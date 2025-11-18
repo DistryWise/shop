@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Контакты — Piligrim</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/static/css/search.css">
+  <link rel="stylesheet" href="/static/css/auth.css">
+  <link rel="stylesheet" href="/static/css/cart.css">
+  <link rel="stylesheet" href="/static/css/ai.css">
+  <link rel="stylesheet" href="/static/css/contacts.css">
+
+  <style>
+    /* === ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ — ВИСЯЩАЯ ЛАМПОЧКА === */
+.theme-toggle-hanging {
+  position: fixed;
+  top: 90px;           /* под хедером */
+  right: 6%;
+  z-index: 999;
+  pointer-events: auto;
+  transform: translateY(-50%);
+}
+
+/* При скролле хедера — лампочка опускается ниже */
+header.scrolled ~ .theme-toggle-hanging,
+header.scrolled + .theme-toggle-hanging {
+  top: 76px;
+}
+
+.theme-toggle-input { display: none; }
+
+.theme-toggle-label {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.theme-toggle-label:hover { transform: translateY(-4px); }
+.theme-toggle-label:active { transform: translateY(6px); }
+
+/* Верёвка сверху */
+.rope.top {
+  width: 2px;
+  height: 110px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.15), rgba(255,255,255,0.4), rgba(255,255,255,0.15));
+  box-shadow: 0 0 8px rgba(255,255,255,0.25);
+  position: relative;
+  transition: all 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+[data-theme="light"] .rope.top {
+  background: linear-gradient(to bottom, rgba(0,0,0,0.08), rgba(0,0,0,0.22), rgba(0,0,0,0.08));
+  box-shadow: 0 0 6px rgba(0,0,0,0.12);
+}
+
+/* Блеск на верёвке */
+.rope.top::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -4px; right: -4px; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  border-radius: 2px;
+  animation: rope-shine 3s infinite ease-in-out;
+}
+[data-theme="light"] .rope.top::before {
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.15), transparent);
+}
+@keyframes rope-shine {
+  0%,100% { opacity: 0.2; }
+  50% { opacity: 0.7; }
+}
+
+/* Лампочка */
+.bulb {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 28% 28%, #fffbe6, #ffd700);
+  border: 1.5px solid rgba(255,215,0,0.7);
+  position: relative;
+  box-shadow: 0 0 24px rgba(255,215,0,0.5), inset 0 0 12px rgba(255,255,255,0.7), 0 6px 12px rgba(0,0,0,0.3);
+  transition: all 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.bulb::before {
+  content: ''; position: absolute; inset: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #fffbe6, #ffed9e);
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+}
+
+/* Свет внутри лампочки */
+.bulb-light {
+  position: absolute; inset: 9px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,150,0.95), rgba(255,235,100,0.7), transparent 70%);
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.theme-toggle-input:checked + .theme-toggle-label .bulb-light { opacity: 1; }
+
+/* Внешнее свечение */
+.bulb-glow {
+  position: absolute; top: 50%; left: 50%;
+  width: 70px; height: 70px;
+  background: radial-gradient(circle, rgba(255,220,100,0.35), transparent 70%);
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+  opacity: 0;
+  transition: opacity 1s ease;
+  pointer-events: none;
+}
+.theme-toggle-input:checked + .theme-toggle-label .bulb-glow { opacity: 1; }
+
+/* Нижняя часть верёвки */
+.rope.bottom {
+  width: 2px; height: 22px;
+  background: inherit;
+  margin-top: -3px;
+}
+
+/* Светлая тема — лампочка выключена */
+[data-theme="light"] .bulb {
+  background: radial-gradient(circle at 30% 30%, #f0f0f0, #bbbbbb);
+  border-color: rgba(0,0,0,0.25);
+  box-shadow: 0 0 10px rgba(0,0,0,0.15), inset 0 0 8px rgba(0,0,0,0.1), 0 6px 12px rgba(0,0,0,0.2);
+}
+[data-theme="light"] .bulb::before {
+  background: radial-gradient(circle at 40% 40%, #ffffff, #dddddd);
+}
+[data-theme="light"] .bulb-light,
+[data-theme="light"] .bulb-glow { opacity: 0 !important; }
+
+/* Адаптив */
+@media (max-width: 992px) {
+  .theme-toggle-hanging { right: 5%; }
+}
+@media (max-width: 768px) {
+  .theme-toggle-hanging { right: 20px; top: 80px; }
+  header.scrolled ~ .theme-toggle-hanging { top: 70px; }
+}
+  </style>
+
+</head>
+<body>
+
+  <div class="custom-cursor"></div>
+
+  <header>
+    <a href="/" class="logo"><img src="/static/assets/logo.png" alt="Piligrim" class="logo-img"></a>
+    <nav>
+      <a href="/" class="nav-link">Главная</a>
+      <a href="/goods" class="nav-link">Товары</a>
+      <a href="/services" class="nav-link">Услуги</a>
+      <a href="/news" class="nav-link">Новости</a>
+      <a href="/about_company" class="nav-link">О компании</a>
+      <a href="/contacts" class="nav-link active">Контакты</a>
+    </nav>
+    <div class="header-icons">
+      <div class="search-wrapper">
+        <div class="search-container">
+          <div class="search-icon"><i class="fas fa-search"></i></div>
+          <input type="text" class="search-input" id="searchInput" placeholder="Поиск...">
+          <button id="searchClear" class="search-clear">×</button>
+        </div>
+        <div id="autocompleteList" class="autocomplete-list"></div>
+      </div>
+      <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
+      
+      <div style="position: relative;">
+        <button class="icon-btn" id="cartBtn">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <div id="miniCartDropdown">
+          <div class="mini-cart-header"><div class="mini-cart-title">Корзина</div></div>
+          <div class="mini-cart-items" id="miniCartItems"><div class="mini-cart-empty">Корзина пуста</div></div>
+          <div class="mini-cart-footer">
+            <div class="mini-cart-total" id="miniCartTotal">Итого: 0.00 ₽</div>
+            <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
+    </div>
+  </header>
+
+  <!-- МОДАЛКА ОБРАТНОЙ СВЯЗИ -->
+  <div class="custom-alert" id="feedbackModal">
+    <div class="alert-content">
+      <button class="alert-close" id="closeFeedback">×</button>
+
+      <div class="alert-icon">
+        <i class="fas fa-envelope-open-text"></i>
+      </div>
+
+      <div class="alert-text">
+        <strong>Обратная связь</strong>
+        <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
+      </div>
+
+      <form class="contact-form" novalidate id="contactForm">
+        <input type="text" placeholder="Ваше имя" name="name" required />
+        
+        <div class="phone-field-wrapper">
+          <input type="tel" placeholder="+7 (___) ___-__-__" name="phone" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+          <button type="button" class="edit-phone-btn" style="display:none;">Изменить</button>
+        </div>
+        
+        <input type="email" placeholder="Email" name="email" required />
+        <textarea placeholder="Ваше сообщение" name="message" required></textarea>
+
+        <button type="submit" id="submitBtn" class="alert-login-btn">
+          <span class="btn-text">Отправить сообщение</span>
+          <span class="btn-cooldown">Отправка... <span class="timer">30</span>с</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА АВТОРИЗАЦИИ -->
+  <div id="authModal" class="auth-modal">
+    <div class="auth-modal-content">
+      <button class="close-modal" id="closeAuthModal">×</button>
+      <h2 class="auth-title">Вход по номеру телефона</h2>
+      <div id="stepPhone" class="auth-step">
+        <div class="country-selector">
+          <div class="selected-country" id="selectedCountry">
+            <span class="flag">RU</span>
+            <span class="code">+7</span>
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="country-dropdown" id="countryDropdown">
+            <div class="country-item" data-code="+7" data-flag="RU">Россия +7</div>
+            <div class="country-item" data-code="+1" data-flag="US">USA +1</div>
+            <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
+          </div>
+        </div>
+        <input type="tel" id="phoneInput" placeholder="___ ___ ___" maxlength="12" class="auth-input">
+        <button id="sendCodeBtn" class="auth-btn">Получить код</button>
+      </div>
+      <div id="stepCode" class="auth-step" style="display:none;">
+        <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
+        <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
+        <button id="verifyCodeBtn" class="auth-btn">Войти</button>
+        <button id="resendCode" class="auth-link">Отправить повторно</button>
+      </div>
+      <div id="stepSuccess" class="auth-step" style="display:none;">
+        <i class="fas fa-check-circle success-icon"></i>
+        <h3>Добро пожаловать!</h3>
+        <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
+        <button id="closeSuccess" class="auth-btn">Продолжить</button>
+      </div>
+    </div>
+  </div>
+
+<!-- КАРТОЧКА ТОВАРА — РАБОЧАЯ, КАК В ZAZA -->
+<div class="product-modal" id="productModal">
+  <div class="product-content">
+    <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
+    <div class="product-info">
+      <h3 id="productTitle" class="product-title">Загрузка...</h3>
+      <div class="product-rating">
+        <div class="stars"></div>
+        <span id="productReviewsCount" class="reviews-count">—</span>
+      </div>
+      <div id="productPrice" class="product-price">—</div>
+      <div id="productDescription" class="product-description">Загрузка описания...</div>
+      <button id="addToCartModal" class="add-to-cart-btn">
+        <i class="fas fa-shopping-cart"></i> Купить
+      </button>
+      <div class="product-reviews">
+        <h4 class="reviews-title">Отзывы покупателей</h4>
+        <div class="reviews-list">
+          <div style="text-align:center;padding:2rem;color:#888;">
+            <i class="far fa-star" style="font-size:2.5rem;margin-bottom:0.5rem;display:block;"></i>
+            <p>Загрузка отзывов...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="close-modal"><i class="fas fa-times"></i></div>
+  </div>
+</div>
+
+<div class="loader" id="loader"></div>
+  <!-- ВСЯ ОСТАЛЬНАЯ РАЗМЕТКА — БЕЗ ИЗМЕНЕНИЙ -->
+  <main>
+    <h1 class="page-title">Контакты</h1>
+    <p class="page-subtitle">Связаться с нами</p>
+    <div class="contacts-wrapper">
+      <div class="contact-block"><span class="contact-label">Телефон</span><p class="contact-value"><a href="tel:+78121234567">+7 (812) 123-45-67</a></p></div>
+      <div class="contact-block"><span class="contact-label">Адрес</span><p class="contact-value">Санкт-Петербург<br>Невский пр., 1</p></div>
+      <div class="contact-block"><span class="contact-label">E-mail</span><p class="contact-value"><a href="mailto:info@piligrim.ru">info@piligrim.ru</a></p></div>
+      <div class="contact-block"><span class="contact-label">Время работы</span><p class="contact-value">24 / 7</p></div>
+    </div>
+    <div class="visit-us"><h2>VISIT US</h2><p>Мы всегда рады видеть вас в нашем шоуруме. Запишитесь на примерку коллекции.</p></div>
+    <div class="divider"></div>
+    <div class="showroom"><h2>SHOWROOM</h2><p>По предварительной записи<br>Невский пр., 1, Санкт-Петербург</p></div>
+    <div class="philosophy"><blockquote><span class="typewriter" id="typewriter"></span></blockquote><cite>— PILIGRIM MANIFESTO</cite></div>
+    <div class="instagram-feed"><h2>INSTAGRAM</h2><div class="insta-grid">
+      <div class="insta-item"><i class="fab fa-instagram"></i></div>
+      <div class="insta-item"><i class="fab fa-instagram"></i></div>
+      <div class="insta-item"><i class="fab fa-instagram"></i></div>
+      <div class="insta-item"><i class="fab fa-instagram"></i></div>
+      <div class="insta-item"><i class="fab fa-instagram"></i></div>
+      <div class="insta-item"><i class="fab fa-instagram"></i></div>
+    </div></div>
+    <div class="newsletter"><h2>SUBSCRIBE</h2><p>Получайте первые новости о новых коллекциях и приватных событиях.</p>
+      <form class="newsletter-form" id="newsletterForm">
+        <input type="email" class="newsletter-input" placeholder="YOUR EMAIL">
+        <button type="submit" class="newsletter-btn">Отправить</button>
+      </form>
+    </div>
+    <div class="social-wrapper">
+      <a href="https://t.me/piligrim"><i class="fab fa-telegram-plane"></i></a>
+      <a href="https://vk.com/piligrim"><i class="fab fa-vk"></i></a>
+      <a href="https://wa.me/79111234567"><i class="fab fa-whatsapp"></i></a>
+    </div>
+    <div class="requisites-wrapper">
+      <div class="requisites-grid">
+        <div><span class="req-title">ООО «ПИЛИГРИМ»</span><p>ИНН 7812345678</p></div>
+        <div><span class="req-title">ОГРН</span><p>1234567890123</p></div>
+        <div><span class="req-title">Юр. адрес</span><p>191186, Санкт-Петербург,<br>Невский пр., д. 1</p></div>
+        <div><span class="req-title">Р/с</span><p>40702810123456789012</p></div>
+      </div>
+    </div>
+<!-- === AI АССИСТЕНТ — ИКОНКА И МОДАЛКА (из zaza.html, не в ai.css) === -->
+<div id="ai-assistant">
+  <svg viewBox="0 0 100 100" class="ai-robot" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f5d78a"/>
+        <stop offset="100%" stop-color="#d4af37"/>
+      </linearGradient>
+    </defs>
+    <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+    <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
+    <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
+    <circle cx="39" cy="40" r="2.5" fill="#fff"/>
+    <circle cx="63" cy="40" r="2.5" fill="#fff"/>
+    <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <g transform="translate(8, 62)">
+      <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
+      <rect x="3" y="3" width="24" height="32" rx="1" fill="#f8f8f8"/>
+      <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+      <line x1="5" y1="17" x2="25" y2="17" stroke="#000" stroke-width="0.9"/>
+      <line x1="5" y1="21" x2="25" y2="21" stroke="#000" stroke-width="0.9"/>
+      <line x1="5" y1="25" x2="23" y2="25" stroke="#000" stroke-width="0.9"/>
+      <line x1="5" y1="29" x2="21" y2="29" stroke="#000" stroke-width="0.9"/>
+    </g>
+    <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
+  </svg>
+</div>
+
+<!-- === AI ЧАТ МОДАЛЬНЫЙ (ТОТ ЖЕ СТИЛЬ) === -->
+<div id="ai-chat" class="ai-chat-modal">
+  <div class="ai-chat-header">
+    <div class="ai-chat-title">
+      <svg width="32" height="32" viewBox="0 0 100 100" style="margin-right:10px;">
+        <use href="#goldGrad"/>
+        <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+        <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="39" cy="40" r="2.5" fill="#fff"/>
+        <circle cx="63" cy="40" r="2.5" fill="#fff"/>
+        <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <g transform="translate(8, 62)">
+          <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
+          <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+        </g>
+        <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
+      </svg>
+      <span>Юрист AI</span>
+    </div>
+    <div class="ai-header-buttons">
+      <button class="ai-btn-minimize" onclick="toggleAIChatSize()" title="На весь экран">
+        <i class="fas fa-expand-arrows-alt"></i>
+      </button>
+      <button class="ai-btn-close" onclick="closeAIChat()" title="Закрыть">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+  <div class="ai-chat-body">
+    <div class="ai-chat-messages"></div>
+    <div class="ai-chat-input">
+      <input type="text" id="ai-input" placeholder="Задайте юридический вопрос..." 
+             onkeypress="if(event.key==='Enter' && this.value.trim()) { sendAIMessage(this.value); this.value=''; }">
+      <button onclick="const inp = document.getElementById('ai-input'); if(inp.value.trim()) { sendAIMessage(inp.value); inp.value=''; }" title="Отправить">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>
+<!-- ТУМБЛЕР ТЕМЫ — ВИСЯЩАЯ ЛАМПОЧКА -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
+  </main>
+
+  <footer>
+    <div class="footer-left">© PILIGRIM 2025. ALL RIGHTS RESERVED.</div>
+    <div class="footer-center"><a href="/" class="footer-logo-link"><img src="/static/assets/logo.png" alt="Piligrim" class="footer-logo"></a></div>
+    <div class="footer-right">
+      <div class="footer-links">
+        <a href="/privacy">Политика конфиденциальности</a>
+        <a href="/terms">Условия использования</a>
+        <a href="/delivery">Доставка и оплата</a>
+      </div>
+    </div>
+  </footer>
+
+  <a href="#" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
+  <div class="alert" id="alert">Спасибо! Вы подписаны.</div>
+
+  <script src="/static/js/search.js"></script>
+  <script src="/static/js/auth.js"></script>
+  <script src="/static/js/cart.js" defer></script>
+  <script src="/static/js/feedback.js"></script>
+  <script src="/static/js/contacts.js" defer></script>
+  <script src="/static/js/ai.js"></script>
+
+  <script>
+const themeToggle = document.getElementById('theme-toggle');
+const html = document.documentElement;
+
+// Автоопределение системной темы + сохранение
+if (localStorage.getItem('theme') === 'light' || 
+   (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+  html.setAttribute('data-theme', 'light');
+  if (themeToggle) themeToggle.checked = true;
+} else {
+  html.setAttribute('data-theme', 'dark');
+  if (themeToggle) themeToggle.checked = false;
+}
+
+themeToggle?.addEventListener('change', () => {
+  if (themeToggle.checked) {
+    html.setAttribute('data-theme', 'light');
+    localStorage.setItem('theme', 'light');
+  } else {
+    html.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+  }
+});
+  </script>
+</body>
+</html>

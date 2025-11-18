@@ -1,0 +1,314 @@
+:root {
+  --bg: #000000;
+  --glass: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.15);
+  --white: #ffffff;
+  --gray: #e0e0e0;
+  --light-gray: #cccccc;
+  --shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  --transition: all 0.35s ease;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100vh; overflow: hidden; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--white); }
+body { display: flex; }
+
+/* === ПАНЕЛИ === */
+.sidebar, .properties { 
+  width: 320px; 
+  background: rgba(0,0,0,0.7); 
+  backdrop-filter: blur(20px); 
+  border: 1px solid var(--border); 
+  padding: 1.8rem; 
+  overflow-y: auto; 
+  z-index: 10; 
+}
+.sidebar { border-right: 1px solid var(--border); }
+.properties { border-left: 1px solid var(--border); }
+
+.panel-title { 
+  font-size: 1.6rem; 
+  font-weight: 700; 
+  color: var(--white); 
+  margin-bottom: 1.5rem; 
+  text-align: center; 
+  letter-spacing: 1.2px; 
+}
+.tool-group { margin-bottom: 2rem; }
+.tool-title { 
+  font-size: 0.85rem; 
+  color: #aaa; 
+  margin-bottom: 0.8rem; 
+  text-transform: uppercase; 
+  letter-spacing: 1.2px; 
+  font-weight: 500; 
+}
+
+/* === КНОПКИ ИНСТРУМЕНТОВ === */
+.tool-btn {
+  width: 100%; 
+  padding: 0.9rem; 
+  background: var(--glass); 
+  border: 1px solid var(--border); 
+  color: var(--white); 
+  border-radius: 12px; 
+  margin-bottom: 0.6rem; 
+  cursor: pointer; 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  transition: var(--transition); 
+  font-size: 0.95rem; 
+  font-weight: 500; 
+  backdrop-filter: blur(10px);
+}
+.tool-btn:hover, 
+.tool-btn.active { 
+  background: rgba(255, 255, 255, 0.2); 
+  color: var(--white); 
+  border-color: var(--white); 
+  transform: translateY(-2px); 
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.15); 
+}
+.tool-btn i { 
+  width: 20px; 
+  text-align: center; 
+  font-size: 1.1rem; 
+}
+
+/* === ПОЛЗУНОК === */
+.range-group { margin-top: 0.6rem; }
+.range-val { 
+  font-size: 0.8rem; 
+  color: #aaa; 
+  text-align: right; 
+  margin-top: 4px; 
+}
+
+/* === ХОЛСТ === */
+.canvas-container { 
+  flex: 1; 
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  padding: 2rem; 
+  position: relative; 
+}
+#canvas { 
+  width: 100%; 
+  max-width: 1200px; 
+  aspect-ratio: 16/9; 
+  background: #000; 
+  position: relative; 
+  overflow: hidden; 
+  border: 2px dashed rgba(255, 255, 255, 0.2); 
+  border-radius: 16px; 
+  box-shadow: var(--shadow); 
+  cursor: crosshair; 
+}
+.grid { 
+  position: absolute; 
+  inset: 0; 
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), 
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); 
+  background-size: 20px 20px; 
+  pointer-events: none; 
+  z-index: 1; 
+}
+
+.canvas-item { 
+  position: absolute; 
+  user-select: none; 
+  cursor: move; 
+  z-index: 10; 
+  transition: none; 
+}
+.canvas-item.selected { 
+  outline: 3px solid var(--white); 
+  outline-offset: 3px; 
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.3); 
+}
+.canvas-item img { 
+  width: 100%; 
+  height: 100%; 
+  object-fit: contain; 
+  pointer-events: none; 
+}
+.canvas-item.text { 
+  white-space: pre-wrap; 
+  line-height: 1.3; 
+  text-shadow: 0 2px 8px rgba(0,0,0,0.7); 
+}
+.canvas-item.letter { 
+  display: inline-block; 
+  cursor: move; 
+}
+
+/* === РЕСАЙЗ ХЕНДЛЫ === */
+.drag-handle { 
+  position: absolute; 
+  width: 14px; 
+  height: 14px; 
+  background: var(--white); 
+  border-radius: 50%; 
+  cursor: nwse-resize; 
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); 
+}
+.drag-handle.tl { top: -7px; left: -7px; }
+.drag-handle.tr { top: -7px; right: -7px; }
+.drag-handle.bl { bottom: -7px; left: -7px; }
+.drag-handle.br { bottom: -7px; right: -7px; }
+
+/* === СВОЙСТВА === */
+.prop-group { margin-bottom: 1.4rem; }
+.prop-label { 
+  display: block; 
+  font-size: 0.8rem; 
+  color: var(--light-gray); 
+  margin-bottom: 0.5rem; 
+  font-weight: 500; 
+}
+input, select, textarea { 
+  width: 100%; 
+  padding: 0.7rem 1rem; 
+  background: rgba(255,255,255,0.08); 
+  border: 1px solid var(--border); 
+  color: #fff; 
+  border-radius: 10px; 
+  font-size: 0.9rem; 
+  transition: var(--transition); 
+}
+input:focus, select:focus, textarea:focus { 
+  outline: none; 
+  border-color: var(--white); 
+  background: rgba(255,255,255,0.14); 
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2); 
+}
+input[type="range"] { 
+  accent-color: var(--white); 
+  height: 6px; 
+}
+
+/* === КНОПКИ ДЕЙСТВИЙ === */
+.btn { 
+  padding: 0.9rem; 
+  background: var(--white); 
+  color: #000; 
+  border: none; 
+  border-radius: 12px; 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: var(--transition); 
+  font-size: 0.95rem; 
+}
+.btn:hover { 
+  background: #f0f0f0; 
+  transform: translateY(-2px); 
+  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2); 
+}
+.btn-secondary { 
+  background: rgba(255,255,255,0.1); 
+  color: #fff; 
+}
+.btn-secondary:hover { 
+  background: rgba(255,255,255,0.2); 
+}
+
+.actions { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 0.6rem; 
+  margin-top: 1rem; 
+}
+
+/* === СЛАЙДЫ === */
+.slides-panel { 
+  display: flex; 
+  gap: 0.6rem; 
+  margin-bottom: 1.5rem; 
+  flex-wrap: wrap; 
+}
+.slide-btn { 
+  flex: 1; 
+  min-width: 50px; 
+  padding: 0.8rem; 
+  background: var(--glass); 
+  color: var(--white); 
+  border: 1px solid var(--border); 
+  border-radius: 12px; 
+  cursor: pointer; 
+  font-size: 0.9rem; 
+  transition: var(--transition); 
+  backdrop-filter: blur(10px); 
+}
+.slide-btn.active, 
+.slide-btn:hover { 
+  background: rgba(255, 255, 255, 0.2); 
+  color: var(--white); 
+  border-color: var(--white); 
+}
+
+/* === АНИМАЦИИ === */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes rotateIn { from { transform: rotate(-180deg) scale(0); opacity: 0; } to { transform: rotate(0) scale(1); opacity: 1; } }
+@keyframes typewriter { from { width: 0; } to { width: 100%; } }
+
+.anim-fade { animation: fadeIn 1s ease-out; }
+.anim-slide { animation: slideUp 0.8s ease-out; }
+.anim-scale { animation: scaleIn 0.7s ease-out; }
+.anim-rotate { animation: rotateIn 1s ease-out; }
+.anim-typewriter { 
+  overflow: hidden; 
+  white-space: nowrap; 
+  border-right: 3px solid var(--white); 
+  animation: typewriter 3s steps(40) forwards; 
+}
+
+/* === ПРЕДПРОСМОТР === */
+.preview-modal { 
+  position: fixed; 
+  inset: 0; 
+  background: rgba(0,0,0,0.95); 
+  backdrop-filter: blur(20px); 
+  z-index: 9999; 
+  display: none; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center; 
+  padding: 2rem; 
+}
+.preview-modal.active { display: flex; }
+.preview-close { 
+  position: absolute; 
+  top: 20px; 
+  right: 20px; 
+  width: 50px; 
+  height: 50px; 
+  background: var(--white); 
+  color: #000; 
+  border-radius: 50%; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 1.5rem; 
+  cursor: pointer; 
+  z-index: 10000; 
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.4); 
+}
+.preview-close:hover {
+  background: #f0f0f0;
+  transform: scale(1.1);
+}
+.preview-container { 
+  width: 100%; 
+  max-width: 1200px; 
+  aspect-ratio: 16/9; 
+  background: #000; 
+  border-radius: 16px; 
+  overflow: hidden; 
+  position: relative; 
+  box-shadow: 0 30px 80px rgba(0,0,0,0.5); 
+}

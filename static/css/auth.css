@@ -1,0 +1,656 @@
+/* auth.css — ЧЁРНО-БЕЛЫЙ ПРЕМИУМ, РАБОТАЕТ С ТВОИМ HTML НА 100% */
+#authModal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    backdrop-filter: blur(28px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    padding: 1rem;
+}
+
+#authModal.show {
+    display: flex;
+    opacity: 1;
+}
+
+#stepSuccess {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#welcomePhone {
+    font-weight: 700;
+    color: #4ade80;
+    font-size: 1.25rem;
+    margin-top: 0.5rem;
+}
+
+.auth-modal-content {
+    background: linear-gradient(135deg, rgba(15,15,15,0.95), rgba(0,0,0,0.98));
+    border: 1.5px solid rgba(255,255,255,0.12);
+    border-radius: 28px;
+    width: 420px;
+    max-width: 92vw;
+    padding: 2.4rem;
+    box-shadow: 
+        0 30px 80px rgba(0,0,0,0.7),
+        0 0 0 1px rgba(255,255,255,0.08) inset,
+        0 0 40px rgba(255,255,255,0.05);
+    position: relative;
+    animation: modalPop 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    backdrop-filter: blur(20px);
+}
+
+@keyframes modalPop {
+    0% { transform: scale(0.88) translateY(20px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.auth-title {
+    font-size: 1.9rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1.8rem;
+    background: linear-gradient(135deg, #ffffff, #cccccc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 0.5px;
+}
+
+.country-selector {
+    position: relative;
+    margin-bottom: 1.2rem;
+}
+
+.selected-country {
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.18);
+    border-radius: 18px;
+    padding: 1.1rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    cursor: pointer;
+    transition: all 0.35s ease;
+    font-size: 1.05rem;
+    backdrop-filter: blur(10px);
+}
+
+.selected-country:hover {
+    background: rgba(255,255,255,0.14);
+    border-color: rgba(255,255,255,0.35);
+    transform: translateY(-1px);
+}
+
+.country-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(15,15,15,0.98);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 18px;
+    margin-top: 0.6rem;
+    max-height: 280px;
+    overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-12px);
+    transition: all 0.4s ease;
+    z-index: 10;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    backdrop-filter: blur(15px);
+}
+
+.country-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.country-item {
+    padding: 1rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-size: 1rem;
+}
+
+.country-item:hover {
+    background: rgba(255,255,255,0.12);
+}
+
+#codeInput {
+    width: 100%;
+    padding: 1.2rem 0;
+    background: rgba(255,255,255,0.07);
+    border: 1.5px solid rgba(255,255,255,0.18);
+    border-radius: 18px;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: 1.2rem;
+    text-align: center;
+    margin: 1.5rem 0 1rem;
+    transition: all 0.35s ease;
+    backdrop-filter: blur(8px);
+}
+
+#codeInput::placeholder {
+    color: #555;
+    letter-spacing: normal;
+    font-size: 1rem;
+}
+
+#codeInput:focus {
+    outline: none;
+    border-color: #ffffff;
+    background: rgba(255,255,255,0.13);
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.12);
+}
+
+.auth-input::placeholder {
+    color: #888;
+}
+
+.auth-input:focus {
+    outline: none;
+    border-color: #ffffff;
+    background: rgba(255,255,255,0.13);
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.12);
+    transform: translateY(-1px);
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 1.25rem;
+    background: #ffffff;
+    color: #000;
+    border: none;
+    border-radius: 18px;
+    font-weight: 700;
+    font-size: 1.12rem;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    margin-top: 0.8rem;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.auth-btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 40px rgba(255, 255, 255, 0.25);
+    background: #f5f5f5;
+}
+
+.auth-btn:disabled {
+    background: #333;
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.auth-info {
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 1.2rem;
+    font-size: 0.95rem;
+}
+
+.auth-link {
+    background: none;
+    border: none;
+    color: #888;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.92rem;
+    margin-top: 1rem;
+    transition: color 0.3s;
+}
+
+.auth-link:hover {
+    color: #fff;
+}
+
+.success-step {
+    text-align: center;
+    padding: 2rem 0;
+}
+
+.success-icon {
+    font-size: 5rem;
+    color: #4ade80;
+    display: block;
+    margin: 0 auto 1.2rem;
+    animation: successPulse 2s infinite;
+    text-shadow: 0 0 20px rgba(74, 222, 128, 0.4);
+}
+
+.success-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 0.5rem;
+    background: linear-gradient(135deg, #4ade80, #00d4ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.success-subtitle {
+    color: #ccc;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+.success-emoji {
+    font-size: 2.5rem;
+    margin-top: 1rem;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.close-modal {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    width: 48px;
+    height: 48px;
+    background: rgba(255,255,255,0.1);
+    border: 1.5px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+}
+
+.close-modal:hover {
+    background: rgba(255,107,107,0.3);
+    border-color: rgba(255,107,107,0.5);
+    transform: rotate(90deg) scale(1.1);
+}
+
+#authBtn {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    border: 1.5px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    padding: 0;
+    gap: 0;
+    z-index: 10;
+    pointer-events: auto !important;
+    /* КНОПКА НЕ ДВИГАЕТСЯ! */
+    transform: none !important;
+    margin: 0 !important;
+}
+
+#authBtn .login-text {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-60%, -60%);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    width: 100%;
+    text-align: center;
+}
+
+#authBtn i {
+    font-size: 1.35rem;
+    color: #fff;
+    transition: transform 0.4s ease;
+    z-index: 2;
+    position: relative;
+    /* Иконка по центру */
+    transform: translateX(0);
+}
+
+/* ХОВЕР — РАСШИРЯЕМСЯ, НО НЕ ДВИГАЕМСЯ */
+#authBtn:hover {
+    width: 130px;
+    min-width: 130px;
+    border-radius: 30px;
+    background: rgba(255,255,255,0.18);
+    border-color: rgba(255,255,255,0.4);
+    box-shadow: 0 10px 30px rgba(255,255,255,0.15);
+    /* НЕ ДВИГАЕМ КНОПКУ! */
+    transform: translateY(-2px) !important;
+}
+
+#authBtn:hover .login-text {
+    opacity: 1;
+}
+
+#authBtn:hover i {
+    /* ИКОНКА УХОДИТ ВПРАВО — ТОЛЬКО ОНА! */
+    transform: translateX(38px);
+}
+
+
+#authBtn.logged-in .login-text {
+    display: none !important;
+}
+
+#authBtn.logged-in i {
+    color: #facc15 !important;
+    transform: translateX(0) !important;
+    font-size: 1.4rem;
+}
+/* Адаптив */
+@media (max-width: 480px) {
+    .auth-modal-content {
+        padding: 2rem 1.5rem;
+        border-radius: 24px;
+    }
+    .auth-title {
+        font-size: 1.7rem;
+    }
+}
+
+/* СКРОЛЛБАР В СТИЛЕ САЙТА */
+.country-dropdown::-webkit-scrollbar {
+    width: 8px;
+}
+
+.country-dropdown::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+}
+
+.country-dropdown::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.25);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.country-dropdown::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.4);
+    background-clip: content-box;
+}
+
+#phoneInput {
+    width: 100%;
+    padding: 1.2rem 1.3rem;
+    background: rgba(255,255,255,0.07);
+    border: 1.5px solid rgba(255,255,255,0.18);
+    border-radius: 18px;
+    color: #fff;
+    font-size: 1.1rem;
+    margin-bottom: 1.2rem;
+    transition: all 0.35s ease;
+    backdrop-filter: blur(8px);
+}
+
+#phoneInput::placeholder {
+    color: #888;
+}
+
+#phoneInput:focus {
+    outline: none;
+    border-color: #ffffff;
+    background: rgba(255,255,255,0.13);
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.12);
+    transform: translateY(-1px);
+}
+
+/* УСПЕШНЫЙ ВХОД — НОМЕР НА НОВОЙ СТРОКЕ */
+#stepSuccess .welcome-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 1rem;
+}
+
+#stepSuccess .welcome-message strong {
+    font-size: 1.4rem;
+    color: #fff;
+}
+
+#welcomePhone {
+    font-size: 1.3rem;
+    color: #2b9c4d;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* АВАТАР ПОСЛЕ ВХОДА — КАК В ОТЗЫВАХ */
+.auth-avatar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  user-select: none;
+  pointer-events: none;
+}
+
+
+#authBtn.logged-in:hover .avatar-circle {
+  transform: scale(1.1);
+}
+
+/* СКРЫВАЕМ ТЕКСТ ПРИ ВХОДЕ */
+#authBtn.logged-in .login-text {
+  display: none !important;
+}
+
+/* ИКОНКА ДО ВХОДА — БЕЛАЯ */
+#authBtn:not(.logged-in) i {
+  color: #fff !important;
+  font-size: 1.35rem;
+}
+
+/* АВАТАР ПОСЛЕ ВХОДА — ЭМОДЗИ КАК В ОТЗЫВАХ */
+.auth-avatar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: transparent;                      /* ← полностью прозрачный фон */
+  border: 1.5px solid rgba(255, 255, 255, 0.25); /* ← лёгкая белая обводка */
+  backdrop-filter: blur(14px);                  /* ← сильный блюр */
+  -webkit-backdrop-filter: blur(14px);          /* ← для Safari */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.25),
+    inset 0 0 20px rgba(255, 255, 255, 0.05);   /* ← лёгкое внутреннее свечение */
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ЛЁГКИЙ ГРАДИЕНТ ПРИ ХОВЕРЕ — КАК У ИКОНОК */
+#authBtn.logged-in:hover .avatar-circle {
+  background: rgba(255, 255, 255, 0.08);        /* ← едва заметный блик */
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 10px 30px rgba(255, 255, 255, 0.15),
+    inset 0 0 25px rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px) scale(1.05);
+}
+/* СКРЫВАЕМ ТЕКСТ ПРИ ВХОДЕ */
+#authBtn.logged-in .login-text {
+  display: none !important;
+}
+
+/* ПРИ ХОВЕРЕ ДО ВХОДА — ТЕКСТ ПОЯВЛЯЕТСЯ */
+#authBtn:not(.logged-in):hover .login-text {
+  opacity: 1;
+}
+
+/* === ПОСЛЕ ВХОДА: ЭМОДЗИ СПРАВА ОТ ЦЕНТРА, "ВЫЙТИ" ПО ЦЕНТРУ РАСШИРЕННОЙ КНОПКИ === */
+#authBtn.logged-in .auth-avatar {
+  position: absolute;
+  left: 18px;                    /* ← СДВИГ ЭМОДЗИ ПРАВЕЕ */
+  top: 50%;
+  transform: translate(-38%, -50%);
+  font-size: 22px;
+  transition: transform 0.4s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+
+#authBtn .logout-text {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  z-index: 1;
+}
+
+/* ПРИ ХОВЕРЕ — РАСШИРЯЕТСЯ */
+#authBtn.logged-in:hover {
+  width: 130px;
+  min-width: 130px;
+  border-radius: 30px;
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.4);
+  box-shadow: 0 10px 30px rgba(255,255,255,0.15);
+  transform: translateY(-2px) !important;
+}
+
+#authBtn.logged-in:hover .logout-text {
+  opacity: 1;
+  transform: translate(-50%, -50%) translateX(-17px); /* ← ДВИГАЕТСЯ ВПРАВО */
+}
+
+#authBtn.logged-in:hover .auth-avatar {
+  transform: translateY(-50%) translateX(20px); /
+}
+
+/* СКРЫВАЕМ ТЕКСТ ПРИ ВХОДЕ (если был) */
+#authBtn.logged-in .login-text {
+  display: none !important;
+}
+
+/* === ПОИСК: ПЛАВНОЕ РАСШИРЕНИЕ ПРИ ХОВЕРЕ === */
+.search-bar {
+  position: absolute;
+  left: 50px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 9;
+}
+
+.search-bar.active {
+  width: 320px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#searchInput {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-radius: 24px;
+  color: #fff;
+  font-size: 1rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+
+#searchInput::placeholder {
+  color: #ccc;
+}
+
+#searchInput:focus {
+  outline: none;
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.15);
+}
+
+/* === ЛУПА — ФИКСИРОВАННЫЙ РАЗМЕР === */
+#searchToggle {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 10;
+}
+
+#searchToggle i {
+  font-size: 1.3rem;
+  color: #fff;
+  transition: transform 0.4s ease;
+}
+
+/* При ховере — лупа слегка увеличивается */
+#searchToggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+#searchToggle:hover i {
+  transform: scale(1.1);
+}

@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пользователи — Админка | Piligrim</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Shadows+Into+Light&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+        :root {
+            --white: #ffffff;
+            --light: #f8f8f8;
+            --gray: #e0e0e0;
+            --dark: #111111;
+            --bg: #000000;
+            --glass: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.15);
+            --shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            --transition: all 0.35s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; font-size: 16px; overflow-x: hidden; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--white);
+            min-height: 100vh;
+            position: relative;
+            padding-top: 90px;
+        }
+
+        /* Хедер */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 1.8rem 5%;
+            height: 90px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(20px);
+            background: rgba(0, 0, 0, 0.6);
+            border-bottom: 1px solid var(--border);
+            transition: var(--transition);
+        }
+        header.scrolled {
+            padding: 1.2rem 5%;
+            background: rgba(0, 0, 0, 0.85);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            height: 76px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+        }
+        .logo-img {
+            height: 130px;
+            width: auto;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+            transition: var(--transition);
+        }
+        header.scrolled .logo-img { height: 110px; }
+        .logo:hover .logo-img { transform: scale(1.08); }
+        .logo-text {
+            font-weight: 700;
+            font-size: 2.4rem;
+            color: var(--white);
+            letter-spacing: 1.5px;
+            transition: var(--transition);
+        }
+        .logo:hover .logo-text {
+            color: #fff;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+        }
+
+        nav { display: flex; gap: 2.4rem; align-items: center; }
+        .nav-link {
+            font-weight: 500;
+            font-size: 1.05rem;
+            color: var(--gray);
+            text-decoration: none;
+            letter-spacing: 1.2px;
+            position: relative;
+            padding: 6px 0;
+            transition: var(--transition);
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 1.5px;
+            background: var(--white);
+            transition: var(--transition);
+            transform: translateX(-50%);
+        }
+        .nav-link:hover { color: var(--white); }
+        .nav-link:hover::after { width: 100%; }
+
+        
+#periodSelect {
+    padding: 1rem 40px 1rem 1rem !important;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    color: #fff;
+    cursor: pointer;
+}
+        /* Сайдбар */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 90px;
+            width: 300px;
+            height: calc(100vh - 90px);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+
+            padding: 2rem;
+            z-index: 900;
+            overflow-y: auto;
+        }
+        .sidebar-title {
+            font-family: 'Shadows Into Light', cursive;
+            font-size: 2rem;
+            color: var(--white);
+            margin-bottom: 2rem;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+        }
+        .sidebar-menu { position: relative; width: 100%; }
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--gray);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.1rem;
+            padding: 0.8rem 0;
+            position: relative;
+            transition: var(--transition);
+            z-index: 2;
+        }
+        .sidebar-item i {
+            font-size: 1.4rem;
+            width: 28px;
+            text-align: center;
+            color: var(--white);
+            transition: transform 0.4s ease;
+        }
+        .sidebar-item span {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .sidebar-badge {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .sidebar-item::before {
+            content: '';
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            width: 8px;
+            height: 8px;
+            background: var(--white);
+            border-radius: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 3;
+        }
+        .sidebar-item:hover i,
+        .sidebar-item.active i { transform: translateX(6px); color: #fff; }
+        .sidebar-item:hover span,
+        .sidebar-item.active span { color: #fff; }
+        .sidebar-item:hover::before,
+        .sidebar-item.active::before { opacity: 1; }
+        .sidebar-item.active { font-weight: 700; }
+        .sidebar-line {
+            position: absolute;
+            left: 17px;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.4);
+            z-index: 1;
+        }
+        .line-1 { top: 70px; height: 50px; }
+        .line-2 { top: 120px; height: 60px; }
+        .line-3 { top: 180px; height: 60px; }
+        .line-4 { top: 240px; height: 60px; }
+        .line-5 { top: 300px; height: 60px; }
+        .line-6 { top: 360px; height: 60px; }
+        .line-7 { top: 420px; height: 60px; }
+
+        /* Основной контент */
+        .main-content {
+            margin-left: 300px;
+            padding: 2rem 5vw;
+        }
+        .admin-container { max-width: 1400px; margin: 0 auto; }
+        .section-title {
+            font-family: 'Shadows Into Light', cursive;
+            font-size: 4rem;
+            color: var(--white);
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+            margin-bottom: 3rem;
+        }
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 2px;
+            background: var(--white);
+            margin: 20px auto 0;
+            border-radius: 1px;
+        }
+
+        /* КНОПКА СТАТИСТИКИ */
+        .stats-toggle {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+        .stats-toggle-btn {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            color: var(--white);
+            padding: 1rem 2rem;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            backdrop-filter: blur(10px);
+        }
+        .stats-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.2);
+        }
+        .stats-toggle-btn i {
+            transition: transform 0.3s ease;
+        }
+        .stats-toggle-btn.open i {
+            transform: rotate(180deg);
+        }
+
+        /* СТАТИСТИКА */
+        .stats-section {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            max-width: 1200px;
+            margin: 0 auto 3rem;
+        }
+        .stats-section.open {
+            display: block;
+            opacity: 1;
+        }
+
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .stats-title {
+            font-family: 'Shadows Into Light', cursive;
+            font-size: 2rem;
+            color: var(--white);
+        }
+        .filter-container {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        .filter-container select {
+            padding: 1rem;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--white);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .filter-container select:focus {
+            border-color: var(--white);
+            background: rgba(255, 255, 255, 0.14);
+            outline: none;
+        }
+        .clear-stats-btn {
+            padding: 1rem 1.6rem;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.95rem;
+        }
+        .clear-stats-btn:hover {
+            background: #ff6666;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 68, 68, 0.4);
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        .stat-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2rem;
+            text-align: center;
+            transition: var(--transition);
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow);
+        }
+        .stat-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+        }
+        .stat-card h3 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 1rem;
+            font-family: 'Inter', sans-serif;
+        }
+        .stat-card p {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--white);
+            font-family: 'SF Pro Display', sans-serif;
+        }
+
+        .stats-items {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-bottom: 2rem;
+        }
+        .stats-item {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+            user-select: none;
+        }
+        .stats-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        .stats-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: var(--white);
+        }
+        .stats-item span {
+            font-weight: 600;
+            color: var(--white);
+        }
+        .clear-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .clear-btn:hover {
+            background: #ff6666;
+        }
+
+        .chart-container {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow);
+            height: 400px;
+            margin-top: 1rem;
+            position: relative;
+            display: none;
+        }
+
+        .chart-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #aaa;
+            font-size: 1.2rem;
+        }
+
+        /* Поиск */
+        .search-form {
+            display: flex;
+            gap: 1rem;
+            margin: 2rem 0;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .search-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--white);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: var(--white);
+            background: rgba(255, 255, 255, 0.14);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Пользователи */
+        .users-list {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .user-item {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(18px);
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            position: relative;
+        }
+        .user-item:hover {
+            transform: translateY(-10px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+        }
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--white);
+            border: 2px solid var(--border);
+        }
+        .user-info { flex: 1; }
+        .user-phone {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--white);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .user-meta {
+            color: var(--gray);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.3rem;
+        }
+        .user-cart-count {
+            background: var(--glass);
+            padding: 0.3rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+        .action-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            color: var(--white);
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        .action-icon:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        .user-actions-icons {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Тумблер админа */
+        .admin-toggle {
+            position: relative;
+            display: inline-block;
+            width: 56px;
+            height: 30px;
+            cursor: pointer;
+        }
+        .admin-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--dark);
+            transition: var(--transition);
+            border-radius: 34px;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background: var(--white);
+            transition: var(--transition);
+            border-radius: 50%;
+        }
+        .admin-toggle input:checked + .slider { background: var(--white); }
+        .admin-toggle input:checked + .slider:before {
+            transform: translateX(26px);
+            background: var(--dark);
+        }
+
+        /* Пагинация */
+        .pagination-container {
+            text-align: center;
+            margin-top: 3rem;
+        }
+        .pagination-info {
+            color: var(--gray);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+        .page-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--glass);
+            color: var(--white);
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: var(--transition);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(8px);
+        }
+        .page-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--white);
+            border-color: var(--white);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.3);
+        }
+        .page-link.active {
+            background: var(--white);
+            color: var(--dark);
+            font-weight: 700;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+            border-color: var(--white);
+        }
+        .page-link.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* Модалки */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal {
+            background: var(--glass);
+            backdrop-filter: blur(32px);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            max-width: 600px;
+            width: 90%;
+            padding: 2.5rem;
+            transform: scale(0.9);
+            opacity: 0;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+        .modal-overlay.active .modal {
+            transform: scale(1);
+            opacity: 1;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .modal-header h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--white);
+        }
+        .modal-close {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            color: var(--white);
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+        .form-group {
+            margin-bottom: 1.6rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.6rem;
+            color: var(--gray);
+            font-weight: 600;
+        }
+        input[type="password"] {
+            width: 100%;
+            padding: 1rem 1.2rem;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--white);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--white);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .modal-actions button {
+            flex: 1;
+            padding: 1.1rem;
+            border: none;
+            border-radius: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .cancel-btn {
+            background: var(--glass);
+            color: var(--white);
+        }
+        .cancel-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .cart-items {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .cart-item {
+            background: var(--glass);
+            padding: 1rem;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .cart-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        /* Flash-сообщения */
+        .flash {
+            padding: 0.9rem 1.2rem;
+            border-radius: 16px;
+            text-align: center;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+        .flash.success {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--white);
+            border: 1px solid var(--border);
+        }
+        .flash.error {
+            background: rgba(255, 68, 68, 0.2);
+            color: #ff6666;
+            border: 1px solid #ff6666;
+        }
+
+        @media (max-width: 992px) {
+            .sidebar { width: 90px; padding: 2rem 1rem; }
+            .sidebar-title, .sidebar-item span { display: none; }
+            .sidebar-item { justify-content: center; }
+            .sidebar-item i { font-size: 1.6rem; }
+            .sidebar-line, .sidebar-item::before { display: none; }
+            .main-content { margin-left: 90px; }
+            .sidebar-badge { display: none; }
+        }
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; padding: 1.5rem; }
+            .section-title { font-size: 2.5rem; }
+            .user-item { flex-direction: column; text-align: center; }
+            .user-phone { justify-content: center; }
+            .stats-container { grid-template-columns: 1fr; }
+            .filter-container { flex-direction: column; }
+        }
+
+
+        /* === ВИСЯЩИЙ СВЕТИЛЬНИК-ТУМБЛЕР === */
+.theme-toggle-hanging {
+  position: fixed;
+  top: 90px;               /* под хедером */
+  right: 6%;
+  transform: translateY(-50%);
+  z-index: 999;
+  pointer-events: auto;
+}
+
+/* Адаптив при скролле хедера */
+header.scrolled ~ .theme-toggle-hanging,
+header.scrolled + .theme-toggle-hanging,
+header.scrolled ~ body .theme-toggle-hanging { top: 76px; }
+
+@media (max-width: 992px) {
+  .theme-toggle-hanging { right: 5%; }
+}
+
+.theme-toggle-input { display: none; }
+
+.theme-toggle-label {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.theme-toggle-label:hover { transform: translateY(-2px); }
+
+/* Верёвка сверху */
+.rope.top {
+  width: 2px;
+  height: 100px;
+  background: linear-gradient(to bottom,
+    rgba(255,255,255,0.15),
+    rgba(255,255,255,0.35),
+    rgba(255,255,255,0.15));
+  position: relative;
+  box-shadow: 0 0 6px rgba(255,255,255,0.2);
+  transition: all 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+[data-theme="light"] .rope.top {
+  background: linear-gradient(to bottom,
+    rgba(0,0,0,0.1),
+    rgba(0,0,0,0.25),
+    rgba(0,0,0,0.1));
+  box-shadow: 0 0 6px rgba(0,0,0,0.15);
+}
+
+.rope.top::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -3px; right: -3px; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  border-radius: 1px;
+  animation: rope-shine 2.5s infinite ease-in-out;
+}
+[data-theme="light"] .rope.top::before {
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.15), transparent);
+}
+
+@keyframes rope-shine {
+  0%,100% { opacity: .3; }
+  50% { opacity: .7; }
+}
+
+/* Лампочка */
+.bulb {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fffbe6, #ffd700);
+  border: 1px solid rgba(255,215,0,0.6);
+  position: relative;
+  box-shadow:
+    0 0 20px rgba(255,215,0,0.4),
+    inset 0 0 10px rgba(255,255,255,0.6),
+    0 4px 8px rgba(0,0,0,0.2);
+  transition: all 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.bulb::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #fffbe6, #ffed9e);
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.15);
+}
+
+.bulb-light {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center,
+    rgba(255,255,150,0.9) 0%,
+    rgba(255,235,100,0.6) 40%,
+    transparent 70%);
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.theme-toggle-input:checked + .theme-toggle-label .bulb-light { opacity: 1; }
+
+.bulb-glow {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 60px; height: 60px;
+  background: radial-gradient(circle, rgba(255,220,100,0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+  opacity: 0;
+  transition: opacity 1s ease;
+  pointer-events: none;
+}
+.theme-toggle-input:checked + .theme-toggle-label .bulb-glow { opacity: 1; }
+
+.rope.bottom {
+  width: 2px;
+  height: 20px;
+  background: inherit;
+  margin-top: -2px;
+}
+
+/* Светлая тема — лампочка выключена */
+[data-theme="light"] .bulb {
+  background: radial-gradient(circle at 30% 30%, #ccc, #888);
+  border-color: rgba(0,0,0,0.2);
+  box-shadow:
+    0 0 8px rgba(0,0,0,0.1),
+    inset 0 0 6px rgba(0,0,0,0.1),
+    0 4px 8px rgba(0,0,0,0.15);
+}
+[data-theme="light"] .bulb::before {
+  background: radial-gradient(circle at 40% 40%, #ddd, #aaa);
+}
+[data-theme="light"] .bulb-light,
+[data-theme="light"] .bulb-glow { display: none; }
+
+/* Анимация "дергания" */
+.theme-toggle-label:active { transform: translateY(4px); }
+        
+    </style>
+
+    <style>
+
+        /* ==================================================================
+   СВЕТЛАЯ ТЕМА ДЛЯ АДМИНКИ
+   Просто добавь в конец <style> — всё заработает через data-theme="light"
+================================================================== */
+[data-theme="light"] {
+  --white: #111111;
+  --light: #f8f8f8;
+  --gray: #666666;
+  --dark: #ffffff;
+  --bg: #f5f5f5;
+  --glass: rgba(255, 255, 255, 0.92);
+  --border: rgba(0, 0, 0, 0.12);
+  --shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+}
+
+/* Фон и текст */
+[data-theme="light"] body { background: var(--bg); color: var(--white); }
+
+/* Хедер */
+[data-theme="light"] header {
+  background: var(--glass);
+  border-bottom-color: var(--border);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+}
+[data-theme="light"] header.scrolled {
+  background: rgba(255,255,255,0.97);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+[data-theme="light"] .logo-img { filter: brightness(0); }
+
+/* Навигация */
+[data-theme="light"] .nav-link { color: #777; }
+[data-theme="light"] .nav-link:hover,
+[data-theme="light"] .nav-link.active { color: var(--white); }
+[data-theme="light"] .nav-link::after { background: var(--white); }
+
+/* Сайдбар */
+[data-theme="light"] .sidebar {
+  background: rgba(255,255,255,0.94);
+
+}
+[data-theme="light"] .sidebar-title { color: #111; text-shadow: none; }
+[data-theme="light"] .sidebar-item { color: #666; }
+[data-theme="light"] .sidebar-item i { color: #444; }
+[data-theme="light"] .sidebar-item:hover,
+[data-theme="light"] .sidebar-item.active { color: #111; }
+[data-theme="light"] .sidebar-item:hover i,
+[data-theme="light"] .sidebar-item.active i { color: #111; transform: translateX(6px); }
+[data-theme="light"] .sidebar-item::before { background: #111; }
+[data-theme="light"] .sidebar-line { background: rgba(0,0,0,0.2); }
+[data-theme="light"] .sidebar-badge {
+  background: rgba(0,0,0,0.06);
+  border-color: rgba(0,0,0,0.15);
+  color: #111;
+}
+
+/* Заголовки */
+[data-theme="light"] .section-title { color: #111; text-shadow: none; }
+[data-theme="light"] .section-title::after { background: #111; }
+
+/* Кнопки и карточки */
+[data-theme="light"] .stats-toggle-btn,
+[data-theme="light"] .stat-card,
+[data-theme="light"] .user-item,
+[data-theme="light"] .stats-item,
+[data-theme="light"] .chart-container,
+[data-theme="light"] .modal,
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] .search-input,
+[data-theme="light"] .page-link,
+[data-theme="light"] .action-icon,
+[data-theme="light"] .clear-btn,
+[data-theme="light"] .cancel-btn {
+  background: var(--glass) !important;
+  border-color: var(--border) !important;
+  color: var(--white) !important;
+  box-shadow: var(--shadow);
+}
+[data-theme="light"] .stats-toggle-btn:hover,
+[data-theme="light"] .stat-card:hover,
+[data-theme="light"] .user-item:hover,
+[data-theme="light"] .stats-item:hover,
+[data-theme="light"] .page-link:hover,
+[data-theme="light"] .action-icon:hover {
+  background: rgba(255,255,255,0.98) !important;
+  border-color: #111 !important;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+  transform: translateY(-6px);
+}
+
+/* Текст в карточках */
+[data-theme="light"] .stat-card h3,
+[data-theme="light"] .user-phone,
+[data-theme="light"] .stats-title,
+[data-theme="light"] .modal-header h2 { color: #111; }
+[data-theme="light"] .user-meta,
+[data-theme="light"] .user-cart-count { color: #666; }
+
+/* Пагинация */
+[data-theme="light"] .page-link.active {
+  background: #111 !important;
+  color: #fff !important;
+}
+[data-theme="light"] .pagination-info { color: #666; }
+
+/* Модальные окна */
+[data-theme="light"] .modal-overlay { background: rgba(255,255,255,0.94); backdrop-filter: blur(20px); }
+[data-theme="light"] .modal-close { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.2); color: #111; }
+[data-theme="light"] .modal-close:hover { background: rgba(0,0,0,0.14); }
+
+/* Тумблер админа */
+[data-theme="light"] .slider { background: #ccc; }
+[data-theme="light"] .admin-toggle input:checked + .slider { background: #111; }
+[data-theme="light"] .admin-toggle input:checked + .slider:before { background: #fff; }
+
+/* Flash-сообщения */
+[data-theme="light"] .flash.success { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.15); color: #111; }
+[data-theme="light"] .flash.error { background: rgba(255,68,68,0.1); color: #d00; border-color: #ff6666; }
+
+/* Тумблер-светильник (уже есть в твоём коде — остаётся рабочим) */
+[data-theme="light"] .rope.top { 
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.25), rgba(0,0,0,0.1));
+  box-shadow: 0 0 6px rgba(0,0,0,0.15);
+}
+[data-theme="light"] .rope.top::before { 
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.15), transparent);
+}
+    </style>
+</head>
+<body>
+    <!-- Хедер -->
+    <header>
+        <a href="/" class="logo">
+            <img src="/static/assets/logo.png" alt="ZAZA" class="logo-img">
+        </a>
+        <nav>
+            <a href="/" class="nav-link">Главная</a>
+        </nav>
+    </header>
+
+ <!-- САЙДБАР -->
+<aside class="sidebar">
+        <h3 class="sidebar-title">Админка</h3>
+        <div class="sidebar-menu">
+            <a href="/admin" class="sidebar-item"><i class="fas fa-box"></i><span>Товары</span></a>
+            <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
+            <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
+            <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
+            <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
+            <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
+            <a href="/admin_reviews" class="sidebar-item active"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews | e }}</div></span></a>
+            <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders | e }}</div></span></a>
+        </div>
+    </aside>
+
+    <!-- Основной контент -->
+    <main class="main-content">
+        <div class="admin-container">
+            <h1 class="section-title">Пользователи</h1>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <!-- КНОПКА СТАТИСТИКИ -->
+            <div class="stats-toggle">
+                <button class="stats-toggle-btn" id="toggleStatsBtn">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Статистика посетителей</span>
+                </button>
+            </div>
+
+            <!-- СТАТИСТИКА -->
+            <div class="stats-section" id="statsSection">
+                <div class="stats-header">
+                    <div class="stats-title">Статистика</div>
+                    <div class="filter-container">
+                        <select id="periodSelect">
+                            <option value="day">За день</option>
+                            <option value="week">За неделю</option>
+                            <option value="month">За месяц</option>
+                            <option value="year">За год</option>
+                        </select>
+                        <button class="clear-stats-btn" id="clearAllBtn">Очистить всё</button>
+                    </div>
+                </div>
+
+                <!-- Основные карточки -->
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <h3>Всего визитов</h3>
+                        <p id="totalVisits">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Уникальных</h3>
+                        <p id="uniqueVisitors">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Онлайн</h3>
+                        <p id="currentOnline">0</p>
+                    </div>
+                </div>
+
+                <!-- Кликабельные пункты -->
+                <div class="stats-items" id="statsItems"></div>
+
+                <!-- Динамический график -->
+                <div class="chart-container" id="dynamicChartContainer" style="display:none;">
+                    <canvas id="dynamicChart"></canvas>
+                    <div class="chart-loading" id="chartLoading">Загрузка...</div>
+                </div>
+            </div>
+
+            <!-- Поиск -->
+            <form method="GET" class="search-form">
+                <input type="text" name="phone" class="search-input" placeholder="Поиск по телефону..." 
+                       value="{{ phone }}" id="phoneSearch">
+                <input type="hidden" name="page" value="1">
+                <button type="submit" style="display:none;"></button>
+            </form>
+
+            <!-- Пользователи -->
+            <div class="users-list">
+                {% for u in users %}
+                <div class="user-item">
+                    <div class="user-avatar">{{ u.phone[-2:] }}</div>
+                    <div class="user-info">
+                        <div class="user-phone">
+                            {{ u.phone }}
+                            <label class="admin-toggle" onclick="openAdminModal({{ u.id }}, {{ u.is_admin }})">
+                                <input type="checkbox" {{ 'checked' if u.is_admin else '' }}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="data">
+                            <i class="fas fa-calendar"></i> {{ u.created_at[:10] }}
+                            {% if u.is_blocked %}
+                                <i class="fas fa-lock" style="color:#ff6666;" title="Заблокирован"></i>
+                            {% else %}
+                                <i class="fas fa-unlock" style="color:#ffffff;" title="Активен"></i>
+                            {% endif %}
+                        </div>
+                        <div class="user-meta">
+                            <i class="fas fa-shopping-cart"></i> 
+                            <span class="user-cart-count">{{ u.cart_count }} в корзине</span>
+                        </div>
+                    </div>
+                    {% if u.id != session.get('user_id') %}
+                    <div class="user-actions-icons">
+                        <button class="action-icon" onclick="openCartModal({{ u.id }})" title="Корзина">
+                            <i class="fas fa-shopping-cart"></i>
+                        </button>
+                        <button class="action-icon" onclick="openBlockModal({{ u.id }}, {{ u.is_blocked }})">
+                            <i class="fas {% if u.is_blocked %}fa-lock{% else %}fa-unlock{% endif %}"></i>
+                        </button>
+                        <button class="action-icon" onclick="openDeleteModal({{ u.id }})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                    {% else %}
+                    <div style="position:absolute;top:1rem;right:1rem;color:#ffffff;font-size:0.9rem;">
+                        Это вы
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Пагинация -->
+            {% if total_pages > 1 %}
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Показано {{ ((page-1)*per_page + 1) }}–{{ [page*per_page, total_users]|min }} из {{ total_users }}
+                </div>
+                <div class="pagination">
+                    {% set url_base = '?phone=' + phone + '&page=' %}
+                    {% if page > 1 %}
+                    <a href="{{ url_base }}{{ page - 1 }}" class="page-link"><i class="fas fa-chevron-left"></i></a>
+                    {% else %}
+                    <span class="page-link disabled"><i class="fas fa-chevron-left"></i></span>
+                    {% endif %}
+                    {% set start_page = [page - 2, 1]|max %}
+                    {% set end_page = [page + 2, total_pages]|min %}
+                    {% if start_page > 1 %}
+                    <a href="{{ url_base }}1" class="page-link">1</a>
+                    {% if start_page > 2 %}<span class="page-dots">...</span>{% endif %}
+                    {% endif %}
+                    {% for p in range(start_page, end_page + 1) %}
+                    <a href="{{ url_base }}{{ p }}" class="page-link {% if p == page %}active{% endif %}">{{ p }}</a>
+                    {% endfor %}
+                    {% if end_page < total_pages %}
+                    {% if end_page < total_pages - 1 %}<span class="page-dots">...</span>{% endif %}
+                    <a href="{{ url_base }}{{ total_pages }}" class="page-link">{{ total_pages }}</a>
+                    {% endif %}
+                    {% if page <page < total_pages %}
+                    <a href="{{ url_base }}{{ page + 1 }}" class="page-link"><i class="fas fa-chevron-right"></i></a>
+                    {% else %}
+                    <span class="page-link disabled"><i class="fas fa-chevron-right"></i></span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <!-- Модалки -->
+    <div class="modal-overlay" id="cartModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Корзина пользователя</h2>
+                <button class="modal-close" onclick="closeCartModal()">×</button>
+            </div>
+            <div id="cartContent">Загрузка...</div>
+            <div class="modal-actions">
+                <button style="background: var(--white); color: var(--dark);" onclick="clearUserCart()">Очистить корзину</button>
+                <button class="cancel-btn" onclick="closeCartModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="blockModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="blockTitle">Заблокировать пользователя?</h2>
+                <button class="modal-close" onclick="closeBlockModal()">×</button>
+            </div>
+            <form method="POST">
+                <input type="hidden" name="action" id="blockAction">
+                <input type="hidden" name="user_id" id="blockUserId">
+                <div class="form-group">
+                    <label>Пароль админа</label>
+                    <input type="password" name="password" required placeholder="Введите пароль">
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" id="blockBtn" style="background: #ff6666; color: var(--white);">Заблокировать</button>
+                    <button type="button" class="cancel-btn" onclick="closeBlockModal()">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Удалить аккаунт навсегда?</h2>
+                <button class="modal-close" onclick="closeDeleteModal()">×</button>
+            </div>
+            <form method="POST">
+                <input type="hidden" name="action" value="delete_user">
+                <input type="hidden" name="user_id" id="deleteUserId">
+                <div class="form-group">
+                    <label>Пароль админа</label>
+                    <input type="password" name="password" required placeholder="Введите пароль">
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" style="background: #ff3366; color: var(--white);">УДАЛИТЬ НАВСЕГДА</button>
+                    <button type="button" class="cancel-btn" onclick="closeDeleteModal()">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="adminModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="adminTitle">Выдать админ-права?</h2>
+                <button class
+
+-modal-close" onclick="closeAdminModal()">×</button>
+            </div>
+            <form method="POST">
+                <input type="hidden" name="action" value="edit_user">
+                <input type="hidden" name="user_id" id="adminUserId">
+                <input type="hidden" name="is_admin" id="adminValue" value="1">
+                <div class="form-group">
+                    <label>Пароль админа</label>
+                    <input type="password" name="password" required placeholder="Введите пароль">
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" id="adminBtn" style="background: var(--white); color: var(--dark);">Выдать</button>
+                    <button type="button" class="cancel-btn" onclick="closeAdminModal()">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ВИСЯЩИЙ ТУМБЛЕР ТЕМЫ -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
+
+<script>
+    // === Глобальные переменные ===
+    let dynamicChart = null;
+    let currentStatsData = null;
+    let currentChartType = null;
+    let isLoading = false;
+
+    const statsTypes = [
+        { key: 'visits',      label: 'Всего визитов (сессии)', icon: 'fa-chart-line' },
+        { key: 'unique',      label: 'Уникальные по IP',       icon: 'fa-user-check' },
+        { key: 'non-unique',  label: 'Все запросы',            icon: 'fa-globe' },
+        { key: 'online',      label: 'Текущий онлайн',         icon: 'fa-circle-dot' },
+        { key: 'avg-time',    label: 'Среднее время',          icon: 'fa-clock' },
+        { key: 'top-pages',   label: 'Топ-страницы',           icon: 'fa-list-ol' },
+        { key: 'activity',    label: 'Активность по часам',    icon: 'fa-chart-area' }
+    ];
+
+    // === Перерисовываем пункты + вешаем клики ===
+    function renderStatsItems() {
+        const container = document.getElementById('statsItems');
+        container.innerHTML = statsTypes.map(t => `
+            <div class="stats-item" data-type="${t.key}">
+                <span><i class="fas ${t.icon}"></i> ${t.label}</span>
+                <button class="clear-btn" data-type="${t.key}">Очистить</button>
+            </div>
+        `).join('');
+
+        // Навешиваем обработчики заново
+        container.addEventListener('click', function(e) {
+            const item = e.target.closest('.stats-item');
+            const clearBtn = e.target.closest('.clear-btn');
+
+            // Клик по кнопке "Очистить"
+            if (clearBtn) {
+                e.stopPropagation();
+                clearPeriod(clearBtn.dataset.type);
+                return;
+            }
+
+            // Клик по пункту графика
+            if (item) {
+                document.querySelectorAll('.stats-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                showChart(item.dataset.type);
+            }
+        });
+    }
+
+    // === Загрузка статистики ===
+    async function loadStats() {
+        if (isLoading) return;
+        isLoading = true;
+        const period = document.getElementById('periodSelect').value;
+
+        try {
+            const res = await fetch(`/api/stats?period=${period}`);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+
+            document.getElementById('totalVisits').textContent = (data.total_visits || 0).toLocaleString();
+            document.getElementById('uniqueVisitors').textContent = (data.unique_visitors || 0).toLocaleString();
+            document.getElementById('currentOnline').textContent = data.current_online || 0;
+
+            currentStatsData = data;
+
+
+        } catch (e) {
+            console.error(e);
+            alert('Ошибка загрузки статистики');
+        } finally {
+            isLoading = false;
+        }
+    }
+
+    // === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ===
+const toggle = document.getElementById('theme-toggle');
+const html = document.documentElement;
+
+if (localStorage.getItem('theme') === 'light') {
+  html.setAttribute('data-theme', 'light');
+  if (toggle) toggle.checked = true;
+} else {
+  html.setAttribute('data-theme', 'dark');
+  localStorage.setItem('theme', 'dark');
+}
+
+toggle?.addEventListener('change', () => {
+  const isLight = toggle.checked;
+  html.setAttribute('data-theme', isLight ? 'light' : 'dark');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+});
+
+function showChart(type) {
+    if (!currentStatsData) return;
+
+    currentChartType = type;
+
+    const container = document.getElementById('dynamicChartContainer');
+    const canvas = document.getElementById('dynamicChart');
+    const loading = document.getElementById('chartLoading');
+
+    // Всегда показываем контейнер
+    container.style.display = 'block';
+
+    // Уничтожаем старый график
+    if (dynamicChart) {
+        dynamicChart.destroy();
+        dynamicChart = null;
+    }
+
+    // Специальные случаи — просто текст
+    if (type === 'avg-time') {
+        const secs = currentStatsData.avg_time_on_site || 0;
+        const mins = Math.floor(secs / 60);
+        const sec = secs % 60;
+
+        canvas.style.display = 'none';
+        loading.style.display = 'none';
+        container.innerHTML = '<canvas id="dynamicChart" style="display:none;"></canvas>' +
+            '<div class="chart-loading" id="chartLoading" style="display:none;"></div>' +
+            `<p style="text-align:center;padding:6rem 0;color:#fff;font-size:2rem;">
+                Среднее время: <strong>${mins} мин ${sec} сек</strong>
+            </p>`;
+        return;
+    }
+
+    if (type === 'online') {
+        canvas.style.display = 'none';
+        loading.style.display = 'none';
+        container.innerHTML = '<canvas id="dynamicChart" style="display:none;"></canvas>' +
+            '<div class="chart-loading" id="chartLoading" style="display:none;"></div>' +
+            `<p style="text-align:center;padding:6rem 0;color:#fff;font-size:2rem;">
+                Сейчас онлайн: <strong>${currentStatsData.current_online || 0}</strong>
+            </p>`;
+        return;
+    }
+
+    // === Обычные графики ===
+    let rawData = [];
+    switch (type) {
+        case 'visits':      rawData = currentStatsData.visits_data || []; break;
+        case 'unique':      rawData = currentStatsData.unique_data || []; break;
+        case 'non-unique':  rawData = currentStatsData.non_unique_data || []; break;
+        case 'top-pages':   rawData = currentStatsData.top_pages || []; break;
+        case 'activity':    rawData = currentStatsData.activity_map || []; break;
+    }
+
+    if (!rawData || rawData.length === 0) {
+        canvas.style.display = 'none';
+        loading.style.display = 'none';
+        container.innerHTML = '<canvas id="dynamicChart" style="display:none;"></canvas>' +
+            '<div class="chart-loading" id="chartLoading" style="display:none;"></div>' +
+            `<p style="text-align:center;padding:6rem 0;color:#aaa;">Нет данных</p>`;
+        return;
+    }
+
+    // Восстанавливаем canvas и loading
+    container.innerHTML = '<canvas id="dynamicChart"></canvas><div class="chart-loading" id="chartLoading">Загрузка...</div>';
+    loading.style.display = 'block';
+
+    requestAnimationFrame(() => {
+        loading.style.display = 'none';
+
+        const labels = rawData.map(x => x.label || x.path || x.hour || '—');
+        const values = rawData.map(x => x.value || x.views || x.active_sessions || 0);
+        const isBar = type === 'top-pages';
+
+        const config = {
+            type: isBar ? 'bar' : 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: isBar ? 'Просмотры' : 'Количество',
+                    data: values,
+                    backgroundColor: isBar ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.15)',
+                    borderColor: '#ffffff',
+                    borderWidth: 2,
+                    fill: !isBar,
+                    tension: 0.4,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: !isBar } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.08)' } },
+                    x: { ticks: { color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.08)' } }
+                }
+            }
+        };
+
+        const newCanvas = document.getElementById('dynamicChart');
+        if (newCanvas) {
+            dynamicChart = new Chart(newCanvas, config);
+        }
+    });
+}
+    // === Очистка конкретного типа ===
+    async function clearPeriod(type) {
+        const password = prompt('Пароль админа для очистки:');
+        if (!password) return;
+
+        const period = document.getElementById('periodSelect').value;
+        const res = await fetch('/api/clear_visits_period', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `password=${encodeURIComponent(password)}&period=${period}&type=${type}`
+        });
+
+        if (res.ok) {
+            alert('Очищено!');
+            loadStats();
+        } else {
+            alert('Неверный пароль или ошибка');
+        }
+    }
+
+    // === Полная очистка ===
+    document.getElementById('clearAllBtn').addEventListener('click', async () => {
+        const password = prompt('Пароль для ПОЛНОЙ очистки ВСЕЙ статистики:');
+        if (!password) return;
+
+        const res = await fetch('/api/clear_visits', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `password=${encodeURIComponent(password)}`
+        });
+
+        if (res.ok) {
+            alert('Вся статистика удалена!');
+            currentStatsData = null;
+            currentChartType = null;
+            document.getElementById('dynamicChartContainer').style.display = 'none';
+            document.querySelectorAll('.stats-item').forEach(i => i.classList.remove('active'));
+            loadStats();
+        } else {
+            alert('Ошибка');
+        }
+    });
+
+    // === Открытие/закрытие блока статистики ===
+// === Открытие/закрытие блока статистики (РАБОЧИЙ ТУМБЛЕР) ===
+document.getElementById('toggleStatsBtn').addEventListener('click', () => {
+    const section = document.getElementById('statsSection');
+    const btn = document.getElementById('toggleStatsBtn');
+    const chartContainer = document.getElementById('dynamicChartContainer');
+
+    const isOpen = section.classList.contains('open');
+    
+    if (isOpen) {
+        // === ЗАКРЫВАЕМ ===
+        section.classList.remove('open');
+        btn.classList.remove('open');
+
+        // Полностью скрываем и очищаем график
+        chartContainer.style.display = 'none';
+        chartContainer.innerHTML = '<canvas id="dynamicChart"></canvas><div class="chart-loading" id="chartLoading">Загрузка...</div>';
+        
+        if (dynamicChart) {
+            dynamicChart.destroy();
+            dynamicChart = null;
+        }
+        currentChartType = null;
+        document.querySelectorAll('.stats-item').forEach(i => i.classList.remove('active'));
+    } else {
+        // === ОТКРЫВАЕМ ===
+        section.classList.add('open');
+        btn.classList.add('open');
+        
+        renderStatsItems();
+        loadStats();
+    }
+});
+
+    // === Смена периода ===
+    document.getElementById('periodSelect').addEventListener('change', loadStats);
+
+    // === Модалки (оставил без изменений) ===
+    let currentUserId = null;
+
+    function openCartModal(id) {
+        currentUserId = id;
+        const cont = document.getElementById('cartContent');
+        cont.innerHTML = '<p style="text-align:center;padding:2rem;color:#aaa;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>';
+        fetch(`/api/user_cart/${id}`).then(r => r.ok ? r.json() : Promise.reject()).then(data => {
+            cont.innerHTML = data.length ? '<div class="cart-items">' + data.map(i => `
+                <div class="cart-item">
+                    <img src="${i.image_url || '/static/no-image.png'}" onerror="this.src='/static/no-image.png'">
+                    <div><strong>${i.title}</strong><br><small>${i.price_str} × ${i.quantity}</small></div>
+                </div>`).join('') + '</div>' : '<p style="text-align:center;color:#aaa;">Корзина пуста</p>';
+        }).catch(() => cont.innerHTML = '<p style="color:#ff6666;">Ошибка</p>');
+        document.getElementById('cartModal').classList.add('active');
+    }
+
+    function clearUserCart() {
+        if (!confirm('Очистить корзину?')) return;
+        const p = prompt('Пароль админа:');
+        if (!p) return;
+        fetch(`/api/clear_user_cart/${currentUserId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `password=${encodeURIComponent(p)}`
+        }).then(r => r.ok ? alert('Очищено') : alert('Ошибка')).then(() => openCartModal(currentUserId));
+    }
+
+    function openBlockModal(id, blocked) {
+        document.getElementById('blockUserId').value = id;
+        document.getElementById('blockAction').value = blocked ? 'unblock_user' : 'block_user';
+        document.getElementById('blockTitle').textContent = blocked ? 'Разблокировать?' : 'Заблокировать?';
+        document.getElementById('blockBtn').textContent = blocked ? 'Разблокировать' : 'Заблокировать';
+        document.getElementById('blockBtn').style.background = blocked ? '#fff' : '#ff6666';
+        document.getElementById('blockBtn').style.color = blocked ? '#000' : '#fff';
+        document.getElementById('blockModal').classList.add('active');
+    }
+
+    function openDeleteModal(id) { document.getElementById('deleteUserId').value = id; document.getElementById('deleteModal').classList.add('active'); }
+    function openAdminModal(id, isAdmin) {
+        document.getElementById('adminUserId').value = id;
+        document.getElementById('adminValue').value = isAdmin ? '0' : '1';
+        document.getElementById('adminTitle').textContent = isAdmin ? 'Забрать права?' : 'Выдать права?';
+        document.getElementById('adminBtn').textContent = isAdmin ? 'Забрать' : 'Выдать';
+        document.getElementById('adminBtn').style.background = isAdmin ? '#ff6666' : '#fff';
+        document.getElementById('adminBtn').style.color = isAdmin ? '#fff' : '#000';
+        document.getElementById('adminModal').classList.add('active');
+    }
+
+    function closeCartModal()   { document.getElementById('cartModal').classList.remove('active'); }
+    function closeBlockModal()  { document.getElementById('blockModal').classList.remove('active'); }
+    function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('active'); }
+    function closeAdminModal()  { document.getElementById('adminModal').classList.remove('active'); }
+
+    document.querySelectorAll('.modal-overlay').forEach(el => el.addEventListener('click', e => {
+        if (e.target === el) el.classList.remove('active');
+    }));
+
+    document.getElementById('phoneSearch')?.addEventListener('input', () => {
+        clearTimeout(window.searchTimer);
+        window.searchTimer = setTimeout(() => document.querySelector('.search-form').submit(), 600);
+    });
+
+    window.addEventListener('scroll', () => {
+        document.querySelector('header').classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // Инициализация
+    renderStatsItems();
+</script>
+</body>
+</html>

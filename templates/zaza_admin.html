@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Админка — редактор главной страницы</title>
+
+  <!-- ШРИФТЫ (все работают) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@400;600;700&family=Playfair+Display:wght@700&family=Montserrat:wght@400;600&family=Shadows+Into+Light&family=Great+Vibes&family=Dancing+Script:wght@700&family=Raleway:wght@300;600&family=Bebas+Neue&family=Oswald:wght@600&family=Anton&family=Cinzel+Decorative&family=Sacramento&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="static/css/editor.css">
+</head>
+<body>
+
+  <!-- ЛЕВАЯ ПАНЕЛЬ -->
+  <div class="sidebar">
+    <h2 class="panel-title"><i class="fas fa-crown"></i> Админка - редактор</h2>
+
+    <div class="slides-panel" id="slides-panel"></div>
+
+    <div class="tool-group">
+      <div class="tool-title">ИНСТРУМЕНТЫ</div>
+      <button class="tool-btn active" data-tool="select"><i class="fas fa-mouse-pointer"></i> Выделение</button>
+      <button class="tool-btn" data-tool="text"><i class="fas fa-font"></i> Текст</button>
+      <button class="tool-btn" data-tool="image"><i class="fas fa-image"></i> Изображение</button>
+      <button class="tool-btn" data-tool="svg"><i class="fas fa-shapes"></i> SVG</button>
+    </div>
+
+    <div class="tool-group">
+      <div class="tool-title">ФОН</div>
+      <input type="file" id="bg-upload" accept="image/*" style="display:none;">
+      <button class="tool-btn" onclick="document.getElementById('bg-upload').click()">
+        <i class="fas fa-upload"></i> Загрузить фон
+      </button>
+      <div class="range-group">
+        <input type="range" id="bg-scale" min="50" max="200" value="100">
+        <div class="range-val">Масштаб: <span id="bg-scale-val">100%</span></div>
+      </div>
+    </div>
+
+
+    <div class="tool-group">
+      <div class="tool-title">ДЕЙСТВИЯ</div>
+      <button class="tool-btn" onclick="saveProject()"><i class="fas fa-save"></i> Сохранить</button>
+      <button class="tool-btn" onclick="openPreview()"><i class="fas fa-eye"></i> Предпросмотр</button>
+      <button class="tool-btn" onclick="exportPNG()"><i class="fas fa-download"></i> Экспорт PNG</button>
+      <button class="tool-btn btn-secondary" onclick="location.reload()"><i class="fas fa-redo"></i> Сброс</button>
+    </div>
+
+    <div class="tool-group" id="layers">
+      <div class="tool-title">СЛОИ</div>
+    </div>
+  </div>
+
+  <!-- ХОЛСТ -->
+  <div class="canvas-container">
+    <div id="canvas"><div class="grid"></div></div>
+  </div>
+
+  <!-- ПРАВАЯ ПАНЕЛЬ -->
+  <div class="properties">
+    <h3 class="panel-title">СВОЙСТВА</h3>
+    <div id="prop-content">Выберите элемент</div>
+  </div>
+
+  <!-- ПРЕДПРОСМОТР -->
+  <div class="preview-modal" id="preview-modal">
+    <div class="preview-close" onclick="closePreview()">X</div>
+    <div class="preview-container" id="preview-container"></div>
+  </div>
+
+  <script src="static/js/editor.js"></script>
+</body>
+</html>

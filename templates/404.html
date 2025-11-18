@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 — Страница не найдена</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Unica+One&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0c0c0c; /* Чёрный с текстурой */
+            --text: #d8d8d8; /* Выцветший серый */
+            --accent: #ff3c3c; /* Кроваво-красный для акцента */
+            --shadow: rgba(0, 0, 0, 0.7);
+            --glass: rgba(255, 255, 255, 0.08);
+            --glow: rgba(255, 60, 60, 0.5);
+            --noise: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.08"/></svg>');
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Текстурный фон */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--noise);
+            z-index: -1;
+            opacity: 0.15;
+        }
+
+        /* Контейнер */
+        .scene {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            padding: 2rem;
+            text-align: left;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2rem;
+        }
+
+        /* Тессеракт */
+        .tesseract {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            transform-style: preserve-3d;
+            animation: drift 12s ease-in-out infinite;
+            perspective: 1200px;
+        }
+
+        .cube {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+        }
+
+        .cube.outer { transform: scale(1); }
+        .cube.inner { transform: scale(0.6); }
+
+        .cube-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 0 30px var(--shadow);
+        }
+
+        .cube-face.front { transform: translateZ(100px); }
+        .cube-face.back { transform: translateZ(-100px) rotateY(180deg); }
+        .cube-face.left { transform: translateX(-100px) rotateY(-90deg); }
+        .cube-face.right { transform: translateX(100px) rotateY(90deg); }
+        .cube-face.top { transform: translateY(-100px) rotateX(90deg); }
+        .cube-face.bottom { transform: translateY(100px) rotateX(-90deg); }
+
+        .cube.inner .cube-face.front { transform: translateZ(60px); }
+        .cube.inner .cube-face.back { transform: translateZ(-60px) rotateY(180deg); }
+        .cube.inner .cube-face.left { transform: translateX(-60px) rotateY(-90deg); }
+        .cube.inner .cube-face.right { transform: translateX(60px) rotateY(90deg); }
+        .cube.inner .cube-face.top { transform: translateY(-60px) rotateX(90deg); }
+        .cube.inner .cube-face.bottom { transform: translateY(60px) rotateX(-90deg); }
+
+        /* Соединяющие линии (имитация 4D) */
+        .tesseract::before,
+        .tesseract::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .tesseract::before {
+            background: linear-gradient(to bottom, transparent, var(--glow));
+            transform: translateZ(-100px);
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        .tesseract::after {
+            background: linear-gradient(to top, transparent, var(--glow));
+            transform: translateZ(100px);
+            animation: pulse-glow 3s ease-in-out infinite 0.5s;
+        }
+
+        /* Анимация тессеракта */
+        .cube.outer {
+            animation: rotate-4d-outer 20s linear infinite;
+        }
+
+        .cube.inner {
+            animation: rotate-4d-inner 15s linear infinite reverse;
+        }
+
+        /* Заголовок */
+        h1 {
+            font-family: 'Unica One', sans-serif;
+            font-size: 5rem;
+            font-weight: 800;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            line-height: 0.9;
+            transform: rotate(-3deg);
+            text-shadow: 3px 3px 10px var(--shadow);
+            animation: glitch 4s infinite;
+        }
+
+        /* Текст */
+        p {
+            font-size: 1.2rem;
+            color: #888;
+            max-width: 500px;
+            line-height: 1.7;
+            transform: rotate(-1deg);
+        }
+
+        /* Кнопка */
+        a {
+            font-family: 'Unica One', sans-serif;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 1.5rem;
+            font-weight: 600;
+            padding: 0.8rem 2rem;
+            border: 1px solid var(--text);
+            border-radius: 0;
+            transform: rotate(-2deg);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        a:hover {
+            color: var(--bg);
+            background: var(--accent);
+            border-color: var(--accent);
+            transform: rotate(0deg) translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255, 60, 60, 0.4);
+        }
+
+        /* Анимации */
+        @keyframes drift {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(15px, -20px); }
+        }
+
+        @keyframes rotate-4d-outer {
+            0% { transform: rotateY(0deg) rotateX(0deg); }
+            100% { transform: rotateY(360deg) rotateX(360deg); }
+        }
+
+        @keyframes rotate-4d-inner {
+            0% { transform: rotateY(0deg) rotateX(0deg); }
+            100% { transform: rotateY(-360deg) rotateX(-360deg); }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: rotate(-3deg) translate(0, 0); }
+            5% { transform: rotate(-3deg) translate(5px, -2px); }
+            10% { transform: rotate(-3deg) translate(-5px, 2px); }
+        }
+
+        /* Медиа-запросы */
+        @media (max-width: 768px) {
+            h1 { font-size: 3.5rem; }
+            .scene { padding: 1rem; align-items: center; text-align: center; }
+            .tesseract { width: 140px; height: 140px; }
+            .cube-face { width: 140px; height: 140px; }
+            .cube-face.front { transform: translateZ(70px); }
+            .cube-face.back { transform: translateZ(-70px) rotateY(180deg); }
+            .cube-face.left { transform: translateX(-70px) rotateY(-90deg); }
+            .cube-face.right { transform: translateX(70px) rotateY(90deg); }
+            .cube-face.top { transform: translateY(-70px) rotateX(90deg); }
+            .cube-face.bottom { transform: translateY(70px) rotateX(-90deg); }
+            .cube.inner .cube-face { width: 84px; height: 84px; }
+            .cube.inner .cube-face.front { transform: translateZ(42px); }
+            .cube.inner .cube-face.back { transform: translateZ(-42px) rotateY(180deg); }
+            .cube.inner .cube-face.left { transform: translateX(-42px) rotateY(-90deg); }
+            .cube.inner .cube-face.right { transform: translateX(42px) rotateY(90deg); }
+            .cube.inner .cube-face.top { transform: translateY(-42px) rotateX(90deg); }
+            .cube.inner .cube-face.bottom { transform: translateY(42px) rotateX(-90deg); }
+            p { font-size: 1rem; }
+            a { font-size: 1.2rem; padding: 0.6rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="scene">
+        <div class="tesseract">
+            <div class="cube outer">
+                <div class="cube-face front"></div>
+                <div class="cube-face back"></div>
+                <div class="cube-face left"></div>
+                <div class="cube-face right"></div>
+                <div class="cube-face top"></div>
+                <div class="cube-face bottom"></div>
+            </div>
+            <div class="cube inner">
+                <div class="cube-face front"></div>
+                <div class="cube-face back"></div>
+                <div class="cube-face left"></div>
+                <div class="cube-face right"></div>
+                <div class="cube-face top"></div>
+                <div class="cube-face bottom"></div>
+            </div>
+        </div>
+
+        <h1>404<br>Путь не найден</h1>
+        <p>Эта страница исчезла. Вернитесь к покупкам или получите консультацию.</p>
+        <a href="/">На главную</a>
+    </div>
+</body>
+</html>

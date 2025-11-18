@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Заказы — Админка | Piligrim</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #00d2ff;
+            --accent: #00ff95;
+            --bg-dark: #0a0a0a;
+            --card-bg: rgba(20, 20, 30, 0.78);
+            --text: #eee;
+            --text-secondary: #aaa;
+            --text-muted: #ccc;
+            --line: rgba(0, 210, 255, 0.4);
+            --error: #ff6b6b;
+            --error-dark: #ff4444;
+            --status-pending-bg: rgba(255, 193, 7, 0.2);
+            --status-pending: #ffc107;
+            --status-processing-bg: rgba(0, 123, 255, 0.2);
+            --status-processing: #007bff;
+            --status-shipping-bg: rgba(255, 152, 0, 0.2);
+            --status-shipping: #ff9800;
+            --status-completed-bg: rgba(0, 255, 149, 0.2);
+            --status-completed: #00ff95;
+            --status-cancelled-bg: rgba(255, 68, 68, 0.2);
+            --status-cancelled: #ff6b6b;
+
+            --radius-lg: 32px;
+            --radius-md: 20px;
+            --radius-sm: 12px;
+            --padding-lg: 2rem;
+            --padding-md: 1.2rem;
+            --padding-sm: 0.8rem;
+            --gap-lg: 1.5rem;
+            --gap-md: 1rem;
+            --gap-sm: 0.6rem;
+            --font-size-lg: 1.8rem;
+            --font-size-md: 1rem;
+            --font-size-sm: 0.9rem;
+            --font-size-xs: 0.8rem;
+
+            --shadow-sm: 0 15px 35px rgba(0,0,0,0.3);
+            --shadow-lg: 0 20px 50px rgba(0,0,0,0.4);
+            --shadow-glow: 0 0 16px rgba(0, 210, 255, 0.5);
+            --transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-fast: all 0.3s ease;
+
+            --z-nav: 100;
+            --z-sidebar: 200;
+            --z-modal: 1000;
+
+            --blue-gradient: linear-gradient(135deg, transparent 0%, rgba(0, 110, 220, 0.32) 42%, rgba(0, 210, 255, 0.16) 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; overflow-x: hidden; }
+        body {
+            background: var(--bg-dark);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.7;
+            min-height: 100vh;
+            position: relative;
+            padding-top: 12vh;
+            display: flex;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.92);
+            z-index: var(--z-modal);
+            align-items: center;
+            justify-content: center;
+            padding: var(--padding-md);
+            backdrop-filter: blur(12px);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity var(--transition-fast), visibility var(--transition-fast);
+        }
+
+        .modal.active {
+            display: flex;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .gradient-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--blue-gradient);
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 2s ease-out;
+        }
+        .gradient-overlay.active { opacity: 1; }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.99);
+            backdrop-filter: blur(22px);
+            z-index: var(--z-nav);
+            padding: var(--padding-md) 0;
+            border-bottom: 1px solid #222;
+        }
+
+        .nav-container {
+            max-width: 1550px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 var(--padding-lg);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: var(--gap-md);
+        }
+
+        .logo-img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-glow);
+            transition: var(--transition);
+        }
+
+        .logo-img:hover { transform: scale(1.08); }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.9rem;
+            color: var(--primary);
+            text-shadow: var(--shadow-glow);
+        }
+
+        .nav-menu { display: flex; gap: 3rem; }
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            position: relative;
+            transition: var(--transition);
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -11px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.5s ease;
+        }
+        .nav-link:hover::after, .nav-link.active::after { width: 100%; }
+        .nav-link:hover, .nav-link.active { color: var(--primary); }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 12vh;
+            width: 300px;
+            height: calc(100vh - 12vh);
+            padding: 3rem var(--padding-lg);
+            z-index: var(--z-sidebar);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .sidebar-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: 2.5rem;
+            margin-bottom: 2.5rem;
+            letter-spacing: 1px;
+            position: relative;
+        }
+
+        .sidebar-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .sidebar-menu { position: relative; width: 100%; }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: var(--gap-md);
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.05rem;
+            padding: var(--padding-sm) 0;
+            position: relative;
+            transition: var(--transition);
+            z-index: 2;
+        }
+
+        .sidebar-item i {
+            font-size: 1.4rem;
+            width: 28px;
+            text-align: center;
+            color: var(--primary);
+            transition: transform var(--transition-fast);
+        }
+
+        .sidebar-item span {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: var(--gap-sm);
+        }
+
+        .sidebar-badge {
+            background: transparent;
+            color: var(--primary);
+            font-size: var(--font-size-xs);
+            font-weight: 700;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .sidebar-item::before {
+            content: '';
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+            z-index: 3;
+        }
+
+        .sidebar-item:hover i,
+        .sidebar-item.active i { transform: translateX(6px); color: #fff; }
+        .sidebar-item:hover span,
+        .sidebar-item.active span { color: #fff; }
+        .sidebar-item:hover::before,
+        .sidebar-item.active::before { opacity: 1; }
+        .sidebar-item.active { font-weight: 700; }
+
+        .sidebar-line {
+            position: absolute;
+            left: 17px;
+            width: 2px;
+            background: var(--line);
+            z-index: 1;
+        }
+
+        .line-1 { top: 0; height: 50px; }
+        .line-2 { top: 50px; height: 60px; }
+        .line-3 { top: 110px; height: 60px; }
+        .line-4 { top: 170px; height: 60px; }
+        .line-5 { top: 230px; height: 60px; }
+        .line-6 { top: 290px; height: 60px; }
+        .line-7 { top: 350px; height: 60px; }
+
+        .main-content {
+            flex: 1;
+            margin-left: 300px;
+            padding: var(--padding-lg) 5vw;
+            position: relative;
+            z-index: 5;
+        }
+
+        .admin-container { max-width: 1400px; margin: 0 auto; }
+        .admin-header { margin-bottom: var(--gap-lg); opacity: 0; transform: translateY(-40px); transition: all 1.8s ease; }
+        .admin-header.visible { opacity: 1; transform: translateY(0); }
+        .admin-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .admin-subtitle { font-size: 1.2rem; color: var(--text-secondary); }
+
+        .flash {
+            padding: var(--padding-sm) var(--padding-md);
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            font-size: var(--font-size-sm);
+            margin-bottom: var(--gap-md);
+        }
+        .flash.success { background: var(--status-completed-bg); color: var(--status-completed); border: 1px solid var(--status-completed); }
+        .flash.error { background: var(--status-cancelled-bg); color: var(--status-cancelled); border: 1px solid var(--status-cancelled); }
+
+        .filters {
+            display: flex;
+            gap: var(--gap-md);
+            margin-bottom: var(--gap-lg);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 280px;
+            padding: var(--padding-sm) var(--padding-md);
+            border-radius: var(--radius-md);
+            border: 2px solid var(--line);
+            background: rgba(255,255,255,0.07);
+            color: var(--text);
+            font-size: var(--font-size-md);
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .filter-select {
+            padding: var(--padding-sm) var(--padding-md);
+            border-radius: var(--radius-md);
+            border: 2px solid var(--line);
+            background: rgba(255,255,255,0.07);
+            color: var(--primary);
+            font-size: var(--font-size-md);
+            min-width: 180px;
+            cursor: pointer;
+        }
+
+        .orders-list { margin-top: var(--gap-md); }
+        .orders-list h2 { font-size: var(--font-size-lg); margin-bottom: var(--gap-lg); color: var(--primary); font-weight: 700; text-align: center; }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem var(--padding-lg);
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+        }
+
+        .empty-state i { font-size: 3rem; color: #555; margin-bottom: var(--gap-md); display: block; }
+        .empty-state button {
+            margin-top: var(--gap-md);
+            padding: var(--padding-sm) var(--padding-md);
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .empty-state button:hover {
+            background: var(--accent);
+        }
+
+        .order-item {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: var(--padding-lg);
+            padding-top: 3.5rem;
+            margin-bottom: var(--gap-lg);
+            backdrop-filter: blur(18px);
+            border: 1px solid var(--line);
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .order-item:hover {
+            transform: translateY(-12px) scale(1.01);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
+        }
+
+        .order-status {
+            position: absolute;
+            top: var(--padding-md);
+            left: var(--padding-md);
+            padding: 0.4rem var(--padding-sm);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-xs);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .order-status.pending { background: var(--status-pending-bg); color: var(--status-pending); }
+        .order-status.processing { background: var(--status-processing-bg); color: var(--status-processing); }
+        .order-status.shipping { background: var(--status-shipping-bg); color: var(--status-shipping); }
+        .order-status.completed { background: var(--status-completed-bg); color: var(--status-completed); }
+        .order-status.cancelled { background: var(--status-cancelled-bg); color: var(--status-cancelled); }
+
+        .order-actions {
+            position: absolute;
+            top: var(--padding-md);
+            right: var(--padding-md);
+            display: flex;
+            gap: var(--gap-sm);
+            align-items: center;
+        }
+
+        .action-btn {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 0.4rem var(--padding-sm);
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-xs);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: #000;
+        }
+
+        .action-btn.cancel {
+            border-color: var(--error);
+            color: var(--error);
+        }
+
+        .action-btn.cancel:hover {
+            background: var(--error);
+            color: #fff;
+        }
+
+        .action-btn.delete {
+            border-color: var(--error-dark);
+            color: var(--error-dark);
+        }
+
+        .action-btn.delete:hover {
+            background: var(--error-dark);
+            color: #fff;
+        }
+
+        .order-user-block,
+        .order-phone-block {
+            margin: 0.5rem 0;
+            font-size: var(--font-size-md);
+            color: var(--text-muted);
+        }
+
+        .order-user-block strong,
+        .order-phone-block strong {
+            color: var(--primary);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--gap-md);
+            flex-wrap: wrap;
+            gap: var(--gap-sm);
+        }
+
+        .order-date {
+            color: var(--text-secondary);
+            font-size: var(--font-size-sm);
+        }
+
+        .order-items {
+            margin: var(--gap-md) 0;
+            padding: var(--padding-md);
+            background: rgba(255,255,255,0.05);
+            border-radius: var(--radius-sm);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .order-product {
+            display: flex;
+            align-items: center;
+            gap: var(--gap-md);
+            padding: var(--padding-sm);
+            background: rgba(255,255,255,0.05);
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--gap-sm);
+            cursor: pointer;
+        }
+
+        .product-thumb {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            transition: transform var(--transition-fast);
+        }
+
+        .product-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .order-total {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent);
+            text-align: right;
+            margin-top: var(--gap-sm);
+            padding-top: var(--gap-sm);
+            border-top: 1px dashed var(--line);
+        }
+
+        .cancel-reason {
+            margin-top: var(--gap-md);
+            padding: var(--padding-sm);
+            background: rgba(255,107,107,0.1);
+            border-radius: var(--radius-sm);
+            color: var(--error);
+            font-size: var(--font-size-sm);
+            font-style: italic;
+            border-left: 4px solid var(--error);
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: var(--padding-lg);
+            border-radius: var(--radius-lg);
+            max-width: 520px;
+            width: 100%;
+            text-align: center;
+            backdrop-filter: blur(18px);
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+        }
+
+        .modal-content h3 {
+            margin-bottom: var(--gap-md);
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+
+        .modal-content input,
+        .modal-content textarea {
+            width: 100%;
+            padding: var(--padding-sm) var(--padding-md);
+            margin-bottom: var(--gap-md);
+            border: 2px solid var(--line);
+            border-radius: var(--radius-md);
+            background: rgba(255,255,255,0.07);
+            color: var(--text);
+            font-size: var(--font-size-md);
+            transition: var(--transition);
+        }
+
+        .modal-content input:focus,
+        .modal-content textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .modal-content textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: var(--gap-md);
+            justify-content: center;
+            margin-top: var(--gap-lg);
+        }
+
+        .modal-actions .action-btn {
+            flex: 1;
+            padding: var(--padding-sm);
+            font-weight: 700;
+            border-radius: var(--radius-md);
+            font-size: var(--font-size-sm);
+        }
+
+        .error-message {
+            color: var(--error);
+            font-size: var(--font-size-sm);
+            margin-bottom: var(--gap-md);
+            display: none;
+            text-align: left;
+        }
+
+        #modalImg {
+            max-width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--gap-md);
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #modalDesc {
+            max-height: 150px;
+            overflow-y: auto;
+            padding-right: var(--padding-sm);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: var(--padding-md);
+            right: var(--padding-md);
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-btn:hover {
+            color: var(--accent);
+            transform: scale(1.2);
+        }
+
+        #productModal .modal-content {
+            max-width: 600px;
+            text-align: left;
+            padding: 2.5rem;
+        }
+
+        #productModal .modal-content h3 {
+            font-size: 1.6rem;
+            margin-bottom: var(--gap-sm);
+        }
+
+        #productModal .modal-content p {
+            font-size: var(--font-size-md);
+            color: var(--text-muted);
+            margin-bottom: var(--gap-sm);
+        }
+
+        /* Стили для цепочки статусов */
+        .order-chain-top {
+            padding: 1.5rem 1rem;
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            margin-bottom: var(--gap-lg);
+        }
+
+        .chain-loading,
+        .chain-error {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .chain-img-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto;
+            overflow: hidden;
+            border: 4px solid #444;
+            transition: all 0.4s ease;
+        }
+
+        .chain-img-circle.active { border-color: #fff; }
+        .chain-img-circle.done { border-color: #fff; }
+        .chain-img-circle.clickable { cursor: pointer; }
+        .chain-img-circle.clickable:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(0,210,255,0.5); }
+
+        @media (max-width: 992px) {
+            .sidebar { width: 90px; padding: 3rem var(--padding-md); }
+            .sidebar-title, .sidebar-item span { display: none; }
+            .sidebar-item { justify-content: center; }
+            .sidebar-item i { font-size: 1.2rem; }
+            .main-content { margin-left: 90px; }
+            .sidebar-badge { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            .admin-title { font-size: 2.8rem; }
+            .main-content { margin-left: 0; padding: var(--padding-md); }
+            .filters { flex-direction: column; }
+            .search-input, .filter-select { min-width: 100%; }
+            .order-header { flex-direction: column; gap: var(--gap-sm); }
+            .order-actions {
+                position: relative;
+                top: auto;
+                right: auto;
+                display: none;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: var(--gap-sm);
+                background: var(--card-bg);
+                padding: var(--padding-sm);
+                border-radius: var(--radius-sm);
+            }
+            .order-actions.active { display: flex; }
+            .order-actions-toggle {
+                position: absolute;
+                top: var(--padding-md);
+                right: var(--padding-md);
+                background: var(--primary);
+                color: #000;
+                padding: 0.4rem var(--padding-sm);
+                border-radius: var(--radius-md);
+                cursor: pointer;
+            }
+            .order-chain-top { padding: 1rem 0.5rem; }
+            .order-chain-top > div { flex-wrap: wrap; gap: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="gradient-overlay"></div>
+
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="logo-section">
+                <img src="/static/assets/logo.png" alt="Piligrim" class="logo-img" loading="lazy" onerror="this.src='/static/assets/no-image.png'">
+                <span class="logo-text">piligrim</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="/" class="nav-link">Главная</a>
+            </nav>
+        </div>
+    </header>
+
+    <aside class="sidebar">
+        <h3 class="sidebar-title">Админка</h3>
+        <div class="sidebar-menu">
+            <div class="sidebar-line line-1"></div>
+            <a href="/admin" class="sidebar-item">
+                <i class="fas fa-box"></i>
+                <span>Товары</span>
+            </a>
+            <div class="sidebar-line line-2"></div>
+            <a href="/admin_services" class="sidebar-item">
+                <i class="fas fa-balance-scale"></i>
+                <span>Услуги</span>
+            </a>
+            <div class="sidebar-line line-3"></div>
+            <a href="/admin_news" class="sidebar-item">
+                <i class="fas fa-newspaper"></i>
+                <span>Новости</span>
+
+         </a>
+            <div class="sidebar-line line-4"></div>
+            <a href="/admin_feedback" class="sidebar-item active">
+                <i class="fas fa-envelope"></i>
+                <span>
+                    Обратная связь
+                    <div class="sidebar-badge">{{ total_feedback }}</div>
+                </span>
+            </a>
+            <div class="sidebar-line line-5"></div>
+            <a href="/admin_users" class="sidebar-item">
+                <i class="fas fa-users"></i>
+                <span>
+                    Пользователи
+                    <div class="sidebar-badge">{{ total_users }}</div>
+                </span>
+            </a>
+            <div class="sidebar-line line-6"></div>
+            <a href="/admin_reviews" class="sidebar-item active">
+                <i class="fas fa-star"></i>
+                <span>
+                    Отзывы
+                    <div class="sidebar-badge">{{ total_reviews | e }}</div>
+                </span>
+            </a>
+            <div class="sidebar-line line-7"></div>
+            <a href="/admin_orders" class="sidebar-item">
+                <i class="fas fa-shopping-cart"></i>
+                <span>
+                    Заказы
+                    <div class="sidebar-badge">{{ total_orders | e }}</div>
+                </span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="admin-container">
+            <!-- Цепочка статусов перемещена сюда -->
+            <div id="orderChain" class="order-chain-top" style="display:none;"></div>
+
+            <div class="admin-header">
+                <h1 class="admin-title">Админка — Заказы</h1>
+                <p class="admin-subtitle">Управление заказами пользователей</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="flash {{ 'success' if category != 'error' else 'error' }}">{{ message | e }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <div class="filters">
+                <input type="text" id="searchInput" class="search-input" placeholder="Поиск по ФИО, телефону, товару, #ID..." aria-label="Поиск заказов">
+                <select id="statusFilter" class="filter-select" aria-label="Фильтр по статусу">
+                    <option value="">Все статусы</option>
+                    <option value="pending">В процессе</option>
+                    <option value="processing">В обработке</option>
+                    <option value="shipping">В доставке</option>
+                    <option value="completed">Выполнено</option>
+                    <option value="cancelled">Отменён</option>
+                </select>
+            </div>
+
+            <div class="orders-list">
+                <h2 id="ordersTitle">Все заказы</h2>
+
+                <div id="ordersContainer">
+                    {% if orders|length == 0 %}
+                    <div class="empty-state">
+                        <i class="fas fa-shopping-cart"></i>
+                        <p>Пока нет заказов</p>
+                        <button onclick="window.location.reload()">Обновить</button>
+                    </div>
+                    {% else %}
+                    {% for o in orders %}
+                    <div class="order-item" data-status="{{ o.status | e }}" data-id="{{ o.id | e }}" data-user="{{ o.full_name | e }} {{ o.phone | e }}">
+                        <div class="order-status {{ o.status | e }}">{{ o.status_label[0] | e }}</div>
+                        <button class="order-actions-toggle" onclick="toggleActions(this)" aria-label="Открыть меню действий">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div class="order-actions">
+                            {% if o.status not in ['cancelled', 'completed'] %}
+                            <button class="action-btn cancel" onclick="openCancelModal({{ o.id | e }})" aria-label="Отменить заказ #{{ o.id | e }}">
+                                Отменить
+                            </button>
+                            {% endif %}
+                            <button class="action-btn delete" onclick="openDeleteModal({{ o.id | e }})" aria-label="Удалить заказ #{{ o.id | e }}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                            <button class="action-btn view-chain" onclick="startOrderChain({{ o.id | e }})" aria-label="Показать цепочку статусов заказа #{{ o.id | e }}">
+                                <i class="fas fa-link"></i> Цепочка
+                            </button>
+                        </div>
+                        <div class="order-header">
+                            <div>
+                                <div class="order-user-block"><strong>#{{ o.id | e }}</strong> — {{ o.full_name | e }}</div>
+                                <div class="order-phone-block"><strong>Телефон:</strong> {{ o.phone | e }}</div>
+                            </div>
+                            <div class="order-date">{{ o.created_at | e }}</div>
+                        </div>
+                        <div class="order-items">
+                            {% for item in o.order_items %}
+                            <div class="order-product" onclick="showProductModal(this)"
+                                 data-title="{{ item.title | e }}"
+                                 data-desc="{{ item.description | e }}"
+                                 data-price="{{ item.price_str | e }}"
+                                 data-img="{{ item.image_url | e }}">
+                                <img src="{{ item.image_url | e }}" alt="{{ item.title | e }}" class="product-thumb" loading="lazy" onerror="this.src='/static/assets/no-image.png'">
+                                <div>
+                                    <strong>{{ item.title | e }}</strong> ×{{ item.quantity | e }}<br>
+                                    <small>{{ item.price_str | e }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="order-total">Итого: {{ o.total_str | e }}</div>
+                        {% if o.cancel_reason %}
+                        <div class="cancel-reason"><strong>Причина отмены:</strong> {{ o.cancel_reason | e }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="statusModal" class="modal" role="dialog" aria-modal="true" aria-label="Модальное окно изменения статуса заказа">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('statusModal')" aria-label="Закрыть модальное окно">&times;</button>
+            <h3>Смена статуса заказа</h3>
+            <p id="statusChangeText"></p>
+            <span class="error-message" aria-live="polite"></span>
+            <input type="password" id="statusPassword" placeholder="Пароль администратора" aria-label="Пароль администратора">
+            <div class="modal-actions">
+                <button class="action-btn cancel-btn" onclick="closeModal('statusModal')" aria-label="Отмена">Отмена</button>
+                <button class="action-btn complete-btn" onclick="submitStatus()" aria-label="Подтвердить изменение статуса">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cancelModal" class="modal" role="dialog" aria-modal="true" aria-label="Модальное окно отмены заказа">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('cancelModal')" aria-label="Закрыть модальное окно">&times;</button>
+            <h3>Отменить заказ</h3>
+            <span class="error-message" aria-live="polite"></span>
+            <textarea id="cancelReason" placeholder="Укажите причину отмены (обязательно)" aria-label="Причина отмены"></textarea>
+            <input type="password" id="cancelPassword" placeholder="Пароль администратора" aria-label="Пароль администратора">
+            <div class="modal-actions">
+                <button class="action-btn cancel-btn" onclick="closeModal('cancelModal')" aria-label="Отмена">Отмена</button>
+                <button class="action-btn complete-btn" onclick="submitCancel()" aria-label="Подтвердить отмену заказа">Подтвердить</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="deleteModal" class="modal" role="dialog" aria-modal="true" aria-label="Модальное окно удаления заказа">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal('deleteModal')" aria-label="Закрыть модальное окно">&times;</button>
+            <h3>Удалить заказ навсегда?</h3>
+            <p>Это действие нельзя отменить.</p>
+            <span class="error-message" aria-live="polite"></span>
+            <input type="password" id="deletePassword" placeholder="Пароль администратора" aria-label="Пароль администратора">
+            <div class="modal-actions">
+                <button class="action-btn cancel-btn" onclick="closeModal('deleteModal')" aria-label="Отмена">Отмена</button>
+                <button class="action-btn complete-btn" onclick="submitDelete()" aria-label="Подтвердить удаление заказа">Удалить</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="productModal" class="modal" role="dialog" aria-modal="true" aria-label="Модальное окно просмотра товара">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="close-btn" onclick="closeModal('productModal')" aria-label="Закрыть модальное окно">&times;</button>
+            <img id="modalImg" src="" alt="" loading="lazy" onerror="this.src='/static/assets/no-image.png'">
+            <h3 id="modalTitle"></h3>
+            <p id="modalDesc"></p>
+            <p id="modalPrice" style="color:var(--accent);font-weight:700;"></p>
+        </div>
+    </div>
+
+    <script>
+        // Функция для создания иконок статусов
+        function createStatusIcon(type) {
+            const size = 60;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#2a2a2a';
+            ctx.fillRect(0, 0, size, size);
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#fff';
+
+            switch (type) {
+                case 'pending':
+                    ctx.beginPath();
+                    ctx.arc(size/2, size/2, 20, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(size/2, size/2);
+                    ctx.lineTo(size/2, size/2 - 15);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(size/2, size/2, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = '#fff';
+                    ctx.fill();
+                    break;
+
+                case 'processing':
+                    const teeth = 8;
+                    const r1 = 18, r2 = 22;
+                    ctx.beginPath();
+                    for (let i = 0; i < teeth; i++) {
+                        const angle = (i / teeth) * Math.PI * 2;
+                        const x1 = size/2 + r1 * Math.cos(angle);
+                        const y1 = size/2 + r1 * Math.sin(angle);
+                        const x2 = size/2 + r2 * Math.cos(angle);
+                        const y2 = size/2 + r2 * Math.sin(angle);
+                        if (i === 0) ctx.moveTo(x2, y2);
+                        else ctx.lineTo(x2, y2);
+                        ctx.lineTo(x1, y1);
+                    }
+                    ctx.closePath();
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(size/2, size/2, 10, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+
+                case 'shipping':
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(15, 25, 30, 15);
+                    ctx.fillRect(38, 20, 12, 20);
+                    ctx.fillStyle = '#000';
+                    ctx.beginPath();
+                    ctx.arc(22, 42, 6, 0, Math.PI * 2);
+                    ctx.arc(38, 42, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+
+                case 'completed':
+                    ctx.beginPath();
+                    ctx.moveTo(18, 30);
+                    ctx.lineTo(25, 37);
+                    ctx.lineTo(42, 20);
+                    ctx.lineWidth = 6;
+                    ctx.stroke();
+                    break;
+
+                case 'cancelled':
+                    ctx.beginPath();
+                    ctx.moveTo(20, 20);
+                    ctx.lineTo(40, 40);
+                    ctx.moveTo(40, 20);
+                    ctx.lineTo(20, 40);
+                    ctx.lineWidth = 6;
+                    ctx.strokeStyle = '#ff6b6b';
+                    ctx.stroke();
+                    break;
+            }
+
+            return canvas.toDataURL();
+        }
+
+        // Функция для отображения цепочки статусов
+        let lastOrderId = null;
+        let pollInterval = null;
+
+        window.startOrderChain = async function(orderId) {
+            if (pollInterval) clearInterval(pollInterval);
+            lastOrderId = orderId;
+            const chain = document.getElementById('orderChain');
+            if (!chain) return;
+
+            chain.style.display = 'block';
+            chain.innerHTML = `<div class="chain-loading">Загружаем статус...</div>`;
+
+            const steps = [
+                { status: 'pending',     label: 'В процессе',   type: 'pending' },
+                { status: 'processing',  label: 'В обработке',  type: 'processing' },
+                { status: 'shipping',    label: 'В доставке',   type: 'shipping' },
+                { status: 'completed',   label: 'Выполнено',    type: 'completed' },
+                { status: 'cancelled',   label: 'Отменён',      type: 'cancelled' }
+            ];
+
+            const poll = async () => {
+                try {
+                    const res = await fetch(`/api/order_status/${orderId}?t=${Date.now()}`);
+                    const data = await res.json();
+
+                    if (!data.status) {
+                        chain.innerHTML = `<div class="chain-error">Заказ не найден</div>`;
+                        return;
+                    }
+
+                    const currentIdx = steps.findIndex(s => s.status === data.status);
+                    const isDone = data.completed || data.status === 'cancelled';
+                    const icons = steps.map(s => createStatusIcon(s.type));
+
+                    chain.innerHTML = `
+                        <div style="display:flex; justify-content:center; align-items:center; gap:1rem; flex-wrap:wrap; padding:0.5rem;">
+                            ${steps.map((step, i) => `
+                                <div style="text-align:center; position:relative; flex:1; min-width:70px;">
+                                    <div class="chain-img-circle ${i === currentIdx ? 'active49' : ''} ${i < currentIdx ? 'done' : ''} ${i === currentIdx + 1 && !isDone ? 'clickable' : ''}"
+                                         style="width:60px; height:60px; border-radius:50%; margin:0 auto; overflow:hidden;
+                                                border:4px solid ${i <= currentIdx && !isDone ? '#fff' : '#444'};
+                                                box-shadow:0 0 15px rgba(0,0,0,0.3); transition:all 0.4s ease;"
+                                         ${i === currentIdx + 1 && !isDone ? `onclick="openStatusModal(${orderId}, '${step.status}', '${step.label}')"` : ''}>
+                                        <img src="${icons[i]}" alt="${step.label}" style="width:100%; height:100%; object-fit:contain;">
+                                    </div>
+                                    <div style="margin-top:0.5rem; font-size:0.85rem; color:${i <= currentIdx ? '#fff' : '#888'};">${step.label}</div>
+                                    ${i < steps.length - 1 ? `
+                                        <div style="position:absolute; top:30px; left:70px; right:-30px; height:4px; 
+                                                    background:${i < currentIdx ? '#fff' : '#444'}; z-index:-1; border-radius:2px;"></div>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="margin-top:1rem; font-size:0.95rem; color:var(--text-secondary); text-align:center;">
+                            Заказ #${orderId} — <strong style="color:#fff;">${data.label}</strong>
+                        </div>
+                        ${data.cancel_reason ? `
+                            <div style="color:#ff6b6b; font-size:0.85rem; margin-top:0.5rem; font-style:italic; text-align:center;">
+                                Причина отмены: ${data.cancel_reason}
+                            </div>
+                        ` : ''}
+                    `;
+
+                    if (isDone) {
+                        clearInterval(pollInterval);
+                        setTimeout(() => chain.style.display = 'none', 3000);
+                    }
+                } catch (e) {
+                    console.error('Ошибка загрузки статуса:', e);
+                    chain.innerHTML = `<div class="chain-error">Ошибка загрузки</div>`;
+                }
+            };
+
+            poll();
+            pollInterval = setInterval(poll, 3000);
+        };
+
+        // Инициализация страницы
+        document.addEventListener("DOMContentLoaded", () => {
+            setTimeout(() => document.querySelector('.gradient-overlay').classList.add('active'), 100);
+            const header = document.querySelector('.admin-header');
+            const observer = new IntersectionObserver(e => e.forEach(en => en.isIntersecting && en.target.classList.add('visible')), { threshold: 0.1 });
+            observer.observe(header);
+
+            // ФИЛЬТРЫ
+            const searchInput = document.getElementById('searchInput');
+            const statusFilter = document.getElementById('statusFilter');
+            const ordersContainer = document.getElementById('ordersContainer');
+            const ordersTitle = document.getElementById('ordersTitle');
+
+            const filterOrders = () => {
+                const query = (searchInput.value || '').toLowerCase().trim();
+                const status = statusFilter.value || '';
+
+                let visible = 0;
+                const orderItems = document.querySelectorAll('.order-item');
+                
+                if (orderItems.length === 0) {
+                    console.warn('No orders found in DOM');
+                    ordersTitle.textContent = 'Все заказы (0)';
+                    return;
+                }
+
+                orderItems.forEach(item => {
+                    const id = (item.dataset.id || '').toLowerCase();
+                    const user = (item.dataset.user || '').toLowerCase();
+                    const itemStatus = (item.dataset.status || '').toLowerCase();
+                    const textContent = item.textContent.toLowerCase();
+
+                    const matchesSearch = !query || textContent.includes(query) || id.includes(query) || user.includes(query);
+                    const matchesStatus = !status || itemStatus === status;
+
+                    if (matchesSearch && matchesStatus) {
+                        item.style.display = 'block';
+                        visible++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                const statusText = status ? statusFilter.options[statusFilter.selectedIndex]?.text || 'Выбрано' : 'Все заказы';
+                ordersTitle.textContent = `${statusText} (${visible})`;
+            };
+
+            if (searchInput) searchInput.addEventListener('input', filterOrders);
+            if (statusFilter) statusFilter.addEventListener('change', filterOrders);
+            filterOrders();
+
+            const productModal = document.getElementById('productModal');
+            if (productModal) {
+                productModal.addEventListener('click', (e) => {
+                    if (e.target === productModal) {
+                        closeModal('productModal');
+                    }
+                });
+            }
+        });
+
+        let lastFocusedElement = null;
+
+        function toggleActions(button) {
+            const actions = button.nextElementSibling;
+            actions.classList.toggle('active');
+        }
+
+        function openStatusModal(orderId, newStatus, statusLabel) {
+            lastFocusedElement = document.activeElement;
+            const modal = document.getElementById('statusModal');
+            modal.dataset.orderId = orderId;
+            modal.dataset.newStatus = newStatus;
+            document.getElementById('statusChangeText').textContent = `Сменить статус на "${statusLabel}"?`;
+            document.getElementById('statusPassword').value = '';
+            modal.classList.add('active');
+            document.getElementById('statusPassword').focus();
+        }
+
+        function openCancelModal(orderId) {
+            lastFocusedElement = document.activeElement;
+            const modal = document.getElementById('cancelModal');
+            modal.dataset.orderId = orderId;
+            document.getElementById('cancelReason').value = '';
+            modal.classList.add('active');
+            document.getElementById('cancelReason').focus();
+        }
+
+        function openDeleteModal(orderId) {
+            lastFocusedElement = document.activeElement;
+            const modal = document.getElementById('deleteModal');
+            modal.dataset.orderId = orderId;
+            modal.classList.add('active');
+            document.getElementById('deletePassword').focus();
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.remove('active');
+            modal.querySelector('.error-message').style.display = 'none';
+            if (lastFocusedElement) {
+                lastFocusedElement.focus();
+                lastFocusedElement = null;
+            }
+            if (id !== 'productModal') {
+                const chain = document.getElementById('orderChain');
+                if (chain) chain.style.display = 'none';
+            }
+        }
+
+        async function submitForm(data) {
+            const modal = document.getElementById(data.action.replace('delete_order', 'deleteModal').replace('cancel_order', 'cancelModal').replace('set_status', 'statusModal'));
+            const errorMessage = modal.querySelector('.error-message');
+            errorMessage.style.display = 'none';
+
+            try {
+                const response = await fetch('/admin_orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    errorMessage.textContent = result.message || 'Ошибка при выполнении действия';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                errorMessage.textContent = 'Ошибка сервера';
+                errorMessage.style.display = 'block';
+            }
+        }
+
+        function submitStatus() {
+            const pwd = document.getElementById('statusPassword').value.trim();
+            const modal = document.getElementById('statusModal');
+            const status = modal.dataset.newStatus;
+            if (!pwd) {
+                modal.querySelector('.error-message').textContent = 'Введите пароль';
+                modal.querySelector('.error-message').style.display = 'block';
+                return;
+            }
+            submitForm({ action: 'set_status', order_id: modal.dataset.orderId, status, password: pwd });
+        }
+
+        function submitCancel() {
+            const pwd = document.getElementById('cancelPassword').value.trim();
+            const reason = document.getElementById('cancelReason').value.trim();
+            if (!pwd || !reason) {
+                document.getElementById('cancelModal').querySelector('.error-message').textContent = 'Укажите пароль и причину';
+                document.getElementById('cancelModal').querySelector('.error-message').style.display = 'block';
+                return;
+            }
+            submitForm({ action: 'cancel_order', order_id: document.getElementById('cancelModal').dataset.orderId, password: pwd, reason });
+        }
+
+        function submitDelete() {
+            const pwd = document.getElementById('deletePassword').value.trim();
+            if (!pwd) {
+                document.getElementById('deleteModal').querySelector('.error-message').textContent = 'Введите пароль';
+                document.getElementById('deleteModal').querySelector('.error-message').style.display = 'block';
+                return;
+            }
+            submitForm({ action: 'delete_order', order_id: document.getElementById('deleteModal').dataset.orderId, password: pwd });
+        }
+
+        function showProductModal(el) {
+            lastFocusedElement = document.activeElement;
+            const modal = document.getElementById('productModal');
+            document.getElementById('modalImg').src = el.dataset.img;
+            document.getElementById('modalTitle').textContent = el.dataset.title;
+            document.getElementById('modalDesc').innerHTML = el.dataset.desc.replace(/\\n/g, '<br>');
+            document.getElementById('modalPrice').textContent = el.dataset.price;
+            modal.classList.add('active');
+        }
+    </script>
+</body>
+</html>

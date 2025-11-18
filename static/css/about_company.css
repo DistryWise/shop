@@ -1,0 +1,677 @@
+   :root {
+      --bg: #000000;
+      --text: #ffffff;
+      --gray: #888888;
+      --light: rgba(255,255,255,0.06);
+      --border: rgba(255,255,255,0.12);
+      --transition: all 0.6s ease;
+    }
+
+    [data-theme="light"] {
+      --bg: #ffffff;
+      --text: #111111;
+      --gray: #666666;
+      --light: rgba(0,0,0,0.06);
+      --border: rgba(0,0,0,0.12);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { 
+      scroll-behavior: smooth; 
+      overflow-x: hidden; 
+      scroll-padding-top: 80px;
+    }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      line-height: 1.8;
+      visibility: hidden;
+    }
+    body.loaded { visibility: visible; }
+
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100" height="100" filter="url(%23n)" opacity="0.02"/></svg>') repeat;
+      opacity: 0.3;
+    }
+
+    .custom-cursor {
+      position: fixed; width: 12px; height: 12px; border: 1px solid #fff;
+      border-radius: 50%; pointer-events: none; z-index: 9999;
+      transform: translate(-50%, -50%); mix-blend-mode: difference;
+      transition: all 0.12s ease;
+    }
+    [data-theme="light"] .custom-cursor { border-color: #000; }
+
+    /* Хедер */
+    header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      padding: 1.5rem 5%; height: 80px; display: flex; justify-content: space-between; align-items: center;
+      backdrop-filter: blur(20px); background: transparent;
+      border-bottom: 1px solid var(--border); transition: all .4s ease;
+    }
+    header.scrolled { padding: 1rem 5%; background: rgba(0,0,0,0.92); height: 70px; }
+    [data-theme="light"] header { background: rgba(255,255,255,0.95); }
+    [data-theme="light"] header.scrolled { background: rgba(255,255,255,0.98); }
+
+    .logo-img {
+      height: 100px; transition: all .4s ease;
+      filter: brightness(0) invert(1);
+    }
+    [data-theme="light"] .logo-img { filter: none; }
+    header.scrolled .logo-img { height: 80px; }
+
+    nav { display: flex; gap: 2rem; }
+    .nav-link {
+      font-size: 0.8rem; font-weight: 400; letter-spacing: 2px; text-transform: uppercase;
+      color: #aaa; text-decoration: none; position: relative; cursor: pointer;
+    }
+    [data-theme="light"] .nav-link { color: #777; }
+    .nav-link::after {
+      content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 1px;
+      background: var(--text); transition: all .4s;
+    }
+    .nav-link:hover::after, .nav-link.active::after { width: 100%; }
+    .nav-link:hover, .nav-link.active { color: var(--text); }
+
+    .header-icons { display: flex; gap: 0.8rem; }
+    .icon-btn {
+      width: 40px; height: 40px; border-radius: 50%; background: var(--light);
+      border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+      color: var(--text); font-size: 0.8rem; transition: var(--transition);
+    }
+    .icon-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--text); }
+
+    /* === ГЕРОЙ === */
+    .hero {
+      height: 120vh; position: relative; overflow: hidden;
+      background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.9)),
+                  url('https://mir-s3-cdn-cf.behance.net/project_modules/max_3840/03ef4657732573.59e13b5fb39ef.jpg') center/cover no-repeat fixed;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0; z-index: 1;
+      background: linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.8) 100%);
+    }
+    .hero-content {
+      position: absolute; bottom: 8%; left: 50%; transform: translateX(-50%);
+      text-align: center; max-width: 700px; width: 90%; z-index: 2;
+      opacity: 0; transition: all 1.8s ease 0.5s;
+    }
+    .hero-content.visible { opacity: 1; }
+    .hero-subtitle {
+      font-size: 0.7rem; letter-spacing: 0.3em; text-transform: uppercase; color: #ccc; margin-bottom: 1rem;
+    }
+    .hero-title {
+      font-size: 2.8rem; font-weight: 100; letter-spacing: 6px; margin-bottom: 1rem;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .hero-text {
+      font-size: 1rem; line-height: 1.9; color: #ddd; font-weight: 300; max-width: 600px; margin: 0 auto;
+    }
+
+    /* === АССИМЕТРИЯ: КЛИЕНТЫ === */
+    .asymmetry-block {
+      position: relative;
+      background: var(--light);
+      clip-path: polygon(0 8%, 100% 0, 100% 92%, 0 100%);
+      margin-top: -8vh;
+      padding: 12vh 5% 14vh;
+      z-index: 1;
+    }
+
+    .clients-section {
+      text-align: center;
+      margin-bottom: 12vh;
+    }
+    .clients-title {
+      font-size: 0.75rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gray); margin-bottom: 3rem;
+    }
+    .clients-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 2rem; max-width: 1200px; margin: 0 auto;
+      opacity: 0; transition: opacity 1.2s ease;
+    }
+    .clients-grid.visible { opacity: 1; }
+    .client-item {
+      font-size: 1rem; font-weight: 300; color: var(--gray); transition: color 0.4s ease;
+    }
+    .client-item:hover { color: var(--text); }
+
+   /* === СЕКЦИИ О КОМПАНИИ === */
+    .about-section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding: 10vh 5%;
+    overflow: hidden;
+    background: var(--bg);
+    }
+
+    /* Чётность: нечётные — картинка слева, текст справа; чётные — картинка справа, текст слева */
+    .about-section:nth-child(odd) {
+    flex-direction: row; /* картинка слева, текст справа */
+    }
+    .about-section:nth-child(even) {
+    flex-direction: row-reverse; /* картинка справа, текст слева */
+    background: var(--light);
+    }
+
+    /* ФИКС "КОМАНДА": ТЕКСТ СПРАВА, КАРТИНКА СЛЕВА */
+    .about-section:nth-child(3) {
+    flex-direction: row-reverse !important;
+    }
+    .about-section:nth-child(3) .content {
+    order: 2 !important;
+    }
+    .about-section:nth-child(3) .image-wrapper {
+    order: 1 !important;
+    }
+
+    /* Анимация появления */
+    .about-section .image-wrapper {
+    flex: 1;
+    height: 100vh;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(-80px);
+    transition: all 1.6s ease;
+    }
+    .about-section:nth-child(even) .image-wrapper {
+    transform: translateX(80px);
+    }
+    .about-section.visible .image-wrapper {
+    opacity: 1;
+    transform: translateX(0);
+    }
+
+    .about-section .image {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    filter: sepia(0.25) contrast(1.1) grayscale(15%);
+    transition: filter 1.4s ease 0.6s;
+    }
+    .about-section.visible .image {
+    filter: sepia(0.15) contrast(1) grayscale(0%);
+    }
+
+    .about-section .content {
+    flex: 1;
+    padding: 0 8%;
+    max-width: 560px;
+    opacity: 0;
+    transform: translateX(80px);
+    transition: all 1.6s ease 0.4s;
+    }
+    .about-section:nth-child(even) .content {
+    transform: translateX(-80px);
+    }
+    .about-section.visible .content {
+    opacity: 1;
+    transform: translateX(0);
+    }
+
+    /* === ПЕРЕХОД К КАРУСЕЛИ === */
+    .transition-to-carousel {
+      position: relative;
+      background: var(--light);
+      clip-path: polygon(0 0, 100% 15%, 100% 100%, 0 85%);
+      margin-top: -8vh;
+      padding: 20vh 5% 28vh;
+      text-align: center;
+      overflow: hidden;
+      z-index: 2;
+    }
+    .transition-to-carousel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(0,0,0,0.1) 0%, transparent 50%, rgba(0,0,0,0.3) 100%);
+      opacity: 0.4;
+      z-index: -1;
+    }
+    .transition-to-carousel h2 {
+      font-size: 2.4rem;
+      font-weight: 100;
+      letter-spacing: 4px;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 1.4s ease;
+    }
+    .transition-to-carousel p {
+      font-size: 1.1rem;
+      max-width: 800px;
+      margin: 0 auto;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 1.4s ease 0.3s;
+    }
+    .transition-to-carousel.visible h2,
+    .transition-to-carousel.visible p {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* === КАРУСЕЛЬ === */
+    .full-carousel-section {
+      position: relative;
+      min-height: 100vh;
+      overflow: hidden;
+      background: #000000;
+      clip-path: polygon(0 0, 100% 8%, 100% 100%, 0 92%);
+      margin-top: -8vh;
+      padding: 16vh 0;
+    }
+    .full-carousel-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .full-carousel-slide {
+      position: absolute;
+      inset: 0;
+      background-size: cover !important;
+      background-position: center !important;
+      opacity: 0;
+      transition: opacity 1.6s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .full-carousel-slide.active { opacity: 1; }
+
+    .full-carousel-content {
+      text-align: center;
+      color: #fff;
+      padding: 2rem;
+      max-width: 90%;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+      z-index: 2;
+    }
+    .full-carousel-content h3 {
+      font-size: 2.2rem;
+      font-weight: 300;
+      letter-spacing: 6px;
+      margin-bottom: 1.5rem;
+    }
+    .full-carousel-content p {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      opacity: 0.95;
+    }
+
+    .full-carousel-controls {
+      position: absolute;
+      bottom: 5%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      z-index: 10;
+    }
+    .full-carousel-arrow {
+      width: 50px; height: 50px; background: rgba(255,255,255,0.1);
+      border: 1.5px solid rgba(255,255,255,0.3); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: var(--transition); backdrop-filter: blur(8px);
+    }
+    .full-carousel-arrow:hover { background: rgba(255,255,255,0.25); border-color: #fff; transform: scale(1.15); }
+    .full-carousel-arrow i { font-size: 1.3rem; color: #fff; }
+
+    .full-carousel-progress { display: flex; gap: 14px; }
+    .full-progress-bar { width: 70px; height: 3px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden; }
+    .full-progress-fill { height: 100%; background: #fff; width: 0%; border-radius: 2px; transition: width 5s linear; }
+    .full-progress-bar.active .full-progress-fill { width: 100%; }
+
+    /* === НИЖНЯЯ СЕКЦИЯ === */
+    .bridging-section {
+      background: #000000;
+      padding: 10vh 5% 16vh;
+      text-align: center;
+      color: var(--text);
+    }
+    .bridging-section h2 {
+      font-size: 2.2rem;
+      font-weight: 100;
+      letter-spacing: 2px;
+      margin-bottom: 2rem;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 1.2s ease;
+    }
+    .bridging-section p {
+      font-size: 1.1rem;
+      line-height: 1.9;
+      max-width: 1000px;
+      margin: 0 auto;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 1.2s ease 0.2s;
+    }
+    .bridging-section.visible h2,
+    .bridging-section.visible p {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Футер */
+    footer {
+      padding: 4rem 5% 2rem; display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 2rem; border-top: 1px solid var(--border);
+      font-size: 0.9rem; color: var(--gray);
+    }
+    .footer-center img { height: 80px; filter: brightness(0) invert(1); }
+    [data-theme="light"] .footer-center img { filter: none; }
+    .footer-right a {
+      color: var(--gray); text-decoration: none; margin-left: 1.5rem;
+      font-size: 0.8rem; letter-spacing: 1px;
+    }
+    .footer-right a:hover { color: var(--text); }
+
+    @media (max-width: 992px) {
+      .hero { height: 100vh; }
+      .hero-title { font-size: 2.2rem; }
+      .about-section { flex-direction: column; padding: 8rem 5%; }
+      .about-section .image-wrapper, .about-section .content { flex: none; width: 100%; height: 60vh; }
+      .about-section .content { padding: 4rem 0; text-align: center; }
+      .asymmetry-block, .full-carousel-section, .transition-to-carousel { clip-path: none !important; margin-top: 0 !important; padding: 10vh 5% !important; }
+      .transition-to-carousel h2 { font-size: 1.8rem; }
+      .full-carousel-content h3 { font-size: 1.6rem; }
+      .full-carousel-content p { font-size: 1rem; }
+      .bridging-section { padding: 8vh 5%; }
+      .bridging-section h2 { font-size: 1.8rem; }
+    }
+
+        /* === СТРЕЛКА НАВЕРХ — НАД AI (ФИНАЛЬНЫЙ СТИЛЬ) === */
+    .back-to-top {
+    position: fixed;
+    bottom: 100px !important;
+    right: 280px;
+    width: 56px;
+    height: 66px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.4rem;
+    backdrop-filter: blur(12px);
+    z-index: 999 !important;                 /* ВЫШЕ AI */
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 1;
+    pointer-events: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    visibility: hidden;
+    }
+
+    .back-to-top.visible {
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+    }
+
+    .back-to-top:hover {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: translateY(-6px) scale(1.1);
+    box-shadow: 0 20px 45px rgba(0,0,0,0.5);
+    }
+
+    /* === AI-ПОМОЩНИК — НИЖЕ И ЛЕВЕЕ СТРЕЛКИ === */
+    #ai-assistant {
+    position: fixed;
+    bottom: 28px;
+    right: 96px;                      /* 28px + 56px + 12px gap */
+    width: 66px;
+    height: 66px;
+    z-index: 1000;                    /* Ниже стрелки */
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    }
+
+    #ai-assistant:hover {
+    transform: scale(1.08);
+    }
+
+    /* === МОБИЛЬНАЯ АДАПТАЦИЯ === */
+    @media (max-width: 768px) {
+    .back-to-top {
+        width: 50px;
+        height: 50px;
+        bottom: 20px;
+        right: 20px;
+        font-size: 1.2rem;
+    }
+    #ai-assistant {
+        width: 58px;
+        height: 58px;
+        bottom: 20px;
+        right: 80px;
+    }
+    }
+        
+/* ==================================================================
+   ФИНАЛЬНЫЙ ФИКС: КОРЗИНА + ИКОНКИ + ОБРАТНАЯ СВЯЗЬ
+   Работает 100% в тёмной и светлой теме
+====================================================================*/
+
+/* 1. ИКОНКИ В ХЕДЕРЕ — ВИДНЫ ВСЕГДА */
+.header-icons .icon-btn,
+.header-icons .icon-btn i,
+.header-icons .icon-btn svg {
+  color: var(--text) !important;
+  fill: currentColor !important;
+  opacity: 1 !important;
+  font-size: 1.1rem !important;   /* чуть крупнее, чтобы точно было видно */
+}
+[data-theme="light"] .header-icons .icon-btn,
+[data-theme="light"] .header-icons .icon-btn i,
+[data-theme="light"] .header-icons .icon-btn svg {
+  color: #111 !important;
+}
+
+/* Бейджик на корзине — контрастный */
+.cart-count {
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: 0.7rem;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: -6px;
+  right: -6px;
+}
+[data-theme="light"] .cart-count {
+  background: #000;
+  color: #fff;
+}
+
+/* 2. МИНИ-КОРЗИНА — ВЕРНУЛИ ВИЗУАЛ И ПЕРЕКЛЮЧЕНИЕ */
+#miniCartDropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 380px;
+  max-height: 70vh;
+  background: rgba(15,15,15,0.98);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  backdrop-filter: blur(20px);
+  z-index: 9999;
+  overflow: hidden;
+  padding: 1.5rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.35s ease;
+  pointer-events: none;
+}
+#miniCartDropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(8px);
+  pointer-events: auto;
+}
+
+/* Светлая тема — корзина */
+[data-theme="light"] #miniCartDropdown {
+  background: rgba(255,255,255,0.98);
+  border-color: rgba(0,0,0,0.1);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.12);
+}
+[data-theme="light"] #miniCartDropdown * { color: #111; }
+
+/* 3. ОБРАТНАЯ СВЯЗЬ — ПОЛНОСТЬЮ РАБОЧАЯ МОДАЛКА */
+.custom-alert {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  backdrop-filter: blur(16px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 2rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s ease;
+}
+.custom-alert.show {
+  display: flex !important;
+  opacity: 1;
+  visibility: visible;
+}
+
+.custom-alert .alert-content {
+  background: rgba(15,15,15,0.98);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  border-radius: 24px;
+  max-width: 480px;
+  width: 100%;
+  padding: 2.8rem 2.4rem;
+  position: relative;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+  backdrop-filter: blur(20px);
+}
+
+.alert-close {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  width: 44px;
+  height: 44px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.alert-close:hover { background: rgba(255,255,255,0.2); }
+
+.alert-icon {
+  font-size: 3.6rem;
+  color: #ff9500;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.alert-text strong {
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 0.6rem;
+  color: #fff;
+  text-align: center;
+}
+.alert-text span {
+  font-size: 1.08rem;
+  color: rgba(255,255,255,0.88);
+  line-height: 1.55;
+  text-align: center;
+  display: block;
+}
+
+.contact-form {
+  margin-top: 1.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: 1rem 1.4rem;
+  background: rgba(255,255,255,0.08);
+  border: 1.5px solid rgba(255,255,255,0.28);
+  border-radius: 14px;
+  color: #fff;
+  font-size: 1rem;
+}
+.contact-form input::placeholder,
+.contact-form textarea::placeholder {
+  color: rgba(255,255,255,0.65);
+}
+.contact-form input:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-color: #ff9500;
+  background: rgba(255,255,255,0.18);
+}
+
+.alert-login-btn {
+  margin-top: 1rem;
+  padding: 1rem 2.4rem;
+  background: #fff;
+  color: #000;
+  border: none;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 1.12rem;
+  cursor: pointer;
+}
+
+/* СВЕТЛАЯ ТЕМА — ОБРАТНАЯ СВЯЗЬ */
+[data-theme="light"] .custom-alert { background: rgba(255,255,255,0.96); }
+[data-theme="light"] .custom-alert .alert-content {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.12);
+  box-shadow: 0 40px 100px rgba(0,0,0,0.12);
+}
+[data-theme="light"] .alert-close { background: rgba(0,0,0,0.08); border-color: rgba(0,0,0,0.2); color: #111; }
+[data-theme="light"] .alert-icon { color: #ff6b6b; }
+[data-theme="light"] .alert-text strong { color: #111; }
+[data-theme="light"] .alert-text span { color: rgba(0,0,0,0.8); }
+[data-theme="light"] .contact-form input,
+[data-theme="light"] .contact-form textarea {
+  background: rgba(0,0,0,0.05);
+  border-color: rgba(0,0,0,0.22);
+  color: #111;
+}
+[data-theme="light"] .contact-form input::placeholder,
+[data-theme="light"] .contact-form textarea::placeholder {
+  color: rgba(0,0,0,0.5);
+}
+[data-theme="light"] .alert-login-btn {
+  background: #000 !important;
+  color: #fff !important;
+}
+    
+        

@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новости — Админка | Piligrim</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
+    <link rel="stylesheet" href="/static/css/admin/admin_goods.css">
+    <link rel="stylesheet" href="/static/css/fonts/inter.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+</head>
+<body>
+
+    <header>
+        <a href="/" class="logo"><img src="/static/assets/logo.png" alt="ZAZA" class="logo-img"></a>
+        <nav style="margin-left: auto;"><a href="/" class="nav-link">Главная</a></nav>
+    </header>
+
+    <aside class="sidebar">
+        <h3 class="sidebar-title">Админка</h3>
+        <div class="sidebar-menu">
+            <a href="/admin" class="sidebar-item"><i class="fas fa-box"></i><span>Товары</span></a>
+            <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
+            <a href="/admin_news" class="sidebar-item active"><i class="fas fa-newspaper"></i><span>Новости</span></a>
+            <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
+            <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
+            <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
+            <a href="/admin_reviews" class="sidebar-item"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews | e }}</div></span></a>
+            <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders | e }}</div></span></a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="admin-container">
+            <h1 class="section-title">Новости</h1>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="flash {{ 'success' if category != 'error' else 'error' }}">{{ message | safe }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <!-- Форма добавления -->
+            <div class="add-form-wrapper" id="addFormWrapper">
+                <div class="add-form-header" onclick="document.getElementById('addFormWrapper').classList.toggle('collapsed')">
+                    <h3>Добавить новость</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="add-form-body">
+                    <form id="addForm" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="action" value="add">
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 1.2rem;">
+                            <div class="form-group">
+                                <label>Заголовок <span style="color:#ff4444;">*</span></label>
+                                <div class="input-wrapper"><i class="fas fa-heading input-icon"></i>
+                                    <input type="text" name="title" placeholder="Запуск новой платформы..." required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Категория</label>
+                                <div class="input-wrapper"><i class="fas fa-folder input-icon"></i>
+                                    <input type="text" name="category" placeholder="например: update, promo">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top:1rem;">
+                            <label>Дата <span style="color:#ff4444;">*</span></label>
+                            <div class="input-wrapper"><i class="fas fa-calendar input-icon"></i>
+                                <input type="text" name="date" class="flatpickr" value="{{ today }}" placeholder="Выберите дату" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top:1rem;">
+                            <label>Краткое описание <span style="color:#ff4444;">*</span></label>
+                            <div class="input-wrapper"><i class="fas fa-align-left input-icon" style="top:14px;"></i>
+                                <textarea name="short_desc" rows="3" placeholder="Кратко о новости..." required></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top:1rem;">
+                            <label>Полный текст</label>
+                            <div class="input-wrapper"><i class="fas fa-align-left input-icon" style="top:14px;"></i>
+                                <textarea name="full_desc" rows="8" placeholder="Подробное описание..."></textarea>
+                            </div>
+                        </div>
+
+
+                        <div class="form-group" style="margin-top:1rem;">
+                            <label>Фото новости (до 4 шт.)</label>
+                            <div class="drop-zone" id="addDropZone">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 2.5rem; color:#666;"></i>
+                                <p style="margin: 1rem 0 0.5rem; color:#aaa;">Перетащите фото сюда или <span style="color:#00ff9d; text-decoration:underline;">кликните</span></p>
+                                <small style="color:#666;">Можно загрузить до 4 фото сразу</small>
+                                <input type="file" name="images" multiple accept="image/*" id="addFileInput" style="display:none;">
+                            </div>
+                            <div class="image-preview" id="addPreview" style="margin-top: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;"></div>
+                        </div>
+
+                        <div style="margin-top: 1rem;">
+                            <button type="submit" class="btn-zaza-primary">
+                                <i class="fas fa-plus-circle"></i> Добавить новость
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Панель поиска и сортировки (теперь внизу формы, компактно) -->
+            <div class="filters-panel" style="display:flex;gap:1rem;align-items:center;margin:2rem 0;padding:1rem;background:rgba(20,20,30,0.6);border-radius:20px;flex-wrap:wrap;">
+                <input type="text" id="searchInput" placeholder="Поиск по заголовку..." style="flex:1;min-width:250px;padding:0.9rem 1.2rem;border-radius:18px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#fff;" onkeyup="filterProducts()">
+
+
+            </div>
+
+            <div class="card">
+                {% if news|length == 0 %}
+                <div class="no-products"><i class="fas fa-newspaper"></i><p style="font-size:1.6rem;">Новостей пока нет</p></div>
+                {% else %}
+<table class="products-table">
+    <thead>
+        <tr>
+            <th>Фото</th>
+            <th>Заголовок</th>
+            <th>Дата</th>
+            <th>Категория</th>
+            <th>Краткое описание</th>
+            <th style="width:140px;">Действия</th>
+        </tr>
+    </thead>
+    <tbody id="productsTableBody">
+        {% for n in news %}
+        <tr class="product-row" data-id="{{ n.id }}" data-category="{{ n.category or '' }}">
+            <td class="images-cell">
+                {% if n.images and n.images|length > 0 %}
+                    <div style="display:flex;gap:4px;flex-wrap:wrap;max-width:90px;">
+                        {% for img in n.images[:3] %}
+                            <img src="/static/uploads/news/{{ img }}" → поменяй на правильный путь
+                                 style="width:38px;height:38px;object-fit:cover;border-radius:8px;"
+                                 onerror="this.style.display='none'">
+                        {% endfor %}
+                        {% if n.images|length > 3 %}
+                            <div style="width:38px;height:38px;background:rgba(0,255,157,.2);border:2px dashed #00ff9d;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#00ff9d;">
+                                +{{ n.images|length - 3 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div style="width:56px;height:56px;background:#222;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#555;font-size:0.7rem;">—</div>
+                {% endif %}
+            </td>
+            <td><div style="font-weight:600;">{{ n.title }}</div></td>
+            <td class="news-date-cell">{{ n.date }}</td>
+            <td><span class="category-badge">{{ n.category or '—' }}</span></td>
+            <td>{{ n.short_desc }}</td>
+            <td>
+                <div class="action-buttons">
+<button type="button" class="action-btn edit"
+    data-id="{{ n.id }}"
+    data-title="{{ n.title|e|replace('"', '&quot;') }}"
+    data-date="{{ n.date|e|replace('"', '&quot;') }}"
+    data-category="{{ (n.category or '')|e|replace('"', '&quot;') }}"
+    data-short_desc="{{ n.short_desc|e|replace('"', '&quot;') }}"
+    data-full_desc="{{ n.full_desc|e|replace('"', '&quot;') }}"
+                        data-images='{{ (n.images or [])|tojson }}'>
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="action-btn delete" 
+                            onclick="event.stopPropagation(); event.preventDefault(); prepareAction('delete', {{ n.id }})">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Карточка новости -->
+    <div class="product-detail modal-overlay" id="productDetail">
+        <button class="detail-close" onclick="closeProductDetail()">×</button>
+        <div class="detail-grid">
+            <div class="detail-images" id="detailImages"></div>
+            <div class="detail-info">
+                <h3 id="detailTitle"></h3>
+                <div class="detail-price" id="detailDate"></div>
+                <div id="detailCategory" style="color:#aaa; margin:0.5rem 0;"></div>
+                <div class="detail-desc" id="detailShortDesc" style="margin-bottom:1rem;"></div>
+                <div class="detail-desc expandable" id="detailFullDesc">
+                    <div class="text-content"></div>
+                    <button class="expand-btn">Развернуть <i class="fas fa-chevron-down"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка редактирования -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('editModal')">×</button>
+            <h3><i class="fas fa-edit" style="margin-right:10px; color:#00ff9d;"></i> Редактировать новость</h3>
+            
+            <form id="editForm" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="news_id" id="edit_id">
+
+                <div class="form-grid" style="gap:1.2rem;">
+                    <div class="form-group">
+                        <label>Заголовок</label>
+                        <div class="input-wrapper"><i class="fas fa-heading input-icon"></i>
+                            <input type="text" name="title" id="edit_title" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Категория</label>
+                        <div class="input-wrapper"><i class="fas fa-folder input-icon"></i>
+                            <input type="text" name="category" id="edit_category" placeholder="например: update, promo">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top:0.5rem;">
+                    <label>Дата</label>
+                    <div class="input-wrapper"><i class="fas fa-calendar input-icon"></i>
+                        <input type="text" name="date" id="edit_date" class="flatpickr" required>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top:0.5rem;">
+                    <label>Краткое описание</label>
+                    <div class="input-wrapper"><i class="fas fa-align-left input-icon" style="top:14px;"></i>
+                        <textarea name="short_desc" id="edit_short_desc" rows="3" required></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top:0.5rem;">
+                    <label>Полный текст</label>
+                    <div class="input-wrapper"><i class="fas fa-align-left input-icon" style="top:14px;"></i>
+                        <textarea name="full_desc" id="edit_full_desc" rows="8"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Текущее изображение</label>
+                    <div class="image-preview" id="editCurrentPreview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Добавить новые фото (до 4 всего)</label>
+                    <div class="drop-zone" id="editDropZone">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color:#666;"></i>
+                        <p style="margin: 0.8rem 0 0.5rem; color:#aaa;">Перетащите или <span style="color:#00ff9d; text-decoration:underline;">кликните</span></p>
+                        <small style="color:#666;">Старые фото останутся, если не удалите</small>
+                        <input type="file" name="images" multiple accept="image/*" id="editFileInput" style="display:none;">
+                    </div>
+                </div>
+
+                <div class="modal-actions" style="margin-top:2rem;">
+                    <button type="submit" class="btn-zaza-primary">
+                        <i class="fas fa-save"></i> Сохранить
+                    </button>
+                    <button type="button" onclick="closeModal('editModal')" class="btn-zaza-secondary">
+                        Отмена
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модалка пароля -->
+    <div id="passwordModal" class="modal-overlay">
+        <div class="modal" style="max-width: 460px;">
+            <button class="modal-close" onclick="closeModal('passwordModal')">×</button>
+            <h3>Подтвердите действие</h3>
+            <p style="color:#aaa; text-align:center; margin:1rem 0;">Введите пароль администратора</p>
+            <input type="password" id="adminPassword" placeholder="Пароль" autofocus style="width:100%; padding:1rem; font-size:1rem;">
+            <div id="passwordError">Неверный пароль</div>
+            <div class="modal-actions">
+                <button class="btn-primary" onclick="executePendingAction()">Подтвердить</button>
+                <button class="cancel-btn" onclick="closeModal('passwordModal')">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="theme-toggle-hanging">
+        <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+        <label for="theme-toggle" class="theme-toggle-label">
+            <div class="rope top"></div>
+            <div class="bulb"><div class="bulb-light"></div><div class="bulb-glow"></div></div>
+            <div class="rope bottom"></div>
+        </label>
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+
+<script>
+fetch('/api/check_admin').then(r => r.json()).then(d => { if (!d.is_admin) location.href = '/404'; });
+
+    // Глобальные переменные
+    let pendingAction = null;
+    let pendingNewsId = null;   // ← теперь есть!
+
+    // Открытие модалки пароля
+    function openPasswordModal() {
+        document.getElementById('passwordError').style.display = 'none';
+        document.getElementById('adminPassword').value = '';
+        document.getElementById('adminPassword').focus();
+        document.getElementById('passwordModal').classList.add('active');
+    }
+
+    // Подготовка действия (удаление, добавление, редактирование)
+    function prepareAction(action, id = null) {
+        pendingAction = action;
+        pendingNewsId = id;
+        openPasswordModal();
+    }
+
+    // === ДОБАВЛЕНИЕ ===
+    document.getElementById('addForm').onsubmit = function(e) {
+        e.preventDefault();
+        if (!validateForm(this)) return;
+        pendingAction = 'add';
+        pendingNewsId = null;
+        openPasswordModal();
+    };
+
+    async function executePendingAction() {
+    const pwd = document.getElementById('adminPassword').value.trim();
+    const err = document.getElementById('passwordError');
+    const btn = document.querySelector('#passwordModal .btn-primary');
+
+    if (!pwd) {
+        err.textContent = 'Введите пароль';
+        err.style.display = 'block';
+        return;
+    }
+
+    err.style.display = 'none';
+    btn.disabled = true;
+    btn.innerHTML = 'Сохранение...';
+
+    let formData = new FormData();
+    formData.append('action', pendingAction);
+    formData.append('password', pwd);
+    if (pendingNewsId !== null) {
+        formData.append('news_id', pendingNewsId);
+    }
+
+    // === РЕДАКТИРОВАНИЕ — используем уже готовый editFormData ===
+    if (pendingAction === 'edit' && editFormData) {
+        formData = editFormData; // ← сюда уже всё собрано: порядок, новые файлы, delete_images
+    }
+
+    // === ДОБАВЛЕНИЕ ===
+    else if (pendingAction === 'add') {
+        const addForm = document.getElementById('addForm');
+        for (let [k, v] of new FormData(addForm).entries()) {
+            if (k !== 'action') formData.append(k, v);
+        }
+        const addInput = document.getElementById('addFileInput');
+        if (addInput?.files?.length) {
+            Array.from(addInput.files).forEach(f => formData.append('images', f));
+        }
+    }
+
+    try {
+        const r = await fetch('/admin_news', {
+            method: 'POST',
+            body: formData
+        });
+        const d = await r.json();
+
+        if (d.success) {
+            closeModal('passwordModal');
+            showAlert(
+                pendingAction === 'delete' ? 'Новость удалена!' :
+                pendingAction === 'add' ? 'Новость добавлена!' : 'Изменения сохранены!',
+                'success'
+            );
+            setTimeout(() => location.reload(), 1200);
+        } else {
+            throw new Error(d.error || 'Ошибка');
+        }
+    } catch (e) {
+        console.error(e);
+        err.textContent = e.message || 'Ошибка сервера';
+        err.style.display = 'block';
+        document.getElementById('adminPassword').value = '';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Подтвердить';
+        editFormData = null; // сбрасываем после отправки
+    }
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+    
+    if (id === 'editModal') {
+        const input = document.getElementById('editFileInput');
+        if (input) input.value = ''; // ← обязательно!
+    }
+}
+
+    function showAlert(m, t = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `zaza-toast ${t}`;
+        toast.innerHTML = `<i class="fas fa-check-circle"></i><span>${m}</span>`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+
+    function validateForm(f) {
+        let ok = true;
+        ['title', 'date', 'short_desc'].forEach(n => {
+            const el = f.querySelector(`[name="${n}"]`);
+            if (el && !el.value.trim()) {
+                ok = false;
+                el.closest('.input-wrapper')?.classList.add('error');
+            }
+        });
+        if (!ok) showAlert('Заполните обязательные поля', 'error');
+        return ok;
+    }
+
+    function removeExistingImage(btn, filename) {
+        if (!confirm('Удалить фото навсегда?')) return;
+        btn.parentElement.remove();
+        let input = document.querySelector('input[name="delete_images"]');
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'delete_images';
+            document.getElementById('editForm').appendChild(input);
+        }
+        const arr = input.value ? JSON.parse(input.value) : [];
+        arr.push(filename);
+        input.value = JSON.stringify(arr);
+    }
+
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+
+    // Фильтр
+    function filterProducts() {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        document.querySelectorAll('.product-row').forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(term) ? '' : 'none';
+        });
+    }
+
+
+    // Сортировка по дате — теперь работает 100%
+    function sortNews() {
+        const tbody = document.getElementById('productsTableBody');
+        const rows = Array.from(tbody.querySelectorAll('.product-row'));
+
+        const months = {
+            января: 0, февраля: 1, марта: 2, апреля: 3, мая: 4, июня: 5,
+            июля: 6, августа: 7, сентября: 8, октября: 9, ноября: 10, декабря: 11
+        };
+
+        rows.sort((a, b) => {
+            const dateA = a.querySelector('.price-cell').textContent.trim();
+            const dateB = b.querySelector('.price-cell').textContent.trim();
+
+            const partsA = dateA.split(' ');
+            const partsB = dateB.split(' ');
+
+            const dA = new Date(partsA[2], months[partsA[1]], partsA[0]);
+            const dB = new Date(partsB[2], months[partsB[1]], partsB[0]);
+
+            return sortAscending ? dA - dB : dB - dA;
+        });
+
+        sortAscending = !sortAscending;
+        rows.forEach(row => tbody.appendChild(row));
+    }
+
+
+    function showProductDetail(row) {
+        const cells = row.cells;
+        document.getElementById('detailTitle').textContent = cells[1].querySelector('div')?.textContent || '—';
+        document.getElementById('detailDate').textContent = cells[2].textContent || '—';
+        document.getElementById('detailCategory').textContent = 'Категория: ' + (cells[3].textContent || '—');
+        document.getElementById('detailShortDesc').textContent = cells[4].textContent || '—';
+
+        const editBtn = row.querySelector('.action-btn.edit');
+        const fullDesc = editBtn?.dataset.full_desc?.replace(/&quot;/g, '"') || 'Нет полного описания';
+        document.getElementById('detailFullDesc').querySelector('.text-content').textContent = fullDesc;
+        document.getElementById('detailFullDesc').classList.remove('expanded');
+
+        // === КРАСИВАЯ ГАЛЕРЕЯ С МИНИАТЮРАМИ ===
+        const imagesDiv = document.getElementById('detailImages');
+        imagesDiv.innerHTML = ''; // Очищаем
+
+        let images = [];
+        try {
+            images = JSON.parse(editBtn.dataset.images || '[]');
+        } catch(e) {
+            images = [];
+        }
+
+        if (images.length === 0) {
+            imagesDiv.innerHTML = `
+                <div style="width:100%;max-width:500px;height:300px;background:#222;border-radius:20px;display:flex;align-items:center;justify-content:center;color:#666;font-size:1.2rem;">
+                    Нет фото
+                </div>`;
+            document.querySelectorAll('.product-row').forEach(r => r.classList.remove('active'));
+            row.classList.add('active');
+            document.getElementById('productDetail').classList.add('active');
+            return;
+        }
+
+        // Контейнер галереи
+        const galleryHTML = `
+            <div class="news-gallery">
+                <div class="gallery-main">
+                    <img src="/static/uploads/news/${images[0]}" alt="Главная" class="main-image" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIzMDBweCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjIyIj48L3JlY3Q+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtc2l6ZT0iMjRweCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5ldCBmb3RvPC90ZXh0Pjwvc3ZnPg=='">
+                </div>
+                <div class="gallery-thumbs">
+                    ${images.map((src, i) => `
+                        <div class="thumb ${i === 0 ? 'active' : ''}" data-index="${i}">
+                            <img src="/static/uploads/news/${src}" alt="Превью ${i+1}" onerror="this.style.opacity='0.3'">
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        imagesDiv.innerHTML = galleryHTML;
+
+        // Обработчики клика по превью
+        imagesDiv.querySelectorAll('.thumb').forEach(thumb => {
+            thumb.addEventListener('click', () => {
+                const idx = thumb.dataset.index;
+                const mainImg = imagesDiv.querySelector('.main-image');
+                mainImg.src = `/static/uploads/news/${images[idx]}`;
+                mainImg.style.opacity = '0';
+                setTimeout(() => mainImg.style.opacity = '1', 50);
+
+                imagesDiv.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+                thumb.classList.add('active');
+            });
+        });
+
+        // Активация карточки
+        document.querySelectorAll('.product-row').forEach(r => r.classList.remove('active'));
+        row.classList.add('active');
+        document.getElementById('productDetail').classList.add('active');
+    }
+
+    function closeProductDetail() {
+        document.getElementById('productDetail').classList.remove('active');
+        document.querySelectorAll('.product-row').forEach(r => r.classList.remove('active'));
+    }
+
+    // Закрытие всех модалок и карточки по клику вне
+    document.addEventListener('click', e => {
+        const overlays = ['productDetail', 'editModal', 'passwordModal'];
+        overlays.forEach(id => {
+            const overlay = document.getElementById(id);
+            if (overlay && overlay.classList.contains('active') && e.target === overlay) {
+                if (id === 'productDetail') closeProductDetail();
+                else closeModal(id);
+            }
+        });
+    });
+
+    // Разворачивание текста
+    document.getElementById('detailFullDesc').addEventListener('click', e => {
+        if (e.target.closest('.expand-btn')) {
+            e.target.closest('.expand-btn').parentElement.classList.toggle('expanded');
+        }
+    });
+
+    // Тема
+    const themeToggle = document.getElementById('theme-toggle');
+    const html = document.documentElement;
+    if (localStorage.getItem('theme') === 'light') {
+        html.setAttribute('data-theme', 'light');
+        themeToggle.checked = true;
+    }
+    themeToggle.addEventListener('change', () => {
+        const isLight = themeToggle.checked;
+        html.setAttribute('data-theme', isLight ? 'light' : 'dark');
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    });
+
+    filterProducts();
+</script>
+<script>
+// === ФИНАЛЬНАЯ 100% РАБОЧАЯ ВЕРСИЯ ФОТО ДЛЯ НОВОСТЕЙ ===
+const MAX_PHOTOS = 4;
+let editAllImages = []; // Все фото при редактировании: старые + новые
+
+document.addEventListener('DOMContentLoaded', () => {
+    const addZone = document.getElementById('addDropZone');
+    const addInput = document.getElementById('addFileInput');
+    const addPreview = document.getElementById('addPreview');
+
+    function updateAddPreview() {
+        addPreview.innerHTML = '';
+        const files = Array.from(addInput.files).slice(0, 4);
+        
+        files.forEach((file, i) => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const div = document.createElement('div');
+                div.className = 'image-item';
+                div.innerHTML = `
+                    <img src="${e.target.result}" style="width:110px;height:110px;object-fit:cover;border-radius:12px;">
+                    ${i === 0 ? '<div class="main-badge">Главная</div>' : ''}
+                    <button type="button" class="image-remove" onclick="this.parentElement.remove(); updateAddFiles()">×</button>
+                `;
+                addPreview.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    window.updateAddFiles = function() {
+        const current = Array.from(addInput.files);
+        const remaining = Array.from(addPreview.querySelectorAll('img')).map(img => {
+            const idx = Array.from(addPreview.querySelectorAll('img')).indexOf(img);
+            return current[idx];
+        }).filter(Boolean);
+        const dt = new DataTransfer();
+        remaining.forEach(f => dt.items.add(f));
+        addInput.files = dt.files;
+    };
+
+    addZone.onclick = () => addInput.click();
+    addInput.onchange = updateAddPreview;
+
+    addZone.ondragover = e => { e.preventDefault(); addZone.classList.add('dragover'); };
+    addZone.ondragleave = () => addZone.classList.remove('dragover');
+    addZone.ondrop = e => {
+        e.preventDefault();
+        addZone.classList.remove('dragover');
+        addInput.files = e.dataTransfer.files;
+        updateAddPreview();
+    };
+
+    flatpickr('.flatpickr', { locale: "ru", dateFormat: "d F Y", allowInput: true });
+});
+
+
+function openEditModal(btn) {
+    const d = btn.dataset;
+    document.getElementById('edit_id').value = d.id;
+    document.getElementById('edit_title').value = d.title.replace(/&quot;/g, '"');
+    document.getElementById('edit_category').value = d.category || '';
+    document.getElementById('edit_short_desc').value = d.short_desc.replace(/&quot;/g, '"');
+    document.getElementById('edit_full_desc').value = (d.full_desc || '').replace(/&quot;/g, '"');
+    
+    const dateInput = document.getElementById('edit_date');
+    if (dateInput._flatpickr) {
+        dateInput._flatpickr.setDate(d.date);
+    } else {
+        dateInput.value = d.date;
+    }
+
+    // Сброс состояния
+    editAllImages = [];
+    document.getElementById('editCurrentPreview').innerHTML = '';
+    document.querySelector('input[name="delete_images"]')?.remove();
+
+    // Загрузка существующих фото
+    let images = [];
+    try { images = JSON.parse(d.images || '[]'); } catch(e) {}
+    images.forEach(name => editAllImages.push({ type: 'existing', name }));
+
+    renderAllEditPhotos();
+
+    // ← ВОТ ЭТА СТРОКА БЫЛА ПОТЕРЯНА!
+    document.getElementById('editModal').classList.add('active');
+}
+
+function renderAllEditPhotos() {
+    const preview = document.getElementById('editCurrentPreview');
+    preview.innerHTML = '';
+    
+    editAllImages.forEach((item, i) => {
+        const div = document.createElement('div');
+        div.className = 'image-item';
+        div.draggable = true;
+        div.dataset.index = i;
+
+        const src = item.type === 'existing' 
+            ? `/static/uploads/news/${item.name}` 
+            : URL.createObjectURL(item.file);
+
+        div.innerHTML = `
+            <img src="${src}" style="width:140px;height:140px;object-fit:cover;border-radius:16px;">
+            ${i === 0 ? '<div class="main-badge">Главная</div>' : ''}
+            <button type="button" class="image-remove" onclick="removeEditPhoto(${i})">×</button>
+        `;
+
+        // Drag & Drop
+        div.addEventListener('dragstart', e => {
+            e.dataTransfer.setData('index', i);
+            div.classList.add('dragging');
+        });
+        div.addEventListener('dragover', e => e.preventDefault());
+        div.addEventListener('drop', e => {
+            e.preventDefault();
+            const from = parseInt(e.dataTransfer.getData('index'));
+            if (from === i) return;
+            const [moved] = editAllImages.splice(from, 1);
+            editAllImages.splice(i, 0, moved);
+            renderAllEditPhotos();
+        });
+        div.addEventListener('dragend', () => div.classList.remove('dragging'));
+
+        preview.appendChild(div);
+    });
+
+    if (editAllImages.length === 0) {
+        preview.innerHTML = '<p style="color:#888; font-style:italic; text-align:center; width:100%; padding:2rem;">Нет фото. Добавьте новые ниже ↓</p>';
+    }
+}
+
+window.removeEditPhoto = function(index) {
+    if (!confirm('Удалить фото?')) return;
+    
+    const item = editAllImages[index];
+    if (item.type === 'existing') {
+        let input = document.querySelector('input[name="delete_images"]');
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'delete_images';
+            document.getElementById('editForm').appendChild(input);
+        }
+        const deleted = input.value ? JSON.parse(input.value) : [];
+        deleted.push(item.name);
+        input.value = JSON.stringify(deleted);
+    }
+    editAllImages.splice(index, 1);
+    renderAllEditPhotos();
+};
+
+document.getElementById('editDropZone').addEventListener('click', e => {
+    if (!e.target.closest('.image-remove')) {
+        document.getElementById('editFileInput').click();
+    }
+});
+
+document.getElementById('editFileInput').addEventListener('change', function() {
+    const files = Array.from(this.files).filter(f => f.type.startsWith('image/'));
+
+    for (const file of files) {
+        if (editAllImages.length >= MAX_PHOTOS) break;
+
+        // ← КРИТИЧЕСКИ ВАЖНО: создаём НОВЫЙ File объект!
+        const newFile = new File([file], file.name, {
+            type: file.type,
+            lastModified: file.lastModified
+        });
+
+        editAllImages.push({
+            type: 'new',
+            file: newFile  // ← свежий, живой объект File
+        });
+    }
+
+    // ← ОБЯЗАТЕЛЬНО очищаем input после выбора!
+    this.value = '';
+
+    renderAllEditPhotos();
+
+    if (editAllImages.length >= MAX_PHOTOS) {
+        showAlert('Максимум 4 фото', 'info');
+    }
+});
+
+// === ПЕРЕХВАТ ОТПРАВКИ ФОРМЫ РЕДАКТИРОВАНИЯ
+let editFormData = null;
+
+document.getElementById('editForm').onsubmit = function(e) {
+    e.preventDefault();
+    if (!validateForm(this)) return;
+
+    const fd = new FormData();
+    fd.append('action', 'edit');
+    fd.append('news_id', document.getElementById('edit_id').value);
+    fd.append('title', document.getElementById('edit_title').value.trim());
+    fd.append('category', document.getElementById('edit_category').value.trim());
+    fd.append('date', document.getElementById('edit_date').value);
+    fd.append('short_desc', document.getElementById('edit_short_desc').value.trim());
+    fd.append('full_desc', document.getElementById('edit_full_desc').value);
+
+    // Удалённые старые фото
+    const delInput = document.querySelector('input[name="delete_images"]');
+    if (delInput && delInput.value) {
+        fd.append('delete_images', delInput.value);
+    }
+
+    const order = editAllImages.map((item, index) => {
+        if (item.type === 'existing') {
+            return item.name;
+        } else {
+            const uniqueName = `new_${Date.now()}_${index}_${item.file.name}`;
+            fd.append('images', item.file, uniqueName);
+            return uniqueName; // ← ВОТ ЭТО ВСЁ ИСПРАВЛЯЕТ
+        }
+    });
+    fd.append('images_order', JSON.stringify(order));
+
+        editFormData = fd;
+        pendingAction = 'edit';
+        pendingNewsId = document.getElementById('edit_id').value;
+        openPasswordModal();
+    };
+
+
+</script>
+
+<style>
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.8);
+        backdrop-filter: blur(20px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.5s ease;
+    }
+    .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .expandable {
+        max-height: 120px;
+        overflow: hidden;
+        position: relative;
+        transition: max-height 0.6s ease;
+    }
+    .expandable.expanded {
+        max-height: none;
+    }
+    .expandable .expand-btn {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, #0a0a0a);
+        color: #00d2ff;
+        border: none;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    .expandable.expanded .expand-btn {
+        position: static;
+        background: none;
+        margin-top: 1rem;
+    }
+
+    #passwordError {
+    display: none;
+    color: #ff4444;
+    font-size: 0.9rem;
+    text-align: center;
+    margin: 1rem 0 0;
+    padding: 0.5rem;
+    background: rgba(255, 68, 68, 0.15);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 68, 68, 0.3);
+}
+</style>
+
+<style>
+.image-item {
+    position: relative;
+    display: inline-block;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+.image-item.dragging { opacity: 0.5; }
+.main-badge {
+    position: absolute;
+    top: 6px; left: 6px;
+    background: #00ff9d;
+    color: black;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-weight: bold;
+}
+.image-remove {
+    position: absolute;
+    top: -8px; right: -8px;
+    width: 28px; height: 28px;
+    background: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+}
+
+.news-gallery {
+    max-width: 600px;
+    width: 100%;
+    background: #111;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    margin: 0 auto;
+}
+
+.gallery-main {
+    width: 100%;
+    height: 420px;
+    overflow: hidden;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.main-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: opacity 0.4s ease;
+    border-radius: 20px;
+    margin: 10px;
+}
+
+.gallery-thumbs {
+    display: flex;
+    gap: 8px;
+    padding: 16px;
+    background: rgba(0,0,0,0.4);
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #00ff9d #222;
+}
+
+.gallery-thumbs::-webkit-scrollbar {
+    height: 6px;
+}
+
+.gallery-thumbs::-webkit-scrollbar-track {
+    background: #222;
+    border-radius: 3px;
+}
+
+.gallery-thumbs::-webkit-scrollbar-thumb {
+    background: #00ff9d;
+    border-radius: 3px;
+}
+
+.thumb {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    flex-shrink: 0;
+    border: 3px solid transparent;
+    transition: all 0.3s ease;
+    opacity: 0.7;
+}
+
+.thumb.active {
+    border-color: #00ff9d;
+    opacity: 1;
+    box-shadow: 0 0 15px rgba(0,255,157,0.5);
+    transform: scale(1.05);
+}
+
+.thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.thumb:hover:not(.active) {
+    opacity: 0.9;
+    transform: scale(1.03);
+}
+
+/* Отключаем "красивую цену" для дат новостей */
+#productsTableBody .price-cell {
+    all: unset !important;
+    background: none !important;
+    border: none !important;
+    padding: 0.5rem 0 !important;
+    border-radius: 0 !important;
+    color: #ccc !important;
+    text-align: center;
+    font-weight: normal;
+}
+</style>
+
+
+<script>
+document.addEventListener('click', e => {
+    const row = e.target.closest('.product-row');
+
+    // Открываем детальную карточку только если клик НЕ по кнопкам действий
+    if (row && !e.target.closest('.action-buttons')) {
+        showProductDetail(row);
+        return;
+    }
+
+    // Редактирование
+    const editBtn = e.target.closest('.action-btn.edit');
+    if (editBtn) {
+        e.stopPropagation();
+        openEditModal(editBtn);
+        return;
+    }
+
+    // Удаление
+    const delBtn = e.target.closest('.action-btn.delete');
+    if (delBtn) {
+        e.stopPropagation();
+        const id = delBtn.closest('tr').dataset.id;
+        prepareAction('delete', id);
+    }
+});
+</script>
+</body>
+</html>

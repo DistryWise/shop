@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "title": "iPhone 15 Pro",
+    "price": 12999000,
+    "description": "Титановый корпус, A17 Pro.",
+    "category": "phones",
+    "brand": "Apple",
+    "image_filename": null,
+    "in_stock": true
+  },
+  {
+    "id": 2,
+    "title": "123",
+    "price": 12300,
+    "description": "123",
+    "category": "123",
+    "brand": "123",
+    "image_filename": null,
+    "in_stock": true
+  }
+]

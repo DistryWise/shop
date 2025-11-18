@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    style-src 'self' 'unsafe-inline' https://
+
+fonts.googleapis.com https://cdnjs.cloudflare.com;
+    style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+    font-src 'self' https://fonts.gstatic.com;
+    connect-src 'self' https://api.allorigins.win;
+    img-src 'self' data: https:;
+    script-src 'self' 'unsafe-inline';
+    object-src 'none';
+    base-uri 'self';
+  ">
+  <title>Piligrim — Редактор каруселей</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Montserrat:wght@600&family=Roboto:wght@700&family=Oswald:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <style>
+    :root {
+      --bg: #000;
+      --panel: #111;
+      --border: #222;
+      --text: #fff;
+      --accent: #00ff88;
+      --hover: #333;
+      --danger: #ff3b30;
+      --grid: rgba(255,255,255,0.05);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    header { padding: 20px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-weight: 700; font-size: 1.6rem; }
+    .nav-btn { background: var(--panel); border: none; color: var(--text); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
+    .nav-btn:hover { background: var(--hover); }
+    main { flex: 1; padding: 40px; display: flex; gap: 30px; overflow: hidden; position: relative; }
+    .sidebar { width: 360px; display: flex; flex-direction: column; gap: 20px; z-index: 10;width: 360px;
+  max-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px; }
+    .carousel-tabs { display: flex; gap: 8px;grid-template-columns: 1fr 1fr 1fr; }
+    .tab { padding: 12px 18px; background: var(--panel); border-radius: 10px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: 0.2s; }
+    .tab.active { background: #fff; color: #000; }
+    .panel { background: var(--panel); padding: 24px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .panel h3 { font-size: 1rem; margin-bottom: 16px; color: #aaa; font-weight: 500; }
+    .upload-area { border: 2px dashed #444; border-radius: 14px; padding: 36px; text-align: center; cursor: pointer; transition: all 0.3s; position: relative; }
+    .upload-area:hover { border-color: var(--accent); background: rgba(0,255,136,0.05); }
+    .upload-area.dragover { border-color: var(--accent); background: rgba(0,255,136,0.1); transform: scale(1.02); }
+    .upload-area p { font-size: 0.9rem; color: #aaa; margin-bottom: 12px; }
+    .upload-area .preview { width: 100%; height: 160px; object-fit: cover; border-radius: 10px; margin-top: 12px; display: none; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 6px; font-weight: 500; }
+    input, select, textarea { width: 100%; padding: 10px 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 10px; font-size: 0.95rem; transition: 0.2s; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    .btn { width: 100%; padding: 14px; background: #fff; color: #000; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; margin-top: 16px; transition: 0.2s; }
+    .btn:hover { background: #f0f0f0; transform: translateY(-1px); }
+    .btn-secondary { background: var(--panel); color: #fff; }
+    .btn-secondary:hover { background: var(--hover); }
+    .btn-danger { background: var(--danger); }
+    .btn-danger:hover { background: #ff5f57; }
+    .nav-controls { display: flex; gap: 8px; margin-top: 12px; }
+    .nav-controls button { flex: 1; }
+    .canvas {
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%; /* 16:9 = 100 / 16 * 9 */
+    position: relative;
+    background: #111;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    background-image: 
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+    cursor: default;
+    }
+    #background { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; z-index: 1; display: none; }
+    .layer { 
+      position: absolute; z-index: 10; cursor: move; user-select: none; 
+      box-shadow: 0 0 0 2px var(--accent) inset; border-radius: 8px; overflow: hidden;
+      min-width: 50px; min-height: 50px;
+    }
+    .layer.selected { box-shadow: 0 0 0 3px #00ff88; }
+    .layer img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .text-layer { 
+      padding: 12px; font-size: 32px; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.7); 
+      background: rgba(0,0,0,0.3); border-radius: 8px; display: flex; align-items: center; 
+      justify-content: center; white-space: pre-wrap; word-break: break-word;
+    }
+    .hotspot { 
+      position: absolute; border: 2px dashed var(--accent); 
+      background: rgba(0,255,136,0.1); border-radius: 8px; z-index: 5; 
+    }
+    .hotspot:hover { background: rgba(0,255,136,0.2); }
+    .action-btns { display: flex; gap: 8px; margin-top: 16px; }
+    .action-btns button { flex: 1; }
+    .hint { font-size: 0.8rem; color: #aaa; margin-top: 8px; text-align: center; }
+    .text-tools { background: var(--panel); padding: 16px; border-radius: 12px; margin-top: 16px; }
+    .resize-handle { position: absolute; width: 12px; height: 12px; background: var(--accent); border-radius: 50%; bottom: -6px; right: -6px; cursor: se-resize; z-index: 11; }
+    .undo-redo { display: flex; gap: 8px; margin-top: 12px; }
+    .undo-redo button { flex: 1; font-size: 1.2rem; }
+
+    /* УВЕДОМЛЕНИЯ */
+    .toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      background: var(--panel); color: #fff; padding: 16px 24px; border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4); z-index: 9999; font-size: 0.95rem;
+      display: flex; align-items: center; gap: 12px; opacity: 0; transition: all 0.4s ease;
+      min-width: 280px; max-width: 400px;
+    }
+    .toast.show { opacity: 1; bottom: 40px; }
+    .toast.success { border-left: 4px solid var(--accent); }
+    .toast.error { border-left: 4px solid var(--danger); }
+    .toast .icon { font-size: 1.4rem; }
+
+    /* ПОДСКАЗКА */
+    .footer-hint {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(17,17,17,0.9); color: #aaa; padding: 10px 16px; border-radius: 10px;
+      font-size: 0.8rem; white-space: nowrap; backdrop-filter: blur(8px); border: 1px solid #333;z-index: 1000;
+    }
+
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
+    .modal.active { display: flex; }
+    .preview-container { width: 90%; max-width: 1200px; height: 80vh; position: relative; background: #000; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .preview-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; }
+    .preview-slide.active { opacity: 1; }
+    .preview-bg { width: 100%; height: 100%; object-fit: cover; }
+    .preview-layer { position: absolute; }
+    .preview-layer img { width: 100%; height: 100%; object-fit: contain; }
+    .close-modal { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.2); color: #fff; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; z-index: 10; }
+    .close-modal:hover { background: rgba(255,255,255,0.4); }
+    .preview-nav { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 10; }
+    .preview-dot { width: 12px; height: 12px; background: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; }
+    .preview-dot.active { background: #fff; }
+    .preview-text {
+  background: none !important;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.7);
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+    /* Рамка выделения */
+.selection-box {
+  position: absolute;
+  border: 2px dashed #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+  pointer-events: none;
+  z-index: 999;
+}
+/* Иконка помощи */
+.help-btn {
+  position: absolute;
+  top: 1160px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  cursor: pointer;
+  z-index: 100;
+  transition: 0.2s;
+}
+.help-btn:hover { background: var(--hover); }
+
+/* Модалка помощи */
+.help-modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.9);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+.help-modal.active { display: flex; }
+.help-content {
+  background: var(--panel);
+  padding: 32px;
+  border-radius: 16px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.help-content h2 { margin-bottom: 16px; font-size: 1.4rem; }
+.help-content ul { list-style: none; }
+.help-content li {
+  padding: 10px 0;
+  border-bottom: 1px solid #333;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+}
+.help-content li:last-child { border: none; }
+.help-content .key { background: #000; padding: 4px 8px; border-radius: 6px; font-family: monospace; font-size: 0.8rem; }
+.close-help { position: absolute; top: 16px; right: 16px; font-size: 1.5rem; cursor: pointer; }
+
+/* Подсказка при наведении */
+.hotspot-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #000;
+  color: #0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 100;
+}
+.hotspot:hover .hotspot-tooltip {
+  opacity: 1;
+}
+
+/* СЛОИ — ПОРЯДОК КАК В ФОТОШОПЕ */
+.layers-panel {
+  background: var(--panel);
+  padding: 16px;
+  border-radius: 12px;
+  margin-top: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;        /* ← убирает горизонтальную прокрутку */
+  -ms-overflow-style: none;  /* ← убирает ползунок в IE и Edge */
+  scrollbar-width: none;     /* ← убирает ползунок в Firefox */
+}
+
+.layers-panel::-webkit-scrollbar {
+  display: none;             /* ← убирает ползунок в Chrome, Safari, новый Edge */
+}
+.layer-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #000;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  cursor: move;
+  transition: 0.2s;
+
+
+  
+}
+.layer-item:hover { background: #222; }
+.layer-item.selected { background: var(--accent); color: #000; }
+.layer-item .eye {
+  width: 20px; height: 20px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center/16px no-repeat;
+}
+.layer-item.hidden .eye { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a21.8 21.8 0 0 1 5.06-6.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a21.8 21.8 0 0 1-2.16 3.19m-6.84-8.1L15.74 9m-3.3-3.3L9.7 9m6.24 6.24L18.7 18m-3.3-3.3L12 12m-3.3 3.3L5.3 18'/%3E%3C/svg%3E"); }
+  
+.layer, .text-layer {
+  transform-origin: center center;
+  transition: transform 0.1s ease;
+}
+
+.animate__fadeIn {
+    animation-duration: 5.5s !important;
+  }
+
+
+  .layer {
+  z-index: 10;
+}
+.hotspot {
+  z-index: 5;
+}
+
+.back-btn {
+  background: var(--danger) !important;
+  color: white !important;
+}
+.back-btn:hover {
+  background: #ff5f57 !important;
+}
+
+.sidebar::-webkit-scrollbar { width: 0; }
+.sidebar { scrollbar-width: none; }
+
+/* ПРЕВЬЮ HOTSPOT */
+.hotspot-preview {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: rgba(0,0,0,0.95);
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: #0f0;
+  white-space: nowrap;
+  z-index: 10000; /* ВАЖНО: выше всех */
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  min-width: 180px;
+  max-width: 300px;
+  pointer-events: auto;
+}
+
+.hotspot-preview.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-12px);
+}
+
+.hotspot-preview .url {
+  color: #0f0;
+  font-family: monospace;
+  word-break: break-all;
+  margin-bottom: 6px;
+}
+
+.hotspot-preview .thumb {
+  width: 100%;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #222;
+  margin-top: 6px;
+  display: none;
+}
+
+.hotspot-preview .thumb.loading {
+  background: #222 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1zm0 15a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0v-2a1 1 0 0 1 1-1zm8.66-10.66a1 1 0 0 1 0 1.42l-1.42 1.42a1 1 0 1 1-1.42-1.42l1.42-1.42a1 1 0 0 1 1.42 0zM7.76 14.24a1 1 0 0 1 0 1.42l-1.42 1.42a1 1 0 1 1-1.42-1.42l1.42-1.42a1 1 0 0 1 1.42 0zm13.9 3.9a1 1 0 0 1-1.42 0l-1.42-1.42a1 1 0 1 1 1.42-1.42l1.42 1.42a1 1 0 0 1 0 1.42zM5.18 4.58a1 1 0 0 1 0 1.42L3.76 7.42a1 1 0 1 1-1.42-1.42L3.76 4.58a1 1 0 0 1 1.42 0z' fill='%23666'/%3E%3C/svg%3E") center/24px no-repeat;
+}
+
+.carousel-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.carousel-tabs > .tab {
+  flex: 1;
+  min-width: 0;
+}
+
+.tab-row-2 {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.tab-row-2 .tab {
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .carousel-tabs,
+  .tab-row-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.carousel-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.tab-row-2 {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .carousel-tabs,
+  .tab-row-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.back-btn {
+  background: var(--danger) !important;
+  color: white !important;
+}
+.back-btn:hover {
+  background: #ff5f57 !important;
+}
+  </style>
+
+</head>
+<body>
+
+<header>
+  <div class="logo">Piligrim редактор</div>
+  <div style="display: flex; gap: 12px; align-items: center;">
+<button class="nav-btn back-btn" id="back-button">
+  ← Назад
+</button>
+    <button class="nav-btn" onclick="location.href='/'">
+      На сайт
+    </button>
+  </div>
+</header>
+
+  <main>
+    <div class="sidebar">
+      <div class="carousel-tabs">
+        <div class="tab active" data-kind="main">Главная</div>
+        <div class="tab" data-kind="services">Услуги</div>
+
+
+        <div class="tab-row-2">
+            <div class="tab" data-action="preview">Предпросмотр</div>
+            <div class="tab" data-action="analytics">Аналитика</div>           
+        </div>
+        </div>
+
+    <div class="panel" id="analytics-panel" style="display:none;">
+    <h3>Статистика кликов</h3>
+    <div id="stats-container">
+        <div id="stats-list" style="max-height:400px; overflow-y:auto;"></div>
+        <div id="no-data" style="text-align:center; color:#aaa; padding:40px; display:none;">
+        <i class="fas fa-chart-line" style="font-size:48px; margin-bottom:16px; opacity:0.3;"></i>
+        <p>Пока нет кликов</p>
+        </div>
+    </div>
+    <button class="btn btn-danger" onclick="clearStats()" style="margin-top:16px;">
+        Очистить статистику
+    </button>
+    </div>
+
+
+      <div class="panel">
+        <h3>Слайд <span id="slide-num">1</span>/3</h3>
+        <div class="upload-area" id="upload-area">
+          <p>Фон: GIF, MP4, WebM, Фото</p>
+          <input type="file" id="bg-input" accept="image/*,video/mp4,video/webm" style="display:none;">
+          <img class="preview" id="upload-preview-img" alt="">
+          <video class="preview" id="upload-preview-video" controls></video>
+        </div>
+
+        <div class="form-group">
+          <label>Анимация фона</label>
+          <select id="bg-animation">
+            <option value="none">Без анимации</option>
+            <option value="fadeIn">Fade In</option>
+            <option value="slideInLeft">Slide Left</option>
+            <option value="zoomIn">Zoom In</option>
+            <option value="bounceIn">Bounce In</option>
+          </select>
+        </div>
+
+        <div class="text-tools">
+          <div class="form-group">
+            <label>Шрифт</label>
+            <select id="font-family">
+              <option value="Inter">Inter</option>
+              <option value="Playfair Display">Playfair Display</option>
+              <option value="Montserrat">Montserrat</option>
+              <option value="Roboto">Roboto</option>
+              <option value="Oswald">Oswald</option>
+            </select>
+          </div>
+          <div class="layers-panel" id="layers-panel">
+            <h3 style="margin:0 0 12px; font-size:0.95rem; color:#aaa;">Слои</h3>
+            <div id="layers-list"></div>
+            </div>
+          <div class="form-group">
+            <label>Размер</label>
+            <input type="number" id="font-size" value="32" min="12" max="120">
+          </div>
+          <div class="form-group">
+            <label>Цвет</label>
+            <input type="color" id="text-color" value="#ffffff">
+          </div>
+          <div class="form-group">
+            <label>Анимация текста</label>
+            <select id="text-animation">
+              <option value="none">Без</option>
+              <option value="fadeIn">Fade In</option>
+              <option value="slideInUp">Slide Up</option>
+              <option value="zoomIn">Zoom In</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary" id="add-text-btn">+ Текст</button>
+          <button class="btn btn-secondary" id="add-image-btn">+ Картинка</button>
+        </div>
+
+        <div class="form-group">
+        <label>Угол наклона</label>
+        <input type="range" id="rotation-slider" min="-180" max="180" value="0" step="1">
+        <div style="text-align:center; font-size:0.8rem; color:#aaa; margin-top:4px;">
+            <span id="rotation-value">0°</span>
+        </div>
+        </div>
+
+        <div class="action-btns">
+          <button class="btn btn-secondary" id="hotspot-btn">Добавить ссылку</button>
+          <button class="btn btn-danger" id="delete-btn">Удалить</button>
+        </div>
+
+        <div class="action-btns">
+          <button class="btn btn-secondary" id="clear-bg-btn">Очистить фон</button>
+          <button class="btn btn-danger" id="clear-slide-btn">Очистить слайд</button>
+        </div>
+
+        <div class="undo-redo">
+          <button class="btn btn-secondary" id="undo-btn">Undo</button>
+          <button class="btn btn-secondary" id="redo-btn">Redo</button>
+        </div>
+
+
+        <button class="btn" id="save-btn">Сохранить</button>
+        <div class="nav-controls">
+          <button class="btn btn-secondary" id="prev-btn">Пред.</button>
+          <button class="btn btn-secondary" id="next-btn">След.</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas" id="canvas"></div>
+
+
+<div class="help-btn" id="help-btn">?</div>
+
+<div class="help-modal" id="help-modal">
+  <div class="help-content">
+    <span class="close-help">X</span>
+    <h2>Управление редактором</h2>
+    <ul>
+      <li><span>Клик по тексту</span> <span class="key">Редактировать</span></li>
+      <li><span>ЛКМ на объект</span> <span class="key">Перетащить</span></li>
+      <li><span>Alt + ЛКМ → рамка</span> <span class="key">Групповое выделение</span></li>
+      <li><span>Ctrl + клик</span> <span class="key">Добавить в группу</span></li>
+      <li><span>Ctrl + колесо</span> <span class="key">Масштаб объекта</span></li>
+      <li><span>Resize-угол</span> <span class="key">Растянуть</span></li>
+      <li><span>Delete</span> <span class="key">Удалить</span></li>
+      <li><span>Ctrl + Z / Y</span> <span class="key">Отмена / Повтор</span></li>
+      <li><span>Ctrl + S</span> <span class="key">Сохранить</span></li>
+      <li><span>Escape</span> <span class="key">Снять выделение</span></li>
+      <li><span>Кнопка "Ссылка"</span> <span class="key">Добавить hotspot</span></li>
+    </ul>
+  </div>
+</div>
+
+    <!-- ПОДСКАЗКА -->
+    <div class="footer-hint">
+      Ctrl+Z — отмена | Ctrl+Y — повтор | Delete — удалить | Ctrl+S — сохранить
+    </div>
+  </main>
+
+  <!-- УВЕДОМЛЕНИЯ -->
+  <div id="toast-container"></div>
+
+  <div class="modal" id="preview-modal">
+    <div class="preview-container">
+      <button class="close-modal" onclick="closePreview()">X</button>
+      <div id="preview-slides"></div>
+      <div class="preview-nav" id="preview-dots"></div>
+    </div>
+  </div>
+
+<script>
+  // === ПЕРЕМЕННЫЕ ===
+  let lastActivePanel = 'main'; // main, services, analytics
+  let currentKind = 'main';
+  let currentIndex = 0;
+  let slides = Array(3).fill().map(() => ({
+    background: { url: null, type: 'image', animation: 'fadeIn' },
+    layers: [],
+    hotspots: []
+  }));
+  let selectedLayers = new Set();
+  let isDrawingSelection = false;
+  let selectionBox = null;
+  let selectionStart = null;
+  let isDrawingHotspot = false;
+  let hotspotStart = null;
+  let hotspotEl = null;
+  let isDragging = false;
+  let isResizing = false;
+  let dragData = null;
+  let resizeData = null;
+  let bgElement = null;
+
+  // UNDO / REDO
+  let history = [];
+  let historyIndex = -1;
+
+    function saveState() {
+    const state = JSON.parse(JSON.stringify(slides));
+    history = history.slice(0, historyIndex + 1);
+    history.push(state);
+    historyIndex++;
+    if (history.length > 50) history.shift();
+
+    localStorage.setItem(`carousel_${currentKind}`, JSON.stringify(slides));
+    }
+
+  function undo() {
+    if (historyIndex <= 0) return;
+    historyIndex--;
+    slides = JSON.parse(JSON.stringify(history[historyIndex]));
+    loadSlide(currentIndex);
+    showToast('Отменено', 'success');
+    updateLayersPanel();
+  }
+
+  function redo() {
+    if (historyIndex >= history.length - 1) return;
+    historyIndex++;
+    slides = JSON.parse(JSON.stringify(history[historyIndex]));
+    loadSlide(currentIndex);
+    showToast('Повторено', 'success');
+    updateLayersPanel();
+  }
+
+  // === УВЕДОМЛЕНИЯ ===
+  function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type} animate__animated animate__fadeInUp`;
+    toast.innerHTML = `<span class="icon">${type === 'success' ? 'Success' : 'Error'}</span><span>${message}</span>`;
+    document.getElementById('toast-container').appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 100);
+    setTimeout(() => {
+      toast.classList.remove('show');
+      toast.classList.add('animate__fadeOutDown');
+      setTimeout(() => toast.remove(), 400);
+    }, 3000);
+  }
+
+  // === DOM ===
+  const canvas = document.getElementById('canvas');
+  const uploadArea = document.getElementById('upload-area');
+  const bgInput = document.getElementById('bg-input');
+  const previewImg = document.getElementById('upload-preview-img');
+  const previewVideo = document.getElementById('upload-preview-video');
+  const helpBtn = document.getElementById('help-btn');
+  const helpModal = document.getElementById('help-modal');
+  const layersList = document.getElementById('layers-list');
+
+  // === ПОМОЩЬ ===
+  helpBtn.addEventListener('click', () => helpModal.classList.add('active'));
+  helpModal.addEventListener('click', e => {
+    if (e.target === helpModal || e.target.classList.contains('close-help')) {
+      helpModal.classList.remove('active');
+    }
+  });
+
+  // === СЛОИ ===
+    function updateLayersPanel() {
+    layersList.innerHTML = '';
+    const all = [
+        ...slides[currentIndex].layers.map(l => ({ ...l, type: l.type || 'image' })),
+        ...slides[currentIndex].hotspots.map(h => ({ ...h, type: 'hotspot' }))
+    ].reverse();
+
+    all.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'layer-item';
+        const name = item.type === 'text' ? 'Текст' : item.type === 'image' ? 'Картинка' : 'Ссылка';
+        div.innerHTML = `<span>${name}</span><div class="eye"></div>`;
+
+        const isSelected = selectedLayers.has({ el: canvas.querySelector(`[data-id="${item.id}"]`), data: item });
+        if (isSelected) div.classList.add('selected');
+        if (item.hidden) div.classList.add('hidden');
+
+        div.onclick = e => {
+        e.stopPropagation();
+        if (e.target.classList.contains('eye')) {
+            item.hidden = !item.hidden;
+            div.classList.toggle('hidden');
+            const el = canvas.querySelector(`[data-id="${item.id}"]`);
+            if (el) el.style.display = item.hidden ? 'none' : 'block';
+            saveState();
+        } else {
+            selectedLayers.forEach(l => l.el.classList.remove('selected'));
+            selectedLayers.clear();
+            const el = canvas.querySelector(`[data-id="${item.id}"]`);
+            if (el) {
+            el.classList.add('selected');
+            selectedLayers.add({ el, data: item });
+            }
+            updateLayersPanel();
+            if (item.type === 'text') updateTextTools(item);
+        }
+        };
+
+        layersList.appendChild(div);
+    });
+    }
+
+    // === ОБРАБОТЧИК ВКЛАДОК (ОДИН РАЗ!) ===
+
+    document.querySelectorAll('.carousel-tabs .tab').forEach(tab => {
+    tab.addEventListener('click', (e) => {
+        // БЛОКИРУЕМ onclick у Предпросмотра
+        if (tab.onclick && tab.onclick.toString().includes('openPreview')) {
+        e.preventDefault();
+        e.stopPropagation();
+        }
+
+        document.querySelectorAll('.carousel-tabs .tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        const kind = tab.dataset.kind;
+        const action = tab.dataset.action;
+
+        // СКРЫВАЕМ ПАНЕЛИ ТОЛЬКО для kind/analytics
+        if (kind || action === 'analytics') {
+        document.querySelectorAll('.panel, #analytics-panel').forEach(p => p.style.display = 'none');
+        }
+
+        if (kind) {
+        switchTab(kind);
+        document.querySelector('.sidebar > .panel:not(#analytics-panel)').style.display = 'block';
+        lastActivePanel = kind;
+        } else if (action === 'analytics') {
+        document.getElementById('analytics-panel').style.display = 'block';
+        loadStats();
+        lastActivePanel = 'analytics';
+        } else if (action === 'preview') {
+        openPreview(); // ← ПАНЕЛИ НЕ ТРОГАЕМ!
+        }
+    });
+    });
+
+  document.getElementById('add-text-btn').addEventListener('click', addTextLayer);
+  document.getElementById('add-image-btn').addEventListener('click', addImageLayer);
+  document.getElementById('hotspot-btn').addEventListener('click', startHotspot);
+  document.getElementById('delete-btn').addEventListener('click', deleteSelected);
+  document.getElementById('clear-bg-btn').addEventListener('click', clearBackground);
+  document.getElementById('clear-slide-btn').addEventListener('click', clearSlide);
+  document.getElementById('undo-btn').addEventListener('click', undo);
+  document.getElementById('redo-btn').addEventListener('click', redo);
+  document.getElementById('save-btn').addEventListener('click', saveSlide);
+  document.getElementById('prev-btn').addEventListener('click', prevSlide);
+  document.getElementById('next-btn').addEventListener('click', nextSlide);
+
+  // === ГОРЯЧИЕ КЛАВИШИ ===
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === 'z') { e.preventDefault(); undo(); }
+      if (e.key === 'y') { e.preventDefault(); redo(); }
+      if (e.key === 's') { e.preventDefault(); saveSlide(); }
+    }
+    if (e.key === 'Delete' && selectedLayers.size > 0) {
+      e.preventDefault();
+      deleteSelected();
+    }
+    if (e.key === 'Escape') {
+      clearSelection();
+    }
+  });
+
+  // === DRAG & DROP ===
+  function setupDragAndDrop(el) {
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('dragover'); });
+    el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+    el.addEventListener('drop', e => {
+      e.preventDefault(); el.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+        handleFileUpload(file);
+      }
+    });
+  }
+  setupDragAndDrop(uploadArea);
+  setupDragAndDrop(canvas);
+
+  uploadArea.addEventListener('click', () => bgInput.click());
+  bgInput.addEventListener('change', () => { if (bgInput.files[0]) handleFileUpload(bgInput.files[0]); });
+
+  function handleFileUpload(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const url = e.target.result;
+      const isVideo = file.type.startsWith('video/');
+      slides[currentIndex].background = { url, type: isVideo ? 'video' : 'image', animation: slides[currentIndex].background.animation };
+      updateBackground(url, isVideo);
+      updateBackgroundPreview(url, isVideo);
+      saveState();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function updateBackground(url, isVideo) {
+    if (bgElement) bgElement.remove();
+    bgElement = document.createElement(isVideo ? 'video' : 'img');
+    bgElement.id = 'background';
+    bgElement.src = url;
+    if (isVideo) {
+      bgElement.autoplay = bgElement.muted = bgElement.loop = true;
+    }
+    bgElement.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block;z-index:1;';
+    canvas.appendChild(bgElement);
+
+    setTimeout(() => {
+      const anim = slides[currentIndex].background.animation;
+      if (anim && anim !== 'none') {
+        bgElement.classList.add('animate__animated', `animate__${anim}`);
+      }
+    }, 100);
+  }
+
+  function updateBackgroundPreview(url, isVideo) {
+    previewImg.style.display = isVideo ? 'none' : 'block';
+    previewVideo.style.display = isVideo ? 'block' : 'none';
+    if (isVideo) {
+      previewVideo.src = url;
+      previewVideo.load();
+    } else {
+      previewImg.src = url;
+    }
+  }
+
+  function clearBackground() {
+    if (!bgElement) return;
+    bgElement.remove();
+    bgElement = null;
+    slides[currentIndex].background.url = null;
+    previewImg.style.display = 'none';
+    previewVideo.style.display = 'none';
+    saveState();
+    showToast('Фон очищен', 'success');
+  }
+
+  function clearSlide() {
+    if (bgElement) bgElement.remove();
+    bgElement = null;
+    previewImg.style.display = 'none';
+    previewVideo.style.display = 'none';
+    document.querySelectorAll('.layer, .hotspot').forEach(el => el.remove());
+    slides[currentIndex] = { background: { url: null, type: 'image', animation: 'fadeIn' }, layers: [], hotspots: [] };
+    selectedLayers.clear();
+    saveState();
+    showToast('Слайд очищен', 'success');
+    updateLayersPanel();
+  }
+
+    function switchTab(kind) {
+    if (currentKind === kind) return;
+
+    localStorage.setItem(`carousel_${currentKind}`, JSON.stringify(slides));
+
+    currentKind = kind;
+    currentIndex = 0;
+
+    // Скрываем ВСЁ: редактор и аналитику
+    document.querySelectorAll('.panel, #analytics-panel').forEach(p => {
+        p.style.display = 'none';
+    });
+
+    // Показываем только редактор
+    const editorPanel = document.querySelector('.sidebar > .panel:not(#analytics-panel)');
+    if (editorPanel) editorPanel.style.display = 'block';
+
+    loadCarousel();
+    }
+
+    window.openPreview = () => {
+    const modal = document.getElementById('preview-modal');
+    const container = document.getElementById('preview-slides');
+    const dots = document.getElementById('preview-dots');
+    container.innerHTML = '';
+    dots.innerHTML = '';
+
+    slides.forEach((slide, i) => {
+        const slideEl = document.createElement('div');
+        slideEl.className = 'preview-slide';
+        if (i === 0) slideEl.classList.add('active');
+
+        if (slide.background.url) {
+        const bg = document.createElement(slide.background.type === 'video' ? 'video' : 'img');
+        bg.src = slide.background.url;
+        bg.className = 'preview-bg';
+        if (slide.background.type === 'video') bg.autoplay = bg.muted = bg.loop = true;
+        if (slide.background.animation && slide.background.animation !== 'none') {
+            bg.classList.add('animate__animated', `animate__${slide.background.animation}`);
+        }
+        slideEl.appendChild(bg);
+        }
+
+        slide.layers.forEach(l => {
+        if (l.hidden) return;
+        const el = document.createElement('div');
+        el.className = 'preview-layer';
+        Object.assign(el.style, l.style);
+        if (l.type === 'text') {
+            el.classList.add('preview-text');
+            el.textContent = l.content;
+            el.style.fontSize = l.style.fontSize;
+            el.style.color = l.style.color;
+            el.style.fontFamily = l.style.fontFamily;
+            if (l.style.animation) el.classList.add('animate__animated', `animate__${l.style.animation}`);
+        } else {
+            const img = document.createElement('img');
+            img.src = l.url;
+            el.appendChild(img);
+        }
+        slideEl.appendChild(el);
+        });
+
+        slide.hotspots.forEach(h => {
+        if (h.hidden) return;
+        const a = document.createElement('a');
+        a.href = h.url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.className = 'preview-hotspot';
+        Object.assign(a.style, {
+            left: h.x + '%',
+            top: h.y + '%',
+            width: h.w + '%',
+            height: h.h + '%'
+        });
+        slideEl.appendChild(a);
+        });
+
+        container.appendChild(slideEl);
+
+        const dot = document.createElement('div');
+        dot.className = 'preview-dot';
+        if (i === 0) dot.classList.add('active');
+        dot.onclick = () => showPreviewSlide(i);
+        dots.appendChild(dot);
+    });
+
+    modal.classList.add('active');
+    startAutoPlay();
+    };
+
+    window.closePreview = () => {
+    document.getElementById('preview-modal').classList.remove('active');
+    stopAutoPlay();
+
+    document.querySelectorAll('.carousel-tabs .tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel, #analytics-panel').forEach(p => p.style.display = 'none');
+
+    if (lastActivePanel === 'analytics') {
+        const analyticsTab = document.querySelector('.carousel-tabs .tab[data-action="analytics"]');
+        analyticsTab.classList.add('active');
+        document.getElementById('analytics-panel').style.display = 'block';
+        loadStats();
+    } else {
+        const kind = lastActivePanel;
+        currentKind = kind;
+        const tab = document.querySelector(`.carousel-tabs .tab[data-kind="${kind}"]`);
+        tab.classList.add('active');
+        document.querySelector('.sidebar > .panel:not(#analytics-panel)').style.display = 'block';
+        loadSlide(currentIndex);
+    }
+    };
+
+    function loadCarousel() {
+    const localKey = `carousel_${currentKind}`;
+    const saved = localStorage.getItem(localKey);
+
+    if (saved) {
+        try {
+        slides = JSON.parse(saved);
+        history = [JSON.parse(saved)];
+        historyIndex = 0;
+        loadSlide(currentIndex);
+        showToast('Локальные изменения восстановлены', 'success');
+        saveState();  // ← СЕЙЧАС сохраняем, чтобы undo/redo работало
+        return;
+        } catch (e) {
+        console.error('Ошибка localStorage', e);
+        }
+    }
+
+    // Если нет локальных данных — грузим с сервера
+        fetch(`/api/landing/carousel/${currentKind}`)
+            .then(r => r.json())
+            .then(data => {
+            slides = data.length === 3 ? data : Array(3).fill().map(() => ({
+                background: { url: null, type: 'image', animation: 'fadeIn' },
+                layers: [], hotspots: []
+            }));
+
+            // Перезаписываем localStorage
+            localStorage.setItem(`carousel_${currentKind}`, JSON.stringify(slides));
+            history = [JSON.parse(JSON.stringify(slides))];
+            historyIndex = 0;
+            loadSlide(currentIndex);
+            showToast('Загружено с сервера', 'success');
+            })
+            .catch(() => {
+            showToast('Оффлайн: локальные данные', 'error');
+            // fallback на localStorage
+            const saved = localStorage.getItem(`carousel_${currentKind}`);
+            if (saved) {
+                slides = JSON.parse(saved);
+                loadSlide(currentIndex);
+            }
+            });
+        }
+
+
+
+    function loadSlide(i) {
+    currentIndex = i;
+    document.getElementById('slide-num').textContent = i + 1;
+    const s = slides[i];
+
+    // Очистка
+    document.querySelectorAll('.layer, .hotspot, .selection-box').forEach(el => el.remove());
+    if (bgElement) bgElement.remove();
+    bgElement = null;
+
+    // Фон
+    if (s.background.url) {
+        try {
+        updateBackground(s.background.url, s.background.type === 'video');
+        updateBackgroundPreview(s.background.url, s.background.type === 'video');
+        } catch (e) {
+        console.error('Ошибка фона:', e);
+        }
+    } else {
+        previewImg.style.display = 'none';
+        previewVideo.style.display = 'none';
+    }
+
+    // Анимация фона
+    const animSelect = document.getElementById('bg-animation');
+    if (animSelect) animSelect.value = s.background.animation || 'none';
+
+    // Слои
+    s.layers.forEach(layer => {
+        try { addLayer(layer); } catch (e) { console.error('Layer error:', e); }
+    });
+    s.hotspots.forEach(hotspot => {
+        try { addHotspotLayer(hotspot); } catch (e) { console.error('Hotspot error:', e); }
+    });
+
+    selectedLayers.clear();
+    updateLayersPanel();
+    }
+
+  document.getElementById('bg-animation').addEventListener('change', e => {
+    slides[currentIndex].background.animation = e.target.value;
+    if (bgElement) {
+      bgElement.className = '';
+      setTimeout(() => {
+        const anim = e.target.value;
+        if (anim && anim !== 'none') bgElement.classList.add('animate__animated', `animate__${anim}`);
+      }, 50);
+    }
+    saveState();
+  });
+
+  // === ПЕРЕВОД px ↔ % ===
+  function pxToPercent(px, axis) {
+    const rect = canvas.getBoundingClientRect();
+    return ((px / (axis === 'x' ? rect.width : rect.height)) * 100).toFixed(3) + '%';
+  }
+
+  function percentToPx(perc, axis) {
+    const rect = canvas.getBoundingClientRect();
+    return (parseFloat(perc) / 100) * (axis === 'x' ? rect.width : rect.height);
+  }
+
+  function addTextLayer() {
+    const layer = {
+      id: Date.now(),
+      type: 'text', content: 'Новый текст',
+      style: { left: '20%', top: '20%', width: '40%', height: '80px', fontSize: '36px', color: '#ffffff', fontFamily: 'Inter', animation: 'fadeIn' }
+    };
+    slides[currentIndex].layers.push(layer);
+    addLayer(layer);
+    saveState();
+    updateLayersPanel();
+  }
+
+  function addImageLayer() {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = 'image/*';
+    input.onchange = () => {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const layer = { id: Date.now(), type: 'image', url: e.target.result, style: { left: '20%', top: '20%', width: '30%', height: '30%' } };
+        slides[currentIndex].layers.push(layer);
+        addLayer(layer);
+        saveState();
+        updateLayersPanel();
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  }
+
+  function addLayer(data) {
+    const el = document.createElement('div');
+    el.className = 'layer';
+    el._data = data;
+    el.dataset.id = data.id;
+    Object.assign(el.style, data.style);
+    if (data.style.transform) {
+    el.style.transform = data.style.transform;
+    }
+
+    if (data.type === 'text') {
+      el.classList.add('text-layer');
+      el.textContent = data.content;
+      Object.assign(el.style, {
+        fontSize: data.style.fontSize,
+        color: data.style.color,
+        fontFamily: data.style.fontFamily
+      });
+      if (data.style.animation && data.style.animation !== 'none') {
+        el.classList.add('animate__animated', `animate__${data.style.animation}`);
+      }
+      el.addEventListener('input', () => {
+        data.content = el.textContent;
+        saveState();
+      });
+    } else {
+      const img = document.createElement('img');
+      img.src = data.url;
+      el.appendChild(img);
+    }
+
+    const handle = document.createElement('div');
+    handle.className = 'resize-handle';
+    el.appendChild(handle);
+
+    makeInteractive(el);
+    canvas.appendChild(el);
+    if (data.hidden) el.style.display = 'none';
+  }
+
+function makeInteractive(el) {
+  const data = el._data;
+  if (!data) return;
+
+  let clickTimeout = null;
+
+// === КЛИК С ЗАДЕРЖКОЙ ===
+el.addEventListener('mousedown', e => {
+  if (e.target.classList.contains('resize-handle')) return;
+  if (isDrawingSelection || isDrawingHotspot) return;
+
+  // Сброс предыдущего таймаута
+  if (clickTimeout) clearTimeout(clickTimeout);
+
+  // Запускаем таймаут для редактирования
+  clickTimeout = setTimeout(() => {
+    e.stopPropagation();
+
+    if (data.type === 'text') {
+      el.contentEditable = true;
+      el.focus();
+      // Снимаем редактирование при потере фокуса
+      const blurHandler = () => {
+        el.contentEditable = false;
+        data.content = el.textContent;
+        saveState();
+        el.removeEventListener('blur', blurHandler);
+      };
+      el.addEventListener('blur', blurHandler);
+      return;
+    }
+
+    if (data.type === 'hotspot') {
+      const newUrl = prompt('Редактировать URL:', data.url);
+      if (newUrl && /^https?:\/\//i.test(newUrl)) {
+        data.url = newUrl;
+        const tooltip = el.querySelector('.hotspot-tooltip');
+        if (tooltip) tooltip.textContent = newUrl;
+        saveState();
+        showToast('URL обновлён', 'success');
+      }
+      return;
+    }
+
+    // Для других слоёв — просто выделение
+    if (!e.ctrlKey && !e.metaKey) {
+      selectedLayers.forEach(l => l.el.classList.remove('selected'));
+      selectedLayers.clear();
+    }
+    el.classList.add('selected');
+    selectedLayers.add({ el, data });
+    updateLayersPanel();
+    if (data.type === 'text') updateTextTools(data);
+  }, 250); // 250 мс — клик без движения
+});
+
+
+// === ПЕРЕТАСКИВАНИЕ (только если клик короткий) ===
+let dragStartTime = 0;
+el.addEventListener('mousedown', e => {
+  if (e.target.classList.contains('resize-handle')) return;
+  if (isDrawingSelection || isDrawingHotspot) return;
+
+  dragStartTime = Date.now();
+
+  const onMouseMove = (moveEvent) => {
+    if (Date.now() - dragStartTime > 50) { // >50 мс — считаем drag
+      clearTimeout(clickTimeout);
+      // Запускаем перетаскивание
+      if (!selectedLayers.has({ el, data })) {
+        if (!moveEvent.ctrlKey && !moveEvent.metaKey) {
+          selectedLayers.forEach(l => l.el.classList.remove('selected'));
+          selectedLayers.clear();
+        }
+        el.classList.add('selected');
+        selectedLayers.add({ el, data });
+        updateLayersPanel();
+      }
+
+      isDragging = true;
+      const rect = canvas.getBoundingClientRect();
+      dragData = {
+        layers: Array.from(selectedLayers),
+        startX: moveEvent.clientX,
+        startY: moveEvent.clientY,
+        offsets: Array.from(selectedLayers).map(l => ({
+          el: l.el,
+          offsetX: moveEvent.clientX - rect.left - percentToPx(l.el.style.left || '0%', 'x'),
+          offsetY: moveEvent.clientY - rect.top - percentToPx(l.el.style.top || '0%', 'y')
+        }))
+      };
+      document.removeEventListener('mousemove', onMouseMove);
+    }
+  };
+
+  document.addEventListener('mousemove', onMouseMove);
+
+  const onMouseUp = () => {
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  };
+  document.addEventListener('mouseup', onMouseUp);
+});
+
+  // === МАСШТАБ ===
+  el.addEventListener('wheel', e => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    const scale = e.deltaY > 0 ? 0.9 : 1.1;
+    const w = percentToPx(el.style.width, 'x') * scale;
+    const h = percentToPx(el.style.height, 'y') * scale;
+    el.style.width = pxToPercent(w, 'x');
+    el.style.height = pxToPercent(h, 'y');
+    if (data.type === 'hotspot') {
+      data.w = parseFloat(el.style.width);
+      data.h = parseFloat(el.style.height);
+      data.style.width = el.style.width;
+      data.style.height = el.style.height;
+    } else {
+      data.style.width = el.style.width;
+      data.style.height = el.style.height;
+    }
+    saveState();
+  });
+}
+  // === ГРУППОВОЕ ПЕРЕТАСКИВАНИЕ И РЕСАЙЗ ===
+  document.addEventListener('mousemove', e => {
+    if (isDragging && dragData) {
+      const rect = canvas.getBoundingClientRect();
+      dragData.offsets.forEach(o => {
+        const x = e.clientX - rect.left - o.offsetX;
+        const y = e.clientY - rect.top - o.offsetY;
+        o.el.style.left = pxToPercent(x, 'x');
+        o.el.style.top = pxToPercent(y, 'y');
+      });
+    }
+
+    if (isResizing && resizeData) {
+      const w = Math.max(50, resizeData.startW + (e.clientX - resizeData.startX));
+      const h = Math.max(50, resizeData.startH + (e.clientY - resizeData.startY));
+      resizeData.el.style.width = pxToPercent(w, 'x');
+      resizeData.el.style.height = pxToPercent(h, 'y');
+    }
+
+    if (isDrawingSelection && selectionBox) {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.min(e.clientX, selectionStart.x) - rect.left;
+      const y = Math.min(e.clientY, selectionStart.y) - rect.top;
+      const w = Math.abs(e.clientX - selectionStart.x);
+      const h = Math.abs(e.clientY - selectionStart.y);
+      selectionBox.style.left = x + 'px';
+      selectionBox.style.top = y + 'px';
+      selectionBox.style.width = w + 'px';
+      selectionBox.style.height = h + 'px';
+    }
+
+    if (isDrawingHotspot && hotspotEl) {
+      const w = e.clientX - hotspotStart.clientX;
+      const h = e.clientY - hotspotStart.clientY;
+      if (w > 0 && h > 0) {
+        hotspotEl.style.width = w + 'px';
+        hotspotEl.style.height = h + 'px';
+      }
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isDrawingSelection && selectionBox) {
+      const boxRect = selectionBox.getBoundingClientRect();
+      document.querySelectorAll('.layer').forEach(el => {
+        const elRect = el.getBoundingClientRect();
+        if (
+          elRect.left >= boxRect.left &&
+          elRect.right <= boxRect.right &&
+          elRect.top >= boxRect.top &&
+          elRect.bottom <= boxRect.bottom
+        ) {
+          el.classList.add('selected');
+          selectedLayers.add({ el, data: el._data });
+        }
+      });
+      selectionBox.remove();
+      selectionBox = null;
+      isDrawingSelection = false;
+      updateLayersPanel();
+    }
+
+    if (isDragging && dragData) {
+    dragData.offsets.forEach(o => {
+        const el = o.el;
+        const data = el._data;
+
+        if (data.type === 'hotspot') {
+        data.x = parseFloat(el.style.left);
+        data.y = parseFloat(el.style.top);
+        } else {
+        data.style.left = el.style.left;
+        data.style.top = el.style.top;
+        }
+    });
+    isDragging = false;
+    dragData = null;
+    saveState();
+    updateLayersPanel();
+    }
+
+    if (isResizing && resizeData) {
+    const el = resizeData.el;
+    const data = el._data;
+
+    if (data.type === 'hotspot') {
+        data.w = parseFloat(el.style.width);
+        data.h = parseFloat(el.style.height);
+    } else {
+        data.style.width = el.style.width;
+        data.style.height = el.style.height;
+    }
+    isResizing = false;
+    resizeData = null;
+    saveState();
+    }
+
+    if (hotspotEl) finalizeHotspot();
+  });
+
+    canvas.addEventListener('mouseover', (e) => {
+    const hotspot = e.target.closest('.hotspot');
+    if (!hotspot) return;
+
+    const preview = hotspot.querySelector('.hotspot-preview');
+    if (preview) {
+        preview.classList.add('show');
+    }
+    });
+
+canvas.addEventListener('mouseout', (e) => {
+  const hotspot = e.target.closest('.hotspot');
+  if (!hotspot) return;
+
+  const preview = hotspot.querySelector('.hotspot-preview');
+  if (preview) {
+    preview.classList.remove('show');
+  }
+});
+
+  function clearSelection() {
+    selectedLayers.forEach(l => l.el.classList.remove('selected'));
+    selectedLayers.clear();
+    updateLayersPanel();
+  }
+
+function startHotspot() {
+  if (isDrawingHotspot) return;
+  isDrawingHotspot = true;
+  canvas.style.cursor = 'crosshair';
+
+  const onClick = (e) => {
+    if (!isDrawingHotspot) return;
+    hotspotStart = { clientX: e.clientX, clientY: e.clientY };
+    hotspotEl = document.createElement('div');
+    hotspotEl.className = 'hotspot';
+    hotspotEl.style.left = (e.clientX - canvas.getBoundingClientRect().left) + 'px';
+    hotspotEl.style.top = (e.clientY - canvas.getBoundingClientRect().top) + 'px';
+    hotspotEl.style.width = '0px';
+    hotspotEl.style.height = '0px';
+
+    const label = document.createElement('div');
+    label.style.position = 'absolute';
+    label.style.top = '-24px';
+    label.style.left = '0';
+    label.style.fontSize = '10px';
+    label.style.background = 'var(--accent)';
+    label.style.color = '#000';
+    label.style.padding = '2px 6px';
+    label.style.borderRadius = '4px';
+    label.textContent = 'Ссылка';
+    hotspotEl.appendChild(label);
+
+    canvas.appendChild(hotspotEl);
+    canvas.removeEventListener('click', onClick);
+  };
+
+  canvas.addEventListener('click', onClick);
+}
+
+    function finalizeHotspot() {
+    if (!hotspotEl) return;
+
+    isDrawingHotspot = false;
+    canvas.style.cursor = 'default';
+
+    const cRect = canvas.getBoundingClientRect();
+    const rect = hotspotEl.getBoundingClientRect();
+
+    const x = ((rect.left - cRect.left) / cRect.width) * 100;
+    const y = ((rect.top - cRect.top) / cRect.height) * 100;
+    const w = (rect.width / cRect.width) * 100;
+    const h = (rect.height / cRect.height) * 100;
+
+    if (w < 2 || h < 2) {
+        hotspotEl.remove();
+        hotspotEl = null;
+        showToast('Слишком маленькая область', 'error');
+        return;
+    }
+
+    const url = prompt('Введите URL для ссылки:', 'https://');
+    if (!url || !/^https?:\/\//i.test(url)) {
+        hotspotEl.remove();
+        hotspotEl = null;
+        showToast('Неверный URL', 'error');
+        return;
+    }
+
+    const hotspotData = {
+        id: Date.now(),
+        type: 'hotspot',
+        x: x.toFixed(2),  // ← только %
+        y: y.toFixed(2),
+        w: w.toFixed(2),
+        h: h.toFixed(2),
+        url: url,
+        hidden: false
+    };
+
+    slides[currentIndex].hotspots.push(hotspotData);
+    hotspotEl.remove();
+    hotspotEl = null;
+
+    saveState();
+    loadSlide(currentIndex); // ← перерисовка
+    showToast('Ссылка добавлена', 'success');
+    }
+
+    function addHotspotLayer(data) {
+    const el = document.createElement('div');
+    el.className = 'hotspot layer';
+    el.dataset.id = data.id;
+    el._data = data;
+
+    el.style.left = data.x + '%';
+    el.style.top = data.y + '%';
+    el.style.width = data.w + '%';
+    el.style.height = data.h + '%';
+
+    // Tooltip (простой)
+    const tooltip = document.createElement('div');
+    tooltip.className = 'hotspot-tooltip';
+    tooltip.textContent = data.url;
+    el.appendChild(tooltip);
+
+    // Label
+    const label = document.createElement('div');
+    label.style.cssText = `
+        position: absolute; top: -24px; left: 0; font-size: 10px; 
+        background: var(--accent); color: #000; padding: 2px 6px; 
+        border-radius: 4px; white-space: nowrap; pointer-events: none;
+    `;
+    label.textContent = 'Ссылка';
+    el.appendChild(label);
+
+    // Resize handle
+    const handle = document.createElement('div');
+    handle.className = 'resize-handle';
+    el.appendChild(handle);
+
+    // Превью
+    const preview = document.createElement('div');
+    preview.className = 'hotspot-preview';
+    preview.innerHTML = `
+        <div class="url">${data.url}</div>
+        <img class="thumb loading" alt="Загрузка...">
+    `;
+    el.appendChild(preview);
+
+    // === ПРАВИЛЬНЫЕ обработчики на hotspot ===
+    const showPreview = () => {
+  const rect = el.getBoundingClientRect();
+  const previewRect = preview.getBoundingClientRect();
+  const spaceAbove = rect.top;
+  const spaceBelow = window.innerHeight - rect.bottom;
+
+  if (spaceAbove < previewRect.height + 20 && spaceBelow > spaceAbove) {
+    preview.style.bottom = 'auto';
+    preview.style.top = '100%';
+    preview.style.transform = 'translateX(-50%) translateY(8px)';
+  } else {
+    preview.style.bottom = '100%';
+    preview.style.top = 'auto';
+    preview.style.transform = 'translateX(-50%) translateY(-8px)';
+  }
+  preview.classList.add('show');
+};
+    const hidePreview = () => preview.classList.remove('show');
+
+    
+
+    el.addEventListener('mouseenter', showPreview);
+    el.addEventListener('mouseleave', hidePreview);
+
+    // Загрузка og:image
+    fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(data.url)}`)
+        .then(r => r.json())
+        .then(res => {
+        const html = res.contents;
+        const match = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
+        if (match && match[1]) {
+            const img = preview.querySelector('.thumb');
+            img.src = match[1];
+            img.onload = () => {
+            img.classList.remove('loading');
+            img.style.display = 'block';
+            };
+        }
+        })
+        .catch(() => {});
+
+    canvas.appendChild(el);
+    makeInteractive(el);
+
+    if (data.hidden) el.style.display = 'none';
+    }
+
+  function deleteSelected() {
+    if (selectedLayers.size === 0) return;
+    selectedLayers.forEach(l => {
+      l.el.remove();
+      if (l.data.type === 'hotspot') {
+        slides[currentIndex].hotspots = slides[currentIndex].hotspots.filter(d => d.id !== l.data.id);
+      } else {
+        slides[currentIndex].layers = slides[currentIndex].layers.filter(d => d.id !== l.data.id);
+      }
+    });
+    selectedLayers.clear();
+    saveState();
+    showToast('Слои удалены', 'success');
+    updateLayersPanel();
+  }
+
+    function openAnalytics() {
+    // Убираем active со всех вкладок
+    document.querySelectorAll('.carousel-tabs .tab').forEach(t => t.classList.remove('active'));
+    
+    // Активируем текущую вкладку аналитики
+    document.querySelector('.carousel-tabs .tab[data-action="analytics"]').classList.add('active');
+
+    // Скрываем ВСЁ, включая редактор и аналитику
+    document.querySelectorAll('.panel, #analytics-panel').forEach(p => {
+        p.style.display = 'none';
+    });
+
+    // Показываем только аналитику
+    document.getElementById('analytics-panel').style.display = 'block';
+
+    loadStats();
+    }
+
+    function loadStats() {
+    fetch(`/api/landing/stats/${currentKind}`)
+        .then(r => r.json())
+        .then(stats => {
+        const list = document.getElementById('stats-list');
+        const noData = document.getElementById('no-data');
+        list.innerHTML = '';
+
+        if (stats.length === 0) {
+            noData.style.display = 'block';
+            return;
+        }
+        noData.style.display = 'none';
+
+        stats.forEach((s, i) => {
+            const div = document.createElement('div');
+            div.className = 'stats-item';
+            div.style.cssText = `
+            background: #000; border-radius:12px; padding:16px; margin-bottom:12px;
+            border-left: 4px solid ${i === 0 ? '#00ff88' : i === 1 ? '#00cc66' : '#00aa44'};
+            transition:0.2s; cursor:pointer;
+            `;
+            div.onclick = () => window.open(s.url, '_blank');
+
+            const date = new Date(s.last).toLocaleString('ru');
+            div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-weight:600; font-size:1.1rem;">${s.clicks} клик(ов)</div>
+                <div style="background:var(--accent); color:#000; padding:4px 12px; border-radius:20px; font-size:0.8rem;">
+                #${i + 1}
+                </div>
+            </div>
+            <div style="margin:8px 0; color:#0f0; font-size:0.9rem; word-break:break-all;">
+                ${s.url}
+            </div>
+            <div style="font-size:0.8rem; color:#666;">
+                Последний: ${date}
+            </div>
+            `;
+            list.appendChild(div);
+        });
+        });
+    }
+
+
+function clearStats() {
+  if (!confirm('Очистить статистику?')) return;
+  fetch(`/api/landing/click`, { method: 'DELETE' }).then(() => {
+    showToast('Статистика очищена', 'success');
+    loadStats();
+  });
+}
+
+
+    function updateTextTools(data) {
+    if (data.type !== 'text') return;
+    document.getElementById('font-family').value = data.style.fontFamily;
+    document.getElementById('font-size').value = parseInt(data.style.fontSize);
+    document.getElementById('text-color').value = data.style.color;
+    document.getElementById('text-animation').value = data.style.animation || 'none';
+    updateRotationTool();
+    }
+
+  ['font-family', 'font-size', 'text-color', 'text-animation'].forEach(id => {
+    document.getElementById(id).addEventListener('change', () => {
+      if (selectedLayers.size === 0) return;
+      const first = Array.from(selectedLayers)[0];
+      if (first.data.type !== 'text') return;
+      const v = document.getElementById(id).value;
+      selectedLayers.forEach(l => {
+        if (l.data.type !== 'text') return;
+        if (id === 'font-family') { l.el.style.fontFamily = v; l.data.style.fontFamily = v; }
+        if (id === 'font-size') { l.el.style.fontSize = v + 'px'; l.data.style.fontSize = v + 'px'; }
+        if (id === 'text-color') { l.el.style.color = v; l.data.style.color = v; }
+        if (id === 'text-animation') {
+          l.el.className = 'layer text-layer selected';
+          if (v !== 'none') l.el.classList.add('animate__animated', `animate__${v}`);
+          l.data.style.animation = v;
+        }
+      });
+      saveState();
+    });
+  });
+
+
+    const rotationSlider = document.getElementById('rotation-slider');
+const rotationValue = document.getElementById('rotation-value');
+
+rotationSlider.addEventListener('input', () => {
+  const angle = rotationSlider.value;
+  rotationValue.textContent = angle + '°';
+
+  selectedLayers.forEach(l => {
+    const el = l.el;
+    const data = l.data;
+
+    // Применяем поворот
+    el.style.transform = `rotate(${angle}deg)`;
+
+    // Сохраняем в данные (если нужно при загрузке)
+    if (!data.style.transform) data.style.transform = '';
+    data.style.transform = `rotate(${angle}deg)`;
+  });
+
+  saveState();
+});
+
+
+// При выборе слоя — обновляем ползунок
+function updateRotationTool() {
+  if (selectedLayers.size === 0) {
+    rotationSlider.value = 0;
+    rotationValue.textContent = '0°';
+    return;
+  }
+
+  const first = Array.from(selectedLayers)[0];
+  const transform = first.el.style.transform || 'rotate(0deg)';
+  const angle = transform.match(/-?\d+/) ? parseInt(transform.match(/-?\d+/)[0]) : 0;
+
+  rotationSlider.value = angle;
+  rotationValue.textContent = angle + '°';
+}
+  function prevSlide() { if (currentIndex > 0) loadSlide(currentIndex - 1); }
+  function nextSlide() { if (currentIndex < 2) loadSlide(currentIndex + 1); }
+
+    function saveSlide() {
+    const dataToSend = slides.map(slide => ({
+        background: {
+        url: slide.background.url || null,
+        animation: slide.background.animation || 'fadeIn'
+        },
+        layers: slide.layers,
+        hotspots: slide.hotspots
+    }));
+
+    fetch(`/api/landing/carousel/${currentKind}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dataToSend)
+    })
+    .then(r => r.json())
+    .then(res => {
+        showToast(res.status === 'saved' ? 'Сохранено!' : 'Ошибка', 
+                res.status === 'saved' ? 'success' : 'error');
+        if (res.status === 'saved') {
+        localStorage.removeItem(`carousel_${currentKind}`); // Очищаем локальные
+        loadCarousel(); // Перезагружаем с сервера
+        }
+    })
+    .catch(() => showToast('Нет сети', 'error'));
+    }
+    
+
+// === СТАРТ ===
+window.addEventListener('load', () => {
+  loadCarousel(); // ← Просто вызываем новую функцию
+});
+
+
+</script>
+
+
+
+</body>
+</html>

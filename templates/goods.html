@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Товары — Piligrim</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/goods_dark.css') }}" id="theme-stylesheet">
+</head>
+
+<body>
+    <div class="gradient-overlay"></div>
+
+    <!-- NAVBAR БЕЗ ПОИСКА И КОРЗИНЫ -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="logo-section">
+                <img src="{{ url_for('static', filename='assets/logo.png') }}" alt="Piligrim" class="logo-img">
+                <span class="logo-text">piligrim</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="/" class="nav-link">Главная</a>
+                <a href="/goods" class="nav-link active">Товары</a>
+                <a href="/services" class="nav-link">Услуги</a>
+                <a href="/news" class="nav-link">Новости</a>
+                <a href="/about_company" class="nav-link">О компании</a>
+                <a href="/contacts" class="nav-link">Контакты</a>
+            </nav>
+            <div class="nav-right">
+                <!-- ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ — ВИСИТ СВЕРХУ В ШАПКЕ -->
+                <div class="rope-switch" id="themeToggle">
+                    <div class="rope"></div>
+                    <div class="theme-ball">
+                        <i class="fas fa-moon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ГЛАВНАЯ СЕКЦИЯ -->
+    <section class="goods-page">
+        <aside class="catalog-sidebar" id="catalogSidebar">
+            <div class="catalog-header" onclick="toggleCatalog()">
+                <h3>Каталог</h3>
+                <i class="fas fa-chevron-up catalog-toggle"></i>
+            </div>
+            <div class="catalog-list open" id="catalogList"></div>
+        </aside>
+
+        <div class="goods-main">
+            <div class="search-filter-bar">
+                <div class="search-box-large">
+                    <input type="text" placeholder="Найти товар..." id="goodsSearch">
+                    <button><i class="fas fa-magnifying-glass"></i></button>
+                </div>
+                <button class="filter-toggle" id="filterToggle">
+                    <i class="fas fa-sliders"></i> Фильтры
+                </button>
+
+                <div class="filters-panel" id="filtersPanel">
+                    <div class="filter-group">
+                        <label>Цена</label>
+                        <div class="price-inputs">
+                            <input type="number" placeholder="от" id="priceFrom">
+                            <input type="number" placeholder="до" id="priceTo">
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <label>Сортировка</label>
+                        <select class="sort-select" id="sortSelect">
+                            <option value="default">По умолчанию</option>
+                            <option value="price-asc">Сначала дешевле</option>
+                            <option value="price-desc">Сначала дороже</option>
+                            <option value="name">По названию</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Бренд</label>
+                        <div id="brandCheckboxes" class="brand-checkboxes"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="goods-grid" id="goodsGrid"></div>
+        </div>
+    </section>
+
+    <!-- МОДАЛЬНОЕ ОКНО -->
+    <div class="modal-overlay" id="goodsModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">x</button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- ЗВУК КЛИКА -->
+    <audio id="clickSound" src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSl+zPDYgjMGHm7A7+OZURE" preload="auto"></audio>
+
+    <script>
+        // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
+        const goodsGrid = document.getElementById('goodsGrid');
+        const catalogList = document.getElementById('catalogList');
+        const goodsSearch = document.getElementById('goodsSearch');
+        const priceFrom = document.getElementById('priceFrom');
+        const priceTo = document.getElementById('priceTo');
+        const sortSelect = document.getElementById('sortSelect');
+        const brandCheckboxes = document.getElementById('brandCheckboxes');
+        const filterToggle = document.getElementById('filterToggle');
+        const filtersPanel = document.getElementById('filtersPanel');
+        let currentCategory = 'all';
+
+        // === ЗВЁЗДЫ ===
+        function renderStars(rating) {
+            rating = parseFloat(rating) || 0;
+            if (rating === 0) return '☆☆☆☆☆';
+            const full = Math.floor(rating);
+            const hasHalf = rating - full >= 0.5;
+            const empty = 5 - full - (hasHalf ? 1 : 0);
+            return '★'.repeat(full) + (hasHalf ? '★' : '') + '☆'.repeat(empty);
+        }
+
+        // === АВТОПРОКРУТКА ФОТО В КАРТОЧКЕ ===
+        function startImageSlider(card) {
+            const container = card.querySelector('.good-img-container');
+            const imgs = container.querySelectorAll('.good-img');
+            if (imgs.length <= 1) return;
+
+            let current = 0;
+            const next = () => {
+                imgs[current].classList.remove('active');
+                current = (current + 1) % imgs.length;
+                imgs[current].classList.add('active');
+            };
+
+            const interval = setInterval(next, 3000);
+            card.dataset.slider = interval;
+
+            card.addEventListener('mouseenter', () => clearInterval(interval));
+            card.addEventListener('mouseleave', () => {
+                card.dataset.slider = setInterval(next, 3000);
+            });
+        }
+
+        function stopSlider(card) {
+            if (card.dataset.slider) {
+                clearInterval(card.dataset.slider);
+                delete card.dataset.slider;
+            }
+        }
+
+        // === ПРИМЕНЕНИЕ ФИЛЬТРОВ ===
+        async function applyFilters() {
+            const params = new URLSearchParams();
+            if (goodsSearch.value.trim()) params.append('search', goodsSearch.value.trim());
+            if (priceFrom.value) params.append('min_price', priceFrom.value);
+            if (priceTo.value) params.append('max_price', priceTo.value);
+            params.append('category', currentCategory);
+            document.querySelectorAll('#brandCheckboxes input:checked').forEach(cb => params.append('brand', cb.value));
+            if (sortSelect.value !== 'default') params.append('sort', sortSelect.value);
+
+            try {
+                const res = await fetch(`/api/products?${params}`);
+                const products = await res.json();
+
+                document.querySelectorAll('.good-card').forEach(stopSlider);
+                goodsGrid.innerHTML = '';
+
+                if (!products.length) {
+                    goodsGrid.innerHTML = '<p style="color:#888; grid-column:1/-1; text-align:center; padding:2rem;">Товары не найдены</p>';
+                    return;
+                }
+
+                const reviewPromises = products.map(p => 
+                    fetch(`/api/reviews/${p.id}`)
+                        .then(r => r.ok ? r.json() : { avg_rating: 0, review_count: 0 })
+                        .catch(() => ({ avg_rating: 0, review_count: 0 }))
+                );
+                const reviewsData = await Promise.all(reviewPromises);
+
+                products.forEach((p, i) => {
+                    const rev = reviewsData[i];
+                    const avgRating = parseFloat(rev.avg_rating) || 0;
+                    const reviewCount = parseInt(rev.review_count) || 0;
+
+                    const card = document.createElement('div');
+                    card.className = 'good-card';
+                    card.dataset.id = p.id;
+                    card.onclick = () => openModal(p.id);
+
+                    const imageHtml = p.image_urls?.length 
+                        ? p.image_urls.map((url, idx) => 
+                            `<img src="${url}" alt="${p.title}" class="good-img ${idx === 0 ? 'active' : ''}" loading="lazy">`
+                        ).join('')
+                        : '<img src="https://via.placeholder.com/600x400/111/888?text=No+Image" class="good-img active">';
+
+                    const starsHtml = avgRating > 0.1 ? `
+                        <div class="rating-stars">
+                            <span class="stars">${renderStars(avgRating)}</span>
+                            <span>${avgRating.toFixed(1)} <small>(${reviewCount})</small></span>
+                        </div>
+                    ` : '';
+
+                    card.innerHTML = `
+                        <div class="good-img-container">
+                            ${imageHtml}
+                            ${starsHtml}
+                        </div>
+                        <div class="good-info">
+                            <h3 class="good-title">${p.title}</h3>
+                            <div class="good-price">${p.price_str}</div>
+                            <div class="good-stock">
+                                ${parseInt(p.stock) === -1 ? 'В наличии' : 
+                                parseInt(p.stock) > 0 ? `В наличии (${parseInt(p.stock)} шт.)` : 'Нет в наличии'}
+                            </div>
+                            <p class="good-desc">${p.description || ''}</p>
+                            <div class="good-actions">
+                                <button class="good-add-cart ${p.stock === 0 ? 'disabled' : ''}" onclick="event.stopPropagation(); addToCart(this, event)" style="display:none;">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    goodsGrid.appendChild(card);
+                    setTimeout(() => {
+                        card.classList.add('visible');
+                        startImageSlider(card);
+                    }, i * 80);
+                });
+            } catch (err) {
+                console.error('Ошибка:', err);
+            }
+        }
+
+        // === МОДАЛКА ===
+        async function openModal(productId) {
+            try {
+                const [productRes, reviewsRes] = await Promise.all([
+                    fetch(`/api/product/${productId}`),
+                    fetch(`/api/reviews/${productId}`)
+                ]);
+
+                const p = await productRes.json();
+                const revData = await reviewsRes.json();
+                if (!revData.success) throw new Error('Нет отзывов');
+
+                const reviews = revData.reviews || [];
+                const avgRating = parseFloat(revData.avg_rating) || 0;
+                const reviewCount = parseInt(revData.review_count) || 0;
+
+                const images = p.image_urls || [];
+                const mainImg = images.length ? images[0] : 'https://via.placeholder.com/600';
+
+                const thumbsHtml = images.length > 1 ? `
+                    <div class="modal-thumbs" style="display:flex; gap:8px; margin-top:12px; overflow-x:auto; padding:4px 0;">
+                        ${images.map((url, i) => `
+                            <img src="${url}" alt="thumb" 
+                                style="width:70px; height:70px; object-fit:cover; border-radius:12px; cursor:pointer; border:2px solid ${i===0?'var(--accent)':'transparent'}; transition:all .3s;"
+                                onclick="document.querySelector('.modal-main-img').src=this.src; 
+                                        document.querySelectorAll('.modal-thumbs img').forEach(t=>t.style.border='2px solid transparent');
+                                        this.style.border='2px solid var(--accent)'">
+                        `).join('')}
+                    </div>
+                ` : '';
+
+                const reviewsHtml = reviews.length ? reviews.map(r => {
+                    const author = r.author || 'Аноним';
+                    return `
+                        <div class="review-item">
+                            <div class="review-avatar">
+                                <div class="avatar-initial">${author[0].toUpperCase()}</div>
+                            </div>
+                            <div class="review-content">
+                                <div class="review-header">
+                                    <strong>${author}</strong>
+                                    <span class="review-rating">
+                                        <span style="color:#FFD60A; letter-spacing:-2px; font-size:1rem;">
+                                            ${renderStars(r.rating)}
+                                        </span>
+                                        <small style="margin-left:4px; opacity:0.9;">${r.rating}.0</small>
+                                    </span>
+                                </div>
+                                <p class="review-text">${r.text || ''}</p>
+                                <small class="review-date">
+                                    ${new Date(r.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                </small>
+                            </div>
+                        </div>
+                    `;
+                }).join('') : `
+                    <div class="no-reviews">
+                        <i class="far fa-star"></i>
+                        <p>Отзывов пока нет</p>
+                        <small>Будьте первым!</small>
+                    </div>
+                `;
+
+                document.getElementById('modalBody').innerHTML = `
+                    <div class="modal-product">
+                        <div class="modal-gallery">
+                            <img src="${mainImg}" alt="${p.title}" class="modal-main-img">
+                            ${thumbsHtml}
+                        </div>
+                        <div class="modal-details">
+                            <h2>${p.title}</h2>
+                            <div class="modal-rating-big">
+                                ${reviewCount > 0 ? `
+                                    <div class="big-stars" style="font-size:2.6rem; letter-spacing:-3px;">
+                                        ${renderStars(avgRating)}
+                                    </div>
+                                    <div class="big-rating">${avgRating.toFixed(1)}</div>
+                                    <small>${reviewCount} отзыв${reviewCount === 1 ? '' : 'а'}</small>
+                                ` : '<small style="opacity:0.7;">Нет оценок</small>'}
+                            </div>
+                            <p class="modal-price">${p.price_str}</p>
+                            <p><strong>Наличие:</strong> 
+                                ${parseInt(p.stock) === -1 ? 'В наличии' : 
+                                parseInt(p.stock) > 0 ? `В наличии (${parseInt(p.stock)} шт.)` : 'Нет в наличии'}
+                            </p>
+                            <p class="modal-desc">${p.description || 'Описание отсутствует'}</p>
+                        </div>
+                    </div>
+
+                    <div class="reviews-section">
+                        <h3>Отзывы покупателей</h3>
+                        <div class="reviews-list">${reviewsHtml}</div>
+                    </div>
+                `;
+
+                document.getElementById('goodsModal').classList.add('active');
+                document.body.style.overflow = 'hidden';
+            } catch (err) {
+                console.error('Ошибка:', err);
+                document.getElementById('modalBody').innerHTML = `<div style="text-align:center;padding:3rem;color:#aaa"><p>Не удалось загрузить данные</p></div>`;
+                document.getElementById('goodsModal').classList.add('active');
+            }
+        }
+
+        // === ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ В ШАПКЕ ===
+        const themeToggle = document.getElementById('themeToggle');
+        const themeBall = themeToggle.querySelector('.theme-ball');
+        const html = document.documentElement;
+        const clickSound = document.getElementById('clickSound');
+        const themeStylesheet = document.getElementById('theme-stylesheet');
+        let isLight = false;
+
+        function updateTheme() {
+            if (isLight) {
+                themeBall.innerHTML = `<i class="fas fa-sun"></i>`;
+                html.setAttribute('data-theme', 'light');
+                themeStylesheet.href = "{{ url_for('static', filename='css/goods_light.css') }}";
+            } else {
+                themeBall.innerHTML = `<i class="fas fa-moon"></i>`;
+                html.setAttribute('data-theme', 'dark');
+                themeStylesheet.href = "{{ url_for('static', filename='css/goods_dark.css') }}";
+            }
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            themeToggle.classList.add('clicked');
+            clickSound.currentTime = 0;
+            clickSound.play().catch(() => {});
+
+            setTimeout(() => {
+                themeToggle.classList.remove('clicked');
+            }, 700);
+
+            setTimeout(() => {
+                isLight = !isLight;
+                updateTheme();
+            }, 300);
+        });
+
+        // === ИНИЦИАЛИЗАЦИЯ ===
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'light') {
+                isLight = true;
+            }
+            updateTheme();
+
+            loadCategories();
+            loadBrands();
+            applyFilters();
+            document.querySelector('.gradient-overlay').classList.add('active');
+            document.querySelector('.catalog-sidebar').classList.add('visible');
+        });
+
+        window.closeModal = function() {
+            const modal = document.getElementById('goodsModal');
+            modal.classList.remove('active');
+            setTimeout(() => { document.body.style.overflow = ''; }, 400);
+        };
+
+        // === ОСТАЛЬНЫЕ ФУНКЦИИ ===
+        async function loadCategories() {
+            try {
+                const res = await fetch('/api/categories');
+                const cats = await res.json();
+                catalogList.innerHTML = `<div class="catalog-item active" data-category="all"><div class="catalog-icon"><i class="fas fa-cube"></i></div><span>Все товары</span></div>`;
+                cats.forEach(cat => {
+                    const item = document.createElement('div');
+                    item.className = 'catalog-item';
+                    item.dataset.category = cat;
+                    item.innerHTML = `<div class="catalog-icon"><i class="fas fa-tag"></i></div><span>${cat}</span>`;
+                    catalogList.appendChild(item);
+                });
+                attachCategoryListeners();
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadBrands() {
+            try {
+                const res = await fetch('/api/brands');
+                const brands = await res.json();
+                brandCheckboxes.innerHTML = '';
+                brands.forEach(b => {
+                    const label = document.createElement('label');
+                    label.innerHTML = `<input type="checkbox" value="${b}"> ${b}`;
+                    brandCheckboxes.appendChild(document.createElement('br'));
+                    brandCheckboxes.appendChild(label);
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        function attachCategoryListeners() {
+            document.querySelectorAll('.catalog-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.catalog-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    currentCategory = item.dataset.category;
+                    applyFilters();
+                });
+            });
+        }
+
+        goodsSearch.addEventListener('input', () => setTimeout(applyFilters, 300));
+        [priceFrom, priceTo, sortSelect].forEach(el => el.addEventListener('input', applyFilters));
+        brandCheckboxes.addEventListener('change', applyFilters);
+        filterToggle.addEventListener('click', () => {
+            filterToggle.classList.toggle('active');
+            filtersPanel.classList.toggle('open');
+        });
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        function toggleCatalog() {
+            document.querySelector('.catalog-header').classList.toggle('collapsed');
+            document.getElementById('catalogList').classList.toggle('open');
+        }
+
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('filtersPanel');
+            const toggle = document.getElementById('filterToggle');
+            if (!toggle.contains(e.target) && !panel.contains(e.target)) {
+                toggle.classList.remove('active');
+                panel.classList.remove('open');
+            }
+        });
+
+        document.getElementById('goodsModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // Функция addToCart оставлена, но кнопка скрыта (на случай, если понадобится в будущем)
+        function addToCart(btn, event) {
+            event.stopPropagation();
+            // Функционал удалён
+        }
+    </script>
+
+    <!-- СТИЛИ ДЛЯ ПЕРЕКЛЮЧАТЕЛЯ В ШАПКЕ -->
+    <style>
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .rope-switch {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            top: 105px;
+        }
+
+        .rope {
+            width: 4px;
+            height: 60px;
+            background: #a8a8a8;
+            position: relative;
+            border-radius: 2px;
+            box-shadow: 0 0 8px rgba(0,0,0,0.4), inset 0 0 3px rgba(255,255,255,0.5);
+            transition: all 0.4s ease;
+            transform-origin: top center;
+            overflow: hidden;
+            margin-bottom: -12px;
+        }
+
+        .rope::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, #f0f0f0 0px, #f0f0f0 1px, #a8a8a8 2px, #a8a8a8 4px);
+            opacity: 0.9;
+        }
+
+        .theme-ball {
+            width: 40px;
+            height: 40px;
+            background: #f5f5f5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.35), inset 0 5px 10px rgba(255,255,255,0.8), inset 0 -5px 10px rgba(0,0,0,0.2);
+            transition: all 0.4s ease;
+            font-size: 1.3rem;
+            color: #333;
+            text-shadow: 0 1px 1px rgba(255,255,255,0.8);
+            border: 1.5px solid #ccc;
+            z-index: 10;
+        }
+
+        [data-theme="light"] .rope {
+            background: #e8e8e8;
+            box-shadow: 0 0 8px rgba(0,0,0,0.15), inset 0 0 3px rgba(255,255,255,0.7);
+        }
+
+        [data-theme="light"] .rope::before {
+            background: repeating-linear-gradient(0deg, #ffffff 0px, #ffffff 1px, #e8e8e8 2px, #e8e8e8 4px);
+        }
+
+        [data-theme="light"] .theme-ball {
+            background: #fdfdfd;
+            color: #222;
+            box-shadow: 0 8px 20px rgba(0,0,0,.15), inset 0 5px 10px rgba(255,255,255,.9), inset 0 -5px 10px rgba(0,0,0,.1);
+            border: 1.5px solid #ddd;
+        }
+
+        .rope-switch.clicked .rope {
+            animation: pull-rope 0.7s cubic-bezier(0.2, 1.5, 0.4, 1);
+        }
+
+        .rope-switch.clicked .theme-ball {
+            animation: pull-ball 0.7s cubic-bezier(0.2, 1.5, 0.4, 1);
+        }
+
+        @keyframes pull-rope {
+            0% { transform: translateY(0) rotate(0); height: 60px; }
+            40% { transform: translateY(18px) rotate(6deg); height: 42px; }
+            100% { transform: translateY(0) rotate(0); height: 60px; }
+        }
+
+        @keyframes pull-ball {
+            0% { transform: translateY(0); }
+            40% { transform: translateY(18px); }
+            100% { transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .rope-switch {
+                display: none;
+            }
+        }
+    </style>
+
+</body>
+</html>

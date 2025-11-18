@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Товары — Админка | Piligrim</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">\
+
+     <link rel="stylesheet" href="/static/css/admin/admin_goods.css">
+
+</head>
+<body>
+
+    <header>
+        <a href="/" class="logo"><img src="/static/assets/logo.png" alt="ZAZA" class="logo-img"></a>
+        <nav style="margin-left: auto;"><a href="/" class="nav-link">Главная</a></nav>
+    </header>
+
+    <aside class="sidebar">
+        <h3 class="sidebar-title">Админка</h3>
+        <div class="sidebar-menu">
+            <a href="/admin" class="sidebar-item active"><i class="fas fa-box"></i><span>Товары</span></a>
+            <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
+            <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
+            <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
+            <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
+            <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
+            <a href="/admin_reviews" class="sidebar-item"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews | e }}</div></span></a>
+            <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders | e }}</div></span></a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="admin-container">
+            <h1 class="section-title">Товары</h1>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="flash {{ 'success' if category != 'error' else 'error' }}">{{ message | safe }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <!-- Сворачиваемая форма добавления -->
+            <div class="add-form-wrapper" id="addFormWrapper">
+                <div class="add-form-header" onclick="document.getElementById('addFormWrapper').classList.toggle('collapsed')">
+                    <h3>Добавить новый товар</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+<!-- ====================== ФОРМА ДОБАВЛЕНИЯ ТОВАРА ====================== -->
+<div class="add-form-body">
+    <form id="addForm">
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 1.2rem;">
+            <div class="form-group">
+                <label>Название <span style="color:#ff4444;">*</span></label>
+                <div class="input-wrapper">
+                    <i class="fas fa-tag input-icon"></i>
+                    <input type="text" name="title" placeholder="iPhone 15 Pro Max" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Цена (₽) <span style="color:#ff4444;">*</span></label>
+                <div class="input-wrapper">
+                    <i class="fas fa-ruble-sign input-icon"></i>
+                    <input type="number" step="0.01" name="price_rub" placeholder="129 990.00" min="0.01" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Категория <span style="color:#ff4444;">*</span></label>
+                <div class="input-wrapper">
+                    <i class="fas fa-folder input-icon"></i>
+                    <input type="text" name="category" placeholder="phones" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Бренд</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-copyright input-icon"></i>
+                    <input type="text" name="brand" placeholder="Apple">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Количество <small style="color:#888;">(-1 = ∞)</small></label>
+                <div class="input-wrapper">
+                    <i class="fas fa-boxes input-icon"></i>
+                    <input type="number" name="stock" value="-1" placeholder="-1">
+                </div>
+            </div>
+
+            <div class="form-group" style="align-self: end;">
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" name="in_stock" checked>
+                    <span class="checkmark"></span>
+                    В наличии
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group" style="grid-column: 1 / -1; margin-top: 1rem;">
+            <label>Фото товара</label>
+            <div class="drop-zone" id="addDropZone">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 0.5rem; color:#666;"></i>
+                <p>Перетащите фото сюда или <span style="color:#00ff9d; text-decoration:underline;">кликните для выбора</span></p>
+                <input type="file" name="images" multiple accept="image/*" id="addFileInput" style="display:none;">
+            </div>
+            <div class="image-preview" id="addPreview"></div>
+        </div>
+
+        <div style="grid-column: 1 / -1; margin-top: 1rem;">
+            <button type="submit" class="btn-zaza-primary">
+                <i class="fas fa-plus-circle"></i> Добавить товар
+            </button>
+        </div>
+    </form>
+</div>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Поиск по названию, категории, бренду..." onkeyup="filterProducts()">
+            </div>
+
+            <div class="card">
+                {% if products|length == 0 %}
+                <div class="no-products"><i class="fas fa-box-open"></i><p style="font-size:1.6rem;">Товаров пока нет</p></div>
+                {% else %}
+                <table class="products-table">
+                    <thead>
+                        <tr>
+                            <th>Фото</th>
+                            <th>Название</th>
+                            <th>Цена</th>
+                            <th>Категория / Бренд</th>
+                            <th>Наличие</th>
+                            <th style="width:140px;">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody">
+                        {% for p in products %}
+                        <tr class="product-row" data-id="{{ p.id }}">
+                            <td>
+                                {% if p.image_filenames and p.image_filenames != '[]' %}
+                                    {% set imgs = p.image_filenames|fromjson %}
+                                    <img src="{{ url_for('uploaded_file', filename=imgs[0]) }}" class="product-thumb" onerror="this.style.display='none';this.parentNode.innerHTML='<div style=\'width:56px;height:56px;background:#222;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#555;font-size:0.7rem;\'>—</div>'">
+                                {% else %}
+                                    <div style="width:56px;height:56px;background:#222;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#555;font-size:0.7rem;">—</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="font-weight:600;">{{ p.title }}</div>
+                                {% if p.description %}
+                                <div style="font-size:0.85rem;color:#999;margin-top:0.3rem;max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                    {{ p.description[:70] }}{% if p.description|length > 70 %}...{% endif %}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td class="price-cell">{{ '%.2f'|format(p.price / 100) }} ₽</td>
+                            <td><div>{{ p.category }}</div>{% if p.brand %}<div style="color:#999;font-size:0.9rem;">{{ p.brand }}</div>{% endif %}</td>
+                            <td><span class="stock-badge">{% if p.stock == -1 %}∞{% else %}{{ p.stock }}{% endif %}</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn edit" onclick="event.stopPropagation(); openEditModal(this)"
+                                        data-id="{{ p.id }}"
+                                        data-title="{{ p.title|e|replace('"', '&quot;') }}"
+                                        data-price_rub="{{ (p.price / 100)|string }}"
+                                        data-category="{{ p.category|e|replace('"', '&quot;') }}"
+                                        data-brand="{{ (p.brand or '')|e|replace('"', '&quot;') }}"
+                                        data-description="{{ (p.description or '')|e|replace('"', '&quot;') }}"
+                                        data-in_stock="{{ p.in_stock|int }}"
+                                        data-stock="{{ p.stock }}"
+                                        data-images="{{ p.image_filenames|e|replace('"', '&quot;') }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="action-btn delete" onclick="event.stopPropagation(); prepareAction('delete', {{ p.id }})">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="pagination" id="pagination"></div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Карточка товара снизу -->
+    <div class="product-detail" id="productDetail">
+        <button class="detail-close" onclick="closeProductDetail()">×</button>
+        <div class="detail-grid">
+            <div class="detail-images" id="detailImages"></div>
+            <div class="detail-info">
+                <h3 id="detailTitle"></h3>
+                <div class="detail-price" id="detailPrice"></div>
+                <div id="detailCategoryBrand" style="color:#aaa; margin:0.5rem 0;"></div>
+                <div id="detailStock" style="color:#aaa;"></div>
+                <div class="detail-desc" id="detailDescription">Нет описания</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка редактирования (без пароля) -->
+<!-- ====================== МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ ====================== -->
+<div id="editModal" class="modal-overlay">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('editModal')">×</button>
+        <h3><i class="fas fa-edit" style="margin-right:10px; color:#00ff9d;"></i> Редактировать товар</h3>
+        
+        <form id="editForm">
+            <input type="hidden" name="product_id" id="edit_id">
+
+            <div class="form-grid" style="gap:1.2rem;">
+                <div class="form-group">
+                    <label>Название</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-tag input-icon"></i>
+                        <input type="text" name="title" id="edit_title" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Цена (₽)</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-ruble-sign input-icon"></i>
+                        <input type="number" step="0.01" name="price_rub" id="edit_price_rub" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Категория</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-folder input-icon"></i>
+                        <input type="text" name="category" id="edit_category" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Бренд</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-copyright input-icon"></i>
+                        <input type="text" name="brand" id="edit_brand">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top:0.5rem;">
+                <label>Описание</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-align-left input-icon" style="top:14px;"></i>
+                    <textarea name="description" id="edit_description" rows="4" placeholder="Краткое описание товара..."></textarea>
+                </div>
+            </div>
+
+            <div class="form-grid" style="gap:1.2rem; align-items:end;">
+                <div class="form-group">
+                    <label>Количество</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-boxes input-icon"></i>
+                        <input type="number" name="stock" id="edit_stock" value="-1">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" name="in_stock" id="edit_in_stock">
+                        <span class="checkmark"></span>
+                        В наличии
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Текущие фото</label>
+                <div class="image-preview" id="editCurrentPreview"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Добавить новые фото</label>
+                <div class="drop-zone" id="editDropZone">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 1.8rem; margin-bottom: 0.4rem; color:#666;"></i>
+                    <p>Перетащите или <span style="color:#00ff9d; text-decoration:underline;">кликните</span></p>
+                    <input type="file" name="images" multiple accept="image/*" id="editFileInput" style="display:none;">
+                </div>
+                <div class="image-preview" id="editNewPreview"></div>
+            </div>
+
+            <div class="modal-actions" style="margin-top:2rem;">
+                <button type="button" onclick="prepareAction('edit')" class="btn-zaza-primary">
+                    <i class="fas fa-save"></i> Сохранить изменения
+                </button>
+                <button type="button" onclick="closeModal('editModal')" class="btn-zaza-secondary">
+                    Отмена
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <!-- Универсальная модалка с паролем -->
+    <div id="passwordModal" class="modal-overlay">
+        <div class="modal" style="max-width: 460px;">
+            <button class="modal-close" onclick="closeModal('passwordModal')">×</button>
+            <h3>Подтвердите действие</h3>
+            <p style="color:#aaa; text-align:center; margin:1rem 0;">Введите пароль администратора</p>
+            <input type="password" id="adminPassword" placeholder="Пароль" autofocus style="width:100%; padding:1rem; font-size:1rem;">
+            <div id="passwordError">Неверный пароль</div>
+            <div class="modal-actions">
+                <button class="btn-primary" onclick="executePendingAction()">Подтвердить</button>
+                <button class="cancel-btn" onclick="closeModal('passwordModal')">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ВИСЯЩИЙ СВЕТИЛЬНИК — ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
+<script>
+    
+    fetch('/api/check_admin').then(r => r.json()).then(d => { if (!d.is_admin) location.href = '/404'; });
+
+    let pendingAction = null;
+    let pendingFormData = null;
+
+    // === АЛЕРТЫ В СТИЛЕ ZAZA ===
+    function showAlert(message, type = 'success') {
+        // Удаляем старый, если вдруг висит
+        document.querySelectorAll('.zaza-toast').forEach(t => t.remove());
+
+        const toast = document.createElement('div');
+        toast.className = `zaza-toast ${type}`;
+        toast.innerHTML = `
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+            <span>${message}</span>
+            <button class="close" onclick="this.parentElement.style.transform='translateX(450px)';this.parentElement.style.opacity='0';setTimeout(()=>this.parentElement.remove(),600)">×</button>
+        `;
+        document.body.appendChild(toast);
+
+        // Анимация появления
+        setTimeout(() => {
+            toast.style.transform = 'translateX(0)';
+            toast.style.opacity = '1';
+        }, 50);
+
+        // Автозакрытие через 4 сек
+        setTimeout(() => {
+            toast.style.transform = 'translateX(450px)';
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 600);
+        }, 4000);
+    }
+
+    // === ПОДГОТОВКА ДЕЙСТВИЯ ===
+    function prepareAction(action, productId = null) {
+        pendingAction = action;
+        pendingFormData = new FormData();
+
+        if (action === 'add') {
+            const form = document.getElementById('addForm');
+            pendingFormData = new FormData(form);
+            pendingFormData.append('action', 'add');
+            pendingFormData.append('price', Math.round(parseFloat(form.price_rub.value || 0) * 100));
+        } else if (action === 'edit') {
+            const form = document.getElementById('editForm');
+            // Собираем keep_images вручную
+            document.querySelectorAll('#editCurrentPreview input[name="keep_images"]').forEach(inp => {
+                pendingFormData.append('keep_images', inp.value);
+            });
+            pendingFormData.append('action', 'edit');
+            pendingFormData.append('product_id', document.getElementById('edit_id').value);
+            pendingFormData.append('title', document.getElementById('edit_title').value);
+            pendingFormData.append('price_rub', document.getElementById('edit_price_rub').value);
+            pendingFormData.append('price', Math.round(parseFloat(document.getElementById('edit_price_rub').value || 0) * 100));
+            pendingFormData.append('category', document.getElementById('edit_category').value);
+            pendingFormData.append('brand', document.getElementById('edit_brand').value || '');
+            pendingFormData.append('description', document.getElementById('edit_description').value || '');
+            pendingFormData.append('stock', document.getElementById('edit_stock').value);
+            pendingFormData.append('in_stock', document.getElementById('edit_in_stock').checked ? 1 : 0);
+            const newFiles = document.getElementById('editFileInput').files;
+            for (let i = 0; i < newFiles.length; i++) {
+                pendingFormData.append('images', newFiles[i]);
+            }
+        } else if (action === 'delete') {
+            pendingFormData.append('action', 'delete');
+            pendingFormData.append('product_id', productId);
+        }
+
+        document.getElementById('passwordModal').classList.add('active');
+        document.getElementById('adminPassword').value = '';
+        document.getElementById('adminPassword').focus();
+        document.getElementById('passwordError').style.display = 'none';
+    }
+
+    async function executePendingAction() {
+        const password = document.getElementById('adminPassword').value.trim(); // ИСПРАВЛЕНО: ById, а не By0Id !!!
+        if (!password) return;
+
+        // Пересоздаём FormData заново — старый пароль не остаётся
+        const freshFormData = new FormData();
+        for (let [key, value] of pendingFormData.entries()) {
+            if (key !== 'password') {
+                freshFormData.append(key, value);
+            }
+        }
+        freshFormData.append('password', password);
+
+        try {
+            const resp = await fetch('/admin', { 
+                method: 'POST', 
+                body: freshFormData,
+                redirect: 'manual'
+            });
+
+            if (resp.ok) {
+                const msg = pendingAction === 'add' ? 'Товар успешно добавлен!' :
+                            pendingAction === 'edit' ? 'Изменения сохранены!' :
+                            'Товар удалён!';
+                showAlert(msg, 'success');
+                closeModal('passwordModal');
+                setTimeout(() => location.reload(), 1200);
+            } else {
+                document.getElementById('passwordError').style.display = 'block';
+                document.getElementById('adminPassword').value = '';
+                document.getElementById('adminPassword').focus();
+                showAlert('Неверный пароль администратора', 'error');
+            }
+        } catch (err) {
+            document.getElementById('passwordError').style.display = 'block';
+            showAlert('Нет связи с сервером', 'error');
+        }
+    }
+    // Привязка форм
+    document.getElementById('addForm').onsubmit = function(e) {
+        e.preventDefault();
+
+        const title = this.title.value.trim();
+        const price = parseFloat(this.price_rub.value);
+        const category = this.category.value.trim();
+
+        if (!title) {
+            showAlert('Заполните поле «Название»', 'error');
+            this.title.focus();
+            return;
+        }
+        if (!price || price <= 0) {
+            showAlert('Укажите корректную цену больше 0', 'error');
+            this.price_rub.focus();
+            return;
+        }
+        if (!category) {
+            showAlert('Заполните поле «Категория»', 'error');
+            this.category.focus();
+            return;
+        }
+
+        prepareAction('add');
+    };
+
+function openEditModal(btn) {
+    const d = btn.dataset;
+
+    // Основные поля — безопасно заменяем &quot; обратно в "
+    document.getElementById('edit_id').value = d.id;
+    document.getElementById('edit_title').value = (d.title || '').replace(/&quot;/g, '"');
+    document.getElementById('edit_price_rub').value = d.price_rub || '';
+    document.getElementById('edit_category').value = (d.category || '').replace(/&quot;/g, '"');
+    document.getElementById('edit_brand').value = (d.brand || '').replace(/&quot;/g, '"');
+    document.getElementById('edit_description').value = (d.description || '').replace(/&quot;/g, '"');
+    document.getElementById('edit_stock').value = d.stock || '-1';
+    document.getElementById('edit_in_stock').checked = d.in_stock === '1';
+
+    // === ТЕКУЩИЕ ФОТО — САМАЯ ВАЖНАЯ ЧАСТЬ ===
+    const currentPreview = document.getElementById('editCurrentPreview');
+    currentPreview.innerHTML = '';
+
+    let images = [];
+    try {
+        // data-images у тебя экранирован как строка — сначала возвращаем кавычки
+        const raw = (d.images || '[]').replace(/&quot;/g, '"');
+        images = JSON.parse(raw);
+    } catch (e) {
+        console.error('Не удалось распарсить фото товара:', e);
+    }
+
+    if (Array.isArray(images) && images.length > 0) {
+        images.forEach(img => {
+            const div = document.createElement('div');
+            div.className = 'image-item';
+            div.innerHTML = `
+                <img src="static/uploads/${img}">
+                <input type="hidden" name="keep_images" value="${img}">
+                <button type="button" class="image-remove" onclick="this.parentElement.remove()">×</button>
+            `;
+            currentPreview.appendChild(div);
+        });
+    }
+
+    // Новые фото — очищаем превью
+    document.getElementById('editNewPreview').innerHTML = '';
+
+    // ОТКРЫВАЕМ МОДАЛКУ (САМОЕ ГЛАВНОЕ!)
+    document.getElementById('editModal').classList.add('active');
+}
+
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    // Закрытие кликом вне
+    document.addEventListener('click', e => {
+        const detail = document.getElementById('productDetail');
+        if (detail.classList.contains('active') && !e.target.closest('.product-detail > .detail-grid') && !e.target.closest('.product-row')) {
+            closeProductDetail();
+        }
+        ['editModal', 'passwordModal'].forEach(id => {
+            const modal = document.getElementById(id);
+            if (modal.classList.contains('active') && !e.target.closest('.modal')) {
+                closeModal(id);
+            }
+        });
+    });
+
+// === ДРОПЗОНЫ === (обновлённая, без дублирования + с удалением)
+function setupDropZone(zone, input, preview) {
+    zone.addEventListener('click', () => input.click());
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files, preview, input);
+    });
+    input.addEventListener('change', () => handleFiles(input.files, preview, input));
+}
+
+function handleFiles(newFiles, preview, input) {
+    // 1. Собираем все файлы без дубликатов
+    const uniqueFiles = new Map();
+
+    // Существующие файлы (по уникальному ключу)
+    Array.from(input.files || []).forEach(file => {
+        const key = `${file.name}_${file.size}_${file.lastModified}`;
+        uniqueFiles.set(key, file);
+    });
+
+    // Новые файлы (перезаписывают старые с тем же именем)
+    Array.from(newFiles).forEach(file => {
+        if (file.type.startsWith('image/')) {
+            const key = `${file.name}_${file.size}_${file.lastModified}`;
+            uniqueFiles.set(key, file);
+        }
+    });
+
+    // 2. Обновляем input.files
+    const dt = new DataTransfer();
+    uniqueFiles.forEach(file => dt.items.add(file));
+    input.files = dt.files;
+
+    // 3. Полностью перерисовываем превью
+    preview.innerHTML = '';
+    Array.from(dt.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const div = document.createElement('div');
+            div.className = 'image-item';
+
+            // Уникальный идентификатор для удаления
+            const key = `${file.name}_${file.size}_${file.lastModified}`;
+            div.innerHTML = `
+                <img src="${e.target.result}">
+                <button type="button" class="image-remove" 
+                        onclick="removePreviewImage(this, '${key}')">×</button>
+            `;
+            preview.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// Удаление конкретного изображения из превью и из input.files
+function removePreviewImage(button, key) {
+    const preview = button.parentElement.parentElement;
+    const inputId = preview.id.includes('add') ? 'addFileInput' : 'editFileInput';
+    const input = document.getElementById(inputId);
+
+    const dt = new DataTransfer();
+    Array.from(input.files).forEach(file => {
+        const fileKey = `${file.name}_${file.size}_${file.lastModified}`;
+        if (fileKey !== key) {
+            dt.items.add(file);
+        }
+    });
+    input.files = dt.files;
+
+    button.parentElement.remove();
+}
+
+// Подключаем дропзоны (остаётся без изменений)
+setupDropZone(document.getElementById('addDropZone'), document.getElementById('addFileInput'), document.getElementById('addPreview'));
+setupDropZone(document.getElementById('editDropZone'), document.getElementById('editFileInput'), document.getElementById('editNewPreview'));
+
+    // === КАРТОЧКА ТОВАРА ===
+function closeProductDetail() {
+    const detail = document.getElementById('productDetail');
+    if (detail) detail.classList.remove('active');
+    document.querySelectorAll('.product-row').forEach(r => r.classList.remove('active'));
+}
+
+function showProductDetail(row) {
+    try {
+        const cells = row.cells;
+
+        // === ТЕКСТОВАЯ ЧАСТЬ (остаётся без изменений) ===
+        document.getElementById('detailTitle').textContent = cells[1].querySelector('div')?.textContent || '—';
+        document.getElementById('detailPrice').textContent = cells[2].textContent || '—';
+        document.getElementById('detailCategoryBrand').innerHTML = cells[3].innerHTML || '—';
+        document.getElementById('detailStock').textContent = 'На складе: ' + (cells[4].textContent || '—');
+        document.getElementById('detailDescription').textContent = 
+            cells[1].querySelector('div:nth-child(2)')?.textContent || 'Нет описания';
+
+        const imagesDiv = document.getElementById('detailImages');
+        imagesDiv.innerHTML = '';
+
+        // === ПОЛУЧАЕМ МАССИВ ФОТО ===
+        const editBtn = row.querySelector('.action-btn.edit');
+        let images = [];
+        if (editBtn?.dataset?.images) {
+            try {
+                const raw = editBtn.dataset.images.replace(/&quot;/g, '"');
+                images = JSON.parse(raw);
+            } catch (e) { console.warn('Не распарсили фото', e); }
+        }
+
+        // Фолбэк на превью из таблицы
+        if ((!images || images.length === 0) && cells[0].querySelector('img')?.src) {
+            const src = cells[0].querySelector('img').src;
+            const match = src.match(/\/uploads\/(.+)$/);
+            if (match) images = [match[1]];
+        }
+
+        if (!images || images.length === 0) {
+            imagesDiv.innerHTML = '<div style="width:320px;height:160px;background:#222;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#666;font-size:1rem;">Нет фото</div>';
+            document.getElementById('productDetail').classList.add('active');
+            row.classList.add('active');
+            return;
+        }
+
+        // === НОВАЯ ГАЛЕРЕЯ С ПЕРЕКЛЮЧЕНИЕМ ===
+const galleryWrapper = document.createElement('div');
+        galleryWrapper.style.cssText = `
+            position: relative;
+            width: 100%;
+            max-width: 460px;
+            aspect-ratio: 1 / 1;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1.5px solid #333;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.7);
+            background: #000;
+        `;
+
+        const mainImg = document.createElement('img');
+        mainImg.id = 'mainDetailImg';
+        mainImg.src = `static/uploads/${images[0]}`;
+        mainImg.style.cssText = `
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: opacity 0.4s ease;
+        `;
+        galleryWrapper.appendChild(mainImg);
+
+        // Контейнер с миниатюрами снизу (только если > 1 фото)
+        if (images.length > 1) {
+            const thumbsContainer = document.createElement('div');
+            thumbsContainer.style.cssText = `
+                position: absolute;
+                bottom: 0; left: 0; right: 0;
+                background: linear-gradient(transparent, rgba(0,0,0,0.8));
+                padding: 12px 8px 8px;
+                display: flex;
+                gap: 6px;
+                justify-content: center;
+            `;
+
+            images.slice(0, 4).forEach((filename, index) => {
+                const thumb = document.createElement('div');
+                thumb.textContent = index + 1;
+                thumb.style.cssText = `
+                    width: 32px; height: 32px;
+                    border-radius: 8px;
+                    background: ${index === 0 ? '#fff' : 'rgba(255,255,255,0.2)'};
+                    color: ${index === 0 ? '#000' : '#fff'};
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    backdrop-filter: blur(4px);
+                `;
+
+                thumb.onclick = (e) => {
+                    e.stopPropagation();
+                    mainImg.style.opacity = '0';
+                    setTimeout(() => {
+                        mainImg.src = `static/uploads/${images[index]}`;
+                        mainImg.style.opacity = '1';
+                    }, 200);
+
+                    // Подсветка активной миниатюры
+                    thumbsContainer.querySelectorAll('div').forEach((t, i) => {
+                        t.style.background = i === index ? '#fff' : 'rgba(255,255,255,0.2)';
+                        t.style.color = i === index ? '#000' : '#fff';
+                    });
+                };
+
+                thumbsContainer.appendChild(thumb);
+            });
+
+            // Если фото больше 4 — показываем "+X"
+            if (images.length > 4) {
+                const more = document.createElement('div');
+                more.textContent = `+${images.length - 4}`;
+                more.style.cssText = `
+                    width: 32px; height: 32px;
+                    border-radius: 8px;
+                    background: rgba(255,255,255,0.15);
+                    color: #fff;
+                    font-weight: 600;
+                    font-size: 0.8rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                `;
+                more.onclick = (e) => {
+                    e.stopPropagation();
+                    openFullscreenGallery(images, 4);
+                };
+                thumbsContainer.appendChild(more);
+            }
+
+            galleryWrapper.appendChild(thumbsContainer);
+        }
+
+        // Клик по основному фото → полноэкранная галерея
+        mainImg.onclick = () => openFullscreenGallery(images, 0);
+
+        galleryWrapper.appendChild(mainImg);
+        imagesDiv.appendChild(galleryWrapper);
+
+        // Активация карточки
+        document.querySelectorAll('.product-row').forEach(r => r.classList.remove('active'));
+        row.classList.add('active');
+        document.getElementById('productDetail').classList.add('active');
+
+    } catch (err) {
+        console.error('Ошибка в showProductDetail:', err);
+    }
+}
+    // === ПОИСК + ПАГИНАЦИЯ ===
+    function filterProducts() {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const rows = Array.from(document.querySelectorAll('.product-row'));
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(term) ? '' : 'none';
+        });
+        renderPagination(rows.filter(r => r.style.display !== 'none'));
+    }
+    function renderPagination(visibleRows) {
+        const total = visibleRows.length;
+        const pages = Math.ceil(total / 15);
+        const container = document.getElementById('pagination');
+        container.innerHTML = '';
+        for (let i = 1; i <= pages; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'page-btn';
+            btn.textContent = i;
+            btn.onclick = () => {
+                document.querySelectorAll('.page-btn.active')?.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                visibleRows.forEach((r, idx) => {
+                    r.style.display = (idx >= (i-1)*15 && idx < i*15) ? '' : 'none';
+                });
+            };
+            if (i === 1) btn.classList.add('active');
+            container.appendChild(btn);
+        }
+        visibleRows.forEach((r, idx) => r.style.display = idx < 15 ? '' : 'none');
+    }
+
+    // === ПОЛНОЭКРАННАЯ ГАЛЕРЕЯ ===
+// === ПОЛНОЭКРАННАЯ ГАЛЕРЕЯ С ЗАКРЫТИЕМ КЛИКОМ ВНЕ ===
+function openFullscreenGallery(images, startIndex = 0) {
+    // Удаляем старую, если есть
+    const existing = document.getElementById('fullscreenGallery');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'fullscreenGallery';
+    overlay.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.98); z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0; transition: opacity 0.4s ease;
+        cursor: zoom-out;
+    `;
+
+    overlay.innerHTML = `
+        <button style="position:absolute;top:20px;right:20px;background:none;border:none;color:white;font-size:3.5rem;cursor:pointer;z-index:10;opacity:0.8;" onclick="closeFullscreenGallery()">×</button>
+        <button id="prevBtn" style="position:absolute;left:30px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);border:none;color:white;font-size:4rem;padding:20px 15px;border-radius:50%;cursor:pointer;backdrop-filter:blur(10px);">‹</button>
+        <button id="nextBtn" style="position:absolute;right:30px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);border:none;color:white;font-size:4rem;padding:20px 15px;border-radius:50%;cursor:pointer;backdrop-filter:blur(10px);">›</button>
+        <img id="fullImg" src="static/uploads/${images[startIndex]}" style="max-width:94%; max-height:94vh; object-fit:contain; border-radius:16px; box-shadow:0 30px 80px rgba(0,0,0,0.9); transition: transform 0.3s ease;">
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Плавное появление
+    setTimeout(() => overlay.style.opacity = '1', 10);
+
+    let current = startIndex;
+    const img = overlay.querySelector('#fullImg');
+
+    const showImage = () => {
+        img.src = `static/uploads/${images[current]}`;
+    };
+
+    overlay.querySelector('#prevBtn').onclick = (e) => {
+        e.stopPropagation();
+        current = (current - 1 + images.length) % images.length;
+        showImage();
+    };
+
+    overlay.querySelector('#nextBtn').onclick = (e) => {
+        e.stopPropagation();
+        current = (current + 1) % images.length;
+        showImage();
+    };
+
+    // === ЗАКРЫТИЕ КЛИКОМ ВНЕ КАРТИНКИ ===
+    overlay.onclick = (e) => {
+        if (e.target === overlay || e.target.tagName === 'BUTTON') {
+            closeFullscreenGallery();
+        }
+    };
+
+    // Закрытие по ESC
+    const escHandler = (e) => {
+        if (e.key === 'Escape') closeFullscreenGallery();
+    };
+    document.addEventListener('keydown', escHandler);
+
+    window.closeFullscreenGallery = () => {
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            overlay.remove();
+            document.removeEventListener('keydown', escHandler);
+            delete window.closeFullscreenGallery;
+        }, 400);
+    };
+}
+
+// === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ===
+const themeToggle = document.getElementById('theme-toggle');
+const html = document.documentElement;
+
+// Восстановление сохранённой темы
+if (localStorage.getItem('theme') === 'light') {
+  html.setAttribute('data-theme', 'light');
+  if (themeToggle) themeToggle.checked = true;
+} else {
+  html.setAttribute('data-theme', 'dark');
+}
+
+// Переключение
+themeToggle?.addEventListener('change', () => {
+  const isLight = themeToggle.checked;
+  html.setAttribute('data-theme', isLight ? 'light' : 'dark');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+});
+
+    // Инициализация
+    filterProducts();
+
+    document.querySelectorAll('.product-row').forEach(row => {
+        row.addEventListener('click', e => {
+            // Игнорируем клик по кнопкам редактировать/удалить
+            if (e.target.closest('.action-btn')) return;
+            showProductDetail(row);
+        });
+    });
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendants-HQ | Элитная Коллекция Украшений</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/svg.css">
+    <style>
+        /* === ОСНОВНЫЕ СТИЛИ ДЛЯ 3D-ЭФФЕКТА === */
+        #bottomLayer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            z-index: 5;
+            opacity: 0;
+            transform: translateY(120px) translateZ(-150px) rotateX(20deg);
+            transform-style: preserve-3d;
+            transition: none !important;
+            pointer-events: none;
+            will-change: transform, opacity;
+        }
+
+        #bottomLayer * {
+            pointer-events: auto;
+        }
+
+        #bottomLayer footer {
+            background: #000;
+            color: #e0e0e0;
+            padding: 60px 20px;
+            text-align: center;
+            border-radius: 80px 80px 0 0;
+            box-shadow: 
+                0 -80px 200px rgba(0,0,0,0.9),
+                0 -160px 400px rgba(0,0,0,0.85);
+        }
+
+        #bottomLayer, #mainLayer, #topLayer {
+    will-change: transform, opacity, filter;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+        /* Убираем transition у слоёв, которыми управляет JS */
+        #mainLayer, #topLayer {
+            transition: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="master3D"></div>
+
+    <!-- КАРУСЕЛЬ (видимая, fixed, улетает при скролле) -->
+    <div id="topLayer">
+        <section class="carousel" id="carousel">
+            <div class="carousel-inner" id="main-carousel-inner">
+                <div class="carousel-slide active">
+                    <img src="" alt="1" id="main-slide-1">
+                    <div class="carousel-caption"></div>
+                </div>
+                <div class="carousel-slide">
+                    <img src="" alt="2" id="main-slide-2">
+                    <div class="carousel-caption"></div>
+                </div>
+                <div class="carousel-slide">
+                    <img src="" alt="3" id="main-slide-3">
+                    <div class="carousel-caption"></div>
+                </div>
+            </div>
+            <div class="carousel-indicators">
+                <span class="indicator active" onclick="currentSlide(1)"></span>
+                <span class="indicator" onclick="currentSlide(2)"></span>
+                <span class="indicator" onclick="currentSlide(3)"></span>
+            </div>
+            <div class="scroll-down" onclick="scrollToProducts()">
+                <svg viewBox="0 0 24 24" width="76" height="76" fill="white">
+                    <path d="M12 16l-6-6h12l-6 6z"/>
+                </svg>
+            </div>
+        </section>
+    </div>
+
+    <!-- ФОН: КАРУСЕЛЬ → ФУТЕР (плавная смена) -->
+    <div id="backgroundLayer">
+        <div id="bgCarousel"></div>
+        <div id="bgFooter"></div>
+    </div>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+    <div class="scroll-container">
+        <div class="scroll-content">
+
+            <!-- ОСНОВНОЙ КОНТЕНТ (налетает сверху) -->
+            <div id="mainLayer">
+                <div id="mainLayerShadow"></div>
+                <div id="flyShadow"></div>
+
+                <section class="filter-section">
+                    <div class="filter-controls">
+                        <button class="sort-btn">Сортировка</button>
+                    </div>
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all">Все</button>
+                        <button class="filter-main-btn">Фильтры</button>
+                        <div class="filter-dropdown">
+                            <ul id="product-list"></ul>
+                        </div>
+                    </div>
+                </section>
+                
+                <div style="padding: 100px 5% 80px; background-color: #ebeaea; text-align: center;">
+                    <div style="position: relative; display: inline-block; width: 100%; max-width: 720px;">
+                        <input type="text" id="searchInput" placeholder="Найти шедевр..." autocomplete="off"
+                               style="width: 100%; padding: 18px 24px 18px 56px; border: none; border-bottom: 2px solid rgba(0,0,0,0.15); background: rgba(255,255,255,0.78); backdrop-filter: blur(20px); font-size: 1.35rem; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.08);">
+                        <i class="fas fa-search" style="position: absolute; left: 22px; top: 50%; transform: translateY(-50%); color: #666;"></i>
+                    </div>
+                    <div class="divider-section" style="margin-top: 80px;">
+                        <div class="divider-line"></div>
+                        <p class="divider-caption">ИДЕАЛЬНЫЕ РЕШЕНИЯ</p>
+                    </div>
+                </div>
+
+                <section class="products-section" id="products-section">
+                    <div class="products-grid" id="productsGrid1"></div>
+                </section>
+
+                <section class="secondary-carousel">
+                    <div class="carousel-inner">
+                        <div class="carousel-slide active">
+                            <img src="" alt="1" id="services-slide-1">
+                        </div>
+                        <div class="carousel-slide">
+                            <img src="" alt="2" id="services-slide-2">
+                        </div>
+                        <div class="carousel-slide">
+                            <img src="" alt="3" id="services-slide-3">
+                        </div>
+                    </div>
+                    <div class="carousel-indicators">
+                        <span class="indicator active" onclick="currentSlideSecondary(1)"></span>
+                        <span class="indicator" onclick="currentSlideSecondary(2)"></span>
+                        <span class="indicator" onclick="currentSlideSecondary(3)"></span>
+                    </div>
+                </section>
+
+                <section class="products-section" id="productsGrid2Section">
+                    <div class="products-grid" id="productsGrid2"></div>
+                </section>
+
+                <section class="load-more-section">
+                    <button class="load-more-btn">Загрузить еще</button>
+                </section>
+            </div>
+            <!-- КОНЕЦ #mainLayer -->
+
+
+
+        </div>
+                   <!-- ФУТЕР — В КОНЦЕ .scroll-content (анимация выезда) -->
+            <div id="bottomLayer">
+                <footer>
+                    <div class="footer-content">
+                        <div class="footer-logo">
+                            <h3>Pendants-HQ</h3>
+                            <p>Изысканные украшения для вечности</p>
+                        </div>
+                    </div>
+                    <div class="footer-bottom">
+                        <p>© 2025 Pendants-HQ. Все права защищены.</p>
+                    </div>
+                </footer>
+            </div>
+    </div>
+    <!-- КОНЕЦ .scroll-container -->
+
+    <!-- МОДАЛКА -->
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal" id="productModal">
+        <span class="modal-close" onclick="closeModal()">x</span>
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-reviews" id="modalReviews"></div>
+    </div>
+
+    <script src="/static/js/svg.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Новости — Piligrim</title>
+
+  <!-- Шрифты -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap" rel="stylesheet">
+
+  <!-- Стили -->
+  <link rel="stylesheet" href="/static/css/search.css">
+  <link rel="stylesheet" href="/static/css/auth.css">
+  <link rel="stylesheet" href="/static/css/cart.css">
+  <link rel="stylesheet" href="/static/css/ai.css">
+  <link rel="stylesheet" href="/static/css/news.css">
+
+  <style>
+    /* === LOADER — СТАРЫЙ СТИЛЬ === */
+    .loader {
+      position: fixed; inset: 0; z-index: 9999; background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 1; pointer-events: none;
+    }
+    .loader::before {
+      content: ''; width: 110px; height: 110px;
+      border: 2px solid rgba(255,255,255,0.08);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 1.8s linear infinite;
+      box-shadow: 0 0 60px rgba(255,255,255,0.18);
+    }
+    .loader::after {
+      content: 'PILIGRIM'; position: absolute; font-size: 1.2rem;
+      letter-spacing: 12px; font-weight: 100; color: #fff;
+      opacity: 0; animation: fadeIn 1.4s ease 0.8s forwards;
+    }
+    .loader.hidden { opacity: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { to { opacity: 1; } }
+  </style>
+
+ 
+</head>
+<body>
+
+  <div class="custom-cursor"></div>
+
+    <!-- ПРЕЛОАДЕР — 1-в-1 ИЗ SERVICES.HTML -->
+    <div class="loader" id="loader"></div>  
+  <!-- ХЕДЕР -->
+  <header>
+    <a href="/" class="logo"><img src="/static/assets/logo.png" alt="Piligrim" class="logo-img"></a>
+    <nav>
+      <a href="/" class="nav-link">Главная</a>
+      <a href="/goods" class="nav-link">Товары</a>
+      <a href="/services" class="nav-link">Услуги</a>
+      <a href="/news" class="nav-link active">Новости</a>
+      <a href="/about_company" class="nav-link">О компании</a>
+      <a href="/contacts" class="nav-link">Контакты</a>
+    </nav>
+    <div class="header-icons">
+      <div class="search-wrapper">
+        <div class="search-container">
+          <div class="search-icon"><i class="fas fa-search"></i></div>
+          <input type="text" class="search-input" id="searchInput" placeholder="Поиск...">
+          <button id="searchClear" class="search-clear">×</button>
+        </div>
+        <div id="autocompleteList" class="autocomplete-list"></div>
+      </div>
+      <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
+      
+    <div style="position: relative;">
+      <button class="icon-btn" id="cartBtn">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+      <div id="miniCartDropdown" style="display: none;">
+          <div class="mini-cart-header"><div class="mini-cart-title">Корзина</div></div>
+          <div class="mini-cart-items" id="miniCartItems"><div class="mini-cart-empty">Корзина пуста</div></div>
+          <div class="mini-cart-footer">
+            <div class="mini-cart-total" id="miniCartTotal">Итого: 0.00 ₽</div>
+            <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
+    </div>
+  </header>
+
+  <!-- ТУМБЛЕР ТЕМЫ -->
+  <div class="theme-toggle-hanging">
+    <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+    <label for="theme-toggle" class="theme-toggle-label">
+      <div class="rope top"></div>
+      <div class="bulb">
+        <div class="bulb-light"></div>
+        <div class="bulb-glow"></div>
+      </div>
+      <div class="rope bottom"></div>
+    </label>
+  </div>
+
+  <!-- МОДАЛКА АВТОРИЗАЦИИ -->
+  <div id="authModal" class="auth-modal">
+    <div class="auth-modal-content">
+      <button class="close-modal" id="closeAuthModal">×</button>
+      <h2 class="auth-title">Вход по номеру телефона</h2>
+      <div id="stepPhone" class="auth-step">
+        <div class="country-selector">
+          <div class="selected-country" id="selectedCountry">
+            <span class="flag">RU</span>
+            <span class="code">+7</span>
+            <i class="fas fa-chevron-down"></i>
+          </div>
+          <div class="country-dropdown" id="countryDropdown">
+            <div class="country-item" data-code="+7" data-flag="RU">Россия +7</div>
+            <div class="country-item" data-code="+1" data-flag="US">USA +1</div>
+            <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
+          </div>
+        </div>
+        <input type="tel" id="phoneInput" placeholder="___ ___ ___" maxlength="12" class="auth-input">
+        <button id="sendCodeBtn" class="auth-btn">Получить код</button>
+      </div>
+      <div id="stepCode" class="auth-step" style="display:none;">
+        <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
+        <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
+        <button id="verifyCodeBtn" class="auth-btn">Войти</button>
+        <button id="resendCode" class="auth-link">Отправить повторно</button>
+      </div>
+      <div id="stepSuccess" class="auth-step" style="display:none;">
+        <i class="fas fa-check-circle success-icon"></i>
+        <h3>Добро пожаловать!</h3>
+        <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
+        <button id="closeSuccess" class="auth-btn">Продолжить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ОБРАТНАЯ СВЯЗЬ -->
+  <div class="custom-alert" id="feedbackModal">
+    <div class="alert-content">
+      <button class="alert-close" id="closeFeedback">×</button>
+      <div class="alert-icon"><i class="fas fa-envelope-open-text"></i></div>
+      <div class="alert-text">
+        <strong>Обратная связь</strong>
+        <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
+      </div>
+      <form class="contact-form" novalidate id="contactForm" autocomplete="off">
+        <input type="text" class="name-input" placeholder="Ваше ФИО" name="name" required />
+        <div class="phone-field-wrapper">
+            <input type="tel" placeholder="+7 (___) ___-__-__" name="phone" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+        </div>
+        <input type="email" placeholder="Email" name="email" required />
+        <textarea placeholder="Ваше сообщение" name="message" required></textarea>
+        <button type="submit" id="submitBtn" class="alert-login-btn">
+            <span class="btn-text">Отправить сообщение</span>
+            <span class="btn-cooldown" style="display:none;">Подождите... <span class="timer">30</span>с</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- КАРТОЧКА ТОВАРА -->
+  <div class="product-modal" id="productModal">
+    <div class="product-content">
+      <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
+      <div class="product-info">
+        <h3 id="productTitle" class="product-title">Загрузка...</h3>
+        <div class="product-rating">
+          <div class="stars"></div>
+          <span id="productReviewsCount" class="reviews-count">—</span>
+        </div>
+        <div id="productPrice" class="product-price">—</div>
+        <div id="productDescription" class="product-description">Загрузка описания...</div>
+        <button id="addToCartModal" class="add-to-cart-btn">
+          <i class="fas fa-shopping-cart"></i> Купить
+        </button>
+        <div class="product-reviews">
+          <h4 class="reviews-title">Отзывы покупателей</h4>
+          <div class="reviews-list">
+            <div style="text-align:center;padding:2rem;color:#888;">
+              <i class="far fa-star" style="font-size:2.5rem;margin-bottom:0.5rem;display:block;"></i>
+              <p>Загрузка отзывов...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="close-modal" id="closeProductModal"><i class="fas fa-times"></i></button>
+    </div>
+  </div>
+
+  <!-- AI-АССИСТЕНТ -->
+  <div id="ai-assistant">
+    <svg viewBox="0 0 100 100" class="ai-robot" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#f5d78a"/>
+          <stop offset="100%" stop-color="#d4af37"/>
+        </linearGradient>
+      </defs>
+      <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+      <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
+      <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
+      <circle cx="39" cy="40" r="2.5" fill="#fff"/>
+      <circle cx="63" cy="40" r="2.5" fill="#fff"/>
+      <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <g transform="translate(8, 62)">
+        <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
+        <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+      </g>
+      <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <!-- AI ЧАТ МОДАЛЬНЫЙ -->
+<div id="ai-chat" class="ai-chat-modal" style="display: none;">
+  <div class="ai-chat-header">
+    <div class="ai-chat-title">
+      <svg width="32" height="32" viewBox="0 0 100 100" style="margin-right:10px;">
+        <use href="#goldGrad"/>
+        <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+        <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="39" cy="40" r="2.5" fill="#fff"/>
+        <circle cx="63" cy="40" r="2.5" fill="#fff"/>
+        <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <g transform="translate(8, 62)">
+          <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
+          <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+        </g>
+        <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
+      </svg>
+      <span>Юрист AI</span>
+    </div>
+    <div class="ai-header-buttons">
+      <button class="ai-btn-minimize" onclick="toggleAIChatSize()" title="На весь экран">
+        <i class="fas fa-expand-arrows-alt"></i>
+      </button>
+      <button class="ai-btn-close" onclick="closeAIChat()" title="Закрыть">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+  <div class="ai-chat-body">
+    <div class="ai-chat-messages">
+      <div class="ai-message bot">
+        <p>Привет! Я — ваш юридический AI-ассистент. Задайте любой вопрос по Конституции, законам или правам.</p>
+      </div>
+    </div>
+    <div class="ai-chat-input">
+      <input type="text" id="ai-input" placeholder="Задайте юридический вопрос..." 
+             onkeypress="if(event.key==='Enter' && this.value.trim()) { sendAIMessage(this.value); this.value=''; }">
+      <button onclick="const inp = document.getElementById('ai-input'); if(inp.value.trim()) { sendAIMessage(inp.value); inp.value=''; }">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+    <!-- ОСНОВНОЙ КОНТЕНТ -->
+  <main>
+    <div class="news-section">
+      <div class="news-intro">
+        <h2 class="news-title">Новости</h2>
+        <p class="news-subtitle">Узнавайте, как искусственный интеллект перестраивает дизайн и бизнес. Реальные кейсы, технологические инсайты и тренды цифровой элиты — в наших новостях.</p>
+        <button class="scroll-trigger" onclick="scrollToNews()">
+          <span>Скролл к новостям</span>
+          <i class="fas fa-chevron-down animated-arrow"></i>
+        </button>
+      </div>
+      <div class="news-feed" id="newsFeed">
+        <!-- Новости будут вставлены через JS -->
+      </div>
+    </div>
+  </main>
+
+  <!-- МОДАЛКА НОВОСТИ — ВНЕ main, НА УРОВНЕ body -->
+  <div id="newsModal" class="news-modal-overlay">
+    <div class="news-modal">
+      <button class="news-modal-close" onclick="closeNewsModal()">×</button>
+      <div class="news-modal-img-wrapper">
+        <img id="modalNewsImg" src="" alt="" class="news-modal-img">
+      </div>
+      <div class="news-modal-body">
+        <span id="modalNewsDate" class="news-modal-date"></span>
+        <h2 id="modalNewsTitle" class="news-modal-title"></h2>
+        <div id="modalNewsContent" class="news-modal-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <a href="#" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
+  <!-- Скрипты -->
+  <script src="/static/js/search.js" defer></script>
+  <script src="/static/js/auth.js" defer></script>
+  <script src="/static/js/cart.js" defer></script>
+  <script src="/static/js/feedback.js" defer></script>
+  <script src="/static/js/ai.js" defer></script>
+  <script src="/static/js/news.js" defer></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Блокируем скролл
+    document.body.style.overflow = 'hidden';
+
+    // Через 1.8 сек — добавляем класс hidden
+    setTimeout(() => {
+      const loader = document.getElementById('loader');  // ← ИСПРАВЛЕНО
+      if (loader) {
+        loader.classList.add('hidden');
+
+        // Через 0.7 сек — убираем из DOM
+        setTimeout(() => {
+          loader.remove();
+          document.body.style.overflow = '';
+          document.body.classList.add('loaded');
+        }, 100);
+      }
+    }, 1600);
+  });
+</script>
+
+</body>
+</html>

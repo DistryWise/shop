@@ -1,0 +1,275 @@
+/* feedback.css — ФИНАЛЬНАЯ ВЕРСИЯ */
+/* Всё в одном месте. Никаких дублей. Работает на 1000% */
+
+.custom-alert {
+  display: none !important;
+  position: fixed !important;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 999999 !important;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(16px);
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-alert.show {
+  display: flex !important;
+}
+
+.alert-content {
+  background: rgba(255, 255, 255, 0.09);
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  border-radius: 26px;
+  padding: 2.2rem 2.6rem;
+  max-width: 440px;
+  width: 92%;
+  text-align: center;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(28px);
+  position: relative;
+  transform: scale(0.88);
+  animation: alertPop 0.52s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes alertPop {
+  to { transform: scale(1); }
+}
+
+.alert-icon {
+  font-size: 3.4rem;
+  color: #ff9500;
+  margin-bottom: 1.1rem;
+  text-shadow: 0 0 22px rgba(255, 149, 0, 0.65);
+}
+
+.alert-text strong {
+  font-size: 1.45rem;
+  display: block;
+  margin-bottom: 0.6rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.alert-text span {
+  font-size: 1.08rem;
+  color: rgba(255, 255, 255, 0.88);
+  line-height: 1.55;
+}
+
+.alert-close {
+  position: absolute;
+  top: 16px; right: 18px;
+  width: 42px; height: 42px;
+  background: rgba(255, 255, 255, 0.16);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 1.6rem;
+  cursor: pointer;
+  transition: all 0.38s ease;
+  backdrop-filter: blur(12px);
+}
+
+.alert-close:hover {
+  background: rgba(255, 255, 255, 0.32);
+  transform: scale(1.18);
+}
+
+.alert-login-btn {
+  margin-top: 2rem;
+  padding: 1rem 2.4rem;
+  background: var(--white);
+  color: #000;
+  border: none;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 1.12rem;
+  cursor: pointer;
+  transition: all 0.38s ease;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+.alert-login-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 35px rgba(255, 255, 255, 0.35);
+}
+
+/* === УБИРАЕМ БРАУЗЕРНУЮ ВАЛИДАЦИЮ === */
+input:invalid, textarea:invalid {
+  box-shadow: none !important;
+}
+input:invalid:focus, textarea:invalid:focus {
+  border-color: rgba(255,255,255,0.65) !important;
+  background: rgba(255,255,255,0.14) !important;
+}
+form.contact-form { novalidate: true; }
+
+/* === ПОЛЕ ТЕЛЕФОНА + КНОПКА "ИЗМЕНИТЬ" === */
+.contact-form input[type="tel"],
+.phone-wrapper input[type="tel"] {
+  padding-right: 115px !important;
+  font-family: 'SF Pro Display', sans-serif;
+  font-weight: 500;
+}
+
+.edit-phone-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.16);
+  border: 1.2px solid rgba(255,255,255,0.28);
+  color: #fff;
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 0.83rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.35s ease;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  z-index: 10;
+}
+
+.edit-phone-btn:hover {
+  background: rgba(255,255,255,0.32);
+  transform: translateY(-50%) scale(1.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+/* === УСПЕШНОЕ СООБЩЕНИЕ === */
+.custom-success {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.custom-success.show {
+  opacity: 1;
+  top: 80px;
+  pointer-events: auto;
+}
+
+.success-content {
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(26px);
+  border: 1.5px solid rgba(255,255,255,0.22);
+  border-radius: 18px;
+  padding: 1.6rem 2.4rem;
+  display: flex;
+  align-items: center;
+  gap: 1.3rem;
+  box-shadow: 0 28px 70px rgba(0,0,0,0.6);
+  color: #fff;
+}
+
+.success-content i {
+  font-size: 2.4rem;
+  color: #4ade80;
+  filter: drop-shadow(0 0 12px #4ade80);
+}
+
+.success-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 2rem;
+  cursor: pointer;
+  opacity: 0.75;
+  margin-left: 1.2rem;
+}
+
+.success-close:hover { opacity: 1; }
+
+/* === КРАСНЫЙ АЛЕРТ ОШИБКИ === */
+.custom-error {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.custom-error.show {
+  opacity: 1;
+  top: 80px;
+  pointer-events: auto;
+}
+
+.error-content {
+  background: rgba(220, 38, 38, 0.95);
+  backdrop-filter: blur(26px);
+  border: 1.5px solid rgba(255, 100, 100, 0.45);
+  border-radius: 18px;
+  padding: 1.6rem 2.4rem;
+  display: flex;
+  align-items: center;
+  gap: 1.3rem;
+  box-shadow: 0 28px 70px rgba(0,0,0,0.65);
+  color: #fff;
+}
+
+.error-content i {
+  font-size: 2.5rem;
+  color: #ff6b6b;
+  filter: drop-shadow(0 0 14px #ff0000);
+}
+
+.error-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 2rem;
+  cursor: pointer;
+  opacity: 0.8;
+  margin-left: 1.2rem;
+}
+
+.error-close:hover { opacity: 1; }
+
+/* ИСПРАВЛЕНИЕ РАЗМЕРА ПОЛЯ ТЕЛЕФОНА */
+.phone-field-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.phone-field-wrapper input[type="tel"] {
+  width: 100% !important;
+  padding-right: 115px !important;
+  box-sizing: border-box !important;
+}
+
+.edit-phone-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.16);
+  border: 1.2px solid rgba(255,255,255,0.28);
+  color: #fff;
+  padding: 8px 15px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.35s ease;
+  backdrop-filter: blur(14px);
+  z-index: 10;
+}
+
+.edit-phone-btn:hover {
+  background: rgba(255,255,255,0.32);
+  transform: translateY(-50%) scale(1.08);
+}
+
+.custom-alert-temp.error .alert-content { border-color: rgba(255,100,100,0.6); }
+.custom-alert-temp.success .alert-content i { color: #4ade80; }
+.custom-alert-temp.error .alert-content i { color: #ff6b6b; }

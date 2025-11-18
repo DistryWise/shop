@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Корзина — Piligrim</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/bin.css">
+    <style>
+/* === КРАСИВАЯ МОДАЛКА ОФОРМЛЕНИЯ === */
+#checkoutModal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+#checkoutModal.active {
+    display: flex;
+}
+
+.checkout-content {
+    background: #1a1a2e;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    overflow: hidden;
+    animation: slideUp 0.4s ease;
+}
+
+.checkout-header {
+    padding: 1.2rem 1.5rem;
+    background: linear-gradient(135deg, #00d2ff, #00ff95);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.checkout-header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.4rem;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: 0.2s;
+}
+
+.close-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.checkout-body {
+    padding: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    color: #ccc;
+    margin-bottom: 0.4rem;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    border: 2px solid #333;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: 0.2s;
+    background: #16213e;
+    color: #fff;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #00d2ff;
+    background: #1a1a2e;
+    box-shadow: 0 0 0 3px rgba(0,210,255,0.15);
+}
+
+.form-group input[readonly] {
+    background: #0f0f1a;
+    color: #00ff95;
+    cursor: not-allowed;
+}
+
+.checkout-summary {
+    background: #16213e;
+    padding: 1rem;
+    border-radius: 12px;
+    margin: 1rem 0;
+    font-size: 0.95rem;
+    border: 1px solid #333;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.summary-row.total {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #00ff95;
+    padding-top: 0.5rem;
+    border-top: 1px solid #333;
+    margin-top: 0.5rem;
+}
+
+.checkout-footer {
+    padding: 1rem 1.5rem;
+    background: #16213e;
+    text-align: center;
+    border-top: 1px solid #333;
+}
+
+.btn-gradient {
+    background: linear-gradient(135deg, #00d2ff, #00ff95);
+    color: #000;
+    border: none;
+    padding: 0.9rem 1.8rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: 0.3s;
+    box-shadow: 0 4px 15px rgba(0,210,255,0.3);
+}
+
+.btn-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,210,255,0.4);
+}
+
+.btn-gradient:active {
+    transform: translateY(0);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+</style>
+</head>
+<body>
+    
+    <!-- === МОДАЛЬНАЯ ФОРМА ОБРАТНОЙ СВЯЗИ === -->
+    <div id="feedbackModal" class="modal-overlay" style="display:none;">
+        <div class="modal-content" style="position: relative; max-width: 700px; background: rgba(20,20,30,0.95); backdrop-filter: blur(32px); border: 1px solid rgba(0,210,255,0.3); border-radius: 32px; padding: 2rem; max-height: 90vh; overflow: hidden;">
+            <button class="modal-close" onclick="closeFeedbackModal()" style="position: absolute; top: 1.5rem; right: 1.5rem; background: rgba(255,255,255,0.1); border: none; width: 40px; height: 40px; border-radius: 50%; color: #fff; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; z-index: 10;"
+                onmouseover="this.style.background='rgba(255,107,107,0.2)'"
+                onmouseout="this.style.background='rgba(255,255,255,0.1)'">x</button>
+
+            <h2 style="font-size: 2.8rem; font-weight: 800; background: linear-gradient(90deg, #00d2ff, #00ff95); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; margin: 0 0 1rem 0; padding-right: 3rem;">
+                Обратная связь
+            </h2>
+            <p style="text-align: center; color: #aaa; margin-bottom: 2rem; padding-right: 3rem;">Напишите нам — ответим быстро</p>
+
+            <form id="feedbackForm" novalidate style="display: grid; gap: 1.2rem; max-height: calc(90vh - 180px); overflow-y: auto; padding-right: 0.5rem;">
+                <!-- ФИО -->
+                <input type="text" name="name" placeholder="Ваше ФИО" required
+                    class="feedback-input"
+                    style="padding: 1rem; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 1rem; outline: none; transition: all 0.3s;"
+                    onfocus="this.style.borderColor='#00d2ff'" onblur="this.style.borderColor='rgba(255,255,255,0.2)'">
+
+                <!-- EMAIL -->
+                <input type="email" name="email" placeholder="Email" required
+                    class="feedback-input"
+                    style="padding: 1rem; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 1rem; outline: none; transition: all 0.3s;"
+                    onfocus="this.style.borderColor='#00d2ff'" onblur="this.style.borderColor='rgba(255,255,255,0.2)'">
+
+                <!-- КРАСИВЫЙ НОМЕР ТЕЛЕФОНА -->
+                <div class="phone-display-premium" id="phoneDisplayPremium" style="display: none;">
+                    <div class="phone-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="phone-info">
+                        <div class="phone-label">Ваш номер телефона</div>
+                        <div class="phone-number" id="feedbackPhoneFormatted">—</div>
+                    </div>
+                </div>
+
+                <!-- РЕЗЕРВНЫЙ БЛОК (если JS не загрузится) -->
+                <div class="phone-display-frame" id="phoneDisplayFallback" style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.2rem; border-radius: 20px; background: rgba(255,255,255,0.08); border: 2px solid rgba(0,210,255,0.25); backdrop-filter: blur(8px); transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,210,255,0.15);">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #00d2ff, #00ff95); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas fa-phone" style="color: #000; font-size: 1.1rem;"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 0.85rem; color: #aaa; margin-bottom: 0.2rem;">Ваш номер</div>
+                        <div id="feedbackPhone" style="font-weight: 700; font-size: 1.1rem; color: #00ff95; letter-spacing: 0.5px;">—</div>
+                    </div>
+                </div>
+
+                <!-- СООБЩЕНИЕ -->
+                <textarea name="message" rows="5" placeholder="Ваше сообщение..." required
+                        class="feedback-input"
+                        style="padding: 1rem; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 1rem; outline: none; resize: none; transition: all 0.3s;"
+                        onfocus="this.style.borderColor='#00d2ff'" onblur="this.style.borderColor='rgba(255,255,255,0.2)'"></textarea>
+
+                <!-- ТАЙМЕР СПАМ-ЗАЩИТЫ -->
+                <div id="feedbackCooldown" style="display:none; text-align:center; margin:1rem 0; padding:1rem; background:rgba(255,107,107,0.1); border:1px solid rgba(255,107,107,0.3); border-radius:18px;">
+                    <div style="font-size:0.9rem; color:#ff6b6b; margin-bottom:0.5rem;">
+                        Защита от спама
+                    </div>
+                    <div class="timer-bar" style="height:6px; background:rgba(255,107,107,0.2); border-radius:3px; overflow:hidden;">
+                        <div id="cooldownProgress" style="height:100%; width:100%; background:linear-gradient(90deg, #00d2ff, #00ff95); transition:width 0.1s linear;"></div>
+                    </div>
+                    <div id="cooldownText" style="margin-top:0.5rem; font-weight:600; color:#ff6b6b;">Подождите 5:00</div>
+                </div>
+
+                <!-- КНОПКА ОТПРАВКИ -->
+                <button type="submit" id="feedbackSubmitBtn"
+                        style="padding: 1rem; border-radius: 50px; background: linear-gradient(135deg, #00d2ff, #00ff95); color: #000; font-weight: 700; font-size: 1.1rem; border: none; cursor: pointer; transition: all 0.4s; box-shadow: 0 8px 25px rgba(0,210,255,0.35);"
+                        onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 15px 35px rgba(0,210,255,0.48)'"
+                        onmouseout="this.style.transform=''; this.style.boxShadow='0 8px 25px rgba(0,210,255,0.35)'">
+                    Отправить
+                </button>
+            </form>
+        </div>
+    </div>
+
+    
+
+    <!-- ТОСТ — ЕДИНСТВЕННЫЙ -->
+    <div id="feedbackToast" class="toast" style="position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); padding: 1rem 2rem; border-radius: 24px; font-weight: 600; z-index: 9999; opacity: 0; transition: all 0.5s; color: #000; background: rgba(0,255,150,0.9); backdrop-filter: blur(10px);">
+        Сообщение отправлено!
+    </div>
+
+    <div class="gradient-overlay"></div>
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="logo-section">
+                <img src="/static/uploads/logo.png" alt="Piligrim" class="logo-img" onerror="this.src='https://via.placeholder.com/50/1a1a1a/a0c4ff?text=P'">
+                <span class="logo-text">piligrim</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="/" class="nav-link">Главная</a>
+                <a href="/goods" class="nav-link">Товары</a>
+                <a href="/services" class="nav-link">Услуги</a>
+                <a href="/news" class="nav-link">Новости</a>
+                <a href="/about_company" class="nav-link">О компании</a>
+                <a href="/contacts" class="nav-link">Контакты</a>
+            </nav>
+            <div class="header-right" style="display: flex; align-items: center; gap: 1rem;">
+                <button id="openFeedbackBtn" class="header-btn" style="background: transparent; border: none; color: var(--primary); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 16px; transition: all 0.3s;">
+                    <i class="fas fa-envelope"></i> <span class="btn-text">Обратная связь</span>
+                </button>
+
+                <div class="search-wrapper" style="margin-right: 0.5rem;">
+                    <div class="search-container" id="searchContainer">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" placeholder="Поиск..." id="searchInput">
+                        <div class="autocomplete-list" id="autocompleteList"></div>
+                    </div>
+                </div>
+
+                <div class="cart-wrapper" style="margin-right: 0.5rem;">
+                    <button class="cart-btn" id="cartBtn">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-badge" id="cartBadge">0</span>
+                    </button>
+                    <div class="cart-modal" id="cartModal">
+                        <div class="cart-modal-content">
+                            <div class="cart-modal-header">
+                                <h3>Корзина</h3>
+                                <button class="modal-close" id="closeCartModal">x</button>
+                            </div>
+                            <div class="cart-modal-body" id="miniCartItems">
+                                <div class="empty-cart">Корзина пуста</div>
+                            </div>
+                            <div class="cart-modal-footer">
+                                <div class="mini-cart-total" id="miniCartTotal">Итого: 0 ₽</div>
+                                <button class="btn-primary" id="goToCartBtn">Перейти в корзину</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="auth-btn" id="authBtn">
+                    <i class="fas fa-sign-in-alt"></i> <span id="authText">Войти</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="orderChain" class="order-chain-top" style="display:none; padding: 1.5rem 1rem; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center;">
+        <div class="chain-loading">Проверяем статус заказа...</div>
+    </div>
+
+    <section class="bin-page" style="padding-top: 1rem;">
+        <div class="bin-header" style="text-align:center; margin-bottom: 1.5rem;">
+            <h1 id="pageTitle">Ваша корзина</h1>
+            <p id="cartSummary">Загрузка...</p>
+            <div class="total-price" id="totalPrice">0 ₽</div>
+            <div style="display:flex; justify-content:center; gap:1rem; margin-top:1.5rem;">
+                <button class="btn-checkout" id="checkoutBtn" disabled>Оформить покупку</button>
+            </div>
+        </div>
+
+        <div class="cart-items" id="cartItems" style="max-width: 1000px; margin: 0 auto;">
+            <div class="empty-cart">Загрузка корзины...</div>
+        </div>
+
+        <div style="text-align:center; margin: 2rem 0;">
+            <button id="openArchiveBtn" class="btn-secondary" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 0.8rem 1.5rem; border-radius: 16px; font-size: 1rem; cursor: pointer;">
+                <i class="fas fa-history"></i> Архив заказов
+            </button>
+        </div>
+    </section>
+
+    <!-- АРХИВ -->
+    <div class="modal-overlay" id="archiveModal" style="display:none;">
+        <div class="modal-content" style="max-width: 900px; width: 90%; max-height: 80vh; overflow-y: auto;">
+            <button class="modal-close" id="closeArchive">x</button>
+            <h2 class="modal-title" style="text-align:center; margin-bottom:1.5rem;">Архив заказов</h2>
+            <div id="ordersList">
+                <div class="empty-cart">Загрузка...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- АВТОРИЗАЦИЯ -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeModal">x</button>
+            <h2 class="modal-title">Вход по номеру телефона</h2>
+            <div class="modal-step active" id="stepPhone">
+                <div class="input-group">
+                    <label>Номер телефона</label>
+                    <div class="phone-input-wrapper">
+                        <div class="country-selector" id="countrySelector">
+                            <div class="selected-country">
+                                <span class="flag">RU</span>
+                                <span class="code">+7</span>
+                                <i class="fas fa-chevron-down arrow"></i>
+                            </div>
+                            <div class="country-dropdown">
+                                <div class="country-option" data-code="+7" data-flag="RU" data-mask=" (___) ___-__-__">
+                                    <span class="flag">RU</span> <span class="country-name">Россия</span> <span class="country-code">(+7)</span>
+                                </div>
+                                <div class="country-option" data-code="+375" data-flag="BY" data-mask=" (__) ___-__-__">
+                                    <span class="flag">BY</span> <span class="country-name">Беларусь</span> <span class="country-code">(+375)</span>
+                                </div>
+                                <div class="country-option" data-code="+7" data-flag="KZ" data-mask=" (___) ___-__-__">
+                                    <span class="flag">KZ</span> <span class="country-name">Казахстан</span> <span class="country-code">(+7)</span>
+                                </div>
+                                <div class="country-option" data-code="+998" data-flag="UZ" data-mask=" (__) ___-__-__">
+                                    <span class="flag">UZ</span> <span class="country-name">Узбекистан</span> <span class="country-code">(+998)</span>
+                                </div>
+                                <div class="country-option" data-code="+996" data-flag="KG" data-mask=" (__) ___-__-__">
+                                    <span class="flag">KG</span> <span class="country-name">Кыргызстан</span> <span class="country-code">(+996)</span>
+                                </div>
+                                <div class="country-option" data-code="+374" data-flag="AM" data-mask=" (__) ___-__-__">
+                                    <span class="flag">AM</span> <span class="country-name">Армения</span> <span class="country-code">(+374)</span>
+                                </div>
+                                <div class="country-option" data-code="+994" data-flag="AZ" data-mask=" (__) ___-__-__">
+                                    <span class="flag">AZ</span> <span class="country-name">Азербайджан</span> <span class="country-code">(+994)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="text" id="phoneInput" class="phone-input" placeholder="(999) 999-99-99" maxlength="16">
+                    </div>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="agreePolicy" checked>
+                    <label for="agreePolicy">Согласен с <a href="/policy" target="_blank" style="color:var(--primary);">политикой конфиденциальности</a></label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="subscribeEmail">
+                    <label for="subscribeEmail">Подписаться на email-рассылку</label>
+                </div>
+                <button class="btn-primary" id="sendCodeBtn" disabled>Получить код</button>
+            </div>
+            <div class="modal-step" id="stepCode" style="display:none;">
+                <div class="input-group">
+                    <label>Код из СМС</label>
+                    <input type="text" id="codeInput" class="code-input" placeholder="1111" maxlength="4" inputmode="numeric">
+                    <div class="error-message" id="codeError">Неверный код</div>
+                </div>
+                <button class="btn-primary" id="verifyCodeBtn">Войти</button>
+                <p style="text-align:center;color:var(--text-secondary);font-size:0.9rem;margin-top:1rem;">
+                    Код отправлен на <span id="sentPhone"></span><br>
+                    <a href="#" id="resendCode" style="color:var(--primary);">Отправить снова</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- === НОВАЯ МОДАЛКА ОФОРМЛЕНИЯ — КРАСИВАЯ, КОМПАКТНАЯ === -->
+    <div id="checkoutModal" class="modal">
+        <div class="checkout-content">
+            <div class="checkout-header">
+                <h2>Оформление заказа</h2>
+                <button class="close-btn" id="closeCheckout">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="checkout-body">
+                <div class="form-group">
+                    <label for="fullName">
+                        <i class="fas fa-user"></i> ФИО
+                    </label>
+                    <input type="text" id="fullName" placeholder="Иванов Иван Иванович" autocomplete="name">
+                </div>
+
+                <!-- КРАСИВЫЙ НОМЕР ТЕЛЕФОНА В ОФОРМЛЕНИИ ЗАКАЗА -->
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-phone"></i> Телефон
+                    </label>
+                    <div class="phone-display-premium" id="checkoutPhonePremium" style="display: none;">
+                        <div class="phone-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <div class="phone-info">
+                            <div class="phone-label">Ваш номер телефона</div>
+                            <div class="phone-number" id="checkoutPhoneFormatted">—</div>
+                        </div>
+                    </div>
+
+                    <!-- РЕЗЕРВНЫЙ ИНПУТ (скрыт, но нужен для отправки) -->
+                    <input type="hidden" id="checkoutPhone" name="phone">
+                </div>
+
+                <div class="checkout-summary">
+                    <div class="summary-row">
+                        <span>Товаров:</span>
+                        <strong id="checkoutCount">0</strong>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Итого:</span>
+                        <strong id="checkoutTotal">0 ₽</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkout-footer">
+                <button id="confirmOrderBtn" class="btn-gradient">
+                    <i class="fas fa-check"></i> Оформить заказ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- БЛОКИРОВКА -->
+    <div class="modal-overlay" id="blockedModal" style="display: none;">
+        <div class="modal" style="max-width: 500px; text-align: center;">
+            <div class="modal-header">
+                <h2 style="color: #ff6666;">Доступ запрещён</h2>
+            </div>
+            <div style="padding: 1rem 0; font-size: 1.1rem; color: #ccc;">
+                <i class="fas fa-ban" style="font-size: 3rem; color: #ff6666; margin-bottom: 1rem;"></i><br>
+                Вы были <strong>заблокированы</strong> администратором.<br>
+                Обратитесь в поддержку.
+            </div>
+            <div class="modal-actions">
+                <button class="cancel-btn" onclick="document.getElementById('blockedModal').style.display='none'">
+                    Закрыть
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ТОСТ КОРЗИНЫ -->
+    <div class="toast" id="cartToast">
+        <div class="toast-icon"><i class="fas fa-check"></i></div>
+        <div><strong id="toastTitle">Готово!</strong><br><span id="toastMessage"></span></div>
+    </div>
+
+    <!-- ОТЗЫВ -->
+    <div class="modal-overlay" id="reviewModal">
+        <div class="modal-content" style="max-width:600px; width:90%;">
+            <button class="modal-close" id="closeReview">x</button>
+            <h2 class="modal-title" id="reviewItemName">Оцените товар</h2>
+            <div class="input-group">
+                <label>Ваша оценка</label>
+                <div id="reviewStars" style="display:flex; gap:0.5rem; justify-content:center; margin:1rem 0;">
+                    <i class="far fa-star" data-value="1"></i>
+                    <i class="far fa-star" data-value="2"></i>
+                    <i class="far fa-star" data-value="3"></i>
+                    <i class="far fa-star" data-value="4"></i>
+                    <i class="far fa-star" data-value="5"></i>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Ваш отзыв</label>
+                <textarea id="reviewText" class="review-textarea" placeholder="Поделитесь впечатлениями..." style="width:100%; height:120px; padding:1rem; border-radius:18px; background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.2); color:#fff;"></textarea>
+            </div>
+            <div style="display:flex; gap:1rem; margin-top:1.5rem; justify-content:center;">
+                <button class="btn-primary" id="submitReview">Отправить</button>
+                <button class="btn-secondary" id="skipReview">Пропустить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- СКРИПТЫ -->
+    <script src="/static/js/bin.js" defer></script>
+    <script src="/static/js/statuschain.js" defer></script>
+    <script defer>
+        // Закрытие обратной связи
+        window.closeFeedbackModal = () => {
+            document.getElementById('feedbackModal').style.display = 'none';
+        };
+
+        // Показ телефона в форме обратной связи
+        document.getElementById('openFeedbackBtn')?.addEventListener('click', () => {
+            const phone = sessionStorage.getItem('phone') || '—';
+            document.getElementById('feedbackPhone').textContent = phone;
+            document.getElementById('feedbackModal').style.display = 'flex';
+        });
+
+        // Блокировка
+        document.addEventListener("DOMContentLoaded", () => {
+            const flashError = document.querySelector('.flash.error');
+            if (flashError && flashError.textContent.includes('заблокированы')) {
+                document.getElementById('blockedModal').style.display = 'flex';
+            }
+        });
+    </script>
+</body>
+</html>

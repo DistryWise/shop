@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отзывы — Админка | ZAZA</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Shadows+Into+Light&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
+
+</head>
+<body>
+
+    <!-- Хедер -->
+    <header>
+        <a href="/" class="logo">
+            <img src="/static/assets/logo.png" alt="ZAZA" class="logo-img">
+        </a>
+        <nav>
+            <a href="/" class="nav-link">Главная</a>
+        </nav>
+    </header>
+
+
+    <!-- Сайдбар (точно как в новой версии) -->
+<aside class="sidebar">
+        <h3 class="sidebar-title">Админка</h3>
+        <div class="sidebar-menu">
+            <a href="/admin" class="sidebar-item"><i class="fas fa-box"></i><span>Товары</span></a>
+            <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
+            <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
+            <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
+            <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
+            <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
+            <a href="/admin_reviews" class="sidebar-item active"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews | e }}</div></span></a>
+            <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders | e }}</div></span></a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="admin-container">
+            <h1 class="section-title">Отзывы</h1>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="flash {{ 'success' if category != 'error' else 'error' }}">{{ message | safe }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+<div class="filters">
+    <!-- Поиск -->
+    <input type="text" id="searchInput" class="search-input" placeholder="Поиск по телефону, товару, тексту..." autocomplete="off">
+
+    <!-- Фильтр по оценке -->
+    <div class="custom-select">
+        <div class="custom-select-trigger">
+            <span class="custom-select-text">Все оценки</
+
+span>
+            <i class="fas fa-chevron-down custom-select-arrow"></i>
+        </div>
+        <div class="custom-select-options">
+            <div class="custom-select-option" data-value="">Все оценки</div>
+            <div class="custom-select-option" data-value="5">5 звёзд</div>
+            <div class="custom-select-option" data-value="4">4 звезды</div>
+            <div class="custom-select-option" data-value="3">3 звезды</div>
+            <div class="custom-select-option" data-value="2">2 звезды</div>
+            <div class="custom-select-option" data-value="1">1 звезда</div>
+        </div>
+        <input type="hidden" id="ratingFilter" value="">
+    </div>
+
+    <input type="date" id="dateFrom" style="display:none;">
+    <input type="date" id="dateTo" style="display:none;">
+
+    <!-- Фильтр по дате — теперь в той же строке! -->
+    <div class="custom-select">
+        <div class="custom-select-trigger">
+            <span class="custom-select-text">За всё время</span>
+            <i class="fas fa-chevron-down custom-select-arrow"></i>
+        </div>
+        <div class="custom-select-options">
+            <div class="custom-select-option" data-value="">За всё время</div>
+            <div class="custom-select-option" data-value="today">Сегодня</div>
+            <div class="custom-select-option" data-value="7days">Последние 7 дней</div>
+            <div class="custom-select-option" data-value="30days">Последние 30 дней</div>
+            <div class="custom-select-option" data-value="custom">Выбрать период...</div>
+        </div>
+        <input type="hidden" id="dateFilter" value="">
+    </div>
+</div>
+
+
+<!-- МОДАЛКА ВЫБОРА ПЕРИОДА ДЛЯ ФИЛЬТРА ОТЗЫВОВ -->
+<div id="dateRangeModal" class="modal-overlay">
+    <div class="modal" style="max-width:480px;">
+        <button class="modal-close" onclick="closeModal('dateRangeModal')">×</button>
+        <h3>Выберите период</h3>
+        
+        <div style="display:flex; flex-direction:column; gap:1.8rem; margin-top:1.5rem;">
+            <div class="form-group">
+                <label>С даты</label>
+                <input type="date" id="modalDateFrom" class="search-input">
+            </div>
+            <div class="form-group">
+                <label>По дату (включительно)</label>
+                <input type="date" id="modalDateTo" class="search-input">
+            </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top:2.5rem;">
+            <button class="btn-primary" onclick="applyCustomDateRange()">Применить</button>
+            <button class="cancel-btn" onclick="closeModal('dateRangeModal')">Отмена</button>
+        </div>
+    </div>
+</div>
+            <div id="reviewsContainer">
+                {% if reviews|length == 0 %}
+                <div style="text-align:center;padding:8rem 0;color:var(--gray);">
+                    <i class="fas fa-comment-slash" style="font-size:6rem;margin-bottom:1.5rem;display:block;opacity:0.6;"></i>
+                    <p style="font-size:1.6rem;">Пока нет ни одного отзыва</p>
+                </div>
+                {% else %}
+                {% for r in reviews %}
+                <div class="review-item" data-rating="{{ r.rating|int }}" data-id="{{ r.id }}">
+
+                    <div class="review-header">
+                        <div class="review-meta">
+                            <div class="review-user">{{ r.user_phone or 'Аноним' }}</div>
+                            <div class="review-date">
+                                <i class="far fa-calendar-alt"></i> {{ r.created_at[:10] }}
+                            </div>
+                        </div>
+                        <div class="review-actions">
+                            <button class="action-btn" onclick="openEditModal({{ r.id }}, {{ r.rating }}, `{{ r.text | replace('`', '\\`') | replace('\n', '\\n') }}`)">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="action-btn delete" onclick="openDeleteModal({{ r.id }})">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="review-product" onclick="fetchItemModal('{{ r.item_type }}', {{ r.item_id }})">
+                        <i class="fas {% if r.item_type == 'product' %}fa-box{% else %}fa-gavel{% endif %}"></i>
+                        {{ r.item_title }}
+                    </div>
+                    <div class="review-rating">
+                        {% for i in range(1,6) %}<span class="star {% if i <= r.rating %}filled{% endif %}">★</span>{% endfor %}
+                    </div>
+                    <div class="review-text">{{ r.text | replace('\n', '<br>') | safe }}</div>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="pagination">
+                <button class="page-link" id="prevBtn" onclick="changePage(-1)" disabled><i class="fas fa-chevron-left"></i></button>
+                <span style="align-self:center;color:var(--gray);font-size:1.1rem;" id="pageInfo">Страница 1 из 1</span>
+                <button class="page-link" id="nextBtn" onclick="changePage(1)" disabled><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+    </main>
+
+    <div class="add-review-btn" onclick="openCreateReviewModal()">+</div>
+
+        <!-- === КРАСИВАЯ МОДАЛКА ТОВАРА/УСЛУГИ === -->
+        <div id="itemModal" class="modal-overlay">
+            <div class="modal item-modal">
+                <button class="modal-close" onclick="closeModal('itemModal')">×</button>
+
+                <div class="item-modal-header">
+                    <div class="item-modal-icon">
+                        <i class="fas fa-box" id="itemModalIcon"></i>
+                    </div>
+                    <h3 id="modalItemTitle">Загрузка...</h3>
+                </div>
+
+                <div class="item-modal-image">
+                    <img id="modalItemImg" src="" alt="" onerror="this.src='/static/assets/no-image.png'">
+                </div>
+
+                <div class="item-modal-content">
+                    <div class="item-modal-desc" id="modalItemDesc">
+                        Загрузка описания...
+                    </div>
+
+                    <div class="item-modal-price" id="modalItemPrice">
+                        Цена не указана
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <div id="editModal" class="modal-overlay">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('editModal')">×</button>
+            <h3>Редактировать отзыв</h3>
+            <form onsubmit="return false;">
+                <input type="hidden" id="edit_review_id">
+                <div class="form-group">
+                    <label>Оценка</label>
+                    <div class="rating-input" id="edit_rating_stars">
+                        <span class="rating-star" data-value="1">★</span>
+                        <span class="rating-star" data-value="2">★</span>
+                        <span class="rating-star" data-value="3">★</span>
+                        <span class="rating-star" data-value="4">★</span>
+                        <span class="rating-star" data-value="5">★</span>
+                    </div>
+                    <input type="hidden" id="edit_rating_value">
+                </div>
+                <div class="form-group">
+                    <label>Текст отзыва</label>
+                    <textarea id="edit_text" required></textarea>
+                </div>
+                    <div class="flash error" id="edit_error" style="display:none;"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-primary" onclick="prepareEditWithPassword()">Сохранить</button>
+                    <button type="button" class="cancel-btn" onclick="closeModal('editModal')">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('deleteModal')">×</button>
+            <h3>Удалить отзыв?</h3>
+            <p>Это действие нельзя отменить.</p>
+            <form onsubmit="return false;">
+                <input type="hidden" id="delete_review_id">
+                <div class="form-group">
+                    <label>Пароль админа</label>
+                    <input type="password" id="delete_password" required placeholder="Введите пароль">
+                </div>
+                <div class="flash error" id="delete_error" style="display:none;"></div>
+                <div class="modal-actions">
+                    <button type="button" style="background:#ff4444;" onclick="submitDelete()">Удалить</button>
+                    <button type="button" class="cancel-btn" onclick="closeModal('deleteModal')">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+<div id="createReviewModal" class="modal-overlay">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('createReviewModal')">×</button>
+        <h3>Создать отзыв</h3>
+        <form onsubmit="return false;">
+            <input type="hidden" id="selected_type">
+            <input type="hidden" id="selected_id">
+
+            <div class="form-group">
+                <label>Выберите товар или услугу</label>
+
+                <!-- КОНТЕЙНЕР С РАЗДЕЛЕНИЕМ -->
+                <div class="custom-scroll-thinner" style="background:rgba(0,0,0,0.25); border-radius:var(--radius-sm); padding:1.5rem; max-height:420px; overflow-y:auto;">
+                    
+                    <!-- ТОВАРЫ -->
+                    <div style="margin-bottom:2rem;">
+                        <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom:1rem; color:#00ff95; font-weight:700; font-size:1.1rem;">
+                            <i class="fas fa-box" style="font-size:1.4rem;"></i>
+                            <span>Товары</span>
+                            <div style="flex:1; height:1px; background:rgba(0,255,149,0.3); margin-left:1rem;"></div>
+                        </div>
+                        <div class="items-grid" id="productsContainer"></div>
+                    </div>
+
+                    <!-- УСЛУГИ -->
+                    <div>
+                        <div style="display:flex; align-items:center; gap:0.8rem; margin-bottom:1rem; color:#ff6bff; font-weight:700; font-size:1.1rem;">
+                            <i class="fas fa-gavel" style="font-size:1.4rem;"></i>
+                            <span>Услуги</span>
+                            <div style="flex:1; height:1px; background:rgba(255,107,255,0.3); margin-left:1rem;"></div>
+                        </div>
+                        <div class="items-grid" id="servicesContainer"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Оценка</label>
+                <div class="rating-input" id="create_rating_stars">
+                    <span class="rating-star" data-value="1">★</span>
+                    <span class="rating-star" data-value="2">★</span>
+                    <span class="rating-star" data-value="3">★</span>
+                    <span class="rating-star" data-value="4">★</span>
+                    <span class="rating-star" data-value="5">★</span>
+                </div>
+                <input type="hidden" id="create_rating_value" value="5">
+            </div>
+
+            <div class="form-group">
+                <label>Текст отзыва</label>
+                <textarea id="create_text" required placeholder="Поделитесь впечатлениями..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>От имени (телефон)</label>
+                <input type="text" 
+                    id="create_user_phone" 
+                    placeholder="+7 (999) 999-99-99" 
+                    maxlength="18"
+                    inputmode="numeric"
+                    autocomplete="tel">
+                <small style="color:var(--gray); font-size:0.85rem; margin-top:0.4rem; display:block;">
+                    Необязательно. Можно указать любой номер или оставить пустым
+                </small>
+            </div>
+
+<div class="modal-actions">
+    <button type="button" class="btn-primary" onclick="submitCreateReviewWithPassword()">Создать</button>
+    <button type="button" class="cancel-btn" onclick="closeModal('createReviewModal')">Отмена</button>
+</div>
+        </form>
+    </div>
+</div>
+
+    <!-- Единое окно ввода пароля -->
+<div id="passwordModal" class="modal-overlay">
+    <div class="modal" style="max-width:420px;">
+        <button class="modal-close" onclick="closeModal('passwordModal')">×</button>
+        <h3>Пароль администратора</h3>
+        <div class="form-group">
+            <input type="password" id="global_password" placeholder="Введите пароль" autofocus>
+        </div>
+        <div class="flash error" id="password_error" style="display:none;"></div>
+        <div class="modal-actions">
+            <button class="btn-primary" onclick="confirmPasswordAction()">Подтвердить</button>
+            <button class="cancel-btn" onclick="closeModal('passwordModal')">Отмена</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+// МГНОВЕННАЯ ПРОВЕРКА IP ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
+fetch('/api/check_admin')
+    .then(r => r.json())
+    .then(data => {
+        if (!data.is_admin) {
+            // Если IP не в белом списке — сразу показываем 404 и ничего больше не грузим
+            document.documentElement.innerHTML = `
+                <!DOCTYPE html>
+                <html lang="ru">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>404 — Страница не найдена</title>
+                    <style>
+                        body { margin:0; height:100vh; background:#000; color:#fff; font-family:Arial,sans-serif; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+                        h1 { font-size:6rem; margin:0; opacity:0.8; }
+                        p { font-size:1.5rem; opacity:0.6; }
+                        .back { margin-top:2rem; color:#fff; text-decoration:none; padding:1rem 2rem; background:rgba(255,255,255,0.1); border-radius:12px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>404</h1>
+                    <p>Страница не найдена</p>
+                    <a href="/" class="back">← На главную</a>
+                </body>
+                </html>`;
+            // Останавливаем выполнение всего остального JS на странице
+            throw new Error("Admin access denied");
+        }
+    })
+    .catch(() => {
+        // На случай, если API недоступен — тоже показываем 404
+        document.documentElement.innerHTML = `<h1 style="color:#fff;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:4rem;">Доступ запрещён</h1>`;
+        throw new Error("Check admin failed");
+    });
+</script>
+
+<script>
+// ======================== 1. ПРОВЕРКА АДМИНСКОГО ДОСТУПА ========================
+fetch('/api/check_admin')
+    .then(r => r.json())
+    .then(data => {
+        if (!data.is_admin) {
+            document.documentElement.innerHTML = `
+                <!DOCTYPE html>
+                <html lang="ru">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>404 — Страница не найдена</title>
+                    <style>
+                        body { margin:0; height:100vh; background:#000; color:#fff; font-family:Arial,sans-serif; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+                        h1 { font-size:6rem; margin:0; opacity:0.8; }
+                        p { font-size:1.5rem; opacity:0.6; }
+                        .back { margin-top:2rem; color:#fff; text-decoration:none; padding:1rem 2rem; background:rgba(255,255,255,0.1); border-radius:12px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>404</h1>
+                    <p>Страница не найдена</p>
+                    <a href="/" class="back">← На главную</a>
+                </body>
+                </html>`;
+            throw new Error("Admin access denied");
+        }
+    })
+    .catch(() => {
+        document.documentElement.innerHTML = `<h1 style="color:#fff;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:4rem;">Доступ запрещён</h1>`;
+        throw new Error("Check admin failed");
+    });
+
+// ======================== 2. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ========================
+let currentPage = 1;
+const itemsPerPage = 10;
+let allReviews = [];
+let filteredReviews = [];
+
+// ======================== 3. ГЛАВНАЯ ФУНКЦИЯ ФИЛЬТРАЦИИ ========================
+function applyFilters() {
+    const searchInput   = document.getElementById('searchInput');
+    const ratingFilter  = document.getElementById('ratingFilter');
+    const dateFilter    = document.getElementById('dateFilter');
+    const dateFrom      = document.getElementById('dateFrom');
+    const dateTo        = document.getElementById('dateTo');
+
+    const query         = searchInput.value.trim().toLowerCase();
+    const selectedRating = ratingFilter.value;
+    const selectedDate   = dateFilter.value;
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    filteredReviews = allReviews.filter(r => {
+        // Поиск по телефону, товару и тексту отзыва
+        const searchMatch = !query ||
+            r.phone.toLowerCase().includes(query) ||
+            r.itemTitle.toLowerCase().includes(query) ||
+            r.text.includes(query);
+
+        // Фильтр по рейтингу
+        const ratingMatch = !selectedRating || r.rating === Number(selectedRating);
+
+        // Фильтр по дате
+        let dateMatch = true;
+        if (selectedDate && r.date) {
+            const reviewDate = new Date(r.date);
+            if (isNaN(reviewDate)) return false;
+
+            switch (selectedDate) {
+                case 'today':
+                    dateMatch = reviewDate.toDateString() === today.toDateString();
+                    break;
+                case '7days':
+                    dateMatch = reviewDate >= new Date(now - 7*24*60*60*1000);
+                    break;
+                case '30days':
+                    dateMatch = reviewDate >= new Date(now - 30*24*60*60*1000);
+                    break;
+                case 'custom':
+                    if (dateFrom.value || dateTo.value) {
+                        const from = dateFrom.value ? new Date(dateFrom.value) : null;
+                        const to   = dateTo.value ? new Date(dateTo.value) : null;
+                        if (to) to.setHours(23,59,59,999);
+                        dateMatch = (!from || reviewDate >= from) && (!to || reviewDate <= to);
+                    }
+                    break;
+            }
+        }
+
+        return searchMatch && ratingMatch && dateMatch;
+    });
+
+    currentPage = 1;
+    renderPage();
+}
+
+// ======================== 4. РЕНДЕР СТРАНИЦЫ ========================
+function renderPage() {
+    const container = document.getElementById('reviewsContainer');
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const pageItems = filteredReviews.slice(start, end);
+
+    container.innerHTML = '';
+
+    if (pageItems.length === 0) {
+        if (allReviews.length === 0) {
+            container.innerHTML = `<div style="text-align:center;padding:8rem 0;color:var(--gray);">
+                <i class="fas fa-comment-slash" style="font-size:6rem;margin-bottom:1.5rem;display:block;opacity:0.6;"></i>
+                <p style="font-size:1.6rem;">Пока нет ни одного отзыва</p>
+            </div>`;
+        } else {
+            container.innerHTML = `<div style="text-align:center;padding:6rem;color:var(--gray);">
+                <i class="fas fa-search" style="font-size:5rem;margin-bottom:1rem;opacity:0.5;"></i>
+                <p style="font-size:1.4rem;">Отзывы не найдены</p>
+            </div>`;
+        }
+    } else {
+        pageItems.forEach(r => container.appendChild(r.element.cloneNode(true)));
+    }
+
+    const totalPages = Math.ceil(filteredReviews.length / itemsPerPage) || 1;
+    document.getElementById('pageInfo').textContent = `Страница ${currentPage} из ${totalPages}`;
+    document.getElementById('prevBtn').disabled = currentPage === 1;
+    document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+}
+
+function changePage(delta) {
+    const totalPages = Math.ceil(filteredReviews.length / itemsPerPage);
+    const newPage = currentPage + delta;
+    if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        renderPage();
+    }
+}
+
+// ======================== 5. ИНИЦИАЛИЗАЦИЯ ========================
+document.addEventListener("DOMContentLoaded", () => {
+    window.addEventListener('scroll', () => {
+        document.querySelector('header').classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // Собираем полные данные из каждого отзыва
+    allReviews = Array.from(document.querySelectorAll('.review-item')).map(el => {
+        const phoneEl    = el.querySelector('.review-user');
+        const itemEl     = el.querySelector('.review-product');
+        const dateEl     = el.querySelector('.review-date');
+        const textEl     = el.querySelector('.review-text');
+
+        const dateMatch = dateEl?.textContent.match(/\d{4}-\d{2}-\d{2}/);
+        const date = dateMatch ? dateMatch[0] : '';
+
+        return {
+            element:   el.cloneNode(true),
+            id:        el.dataset.id,
+            rating:    parseInt(el.dataset.rating || '0', 10),
+            phone:     (phoneEl?.textContent || '').trim(),
+            itemTitle: (itemEl?.textContent || '').trim(),
+            date:      date,
+            text:      (textEl?.textContent || '').trim().toLowerCase()
+        };
+    });
+
+    filteredReviews = [...allReviews];
+    renderPage();
+
+    // Подписываемся на все фильтры
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('ratingFilter').addEventListener('change', applyFilters);
+    document.getElementById('dateFilter').addEventListener('change', applyFilters);
+    document.getElementById('dateFrom').addEventListener('change', applyFilters);
+    document.getElementById('dateTo').addEventListener('change', applyFilters);
+
+    // Кнопки редактировать / удалить
+    document.getElementById('reviewsContainer').addEventListener('click', e => {
+        const btn = e.target.closest('.action-btn');
+        if (!btn) return;
+
+        const reviewItem = btn.closest('.review-item');
+        const id = reviewItem.dataset.id;
+        const original = allReviews.find(r => r.id === id);
+        const cleanText = original?.element.querySelector('.review-text')?.innerText || '';
+
+        if (btn.querySelector('.fa-edit')) {
+            openEditModal(id, reviewItem.dataset.rating, cleanText);
+        } else if (btn.querySelector('.fa-trash-alt')) {
+            openDeleteModal(id);
+        }
+    });
+});
+
+// ======================== 6. КАСТОМНЫЕ СЕЛЕКТЫ ========================
+document.addEventListener('click', e => {
+    const trigger = e.target.closest('.custom-select-trigger');
+    const option  = e.target.closest('.custom-select-option');
+    const select  = e.target.closest('.custom-select');
+
+    if (trigger) {
+        document.querySelectorAll('.custom-select').forEach(s => {
+            if (s !== trigger.parentElement) s.classList.remove('open');
+        });
+        trigger.parentElement.classList.toggle('open');
+    }
+    else if (option) {
+        const parent = option.closest('.custom-select');
+        const textEl = parent.querySelector('.custom-select-text');
+        const hiddenId = parent.querySelector('input[type="hidden"]')?.id || 'ratingFilter';
+        const hidden = document.getElementById(hiddenId);
+
+        textEl.textContent = option.textContent.trim();
+        hidden.value = option.dataset.value || '';
+        parent.classList.remove('open');
+        applyFilters();
+    }
+    else if (!select) {
+        document.querySelectorAll('.custom-select').forEach(s => s.classList.remove('open'));
+    }
+});
+
+// === ОТКРЫТИЕ МОДАЛКИ + СОХРАНЕНИЕ/ВОССТАНОВЛЕНИЕ ДАТ ===
+document.addEventListener('click', function(e) {
+    const customOption = e.target.closest('.custom-select-option[data-value="custom"]');
+    if (!customOption) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const selectWrapper = customOption.closest('.custom-select');
+    const displayText = selectWrapper.querySelector('.custom-select-text');
+    selectWrapper.classList.remove('open');
+
+    openModal('dateRangeModal');
+
+    const today = new Date().toISOString().split('T')[0];
+    const fromInput = document.getElementById('modalDateFrom');
+    const toInput = document.getElementById('modalDateTo');
+
+    // Запрещаем будущие даты
+    fromInput.max = today;
+    toInput.max = today;
+
+    // === ВОССТАНАВЛИВАЕМ ПОСЛЕДНИЕ ВЫБРАННЫЕ ДАТЫ ИЗ localStorage ===
+    const savedFrom = localStorage.getItem('admin_reviews_date_from');
+    const savedTo = localStorage.getItem('admin_reviews_date_to');
+
+    if (savedFrom && savedTo && savedFrom <= today && savedTo <= today) {
+        fromInput.value = savedFrom;
+        toInput.value = savedTo;
+    } else {
+        // По умолчанию — последние 30 дней
+        const last30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        fromInput.value = last30;
+        toInput.value = today;
+    }
+
+    // Автоматическая подстройка дат
+    fromInput.addEventListener('change', () => {
+        if (fromInput.value > toInput.value) toInput.value = fromInput.value;
+        toInput.min = fromInput.value;
+    });
+    toInput.addEventListener('change', () => {
+        if (toInput.value < fromInput.value) fromInput.value = toInput.value;
+    });
+
+    // Возвращаем текст "За всё время", если даты не применены
+    if (!savedFrom || !savedTo) {
+        displayText.textContent = 'За всё время';
+    }
+});
+
+// === ПРИМЕНЕНИЕ ДАТ + СОХРАНЕНИЕ В localStorage ===
+function applyCustomDateRange() {
+    const from = document.getElementById('modalDateFrom').value;
+    const to = document.getElementById('modalDateTo').value;
+
+    if (!from || !to) {
+        alert('Выберите обе даты');
+        return;
+    }
+    if (new Date(from) > new Date(to)) {
+        alert('Начальная дата не может быть позже конечной');
+        return;
+    }
+
+    // Сохраняем в localStorage (чтобы после перезагрузки остались)
+    localStorage.setItem('admin_reviews_date_from', from);
+    localStorage.setItem('admin_reviews_date_to', to);
+
+    // Записываем в скрытые поля
+    document.getElementById('dateFrom').value = from;
+    document.getElementById('dateTo').value = to;
+
+    // Обновляем текст в селекте
+    const fromStr = new Date(from).toLocaleDateString('ru-RU');
+    const toStr = new Date(to).toLocaleDateString('ru-RU');
+    document.querySelector('#dateFilter').closest('.custom-select')
+        .querySelector('.custom-select-text').textContent = `${fromStr} – ${toStr}`;
+
+    closeModal('dateRangeModal');
+    applyFilters();
+}
+
+// ======================== 8. ВСЕ ОСТАЛЬНЫЕ ФУНКЦИИ (ТВОИ, НЕ ТРОГАЛ!) ========================
+async function fetchItemModal(type, id) {
+    const modal = document.getElementById('itemModal');
+    const title = document.getElementById('modalItemTitle');
+    const img = document.getElementById('modalItemImg');
+    const desc = document.getElementById('modalItemDesc');
+    const price = document.getElementById('modalItemPrice');
+    const icon = document.getElementById('itemModalIcon');
+
+    title.textContent = 'Загрузка...';
+    desc.textContent = 'Загрузка описания...';
+    price.textContent = '';
+    img.src = '/static/assets/no-image.png';
+    icon.className = type === 'product' ? 'fas fa-box' : 'fas fa-gavel';
+
+    const endpoint = type === 'product' ? `/api/product/${id}` : `/api/service/${id}`;
+    
+    try {
+        const res = await fetch(endpoint);
+        const data = await res.json();
+
+        title.textContent = data.title || 'Без названия';
+        img.src = data.image_urls?.[0] || '/static/assets/no-image.png';
+        desc.textContent = data.full_desc || data.description || 'Описание отсутствует';
+        price.textContent = data.price_str || data.price || 'Цена не указана';
+    } catch (e) {
+        title.textContent = 'Ошибка загрузки';
+        desc.textContent = 'Не удалось загрузить данные.';
+        price.textContent = '—';
+    }
+
+    openModal('itemModal');
+}
+
+function openEditModal(id, rating, text) {
+    document.getElementById('edit_review_id').value = id;
+    document.getElementById('edit_rating_value').value = rating;
+    document.getElementById('edit_text').value = text.replace(/\\n/g, '\n');
+    document.getElementById('edit_error').style.display = 'none';
+
+    // Зажигаем звёздочки
+    document.querySelectorAll('#edit_rating_stars .rating-star').forEach(s => 
+        s.classList.toggle('selected', parseInt(s.dataset.value) <= rating)
+    );
+
+    openModal('editModal');
+}
+
+// НОВАЯ ФУНКЦИЯ — подготовка редактирования
+function prepareEditWithPassword() {
+    const id = document.getElementById('edit_review_id').value;
+    const rating = document.getElementById('edit_rating_value').value;
+    const text = document.getElementById('edit_text').value.trim();
+
+    if (!text) {
+        document.getElementById('edit_error').textContent = 'Напишите текст отзыва';
+        document.getElementById('edit_error').style.display = 'block';
+        return;
+    }
+
+    // Сохраняем временно и открываем пароль
+    window.pendingEditData = { id, rating, text };
+    closeModal('editModal');
+    openModal('passwordModal');
+}
+
+// ЕДИНСТВЕННАЯ РАБОЧАЯ ФУНКЦИЯ — БОЛЬШЕ НИЧЕГО НЕ НУЖНО
+async function reviewAction(action, payload = {}, password) {
+    const formData = new FormData();
+    formData.append('action', action);
+    formData.append('password', password);
+
+    Object.entries(payload).forEach(([k, v]) => {
+        formData.append(k, v);
+    });
+
+    const res = await fetch('/admin_reviews', {
+        method: 'POST',
+        body: formData
+        // БЕЗ ЛЮБЫХ HEADERS!
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+}
+
+async function confirmPasswordAction() {
+    const password = document.getElementById('global_password').value.trim();
+    const error = document.getElementById('password_error');
+    error.style.display = 'none';
+
+    if (!password) {
+        error.textContent = 'Введите пароль';
+        error.style.display = 'block';
+        return;
+    }
+
+    try {
+        let result;
+
+        if (window.pendingEditData) {
+            result = await reviewAction('edit_review', {
+                review_id: window.pendingEditData.id,
+                rating: window.pendingEditData.rating,
+                text: window.pendingEditData.text
+            }, password);
+        }
+        else if (window.pendingDeleteData) {
+            result = await reviewAction('delete_review', {
+                review_id: window.pendingDeleteData.id
+            }, password);
+        }
+        else if (window.pendingReviewData) {
+            result = await reviewAction('create_review', {
+                item_type: window.pendingReviewData.type,
+                item_id: window.pendingReviewData.id,
+                rating: window.pendingReviewData.rating,
+                text: window.pendingReviewData.text,
+                user_phone: window.pendingReviewData.phone || ''
+            }, password);
+        }
+
+        if (result?.success) {
+            location.reload();
+        } else {
+            error.textContent = result?.message || 'Неверный пароль';
+            error.style.display = 'block';
+        }
+    } catch (err) {
+        console.error(err);
+        error.textContent = 'Ошибка сервера (415 и т.д.)';
+        error.style.display = 'block';
+    } finally {
+        delete window.pendingEditData;
+        delete window.pendingDeleteData;
+        delete window.pendingReviewData;
+        document.getElementById('global_password').value = '';
+        closeModal('passwordModal');
+    }
+}
+
+function submitEdit() {
+    const id = document.getElementById('edit_review_id').value;
+    const rating = document.getElementById('edit_rating_value').value;
+    const text = document.getElementById('edit_text').value.trim();
+    const password = document.getElementById('edit_password').value.trim();
+    const error = document.getElementById('edit_error');
+
+    if (!text || !password) { error.textContent = 'Заполните все поля'; error.style.display = 'block'; return; }
+
+    fetch('/admin_reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ action: 'edit_review', review_id: id, rating, text, password })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) location.reload();
+        else { error.textContent = data.message || 'Ошибка'; error.style.display = 'block'; }
+    });
+}
+
+function openDeleteModal(id) {
+    document.getElementById('delete_review_id').value = id;
+    document.getElementById('delete_error').style.display = 'none';
+    openModal('deleteModal');
+}
+
+function submitDelete() {
+    const id = document.getElementById('delete_review_id').value;
+    const password = document.getElementById('delete_password').value.trim();
+    const error = document.getElementById('delete_error');
+
+    if (!password) { error.textContent = 'Введите пароль'; error.style.display = 'block'; return; }
+
+    fetch('/admin_reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ action: 'delete_review', review_id: id, password })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) location.reload();
+        else { error.textContent = data.message || 'Ошибка'; error.style.display = 'block'; }
+    });
+}
+
+function openModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.classList.add('active');
+        modal.onclick = e => { if (e.target === modal) closeModal(id); };
+    }
+}
+
+function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) modal.classList.remove('active');
+}
+
+document.addEventListener('click', e => {
+    if (!e.target.classList.contains('rating-star')) return;
+    const star = e.target;
+    const container = star.closest('.rating-input');
+    if (!container) return;
+
+    const value = star.dataset.value;
+    const inputId = container.id.replace('_stars', '_value');
+    const hiddenInput = document.getElementById(inputId);
+
+    if (hiddenInput) hiddenInput.value = value;
+
+    container.querySelectorAll('.rating-star').forEach(s => 
+        s.classList.toggle('selected', s.dataset.value <= value)
+    );
+});
+
+function openCreateReviewModal() {
+    // Сбрасываем все поля
+    document.getElementById('create_rating_value').value = '5';
+    document.getElementById('create_text').value = '';
+    document.getElementById('create_user_phone').value = '';
+    document.getElementById('selected_type').value = '';
+    document.getElementById('selected_id').value = '';
+    document.querySelectorAll('.item-option.selected').forEach(el => el.classList.remove('selected'));
+
+    // Зажигаем 5 звёзд
+    document.querySelectorAll('#create_rating_stars .rating-star').forEach((star, i) => {
+        star.classList.toggle('selected', i < 5);
+    });
+
+    // Устанавливаем телефон и ставим курсор в нужное место
+    const phoneInput = document.getElementById('create_user_phone');
+    phoneInput.value = '+7 (';
+
+    // Даём браузеру время отрисовать модалку, потом фокусируемся
+    requestAnimationFrame(() => {
+        phoneInput.focus();
+        phoneInput.setSelectionRange(4, 4); // курсор после "+7 ("
+    });
+
+    // Загружаем товары/услуги (если ещё не загружены)
+    if (!document.querySelector('#productsContainer .item-option')) {
+        loadItemsForReview();
+    }
+
+    openModal('createReviewModal');
+}
+
+function loadItemsForReview() {
+    const productsContainer = document.getElementById('productsContainer');
+    const servicesContainer = document.getElementById('servicesContainer');
+
+    productsContainer.innerHTML = '<p style="color:#aaa;grid-column:1/-1;">Загрузка...</p>';
+    servicesContainer.innerHTML = '<p style="color:#aaa;grid-column:1/-1;">Загрузка...</p>';
+
+    Promise.all([
+        fetch('/api/all_products').then(r => r.json()).catch(() => []),
+        fetch('/api/services').then(r => r.json()).catch(() => [])
+    ])
+    .then(([products, services]) => {
+        productsContainer.innerHTML = '';
+        servicesContainer.innerHTML = '';
+
+        (products.length ? products : [{title: 'Нет товаров'}]).forEach(item => {
+            if (!item.id) return;
+            const div = document.createElement('div');
+            div.className = 'item-option';
+            div.innerHTML = `<i class="fas fa-box" style="display:block;font-size:0.9rem;margin-bottom:0.4rem;opacity:0.7;"></i>${item.title}`;
+            div.onclick = () => selectItem(div, 'product', item.id);
+            productsContainer.appendChild(div);
+        });
+
+        (services.length ? services : [{title: 'Нет услуг'}]).forEach(item => {
+            if (!item.id) return;
+            const div = document.createElement('div');
+            div.className = 'item-option';
+            div.innerHTML = `<i class="fas fa-gavel" style="display:block;font-size:0.9rem;margin-bottom:0.4rem;opacity:0.7;"></i>${item.title}`;
+            div.onclick = () => selectItem(div, 'service', item.id);
+            servicesContainer.appendChild(div);
+        });
+    });
+}
+
+function selectItem(el, type, id) {
+    document.querySelectorAll('.item-option').forEach(e => e.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('selected_type').value = type;
+    document.getElementById('selected_id').value = id;
+}
+
+function submitCreateReviewWithPassword() {
+    const type = document.getElementById('selected_type').value;
+    const id = document.getElementById('selected_id').value;
+    const rating = document.getElementById('create_rating_value').value;
+    const text = document.getElementById('create_text').value.trim();
+    const phone = document.getElementById('create_user_phone').value.trim();
+
+    if (!type || !id) return alert('Выберите товар или услугу');
+    if (!text) return alert('Напишите текст отзыва');
+
+    window.pendingReviewData = { type, id, rating, text, phone };
+    openModal('passwordModal');
+}
+
+// === НОВАЯ ФУНКЦИЯ: Редактирование с подтверждением пароля через универсальную модалку ===
+function prepareEditWithPassword() {
+    const id = document.getElementById('edit_review_id').value;
+    const rating = document.getElementById('edit_rating_value').value;
+    const text = document.getElementById('edit_text').value.trim();
+
+    if (!text) {
+        document.getElementById('edit_error').textContent = 'Напишите текст отзыва';
+        document.getElementById('edit_error').style.display = 'block';
+        return;
+    }
+
+    // Сохраняем данные временно и открываем окно с паролем
+    window.pendingEditData = { id, rating, text };
+    closeModal('editModal');        // закрываем модалку редактирования
+    openModal('passwordModal');     // открываем универсальное окно пароля
+}
+
+// === Перехватываем подтверждение пароля и отправляем редактирование ===
+function confirmPasswordAction() {
+    const password = document.getElementById('global_password').value.trim();
+    const error = document.getElementById('password_error');
+    if (!password) {
+        error.textContent = 'Введите пароль';
+        error.style.display = 'block';
+        return;
+    }
+
+    // Если есть данные редактирования — отправляем их
+    if (window.pendingEditData) {
+        const data = window.pendingEditData;
+        fetch('/admin_reviews', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                action: 'edit_review',
+                review_id: data.id,
+                rating: data.rating,
+                text: data.text,
+                password
+            })
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                location.reload();
+            } else {
+                error.textContent = res.message || 'Неверный пароль';
+                error.style.display = 'block';
+            }
+        });
+
+        // Очищаем временные данные
+        delete window.pendingEditData;
+        document.getElementById('global_password').value = '';
+        return;
+    }
+
+    // Если это было создание отзыва — оставляем старое поведение (ничего не меняем)
+    if (window.pendingReviewData) {
+        // твой старый код создания отзыва остаётся без изменений
+        const data = window.pendingReviewData;
+        fetch('/admin_reviews', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                action: 'create_review',
+                item_type: data.type,
+                item_id: data.id,
+                rating: data.rating,
+                text: data.text,
+                user_phone: data.phone,
+                password
+            })
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) location.reload();
+            else { error.textContent = res.message || 'Ошибка'; error.style.display = 'block'; }
+        });
+        delete window.pendingReviewData;
+    }
+}
+
+// === РАБОЧАЯ МАСКА ДЛЯ ТЕЛЕФОНА (вешаем один раз!) ===
+document.getElementById('create_user_phone').addEventListener('input', function(e) {
+    let input = e.target;
+    let digits = input.value.replace(/\D/g, ''); // только цифры
+
+    // Автоматически заменяем 8 → 7 в начале
+    if (digits.startsWith('8') && digits.length > 1) {
+        digits = '7' + digits.slice(1);
+    }
+
+    // Обрезаем до 11 цифр (7 + 10 цифр номера)
+    if (digits.length > 11) {
+        digits = digits.slice(0, 11);
+    }
+
+    // Форматируем красиво
+    let formatted = '';
+    if (digits.length > 0) {
+        formatted = '+7';
+        if (digits.length > 1)  formatted += ' (' + digits.slice(1, 4);
+        if (digits.length >= 5)  formatted += ') ' + digits.slice(4, 7);
+        if (digits.length >= 8)  formatted += '-' + digits.slice(7, 9);
+        if (digits.length >= 10) formatted += '-' + digits.slice(9, 11);
+    }
+
+    input.value = formatted;
+
+    // Если пользователь стёр всё — оставляем пусто (можно ввести заново)
+    if (digits === '') {
+        input.value = '';
+    }
+});
+
+</script>
+</body>
+</html>

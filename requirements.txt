@@ -1,0 +1,7 @@
+Flask==3.0.3
+Flask-WTF==1.2.1
+Flask-SQLAlchemy==3.0.5
+Werkzeug==3.0.4
+flask-talisman==1.1.0
+MarkupSafe==2.1.5
+Jinja2==3.1.4        

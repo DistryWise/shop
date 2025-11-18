@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Piligrim — Premium Elegance</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Shadows+Into+Light&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" href="/static/css/search.css">
+  <link rel="stylesheet" href="/static/css/auth.css">
+  <link rel="stylesheet" href="/static/css/cart.css">
+  <link rel="stylesheet" href="/static/css/feedback.css">
+  <link rel="stylesheet" href="/static/css/ai.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" />
+    <style>
+    .product-content, .product-title, .product-price, .add-to-cart-btn {
+        font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    }
+    </style>
+  <script>
+    const API_LOAD_URL = "{{ api_load_url }}";
+    console.log("API_LOAD_URL:", API_LOAD_URL);
+  </script>
+  <script>
+  window.addEventListener('message', (e) => {
+    if (e.data.type === 'preview') {
+      localStorage.setItem('zazaPreviewData', e.data.data);
+      location.reload();
+    }
+  });
+
+  const saved = localStorage.getItem('zazaPreviewData');
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      window.dbSlides = data.slides.map(s => ({
+        background: s.background || '',
+        elements: (s.elements || []).map(el => ({
+          ...el,
+          x: el.x || 0,
+          y: el.y || 0,
+          width: el.width || 200,
+          height: el.height || 200,
+          fontSize: el.fontSize || 48,
+          opacity: el.opacity || 1,
+          href: el.href || null
+        }))
+      }));
+      localStorage.removeItem('zazaPreviewData');
+    } catch (e) { console.error(e); }
+  }
+</script>
+  <style>
+    :root {
+      --white: #ffffff;
+      --light: #f8f8f8;
+      --gray: #e0e0e0;
+      --dark: #111111;
+      --bg: #000000;
+      --glass: rgba(255, 255, 255, 0.08);
+      --border: rgba(255, 255, 255, 0.15);
+      --shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+      --transition: all 0.35s ease;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; font-size: 16px; overflow-x: hidden; }
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: var(--bg); 
+      color: var(--white); 
+      min-height: 100vh; 
+      position: relative;
+
+    }
+
+    /* === ХЕДЕР === */
+    header { 
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000; 
+      padding: 1.8rem 5%; 
+      height: 90px;
+      display: flex; justify-content: space-between; 
+      align-items: center; 
+      backdrop-filter: blur(20px); 
+      background: rgba(0, 0, 0, 0.6); 
+      border-bottom: 1px solid var(--border); 
+      transition: var(--transition);
+    }
+    header.scrolled { 
+      padding: 1.2rem 5%; 
+      background: rgba(0, 0, 0, 0.85); 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4); 
+    }
+
+    .logo { 
+      display: flex; align-items: center; gap: 14px; text-decoration: none; 
+    }
+    .logo-img { 
+      height: 130px; width: auto; object-fit: contain; 
+      filter: brightness(0) invert(1);
+      transition: var(--transition);
+    }
+    .logo:hover .logo-img { transform: scale(1.08); }
+    .logo-text { 
+      font-weight: 700; 
+      font-size: 2.4rem; color: var(--white); letter-spacing: 1.5px; 
+      transition: var(--transition);
+    }
+    .logo:hover .logo-text { 
+      color: #fff; 
+      text-shadow: 0 0 15px rgba(255, 255, 255, 0.6); 
+    }
+
+    header.scrolled .logo-img {
+    height: 110px;           /* Меньше, чем в обычном состоянии */
+    top: 6px;
+    transform: translateY(0);
+    }
+
+    header.scrolled {
+    padding: 1.2rem 5%; 
+    height: 76px;           /* Меньше при скролле */
+    }
+
+    nav { display: flex; gap: 2.4rem; align-items: center; margin-left: 5rem; }
+    .nav-link { 
+      font-weight: 500; 
+      font-size: 1.05rem; color: var(--gray); text-decoration: none; 
+      letter-spacing: 1.2px; position: relative; padding: 6px 0; 
+      transition: var(--transition); 
+    }
+    .nav-link::after { 
+      content: ''; position: absolute; bottom: 0; left: 50%; width: 0; 
+      height: 1.5px; background: var(--white); transition: var(--transition); 
+      transform: translateX(-50%); 
+    }
+    .nav-link:hover { color: var(--white); }
+    .nav-link:hover::after { width: 100%; }
+
+    .header-icons {
+    display: flex;
+    gap: 1.1rem;
+    align-items: center;
+        }
+
+    .icon-btn {
+    width: 48px;           /* ← ВЕРНУЛИ 48px */
+    height: 48px;          /* ← ВЕРНУЛИ 48px */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--glass);
+    border: 1.2px solid var(--border);
+    backdrop-filter: blur(10px);
+    }
+
+    .icon-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.12);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    }
+
+    .icon-btn i {
+    font-size: 1.35rem;    /* ← Чуть больше */
+    color: var(--white);
+    }
+
+
+    /* === КАРУСЕЛЬ === */
+    #landing {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #000;
+      z-index: 1;
+    }
+
+    .slide {
+      position: absolute;
+      background-size: 100% 100% !important;
+      background-repeat: no-repeat;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      transition: opacity 1.6s ease;
+      z-index: 1;
+    }
+    .slide.active { opacity: 1; z-index: 2; }
+    .slide::before { 
+      content: ''; position: absolute; inset: 0; 
+      background: linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.65)); 
+      z-index: 3; 
+    }
+
+    .carousel-content {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .carousel-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      pointer-events: auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .carousel-inner {
+      position: relative;
+      width: 1200px;
+      height: 675px;
+      transform: scale(var(--scale, 1));
+      transform-origin: center center;
+    }
+
+    .carousel-arrow {
+      position: absolute;
+      width: 40px; height: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      transition: var(--transition);
+      backdrop-filter: blur(8px);
+    }
+    .carousel-arrow:hover { 
+      background: rgba(255, 255, 255, 0.25); 
+      border-color: var(--white);
+      transform: scale(1.15);
+    }
+    .carousel-arrow i { font-size: 1.1rem; color: var(--white); }
+    .carousel-arrow.prev { left: 20px; top: 50%; transform: translateY(-50%); }
+    .carousel-arrow.next { right: 20px; top: 50%; transform: translateY(-50%); }
+
+    .carousel-progress {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      z-index: 10;
+    }
+    .progress-bar {
+      width: 60px;
+      height: 3px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--white);
+      width: 0%;
+      border-radius: 2px;
+      transition: width 5s linear;
+    }
+    .progress-bar.active .progress-fill {
+      width: 100%;
+    }
+
+    .slide-element {
+      position: absolute;
+      user-select: none;
+      z-index: 5;
+      transform-origin: top left;
+    }
+    .slide-element.text {
+      color: #fff;
+      font-weight: 600;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      white-space: normal;
+      line-height: 1.3;
+      font-family: 'Inter', sans-serif;
+    }
+    .slide-element img {
+      width: 100%; height: 100%; object-fit: contain; pointer-events: none;
+    }
+
+    /* === ОБРАТНАЯ СВЯЗЬ === */
+    #contact {
+      position: relative;
+      min-height: 100vh;
+      padding: 16vh 8%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3.5rem;
+      background: var(--bg);
+      z-index: 2;
+      overflow: visible;
+    }
+
+    .contact-wrapper {
+        display: grid;
+        grid-template-columns: 
+            minmax(300px, 420px)   /* левый */
+            minmax(500px, 680px)   /* форма */
+            minmax(300px, 420px);  /* правый */
+        gap: 5rem;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        max-width: 1600px;
+        position: relative;
+        padding: 0 2rem;
+    }
+
+
+    /* ЛЕВЫЙ ГРАФФИТИ */
+    .form-wrapper {
+    transform: translateX(180px) translateY(-40px) scale(1.05);
+    z-index: 10;
+    }
+
+    /* ВЕРХНИЙ ГРАФФИТИ — самый левый, самый верхний */
+    .graffiti-left-wrapper {
+    transform: translateX(-320px) translateY(-280px) scale(1.05);
+    z-index: 5;
+    }
+
+    /* НИЖНИЙ ГРАФФИТИ — правее и ниже, как вторая ступенька */
+    .graffiti-right-wrapper {
+    transform: translateX(-1120px) translateY(180px) scale(1.05);
+    z-index: 5;
+    }
+
+    /* СТРЕЛКА — от НИЖНЕЙ СТУПЕНЬКИ (правого блока) к ФОРМЕ */
+
+    #contact {
+    position: relative; /* ← ОБЯЗАТЕЛЬНО */
+    overflow: visible;
+  }
+
+    .graffiti-arrow {
+    position: absolute;
+    width: 96%;
+    max-width: 1400px;
+    height: 90vh;
+    min-height: 560px;
+    top: 92%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    z-index: 6;
+    pointer-events: none;
+    opacity: 1 !important; /* ВИДНА СРАЗУ */
+    }
+
+    .graffiti-arrow::before {
+        content: "";
+        position: absolute;
+        width: 86%;
+        height: 260px;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%) rotate(0deg);
+        border: 22px solid transparent;
+        border-bottom: 22px solid #ffffff;
+        border-radius: 0 0 66% 66%;
+        box-shadow: 0 0 50px rgba(255,255,255,0.9);
+        clip-path: polygon( 
+            92% 0%,    /* старт — под правым блоком */
+            100% 15%, 
+            100% 100%, 
+            75% 100%, 
+            73% 70%, 
+            20% 70%, 
+            18% 100%, 
+            0% 100%, 
+            0% 15%, 
+            8% 0%      /* конец — тычет в правый блок снизу вверх */
+        );
+        animation: drawArrow 4.2s ease-out 2.8s forwards;
+    }
+
+    .graffiti-arrow::after {
+        content: "";
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-left: 46px solid #ffffff;
+        border-top: 36px solid transparent;
+        border-bottom: 36px solid transparent;
+        right: 9.5%;
+        top: 24%;
+        transform: rotate(88deg);
+        filter: drop-shadow(0 0 30px #ffffff);
+        opacity: 0;
+        animation: showTip 0.9s ease-out 6.2s forwards;
+    }
+
+    @keyframes drawArrow {
+        0% {
+            clip-path: polygon(92% 0%, 92% 0%, 92% 0%, 92% 0%, 92% 0%, 92% 0%, 92% 0%, 92% 0%, 92% 0%, 92% 0%);
+        }
+        100% {
+            clip-path: polygon(92% 0%, 100% 15%, 100% 100%, 75% 100%, 73% 70%, 20% 70%, 18% 100%, 0% 100%, 0% 15%, 8% 0%);
+        }
+    }
+
+    @keyframes showTip {
+        to { opacity: 1; }
+    }
+
+    .contact-form {
+    justify-self: center;
+    }
+
+    /* === ГРАФФИТИ ТЕКСТ — ВИДЕН! === */
+    /* === ГРАФФИТИ ТЕКСТ — ИСПРАВЛЕНО === */
+    .graffiti-text {
+    font-family: 'Shadows Into Light', cursive;
+    font-size: 2.6rem;
+    color: #ffffff;
+    text-shadow: 
+        0 0 8px rgba(255, 255, 255, 0.3),
+        1px 1px 0 #000,
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000;
+    opacity: 1; /* УБРАЛИ opacity: 0 */
+    position: relative;
+    z-index: 5;
+    line-height: 1.4;
+    letter-spacing: 0.8px;
+    white-space: pre-wrap;
+    max-width: 420px;
+    /* Анимация появления всего текста */
+    animation: fadeInText 0.5s ease-out 0.3s forwards;
+    }
+
+    .graffiti-text span {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: write-letter 0.6s ease-out forwards;
+    }
+
+    @keyframes fadeInText {
+    to { opacity: 1; }
+    }
+
+    @keyframes write-letter {
+    to {
+        opacity: 1;
+        transform: translateY(0) rotate(var(--rot, 0deg)) translateX(var(--x, 0px)) translateY(var(--y, 0px));
+    }
+    }
+
+
+    /* === ФОРМА === */
+    .contact-form {
+    background: rgba(255, 255, 255, 0.06); 
+    padding: 3.4rem; 
+    border-radius: 28px; 
+    border: 1.5px solid rgba(255, 255, 255, 0.18); 
+    backdrop-filter: blur(24px); 
+    box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.35),
+        0 0 30px rgba(255, 255, 255, 0.08) inset;
+    display: grid; 
+    gap: 1.8rem;
+    max-width: 680px;
+    width: 100%;
+    position: relative;
+    z-index: 10;
+    transition: all 0.4s ease;
+    overflow: hidden;
+    }
+
+    .contact-form::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+    pointer-events: none;
+    border-radius: 28px;
+    z-index: -1;
+    }
+
+    .contact-form:hover {
+    transform: translateY(-6px);
+    box-shadow: 
+        0 35px 70px rgba(0, 0, 0, 0.45),
+        0 0 40px rgba(255, 255, 255, 0.12) inset;
+    border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .contact-form input, 
+    .contact-form textarea {
+      padding: 1.2rem 1.6rem; 
+      background: rgba(255,255,255,0.08); 
+      border: 1px solid var(--border); 
+      border-radius: 14px; 
+      color: #fff; 
+      font-size: 1rem; 
+      transition: var(--transition);
+    }
+
+    .contact-form input:focus, 
+    .contact-form textarea:focus {
+      outline: none; 
+      border-color: var(--white); 
+      background: rgba(255,255,255,0.14);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    }
+
+    .contact-form textarea { 
+      min-height: 150px; 
+      resize: vertical; 
+    }
+
+    .contact-form button {
+      padding: 1.2rem 2.8rem; 
+      background: var(--white); 
+      color: #000; 
+      border: none; 
+      border-radius: 14px; 
+      font-weight: 600; 
+      font-size: 1.1rem; 
+      cursor: pointer; 
+      transition: var(--transition); 
+      justify-self: center;
+    }
+
+    .contact-form button:hover {
+      transform: translateY(-2px); 
+      box-shadow: 0 10px 30px rgba(255, 255, 255, 0.25);
+    }
+
+    /* === FAQ === */
+    #faq {
+      min-height: 100vh;
+      padding: 16vh 8%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3.5rem;
+      background: var(--bg);
+      z-index: 2;
+    }
+
+    .section-title {
+      font-size: 4rem; color: var(--white); text-align: center; 
+      font-weight: 700; letter-spacing: 1px;
+      margin-top: -10rem;     /* поднять выше */
+      margin-bottom: 1rem;
+    }
+
+    .section-title::after {
+      content: ''; display: block; width: 100px; height: 2px; 
+      background: var(--white); margin: 20px auto 0; border-radius: 1px;
+    }
+
+    .faq-container { width: 100%; max-width: 880px; display: flex; flex-direction: column; gap: 1.4rem; }
+    .faq-item {
+      background: rgba(255, 255, 255, 0.06); 
+      padding: 2rem 2.4rem; border-radius: 18px; 
+      border: 1px solid var(--border); 
+      cursor: pointer; transition: var(--transition); 
+      overflow: hidden; opacity: 0; transform: translateY(35px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+    }
+    .faq-item.visible { opacity: 1; transform: translateY(0); }
+    .faq-item:hover { 
+      transform: translateY(-5px); border-color: rgba(255, 255, 255, 0.4); 
+      box-shadow: 0 15px 35px rgba(255, 255, 255, 0.1); 
+    }
+    .faq-question {
+      font-weight: 600; font-size: 1.4rem; color: #fff; 
+      display: flex; justify-content: space-between; align-items: center; 
+    }
+    .faq-question::after { content: '+'; font-size: 1.6rem; color: var(--white); transition: transform 0.3s ease; }
+    .faq-item.active .faq-question::after { content: '−'; transform: rotate(180deg); }
+    .faq-answer {
+      max-height: 0; overflow: hidden; color: #ddd; 
+      line-height: 1.8; font-size: 1.05rem; margin-top: 0.8rem; 
+      transition: max-height 0.5s ease, padding 0.5s ease;
+    }
+    .faq-item.active .faq-answer { max-height: 450px; padding-top: 1rem; }
+
+    #ai-assistant { 
+      position: fixed; bottom: 28px; right: 28px; 
+      width: 66px; height: 66px; 
+      background: rgba(255, 255, 255, 0.15); border-radius: 50%; 
+      display: flex; align-items: center; justify-content: center; 
+      box-shadow: 0 12px 35px rgba(255, 255, 255, 0.2); cursor: pointer; 
+      transition: var(--transition); z-index: 999; backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+    }
+    #ai-assistant:hover { 
+      transform: scale(1.18); 
+      background: rgba(255, 255, 255, 0.25);
+      box-shadow: 0 20px 50px rgba(255, 255, 255, 0.3); 
+    }
+    #ai-assistant svg { width: 38px; height: 38px; fill: #fff; }
+
+    @media (max-width: 768px) {
+      .contact-wrapper { flex-direction: column; gap: 3rem; }
+      .graffiti-left, .graffiti-right { text-align: center; max-width: 100%; transform: rotate(0deg); margin-top: 0; }
+      .hand-arrow { display: none; }
+      .carousel-arrow { width: 36px; height: 36px; }
+      .progress-bar { width: 40px; }
+      nav { display: none; }
+    }
+
+
+        .faq-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 3rem auto;
+    perspective: 1500px;
+    }
+
+    .faq-card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 2.2rem;
+    cursor: pointer;
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    transform-style: preserve-3d;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+    }
+
+    .faq-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+    pointer-events: none;
+    }
+
+    .faq-card:hover {
+    transform: translateY(-12px) rotateX(8deg) rotateY(6deg);
+    box-shadow: 0 30px 70px rgba(0,0,0,0.6), 0 0 40px rgba(255,255,255,0.15) inset;
+    border-color: rgba(255,255,255,0.4);
+    }
+
+    .cart-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #dfdedd;
+    color: #000;
+    font-size: 0.7rem;
+    font-weight: 700;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; /* чтобы не мешал клику */
+    }
+
+    .faq-card:hover::before { opacity: 1; }
+    
+    .faq-card .question {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Shadows Into Light', cursive;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.7);
+    }
+
+    .faq-card .question::after {
+    content: '+';
+    font-size: 2rem;
+    font-weight: 300;
+    transition: transform 0.4s ease;
+    }
+
+    .faq-card.active .question::after {
+    content: '−';
+    transform: rotate(180deg);
+    }
+
+    .faq-card .answer {
+    max-height: 0;
+    overflow: hidden;
+    color: #ccc;
+    line-height: 1.8;
+    font-size: 1.05rem;
+    margin-top: 0;
+    transition: all 0.6s ease;
+    opacity: 0;
+    }
+
+    .faq-card.active .answer {
+    max-height: 500px;
+    margin-top: 1.2rem;
+    opacity: 1;
+    padding-top: 0.5rem;
+    }
+
+    /* Поиск */
+    .faq-search {
+    max-width: 600px;
+    margin: 2rem auto;
+    display: flex;
+    background: rgba(255,255,255,0.08);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    }
+
+    .faq-search input {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 1.1rem;
+    }
+
+    .faq-search button {
+    padding: 0 1.5rem;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    }
+
+    #searchToggle {
+    position: relative;
+    z-index: 1002 !important; /* ещё выше, на всякий случай */
+    pointer-events: auto !important;
+}
+
+  .simple-arrow-wrapper {
+  position: absolute;
+  top: 40%;
+  right: 100px; /* регулируй расстояние от формы */
+  transform: translateY(-50%) rotate(-300deg); /* вертикально + поворот */
+  width: 420px;
+  height: auto;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+}
+
+  .simple-arrow-png {
+  width: 100%;
+  height: auto;
+  filter: invert(1) drop-shadow(0 0 35px rgba(255,255,255,0.95));
+  }
+
+  /* Появление */
+  .simple-arrow-wrapper.visible {
+  opacity: 1;
+  transform: translateY(-50%) rotate(-190deg) translateX(0);
+  }
+
+  /* Анимация появления */
+  @keyframes fadeInArrow {
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+  .simple-arrow-png {
+    width: 80px;
+    left: 50%;
+    top: 75%; /* На мобилке — ниже, чтобы указывала на форму */
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes drawArrow {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes showTip {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+  </style>
+</head>
+<body>
+
+  <!-- ХЕДЕР -->
+  <header>
+    <a href="/" class="logo">
+      <img src="/static/assets/logo.png" alt="ZAZA" class="logo-img">
+
+    </a>
+
+    <nav>
+      <a href="#landing" class="nav-link">Главная</a>
+      <a href="/goods" class="nav-link">Товары</a>
+      <a href="/services" class="nav-link">Услуги</a>
+      <a href="/news" class="nav-link">Новости</a>
+      <a href="/about_company" class="nav-link">О компании</a>
+      <a href="/contacts" class="nav-link">Контакты</a>
+    </nav>
+
+<div class="header-icons">
+  <!-- ПОИСК — КАК В BIN.CSS -->
+  <div class="search-wrapper">
+    <div class="search-container">
+      <div class="search-icon">
+        <i class="fas fa-search"></i>
+      </div>
+      <input type="text" class="search-input" id="searchInput" placeholder="Поиск товаров и услуг..." autocomplete="off">
+      <button id="searchClear" class="search-clear">×</button>
+    </div>
+    <div id="autocompleteList" class="autocomplete-list"></div>
+  </div>
+
+  <!-- АВТОРИЗАЦИЯ -->
+  <button id="authBtn" class="icon-btn">
+    <i class="fas fa-user"></i>
+  </button>
+
+  <!-- КОРЗИНА -->
+  <button class="icon-btn" id="cartBtn" style="position: relative;">
+    <i class="fas fa-shopping-bag"></i>
+    <span class="cart-count" id="cartCount">0</span>
+  </button>
+
+  <!-- ПИСЬМО -->
+  <button class="icon-btn" onclick="scrollToContact()">
+    <i class="fas fa-envelope"></i>
+  </button>
+</div>
+
+  <!-- МИНИ-КОРЗИНА (МОДАЛКА) -->
+  <div id="cartModal" class="cart-modal">
+    <div class="cart-modal-header">
+      <div class="cart-modal-title">Корзина</div>
+      <button class="cart-modal-close" id="closeCartModal">×</button>
+    </div>
+    <div class="mini-cart-items" id="miniCartItems"></div>
+    <div class="cart-modal-footer">
+      <div class="mini-cart-total" id="miniCartTotal">Итого: 0.00 ₽</div>
+      <button class="go-to-cart-btn" id="goToCartBtn">
+        <i class="fas fa-arrow-right"></i> Оформить
+      </button>
+    </div>
+  </div>
+
+
+  
+</div>
+  </header>
+
+    <!-- МОДАЛКА АВТОРИЗАЦИИ -->
+<div id="authModal" class="auth-modal">
+  <div class="auth-modal-content">
+    <button class="close-modal" id="closeAuthModal">×</button>
+    
+    <h2 class="auth-title">Вход по номеру телефона</h2>
+    
+    <!-- ШАГ 1: НОМЕР -->
+    <div id="stepPhone" class="auth-step">
+      <div class="country-selector">
+        <div class="selected-country" id="selectedCountry">
+          <span class="flag">🇷🇺</span>
+          <span class="code">+7</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="country-dropdown" id="countryDropdown">
+          <div class="country-item" data-code="+7" data-flag="🇷🇺">Россия +7</div>
+          <div class="country-item" data-code="+1" data-flag="🇺🇸">USA +1</div>
+          <div class="country-item" data-code="+44" data-flag="🇬🇧">UK +44</div>
+          <div class="country-item" data-code="+33" data-flag="🇫🇷">France +33</div>
+          <div class="country-item" data-code="+49" data-flag="🇩🇪">Germany +49</div>
+          <div class="country-item" data-code="+86" data-flag="🇨🇳">China +86</div>
+        </div>
+      </div>
+      <input type="tel" id="phoneInput" placeholder="___ ___ ___" maxlength="12" class="auth-input">
+      <button id="sendCodeBtn" class="auth-btn">Получить код</button>
+    </div>
+    
+    <!-- ШАГ 2: КОД -->
+    <div id="stepCode" class="auth-step" style="display:none;">
+      <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
+      <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
+      <button id="verifyCodeBtn" class="auth-btn">Войти</button>
+      <button id="resendCode" class="auth-link">Отправить код повторно</button>
+    </div>
+    
+    <!-- УСПЕХ -->
+    <div id="stepSuccess" class="auth-step" style="display:none;">
+      <i class="fas fa-check-circle success-icon"></i>
+      <h3>Добро пожаловать!</h3>
+      <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
+      <button id="closeSuccess" class="auth-btn">Продолжить</button>
+    </div>
+  </div>
+</div>
+    <!-- === РАБОЧАЯ APPLE КАРТОЧКА БЕЗ ЗАГЛУШЕК === -->
+    <div class="product-modal" id="productModal">
+      <div class="product-content">
+        
+        <!-- КАРТИНКА -->
+        <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
+
+        <!-- ИНФО -->
+        <div class="product-info">
+          <h3 id="productTitle" class="product-title">Загрузка...</h3>
+          
+          <!-- ОЦЕНКА -->
+          <div class="product-rating">
+            <div class="stars"></div>
+            <span id="productReviewsCount" class="reviews-count">—</span>
+          </div>
+
+          <!-- ЦЕНА -->
+          <div id="productPrice" class="product-price">—</div>
+
+          <!-- ОПИСАНИЕ -->
+          <div id="productDescription" class="product-description">Загрузка описания...</div>
+
+          <!-- КНОПКА КУПИТЬ -->
+          <button id="addToCartModal" class="add-to-cart-btn">
+            <i class="fas fa-shopping-cart"></i> Купить
+          </button>
+
+          <!-- ОТЗЫВЫ -->
+          <div class="product-reviews">
+            <h4 class="reviews-title">Отзывы покупателей</h4>
+            <div class="reviews-list">
+              <div style="text-align:center;padding:2rem;color:#888;">
+                <i class="far fa-star" style="font-size:2.5rem;margin-bottom:0.5rem;display:block;"></i>
+                <p>Загрузка отзывов...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- КРЕСТИК -->
+        <div class="close-modal">
+          <i class="fas fa-times"></i>
+        </div>
+      </div>
+    </div>
+   <div id="stepSuccess" class="success-step" style="display:none;">
+    <i class="fas fa-check-circle success-icon"></i>
+    <h3 class="success-title">Добро пожаловать!</h3>
+    <p class="success-subtitle">Вы успешно вошли как <span id="welcomePhone"></span></p>
+    <div class="success-emoji">party-popper</div>
+    </div>
+  <!-- КАРУСЕЛЬ -->
+  <section id="landing">
+    <div class="slide active"></div>
+    <div class="slide"></div>
+    <div class="slide"></div>
+    <div class="slide"></div>
+    <div class="slide"></div>
+
+    <div class="carousel-content">
+      <div class="carousel-container">
+        <div class="carousel-arrow prev" onclick="prevSlide()"><i class="fas fa-chevron-left"></i></div>
+        <div class="carousel-arrow next" onclick="nextSlide()"><i class="fas fa-chevron-right"></i></div>
+        <div class="carousel-progress">
+          <div class="progress-bar active"><div class="progress-fill"></div></div>
+          <div class="progress-bar"><div class="progress-fill"></div></div>
+          <div class="progress-bar"><div class="progress-fill"></div></div>
+          <div class="progress-bar"><div class="progress-fill"></div></div>
+          <div class="progress-bar"><div class="progress-fill"></div></div>
+        </div>
+        <div class="carousel-inner"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ГРАФФИТИ + ФОРМА + СТРЕЛКА -->
+
+    <section id="contact">
+    <!-- НЕЗАВИСИМАЯ НАДПИСЬ -->
+    <div class="title-wrapper">
+        <h2 class="section-title">Обратная связь</h2>
+    </div>
+
+    <!-- БЛОКИ В GRID -->
+    <div class="contact-wrapper">
+        <!-- ЛЕВЫЙ БЛОК -->
+        <div class="graffiti-left-wrapper">
+        <div class="graffiti-text graffiti-left" id="graffiti-left"></div>
+        </div>
+
+        <!-- ФОРМА -->
+        <!-- ФОРМА — ИДЕАЛЬНАЯ ВЕРСИЯ -->
+        <div class="form-wrapper">
+          <form class="contact-form" novalidate>
+            <input type="text" placeholder="Имя" class="name-input" required />
+            
+            <div class="phone-field-wrapper">
+              <input type="tel" placeholder="+7 (___) ___-__-__" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+            </div>
+            
+            <input type="email" placeholder="Email" required />
+            <textarea placeholder="Сообщение" required></textarea>
+            <button type="submit">Отправить</button>
+          </form>
+        </div>
+
+        <!-- ПРАВЫЙ БЛОК -->
+        <div class="graffiti-right-wrapper">
+        <div class="graffiti-text graffiti-right" id="graffiti-right"></div>
+        </div>
+    </div>
+
+</div>
+<!-- ← ВСТАВЬ СЮДА → -->
+  <div class="simple-arrow-wrapper">
+    <img src="/static/assets/arrow.png" alt="Стрелка к форме" class="simple-arrow-png">
+  </div>
+    </div>
+    </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <h2 class="section-title">Часто задаваемые вопросы</h2>
+    
+    <div class="faq-search">
+        <input type="text" placeholder="Поиск по вопросам..." id="faq-search" />
+        <button onclick="searchFAQ()"><i class="fas fa-search"></i></button>
+    </div>
+
+    <div class="faq-grid">
+        <!-- Карточки генерируются JS -->
+    </div>
+  </section>
+
+<!-- === AI АССИСТЕНТ — ЮРИСТ (ИДЕАЛЬНАЯ ШЛЯПА) === -->
+  <div id="ai-assistant">
+    <div class="ai-bubble" style="display:none;"></div>
+    <svg viewBox="0 0 100 100" class="ai-robot" xmlns="http://www.w3.org/2000/svg">
+    <!-- ГРАДИЕНТ ОСТАЁТСЯ -->
+    <defs>
+        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f5d78a"/>
+        <stop offset="100%" stop-color="#d4af37"/>
+        </linearGradient>
+    </defs>
+
+    <!-- Тело -->
+    <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+
+    <!-- Лицо -->
+    <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
+    <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
+    <circle cx="39" cy="40" r="2.5" fill="#fff"/>
+    <circle cx="63" cy="40" r="2.5" fill="#fff"/>
+    <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+    <!-- Конституция в руке -->
+    <g transform="translate(8, 62)">
+        <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
+        <rect x="3" y="3" width="24" height="32" rx="1" fill="#f8f8f8"/>
+        <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+        <line x1="5" y1="17" x2="25" y2="17" stroke="#000" stroke-width="0.9"/>
+        <line x1="5" y1="21" x2="25" y2="21" stroke="#000" stroke-width="0.9"/>
+        <line x1="5" y1="25" x2="23" y2="25" stroke="#000" stroke-width="0.9"/>
+        <line x1="5" y1="29" x2="21" y2="29" stroke="#000" stroke-width="0.9"/>
+    </g>
+
+    <!-- Рука -->
+    <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <!-- === AI ЧАТ МОДАЛЬНЫЙ (ТОТ ЖЕ СТИЛЬ) === -->
+  <div id="ai-chat" class="ai-chat-modal">
+    <div class="ai-chat-header">
+      <div class="ai-chat-title">
+        <svg width="32" height="32" viewBox="0 0 100 100" style="margin-right:10px;">
+            <use href="#goldGrad"/>
+            <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+            <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
+            <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
+            <circle cx="39" cy="40" r="2.5" fill="#fff"/>
+            <circle cx="63" cy="40" r="2.5" fill="#fff"/>
+            <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+            <!-- Конституция в руке -->
+            <g transform="translate(8, 62)">
+                <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
+                <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+            </g>
+            <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
+            </svg>
+        <span>Юрист AI</span>
+      </div>
+      <div class="ai-header-buttons">
+        <button class="ai-btn-minimize" onclick="toggleAIChatSize()" title="На весь экран">
+          <i class="fas fa-expand-arrows-alt"></i>
+        </button>
+        <button class="ai-btn-close" onclick="closeAIChat()" title="Закрыть">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+    <div class="ai-chat-body">
+      <div class="ai-chat-messages"></div>
+      <div class="ai-chat-input">
+        <input type="text" id="ai-input" placeholder="Задайте юридический вопрос..." 
+               onkeypress="if(event.key==='Enter' && this.value.trim()) { sendAIMessage(this.value); this.value=''; }">
+        <button onclick="const inp = document.getElementById('ai-input'); if(inp.value.trim()) { sendAIMessage(inp.value); inp.value=''; }" title="Отправить">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const progressBars = document.querySelectorAll('.progress-bar');
+    let currentSlide = 0;
+    let autoPlay;
+    let dbSlides = Array(5).fill().map(() => ({ background: '', elements: [] }));
+
+    // === ЭЛИТНЫЙ СКРОЛЛ ===
+    let scrollIndex = 0;
+    const sections = ['#landing', '#contact', '#faq'];
+    let isScrolling = false;
+
+    window.addEventListener('wheel', (e) => {
+      if (isScrolling) return;
+      isScrolling = true;
+
+      if (e.deltaY > 0) {
+        scrollIndex = Math.min(scrollIndex + 1, sections.length - 1);
+      } else {
+        scrollIndex = Math.max(scrollIndex - 1, 0);
+      }
+
+      document.querySelector(sections[scrollIndex]).scrollIntoView({ behavior: 'smooth' });
+
+      setTimeout(() => { isScrolling = false; }, 800);
+    });
+
+    function updateScale() {
+      const baseWidth = 1200;
+      const baseHeight = 675;
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const scaleX = viewportWidth / baseWidth;
+      const scaleY = viewportHeight / baseHeight;
+      const scale = Math.min(scaleX, scaleY);
+      document.documentElement.style.setProperty('--scale', scale);
+    }
+
+    function showSlide(n) {
+      slides[currentSlide].classList.remove('active');
+      progressBars[currentSlide].classList.remove('active');
+      currentSlide = (n + slides.length) % slides.length;
+      slides[currentSlide].classList.add('active');
+      progressBars[currentSlide].classList.add('active');
+
+      const inner = document.querySelector('.carousel-inner');
+      inner.querySelectorAll('.slide-element').forEach(el => el.remove());
+
+      const slideData = dbSlides[currentSlide];
+      slideData.elements.forEach(el => {
+        const elem = document.createElement('div');
+        elem.className = `slide-element ${el.type}`;
+        elem.style.left = el.x + 'px';
+        elem.style.top = el.y + 'px';
+        elem.style.width = el.width + 'px';
+        elem.style.height = el.height + 'px';
+        elem.style.transform = el.rotation || 'rotate(0deg)';
+        elem.style.opacity = el.opacity || 1;
+        elem.style.zIndex = el.zIndex || 5;
+
+        if (el.href) {
+          elem.style.cursor = 'pointer';
+          elem.onclick = (e) => { e.stopPropagation(); window.open(el.href, '_blank'); };
+        }
+
+        if (el.type === 'text') {
+          elem.textContent = el.content;
+          elem.style.fontSize = el.fontSize + 'px';
+          elem.style.color = el.color || '#ffffff';
+          elem.style.fontWeight = el.fontWeight || '600';
+          elem.style.fontFamily = el.fontFamily || "'Inter', sans-serif";
+          elem.style.textShadow = '0 2px 8px rgba(0,0,0,0.6)';
+          elem.style.whiteSpace = 'normal';
+          elem.style.lineHeight = '1.3';
+        } else if (el.type === 'image') {
+          const img = document.createElement('img');
+          img.src = el.content;
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = el.objectFit || 'contain';
+          img.style.pointerEvents = 'none';
+          elem.appendChild(img);
+        }
+
+        inner.appendChild(elem);
+      });
+
+      progressBars.forEach((bar, i) => {
+        const fill = bar.querySelector('.progress-fill');
+        fill.style.transition = 'none';
+        fill.style.width = '0%';
+        bar.classList.remove('active');
+        void bar.offsetHeight;
+        if (i === currentSlide) {
+          bar.classList.add('active');
+          fill.style.transition = 'width 5s linear';
+          fill.style.width = '100%';
+        }
+      });
+    }
+
+    function nextSlide() { showSlide(currentSlide + 1); }
+    function prevSlide() { showSlide(currentSlide - 1); }
+
+    function startAutoPlay() { autoPlay = setInterval(nextSlide, 5000); }
+    function stopAutoPlay() { clearInterval(autoPlay); }
+
+    const container = document.querySelector('.carousel-content');
+    container.addEventListener('mouseenter', stopAutoPlay);
+    container.addEventListener('mouseleave', startAutoPlay);
+
+    // Загрузка
+    fetch(API_LOAD_URL)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
+      .then(data => {
+        const loadedSlides = data.slides || [];
+        const sorted = Array(5).fill().map(() => ({ background: '', elements: [] }));
+        loadedSlides.forEach(s => {
+          const idx = (s.slide || 1) - 1;
+          if (idx >= 0 && idx < 5) {
+            sorted[idx] = {
+              background: s.background || '',
+              elements: (s.elements || []).map(el => ({
+                ...el,
+                x: el.x || 0,
+                y: el.y || 0,
+                width: el.width || 200,
+                height: el.height || 200,
+                fontSize: el.fontSize || 48,
+                color: el.color || '#ffffff',
+                fontWeight: el.fontWeight || '600',
+                fontFamily: el.fontFamily || "'Inter', sans-serif",
+                rotation: el.rotation || 'rotate(0deg)',
+                opacity: el.opacity || 1,
+                zIndex: el.zIndex || 5,
+                href: el.href || null
+              }))
+            };
+          }
+        });
+
+        dbSlides = sorted;
+        slides.forEach((slide, i) => {
+          if (dbSlides[i].background) {
+            slide.style.backgroundImage = `url("${dbSlides[i].background}")`;
+          }
+        });
+
+        updateScale();
+        showSlide(0);
+        startAutoPlay();
+      })
+      .catch(err => {
+        console.error('Ошибка:', err);
+        updateScale();
+        showSlide(0);
+        startAutoPlay();
+      });
+
+    // === АНИМАЦИЯ ГРАФФИТИ + СТРЕЛКА ===
+    function createGraffitiText(element, text, delay = 0) {
+      element.innerHTML = '';
+      const chars = text.split('');
+      chars.forEach((char, i) => {
+        const span = document.createElement('span');
+        span.textContent = char === ' ' ? '\u00A0' : char;
+        
+        const rot = (Math.random() - 0.5) * 18;
+        const x = (Math.random() - 0.5) * 7;
+        const y = (Math.random() - 0.5) * 5;
+        
+        span.style.setProperty('--rot', `${rot}deg`);
+        span.style.setProperty('--x', `${x}px`);
+        span.style.setProperty('--y', `${y}px`);
+        span.style.animationDelay = `${delay + i * 0.07}s`;
+        
+        element.appendChild(span);
+      });
+    }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const left = document.getElementById('graffiti-left');
+        const right = document.getElementById('graffiti-right');
+        const arrowWrapper = document.querySelector('.simple-arrow-wrapper');
+
+        createGraffitiText(left, "Обратная связь:\nВы можете связаться с нами", 0.4);
+        createGraffitiText(right, "Авторизуйтесь по  номеру телефона,  заполните анкету —и мы свяжемся с вами", 1.9);
+
+        // Показать PNG-стрелку через 2.8с
+        setTimeout(() => {
+          arrowWrapper.classList.add('visible');
+        }, 2800);
+
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  observer.observe(document.getElementById('contact'));
+
+    function scrollToContact() {
+      document.querySelector('#contact').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.addEventListener('resize', updateScale);
+    window.addEventListener('scroll', () => {
+      document.querySelector('header').classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    document.querySelectorAll('.faq-item').forEach((el, i) => {
+      setTimeout(() => {
+        const obs = new IntersectionObserver((e) => {
+          e.forEach(en => en.isIntersecting && en.target.classList.add('visible'));
+        }, { threshold: 0.3 });
+        obs.observe(el);
+      }, i * 180);
+    });
+
+    updateScale();
+
+    const faqData = [
+  { q: "Как оформить заказ?", a: "Добавьте товар в корзину → оформление → менеджер свяжется в течение 15 минут." },
+  { q: "Доставка за границу?", a: "Да: DHL, FedEx, EMS. 3–7 дней." },
+  { q: "Возврат?", a: "14 дней. За наш счёт." },
+  { q: "Оплата криптовалютой?", a: "BTC, ETH, USDT — принимаем." },
+  { q: "Есть VIP-клуб?", a: "Да. Скидки до 40%, закрытые коллекции, личный стилист." }
+];
+
+function renderFAQ(filter = '') {
+  const grid = document.querySelector('.faq-grid');
+  grid.innerHTML = '';
+  
+  const filtered = faqData.filter(item => 
+    item.q.toLowerCase().includes(filter.toLowerCase()) ||
+    item.a.toLowerCase().includes(filter.toLowerCase())
+  );
+
+  filtered.forEach((item, i) => {
+    const card = document.createElement('div');
+    card.className = 'faq-card';
+    card.innerHTML = `
+      <div class="question">${item.q}</div>
+      <div class="answer">${item.a}</div>
+    `;
+    card.onclick = () => card.classList.toggle('active');
+    card.style.animationDelay = `${i * 0.15}s`;
+    grid.appendChild(card);
+
+    // Анимация появления
+    setTimeout(() => card.style.opacity = '1', 100);
+  });
+}
+
+function searchFAQ() {
+  const query = document.getElementById('faq-search').value;
+  renderFAQ(query);
+}
+
+// Инициализация
+renderFAQ();
+  </script>
+  
+  <script src="/static/js/search.js"></script>
+  <script src="/static/js/auth.js" defer></script>
+  <script src="/static/js/cart.js" defer></script>
+  <script src="/static/js/feedback.js"></script>
+  <script src="/static/js/ai.js" defer></script>
+
+<script>
+  // === УЛЬТРА-ФИКС: ОТКРЫТИЕ КАРТОЧКИ ТОВАРА ЛЮБЫМ СПОСОБОМ ===
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('productModal');
+    if (!modal) return;
+
+    // 1. Следим за display (search.js)
+    const observer = new MutationObserver(() => {
+      const display = window.getComputedStyle(modal).display;
+      if (display !== 'none') {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      } else {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+    observer.observe(modal, { attributes: true, attributeFilter: ['style'] });
+
+    // 2. Клик вне или на крестик
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal || e.target.closest('.close-modal')) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+
+    // 3. Esc
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('active')) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+
+    // 4. Принудительно скрываем при загрузке
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+  });
+
+  
+</script>
+<!-- АЛЕРТ АВТОРИЗАЦИИ -->
+<div id="authAlert" class="custom-alert">
+  <div class="alert-content">
+    <div class="alert-icon">Warning</div>
+    <div class="alert-text">
+      <strong>Войдите в аккаунт</strong>
+      <span>Чтобы отправить заявку — нужно авторизоваться</span>
+    </div>
+    <button class="alert-close">×</button>
+    <button class="alert-login-btn">Войти</button>
+  </div>
+</div>
+
+  <script>
+  // Ждём полной загрузки
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const wrapper = document.querySelector('.simple-arrow-wrapper');
+      if (wrapper) wrapper.classList.add('visible');
+    }, 3500); // 3.5 секунды
+  });
+</script>
+
+</div>
+</body>
+</html>

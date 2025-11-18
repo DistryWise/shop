@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Товары — Админка | Piligrim</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">\
+
+     <link rel="stylesheet" href="/static/css/admin/admin_goods.css">
+
+</head>
+<body>
+
+    <header>
+        <a href="/" class="logo"><img src="/static/assets/logo.png" alt="ZAZA" class="logo-img"></a>
+        <nav style="margin-left: auto;"><a href="/" class="nav-link">Главная</a></nav>
+    </header>
+
+    <aside class="sidebar">
+        <h3 class="sidebar-title">Админка</h3>
+        <div class="sidebar-menu">
+            <a href="/admin" class="sidebar-item active"><i class="fas fa-box"></i><span>Товары</span></a>
+            <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
+            <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
+            <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
+            <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
+            <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
+            <a href="/admin_reviews" class="sidebar-item"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews | e }}</div></span></a>
+            <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders | e }}</div></span></a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="admin-container">
+            <h1 class="section-title">Товары</h1>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="flash {{ 'success' if category != 'error' else 'error' }}">{{ message | safe }}</div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            <!-- Сворачиваемая форма добавления -->
+            <div class="add-form-wrapper" id="addFormWrapper">
+                <div class="add-form-header" onclick="document.getElementById('addFormWrapper').classList.toggle('collapsed')">
+                    <h3>Добавить новый товар</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+<!-- ====================== ФОРМА ДОБАВЛЕНИЯ ТОВАРА ====================== -->
+<div class="add-form-body">
+    <form id="addForm">
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 1.2rem;">
+            <div class="form-group">
+                <label>Название <span style="color:#ff4444;">*</span></label>
+                <div class="input-wrapper">
+                    <i class="fas fa-tag input-icon"></i>
+                    <input type="text" name="title" placeholder="iPhone 15 Pro Max" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Цена (₽) <span style="color:#ff4444;">*</span></label>
+                <div class="input-wrapper">
+                    <i class="fas fa-ruble-sign input-icon"></i>
+                    <input type="number" step="0.01" name="price_rub" placeholder="129 990.00" min="0.01" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Категория <span style="color:#ff4444;">*</span></label>
+                <div class="input-wrapper">
+                    <i class="fas fa-folder input-icon"></i>
+                    <input type="text" name="category" placeholder="phones" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Бренд</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-copyright input-icon"></i>
+                    <input type="text" name="brand" placeholder="Apple">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Количество <small style="color:#888;">(-1 = ∞)</small></label>
+                <div class="input-wrapper">
+                    <i class="fas fa-boxes input-icon"></i>
+                    <input type="number" name="stock" value="-1" placeholder="-1">
+                </div>
+            </div>
+
+            <div class="form-group" style="align-self: end;">
+                <label class="checkbox-wrapper">
+                    <input type="checkbox" name="in_stock" checked>
+                    <span class="checkmark"></span>
+                    В наличии
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group" style="grid-column: 1 / -1; margin-top: 1rem;">
+            <label>Фото товара</label>
+            <div class="drop-zone" id="addDropZone">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 0.5rem; color:#666;"></i>
+                <p>Перетащите фото сюда или <span style="color:#00ff9d; text-decoration:underline;">кликните для выбора</span></p>
+                <input type="file" name="images" multiple accept="image/*" id="addFileInput" style="display:none;">
+            </div>
+            <div class="image-preview" id="addPreview"></div>
+        </div>
+
+        <div style="grid-column: 1 / -1; margin-top: 1rem;">
+            <button type="submit" class="btn-zaza-primary">
+                <i class="fas fa-plus-circle"></i> Добавить товар
+            </button>
+        </div>
+    </form>
+</div>
+            </div>
+
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Поиск по названию, категории, бренду..." onkeyup="filterProducts()">
+            </div>
+
+            <div class="card">
+                {% if products|length == 0 %}
+                <div class="no-products"><i class="fas fa-box-open"></i><p style="font-size:1.6rem;">Товаров пока нет</p></div>
+                {% else %}
+                <table class="products-table">
+                    <thead>
+                        <tr>
+                            <th>Фото</th>
+                            <th>Название</th>
+                            <th>Цена</th>
+                            <th>Категория / Бренд</th>
+                            <th>Наличие</th>
+                            <th style="width:140px;">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody">
+                        {% for p in products %}
+                        <tr class="product-row" data-id="{{ p.id }}">
+                            <td>
+                                {% if p.image_filenames and p.image_filenames != '[]' %}
+                                    {% set imgs = p.image_filenames|fromjson %}
+                                    <img src="{{ url_for('uploaded_file', filename=imgs[0]) }}" class="product-thumb" onerror="this.style.display='none';this.parentNode.innerHTML='<div style=\'width:56px;height:56px;background:#222;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#555;font-size:0.7rem;\'>—</div>'">
+                                {% else %}
+                                    <div style="width:56px;height:56px;background:#222;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#555;font-size:0.7rem;">—</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="font-weight:600;">{{ p.title }}</div>
+                                {% if p.description %}
+                                <div style="font-size:0.85rem;color:#999;margin-top:0.3rem;max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                    {{ p.description[:70] }}{% if p.description|length > 70 %}...{% endif %}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td class="price-cell">{{ '%.2f'|format(p.price / 100) }} ₽</td>
+                            <td><div>{{ p.category }}</div>{% if p.brand %}<div style="color:#999;font-size:0.9rem;">{{ p.brand }}</div>{% endif %}</td>
+                            <td><span class="stock-badge">{% if p.stock == -1 %}∞{% else %}{{ p.stock }}{% endif %}</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="action-btn edit" onclick="event.stopPropagation(); openEditModal(this)"
+                                        data-id="{{ p.id }}"
+                                        data-title="{{ p.title|e|replace('"', '&quot;') }}"
+                                        data-price_rub="{{ (p.price / 100)|string }}"
+                                        data-category="{{ p.category|e|replace('"', '&quot;') }}"
+                                        data-brand="{{ (p.brand or '')|e|replace('"', '&quot;') }}"
+                                        data-description="{{ (p.description or '')|e|replace('"', '&quot;') }}"
+                                        data-in_stock="{{ p.in_stock|int }}"
+                                        data-stock="{{ p.stock }}"
+                                        data-images="{{ p.image_filenames|e|replace('"', '&quot;') }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="action-btn delete" onclick="event.stopPropagation(); prepareAction('delete', {{ p.id }})">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="pagination" id="pagination"></div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Карточка товара снизу -->
+    <div class="product-detail" id="productDetail">
+        <button class="detail-close" onclick="closeProductDetail()">×</button>
+        <div class="detail-grid">
+            <div class="detail-images" id="detailImages"></div>
+            <div class="detail-info">
+                <h3 id="detailTitle"></h3>
+                <div class="detail-price" id="detailPrice"></div>
+                <div id="detailCategoryBrand" style="color:#aaa; margin:0.5rem 0;"></div>
+                <div id="detailStock" style="color:#aaa;"></div>
+                <div class="detail-desc" id="detailDescription">Нет описания</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка редактирования (без пароля) -->
+<!-- ====================== МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ ====================== -->
+<div id="editModal" class="modal-overlay">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('editModal')">×</button>
+        <h3><i class="fas fa-edit" style="margin-right:10px; color:#00ff9d;"></i> Редактировать товар</h3>
+        
+        <form id="editForm">
+            <input type="hidden" name="product_id" id="edit_id">
+
+            <div class="form-grid" style="gap:1.2rem;">
+                <div class="form-group">
+                    <label>Название</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-tag input-icon"></i>
+                        <input type="text" name="title" id="edit_title" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Цена (₽)</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-ruble-sign input-icon"></i>
+                        <input type="number" step="0.01" name="price_rub" id="edit_price_rub" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Категория</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-folder input-icon"></i>
+                        <input type="text" name="category" id="edit_category" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Бренд</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-copyright input-icon"></i>
+                        <input type="text" name="brand" id="edit_brand">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top:0.5rem;">
+                <label>Описание</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-align-left input-icon" style="top:14px;"></i>
+                    <textarea name="description" id="edit_description" rows="4" placeholder="Краткое описание товара..."></textarea>
+                </div>
+            </div>
+
+            <div class="form-grid" style="gap:1.2rem; align-items:end;">
+                <div class="form-group">
+                    <label>Количество</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-boxes input-icon"></i>
+                        <input type="number" name="stock" id="edit_stock" value="-1">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" name="in_stock" id="edit_in_stock">
+                        <span class="checkmark"></span>
+                        В наличии
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Текущие фото</label>
+                <div class="image-preview" id="editCurrentPreview"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Добавить новые фото</label>
+                <div class="drop-zone" id="editDropZone">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 1.8rem; margin-bottom: 0.4rem; color:#666;"></i>
+                    <p>Перетащите или <span style="color:#00ff9d; text-decoration:underline;">кликните</span></p>
+                    <input type="file" name="images" multiple accept="image/*" id="editFileInput" style="display:none;">
+                </div>
+                <div class="image-preview" id="editNewPreview"></div>
+            </div>
+
+            <div class="modal-actions" style="margin-top:2rem;">
+                <button type="button" onclick="prepareAction('edit')" class="btn-zaza-primary">
+                    <i class="fas fa-save"></i> Сохранить изменения
+                </button>
+                <button type="button" onclick="closeModal('editModal')" class="btn-zaza-secondary">
+                    Отмена
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+    <!-- Универсальная модалка с паролем -->
+    <div id="passwordModal" class="modal-overlay">
+        <div class="modal" style="max-width: 460px;">
+            <button class="modal-close" onclick="closeModal('passwordModal')">×</button>
+            <h3>Подтвердите действие</h3>
+            <p style="color:#aaa; text-align:center; margin:1rem 0;">Введите пароль администратора</p>
+            <input type="password" id="adminPassword" placeholder="Пароль" autofocus style="width:100%; padding:1rem; font-size:1rem;">
+            <div id="passwordError">Неверный пароль</div>
+            <div class="modal-actions">
+                <button class="btn-primary" onclick="executePendingAction()">Подтвердить</button>
+                <button class="cancel-btn" onclick="closeModal('passwordModal')">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ВИСЯЩИЙ СВЕТИЛЬНИК — ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
+
+<script src="/static/js/admin/admin_goods.js" defer></script>
+
+</body>
+</html>
