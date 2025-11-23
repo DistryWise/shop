@@ -333,8 +333,39 @@ window.openProductModal = async (title, type = 'product') => {
   });
   // === ЗАГЛУШКИ ===
   window.showToast = (title, msg = '', error = false, duration = 3000) => {
-    alert(`${title}: ${msg}`);
-  };
+  // Удаляем старый тост, если есть
+  const old = document.querySelector('.custom-toast');
+  if (old) old.remove();
+
+  const toast = document.createElement('div');
+  toast.className = `custom-toast ${error ? 'error' : 'success'}`;
+  toast.innerHTML = `
+    <strong>${title}</strong>
+    ${msg ? `<div style="margin-top:4px;font-size:0.9em;opacity:0.9;">${msg}</div>` : ''}
+  `;
+  Object.assign(toast.style, {
+    position: 'fixed',
+    bottom: '20px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: error ? '#d32f2f' : '#1e7e34',
+    color: 'white',
+    padding: '14px 24px',
+    borderRadius: '12px',
+    boxShadow: '0 8px 25px rgba(0,0,0,0.3)',
+    zIndex: 9999,
+    fontSize: '1em',
+    fontWeight: '500',
+    maxWidth: '90%',
+    textAlign: 'center',
+    animation: 'toastSlide 0.4s ease',
+    pointerEvents: 'none'
+  });
+
+  document.body.appendChild(toast);
+
+  setTimeout(() => toast.remove(), duration);
+};
 
   const calculateTotal = (items) => {
     const count = items.reduce((s, i) => s + i.quantity, 0);
@@ -356,5 +387,64 @@ window.openProductModal = async (title, type = 'product') => {
   };
 
   loadCart();
+  // === АНТИСПАМ ДЛЯ КНОПКИ "+" В АВТОКОМПЛИТЕ ===
+  let addButtonClicks = 0;
+  let cooldownActive = false;
+  let resetTimer = null;
 
+  // Сбрасываем счётчик каждые 30 секунд
+  const startClickCounter = () => {
+    if (resetTimer) clearTimeout(resetTimer);
+    resetTimer = setTimeout(() => {
+      addButtonClicks = 0; // обнуляем после 30 секунд бездействия
+    }, 30000);
+  };
+
+  // Показ тоста в стиле сайта (используем твою функцию showToast)
+  const triggerCooldown = () => {
+    if (cooldownActive) return;
+
+    cooldownActive = true;
+    showToast('Слишком быстро!', 'Подождите 10 секунд перед следующим добавлением', true, 5000);
+
+    // Блокируем все кнопки "+" на 10 секунд
+    document.querySelectorAll('.autocomplete-add').forEach(btn => {
+      btn.style.pointerEvents = 'none';
+      btn.style.opacity = '0.5';
+      btn.innerHTML = '<i class="fas fa-hourglass-half"></i>';
+    });
+
+    setTimeout(() => {
+      cooldownActive = false;
+      document.querySelectorAll('.autocomplete-add').forEach(btn => {
+        btn.style.pointerEvents = '';
+        btn.style.opacity = '';
+        btn.innerHTML = '<i class="fas fa-plus"></i>';
+      });
+    }, 10000);
+  };
+
+  // Перехватываем клики по всем кнопкам "+" в автокомплите
+  document.addEventListener('click', (e) => {
+    const addBtn = e.target.closest('.autocomplete-add');
+    if (!addBtn) return;
+
+    // Если кулдаун активен — просто игнорируем
+    if (cooldownActive) {
+      e.stopPropagation();
+      e.preventDefault();
+      return false;
+    }
+
+    addButtonClicks++;
+    startClickCounter(); // перезапускаем таймер окна в 30 сек
+
+    if (addButtonClicks > 10) {
+      e.stopPropagation();
+      e.preventDefault();
+      triggerCooldown();
+      addButtonClicks = 0; // можно обнулить, чтобы не накапливалось
+      if (resetTimer) clearTimeout(resetTimer);
+    }
+  }, true); // используем capturing, чтобы перехватить до onclick в разметке
 });

@@ -1,560 +1,1808 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Корзина — Piligrim</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/bin.css">
-    <style>
-/* === КРАСИВАЯ МОДАЛКА ОФОРМЛЕНИЯ === */
-#checkoutModal {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(8px);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-    animation: fadeIn 0.3s ease;
-}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Корзина — Piligrim</title>
 
-#checkoutModal.active {
-    display: flex;
-}
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
-.checkout-content {
-    background: #1a1a2e;
-    border-radius: 20px;
-    width: 90%;
-    max-width: 420px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-    overflow: hidden;
-    animation: slideUp 0.4s ease;
-}
+  <!-- Твои основные стили -->
+  <link rel="stylesheet" href="/static/css/contacts.css">
+  <link rel="stylesheet" href="/static/css/search.css">
+  <link rel="stylesheet" href="/static/css/auth.css">
+  <link rel="stylesheet" href="/static/css/cart.css">
+  <link rel="stylesheet" href="/static/css/ai.css">
+  <link rel="stylesheet" href="/static/css/bins.css">
 
-.checkout-header {
-    padding: 1.2rem 1.5rem;
-    background: linear-gradient(135deg, #00d2ff, #00ff95);
-    color: white;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.checkout-header h2 {
-    margin: 0;
-    font-size: 1.3rem;
-    font-weight: 600;
-}
-
-.close-btn {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 1.4rem;
-    cursor: pointer;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: 0.2s;
-}
-
-.close-btn:hover {
-    background: rgba(255,255,255,0.2);
-}
-
-.checkout-body {
-    padding: 1.5rem;
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.form-group label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.95rem;
-    color: #ccc;
-    margin-bottom: 0.4rem;
-    font-weight: 500;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 0.9rem 1rem;
-    border: 2px solid #333;
-    border-radius: 12px;
-    font-size: 1rem;
-    transition: 0.2s;
-    background: #16213e;
-    color: #fff;
-}
-
-.form-group input:focus {
-    outline: none;
-    border-color: #00d2ff;
-    background: #1a1a2e;
-    box-shadow: 0 0 0 3px rgba(0,210,255,0.15);
-}
-
-.form-group input[readonly] {
-    background: #0f0f1a;
-    color: #00ff95;
-    cursor: not-allowed;
-}
-
-.checkout-summary {
-    background: #16213e;
-    padding: 1rem;
-    border-radius: 12px;
-    margin: 1rem 0;
-    font-size: 0.95rem;
-    border: 1px solid #333;
-}
-
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-}
-
-.summary-row.total {
-    font-weight: 600;
-    font-size: 1.1rem;
-    color: #00ff95;
-    padding-top: 0.5rem;
-    border-top: 1px solid #333;
-    margin-top: 0.5rem;
-}
-
-.checkout-footer {
-    padding: 1rem 1.5rem;
-    background: #16213e;
-    text-align: center;
-    border-top: 1px solid #333;
-}
-
-.btn-gradient {
-    background: linear-gradient(135deg, #00d2ff, #00ff95);
-    color: #000;
-    border: none;
-    padding: 0.9rem 1.8rem;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: 0.3s;
-    box-shadow: 0 4px 15px rgba(0,210,255,0.3);
-}
-
-.btn-gradient:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,210,255,0.4);
-}
-
-.btn-gradient:active {
-    transform: translateY(0);
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideUp {
-    from { transform: translateY(50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-</style>
 </head>
 <body>
+
+  <div class="custom-cursor"></div>
+  <!-- ХЕДЕР -->
+  <header>
+    <a href="/" class="logo"><img src="/static/assets/logo.png" alt="Piligrim" class="logo-img"></a>
+    <nav>
+      <a href="/" class="nav-link">Главная</a>
+      <a href="/goods" class="nav-link">Товары</a>
+      <a href="/services" class="nav-link">Услуги</a>
+      <a href="/news" class="nav-link">Новости</a>
+      <a href="/about_company" class="nav-link">О компании</a>
+      <a href="/contacts" class="nav-link">Контакты</a>
+    </nav>
+    <div class="header-icons">
+      <div class="search-wrapper">
+        <div class="search-container">
+          <div class="search-icon"><i class="fas fa-search"></i></div>
+          <input type="text" class="search-input" id="searchInput" placeholder="Поиск...">
+          <button id="searchClear" class="search-clear">×</button>
+        </div>
+        <div id="autocompleteList" class="autocomplete-list"></div>
+      </div>
+
+      <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
+
+      <div style="position: relative;">
+        <button class="icon-btn" id="cartBtn">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <div id="miniCartDropdown">
+          <div class="mini-cart-header"><div class="mini-cart-title">Корзина</div></div>
+          <div class="mini-cart-items" id="miniCartItems"><div class="mini-cart-empty">Корзина пуста</div></div>
+          <div class="mini-cart-footer">
+            <div class="mini-cart-total" id="miniCartTotal">Итого: 0 ₽</div>
+            <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
+    </div>
+  </header>
+
+  <!-- ВИСЯЩАЯ ЛАМПОЧКА -->
+  <div class="theme-toggle-hanging">
+    <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+    <label for="theme-toggle" class="theme-toggle-label">
+      <div class="rope top"></div>
+      <div class="bulb">
+        <div class="bulb-light"></div>
+        <div class="bulb-glow"></div>
+      </div>
+      <div class="rope bottom"></div>
+    </label>
+  </div>
+
+
+<!-- ПЛАВАЮЩАЯ ПАНЕЛЬ С ПОДДЕРЖКОЙ НЕСКОЛЬКИХ ЗАКАЗОВ -->
+<div id="floatingOrderBar" style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:9998; display:none;">
+  <div id="multiOrderPill" onclick="openMultiOrderModal()" style="cursor:pointer; background:rgba(20,20,30,0.95); backdrop-filter:blur(30px); border:1px solid rgba(255,255,255,0.1); border-radius:28px; padding:1rem 1.8rem; display:flex; align-items:center; gap:1.2rem; box-shadow:0 20px 50px rgba(0,0,0,0.5); transition:all 0.4s;">
+    <div style="position:relative;">
+      <i class="fas fa-truck" style="font-size:1.9rem; color:#00ff95;"></i>
+      <span id="activeOrdersBadge" style="position:absolute; top:-6px; right:-10px; background:#00ff95; color:#000; font-size:0.75rem; font-weight:700; min-width:18px; height:18px; border-radius:9px; display:flex; align-items:center; justify-content:center; padding:0 5px;">1</span>
+    </div>
+    <div>
+      <div style="font-weight:600; color:#fff; font-size:1.12rem;">
+        <span id="pillMainText">Заказ №1423 в работе</span>
+      </div>
+      <div style="font-size:0.88rem; color:#aaa; margin-top:0.3rem;">
+        <span id="pillSubText">Нажмите для подробностей</span>
+      </div>
+    </div>
+    <i class="fas fa-chevron-up" style="font-size:1.4rem; color:#aaa; margin-left:auto;"></i>
+  </div>
+</div>
+
+<!-- РАСШИРЕННАЯ APPLE-МОДАЛКА ДЛЯ АКТИВНЫХ ЗАКАЗОВ (2025) -->
+<div id="multiOrderModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); backdrop-filter:blur(32px); -webkit-backdrop-filter:blur(32px); z-index:9999; justify-content:center; align-items:center; padding:16px; box-sizing:border-box;">
+  
+  <div style="background:rgba(15,15,30,0.98); backdrop-filter:blur(50px); border-radius:32px; width:100%; max-width:720px; max-height:94vh; overflow:hidden; box-shadow:0 50px 120px rgba(0,0,0,0.9); border:1px solid rgba(255,255,255,0.08); position:relative;">
     
-    <!-- === МОДАЛЬНАЯ ФОРМА ОБРАТНОЙ СВЯЗИ === -->
-    <div id="feedbackModal" class="modal-overlay" style="display:none;">
-        <div class="modal-content" style="position: relative; max-width: 700px; background: rgba(20,20,30,0.95); backdrop-filter: blur(32px); border: 1px solid rgba(0,210,255,0.3); border-radius: 32px; padding: 2rem; max-height: 90vh; overflow: hidden;">
-            <button class="modal-close" onclick="closeFeedbackModal()" style="position: absolute; top: 1.5rem; right: 1.5rem; background: rgba(255,255,255,0.1); border: none; width: 40px; height: 40px; border-radius: 50%; color: #fff; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; z-index: 10;"
-                onmouseover="this.style.background='rgba(255,107,107,0.2)'"
-                onmouseout="this.style.background='rgba(255,255,255,0.1)'">x</button>
-
-            <h2 style="font-size: 2.8rem; font-weight: 800; background: linear-gradient(90deg, #00d2ff, #00ff95); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; margin: 0 0 1rem 0; padding-right: 3rem;">
-                Обратная связь
-            </h2>
-            <p style="text-align: center; color: #aaa; margin-bottom: 2rem; padding-right: 3rem;">Напишите нам — ответим быстро</p>
-
-            <form id="feedbackForm" novalidate style="display: grid; gap: 1.2rem; max-height: calc(90vh - 180px); overflow-y: auto; padding-right: 0.5rem;">
-                <!-- ФИО -->
-                <input type="text" name="name" placeholder="Ваше ФИО" required
-                    class="feedback-input"
-                    style="padding: 1rem; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 1rem; outline: none; transition: all 0.3s;"
-                    onfocus="this.style.borderColor='#00d2ff'" onblur="this.style.borderColor='rgba(255,255,255,0.2)'">
-
-                <!-- EMAIL -->
-                <input type="email" name="email" placeholder="Email" required
-                    class="feedback-input"
-                    style="padding: 1rem; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 1rem; outline: none; transition: all 0.3s;"
-                    onfocus="this.style.borderColor='#00d2ff'" onblur="this.style.borderColor='rgba(255,255,255,0.2)'">
-
-                <!-- КРАСИВЫЙ НОМЕР ТЕЛЕФОНА -->
-                <div class="phone-display-premium" id="phoneDisplayPremium" style="display: none;">
-                    <div class="phone-icon">
-                        <i class="fas fa-mobile-alt"></i>
-                    </div>
-                    <div class="phone-info">
-                        <div class="phone-label">Ваш номер телефона</div>
-                        <div class="phone-number" id="feedbackPhoneFormatted">—</div>
-                    </div>
-                </div>
-
-                <!-- РЕЗЕРВНЫЙ БЛОК (если JS не загрузится) -->
-                <div class="phone-display-frame" id="phoneDisplayFallback" style="display: flex; align-items: center; gap: 1rem; padding: 1rem 1.2rem; border-radius: 20px; background: rgba(255,255,255,0.08); border: 2px solid rgba(0,210,255,0.25); backdrop-filter: blur(8px); transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,210,255,0.15);">
-                    <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #00d2ff, #00ff95); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <i class="fas fa-phone" style="color: #000; font-size: 1.1rem;"></i>
-                    </div>
-                    <div style="flex: 1;">
-                        <div style="font-size: 0.85rem; color: #aaa; margin-bottom: 0.2rem;">Ваш номер</div>
-                        <div id="feedbackPhone" style="font-weight: 700; font-size: 1.1rem; color: #00ff95; letter-spacing: 0.5px;">—</div>
-                    </div>
-                </div>
-
-                <!-- СООБЩЕНИЕ -->
-                <textarea name="message" rows="5" placeholder="Ваше сообщение..." required
-                        class="feedback-input"
-                        style="padding: 1rem; border-radius: 18px; border: 2px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; font-size: 1rem; outline: none; resize: none; transition: all 0.3s;"
-                        onfocus="this.style.borderColor='#00d2ff'" onblur="this.style.borderColor='rgba(255,255,255,0.2)'"></textarea>
-
-                <!-- ТАЙМЕР СПАМ-ЗАЩИТЫ -->
-                <div id="feedbackCooldown" style="display:none; text-align:center; margin:1rem 0; padding:1rem; background:rgba(255,107,107,0.1); border:1px solid rgba(255,107,107,0.3); border-radius:18px;">
-                    <div style="font-size:0.9rem; color:#ff6b6b; margin-bottom:0.5rem;">
-                        Защита от спама
-                    </div>
-                    <div class="timer-bar" style="height:6px; background:rgba(255,107,107,0.2); border-radius:3px; overflow:hidden;">
-                        <div id="cooldownProgress" style="height:100%; width:100%; background:linear-gradient(90deg, #00d2ff, #00ff95); transition:width 0.1s linear;"></div>
-                    </div>
-                    <div id="cooldownText" style="margin-top:0.5rem; font-weight:600; color:#ff6b6b;">Подождите 5:00</div>
-                </div>
-
-                <!-- КНОПКА ОТПРАВКИ -->
-                <button type="submit" id="feedbackSubmitBtn"
-                        style="padding: 1rem; border-radius: 50px; background: linear-gradient(135deg, #00d2ff, #00ff95); color: #000; font-weight: 700; font-size: 1.1rem; border: none; cursor: pointer; transition: all 0.4s; box-shadow: 0 8px 25px rgba(0,210,255,0.35);"
-                        onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 15px 35px rgba(0,210,255,0.48)'"
-                        onmouseout="this.style.transform=''; this.style.boxShadow='0 8px 25px rgba(0,210,255,0.35)'">
-                    Отправить
-                </button>
-            </form>
-        </div>
+    <!-- iOS-граббер -->
+    <div style="height:56px; display:flex; align-items:center; justify-content:center; padding-top:env(safe-area-inset-top);">
+      <div style="width:52px; height:6px; background:rgba(255,255,255,0.35); border-radius:4px;"></div>
     </div>
 
-    
-
-    <!-- ТОСТ — ЕДИНСТВЕННЫЙ -->
-    <div id="feedbackToast" class="toast" style="position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); padding: 1rem 2rem; border-radius: 24px; font-weight: 600; z-index: 9999; opacity: 0; transition: all 0.5s; color: #000; background: rgba(0,255,150,0.9); backdrop-filter: blur(10px);">
-        Сообщение отправлено!
+    <!-- Заголовок -->
+    <div style="padding:0 2.5rem 1.8rem; text-align:center;">
+      <h2 style="margin:0; font-size:2.4rem; font-weight:800; color:#fff; letter-spacing:-0.5px;">
+        Ваши заказы
+      </h2>
+      <p style="margin:0.8rem 0 0; color:#aaa; font-size:1.15rem;">
+        <span id="activeOrdersCountText">3 заказа</span> в обработке · Обновляется автоматически
+      </p>
     </div>
 
-    <div class="gradient-overlay"></div>
-    <header class="navbar">
-        <div class="nav-container">
-            <div class="logo-section">
-                <img src="/static/uploads/logo.png" alt="Piligrim" class="logo-img" onerror="this.src='https://via.placeholder.com/50/1a1a1a/a0c4ff?text=P'">
-                <span class="logo-text">piligrim</span>
-            </div>
-            <nav class="nav-menu">
-                <a href="/" class="nav-link">Главная</a>
-                <a href="/goods" class="nav-link">Товары</a>
-                <a href="/services" class="nav-link">Услуги</a>
-                <a href="/news" class="nav-link">Новости</a>
-                <a href="/about_company" class="nav-link">О компании</a>
-                <a href="/contacts" class="nav-link">Контакты</a>
-            </nav>
-            <div class="header-right" style="display: flex; align-items: center; gap: 1rem;">
-                <button id="openFeedbackBtn" class="header-btn" style="background: transparent; border: none; color: var(--primary); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 16px; transition: all 0.3s;">
-                    <i class="fas fa-envelope"></i> <span class="btn-text">Обратная связь</span>
-                </button>
-
-                <div class="search-wrapper" style="margin-right: 0.5rem;">
-                    <div class="search-container" id="searchContainer">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" class="search-input" placeholder="Поиск..." id="searchInput">
-                        <div class="autocomplete-list" id="autocompleteList"></div>
-                    </div>
-                </div>
-
-                <div class="cart-wrapper" style="margin-right: 0.5rem;">
-                    <button class="cart-btn" id="cartBtn">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span class="cart-badge" id="cartBadge">0</span>
-                    </button>
-                    <div class="cart-modal" id="cartModal">
-                        <div class="cart-modal-content">
-                            <div class="cart-modal-header">
-                                <h3>Корзина</h3>
-                                <button class="modal-close" id="closeCartModal">x</button>
-                            </div>
-                            <div class="cart-modal-body" id="miniCartItems">
-                                <div class="empty-cart">Корзина пуста</div>
-                            </div>
-                            <div class="cart-modal-footer">
-                                <div class="mini-cart-total" id="miniCartTotal">Итого: 0 ₽</div>
-                                <button class="btn-primary" id="goToCartBtn">Перейти в корзину</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="auth-btn" id="authBtn">
-                    <i class="fas fa-sign-in-alt"></i> <span id="authText">Войти</span>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <div id="orderChain" class="order-chain-top" style="display:none; padding: 1.5rem 1rem; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center;">
-        <div class="chain-loading">Проверяем статус заказа...</div>
+    <!-- Список заказов — теперь шире и удобнее -->
+    <div id="ordersVerticalList" style="padding:0 2.5rem 2.5rem; display:flex; flex-direction:column; gap:2.2rem; max-height:60vh; overflow-y:auto; scrollbar-width:none;">
+      <!-- Заказы подгружаются через JS -->
     </div>
 
-    <section class="bin-page" style="padding-top: 1rem;">
-        <div class="bin-header" style="text-align:center; margin-bottom: 1.5rem;">
-            <h1 id="pageTitle">Ваша корзина</h1>
-            <p id="cartSummary">Загрузка...</p>
-            <div class="total-price" id="totalPrice">0 ₽</div>
-            <div style="display:flex; justify-content:center; gap:1rem; margin-top:1.5rem;">
-                <button class="btn-checkout" id="checkoutBtn" disabled>Оформить покупку</button>
-            </div>
-        </div>
-
-        <div class="cart-items" id="cartItems" style="max-width: 1000px; margin: 0 auto;">
-            <div class="empty-cart">Загрузка корзины...</div>
-        </div>
-
-        <div style="text-align:center; margin: 2rem 0;">
-            <button id="openArchiveBtn" class="btn-secondary" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 0.8rem 1.5rem; border-radius: 16px; font-size: 1rem; cursor: pointer;">
-                <i class="fas fa-history"></i> Архив заказов
-            </button>
-        </div>
-    </section>
-
-    <!-- АРХИВ -->
-    <div class="modal-overlay" id="archiveModal" style="display:none;">
-        <div class="modal-content" style="max-width: 900px; width: 90%; max-height: 80vh; overflow-y: auto;">
-            <button class="modal-close" id="closeArchive">x</button>
-            <h2 class="modal-title" style="text-align:center; margin-bottom:1.5rem;">Архив заказов</h2>
-            <div id="ordersList">
-                <div class="empty-cart">Загрузка...</div>
-            </div>
-        </div>
+    <!-- Футер с кнопкой закрытия -->
+    <div style="padding:0 2.5rem 3rem calc(3rem + env(safe-area-inset-bottom));">
+      <button onclick="closeMultiOrderModal()" 
+              style="width:100%; background:rgba(255,255,255,0.14); color:#fff; border:none; padding:1.3rem; border-radius:24px; font-size:1.2rem; font-weight:600; cursor:pointer; transition:all 0.4s; backdrop-filter:blur(10px);"
+              onmouseover="this.style.background='rgba(255,255,255,0.24)'"
+              onmouseout="this.style.background='rgba(255,255,255,0.14)'">
+        Закрыть
+      </button>
+    </div>
+  </div>
+</div>
+  
+  <!-- КОНТЕНТ КОРЗИНЫ -->
+  <main>
+    <div>
+      <h1 class="page-title">Корзина</h1>
+      <div id="cartItemsList">
+        <div class="cart-empty">Корзина пуста</div>
+      </div>
+      <div class="pagination" id="pagination" style="display:none; justify-content:center; margin-top:3rem; gap:1rem;"></div>
     </div>
 
-    <!-- АВТОРИЗАЦИЯ -->
-    <div class="modal-overlay" id="authModal">
-        <div class="modal-content">
-            <button class="modal-close" id="closeModal">x</button>
-            <h2 class="modal-title">Вход по номеру телефона</h2>
-            <div class="modal-step active" id="stepPhone">
-                <div class="input-group">
-                    <label>Номер телефона</label>
-                    <div class="phone-input-wrapper">
-                        <div class="country-selector" id="countrySelector">
-                            <div class="selected-country">
-                                <span class="flag">RU</span>
-                                <span class="code">+7</span>
-                                <i class="fas fa-chevron-down arrow"></i>
-                            </div>
-                            <div class="country-dropdown">
-                                <div class="country-option" data-code="+7" data-flag="RU" data-mask=" (___) ___-__-__">
-                                    <span class="flag">RU</span> <span class="country-name">Россия</span> <span class="country-code">(+7)</span>
-                                </div>
-                                <div class="country-option" data-code="+375" data-flag="BY" data-mask=" (__) ___-__-__">
-                                    <span class="flag">BY</span> <span class="country-name">Беларусь</span> <span class="country-code">(+375)</span>
-                                </div>
-                                <div class="country-option" data-code="+7" data-flag="KZ" data-mask=" (___) ___-__-__">
-                                    <span class="flag">KZ</span> <span class="country-name">Казахстан</span> <span class="country-code">(+7)</span>
-                                </div>
-                                <div class="country-option" data-code="+998" data-flag="UZ" data-mask=" (__) ___-__-__">
-                                    <span class="flag">UZ</span> <span class="country-name">Узбекистан</span> <span class="country-code">(+998)</span>
-                                </div>
-                                <div class="country-option" data-code="+996" data-flag="KG" data-mask=" (__) ___-__-__">
-                                    <span class="flag">KG</span> <span class="country-name">Кыргызстан</span> <span class="country-code">(+996)</span>
-                                </div>
-                                <div class="country-option" data-code="+374" data-flag="AM" data-mask=" (__) ___-__-__">
-                                    <span class="flag">AM</span> <span class="country-name">Армения</span> <span class="country-code">(+374)</span>
-                                </div>
-                                <div class="country-option" data-code="+994" data-flag="AZ" data-mask=" (__) ___-__-__">
-                                    <span class="flag">AZ</span> <span class="country-name">Азербайджан</span> <span class="country-code">(+994)</span>
-                                </div>
-                            </div>
-                        </div>
-                        <input type="text" id="phoneInput" class="phone-input" placeholder="(999) 999-99-99" maxlength="16">
-                    </div>
-                </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="agreePolicy" checked>
-                    <label for="agreePolicy">Согласен с <a href="/policy" target="_blank" style="color:var(--primary);">политикой конфиденциальности</a></label>
-                </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="subscribeEmail">
-                    <label for="subscribeEmail">Подписаться на email-рассылку</label>
-                </div>
-                <button class="btn-primary" id="sendCodeBtn" disabled>Получить код</button>
-            </div>
-            <div class="modal-step" id="stepCode" style="display:none;">
-                <div class="input-group">
-                    <label>Код из СМС</label>
-                    <input type="text" id="codeInput" class="code-input" placeholder="1111" maxlength="4" inputmode="numeric">
-                    <div class="error-message" id="codeError">Неверный код</div>
-                </div>
-                <button class="btn-primary" id="verifyCodeBtn">Войти</button>
-                <p style="text-align:center;color:var(--text-secondary);font-size:0.9rem;margin-top:1rem;">
-                    Код отправлен на <span id="sentPhone"></span><br>
-                    <a href="#" id="resendCode" style="color:var(--primary);">Отправить снова</a>
-                </p>
-            </div>
+    <div class="checkout-sidebar">
+      <h3 class="checkout-title">Итого</h3>
+      <div class="summary-row"><span>Товаров:</span><strong id="summaryCount">0</strong></div>
+      <div class="summary-row total"><span>К оплате:</span><strong id="summaryTotal">0 ₽</strong></div>
+      <button class="checkout-btn" id="checkoutBtn" disabled>Оформить заказ</button>
+      <button class="archive-btn" id="openArchiveBtn"><i class="fas fa-history"></i> Архив заказов</button>
+    </div>
+  </main>
+
+  <!-- МОДАЛКА АВТОРИЗАЦИИ — ОБЯЗАТЕЛЬНО ДОЛЖНА БЫТЬ НА КАЖДОЙ СТРАНИЦЕ -->
+<div id="authModal" class="auth-modal">
+  <div class="auth-modal-content">
+    <button class="close-modal" id="closeAuthModal">×</button>
+    <h2 class="auth-title">Вход по номеру телефона</h2>
+
+    <!-- ШАГ 1 — ВВОД НОМЕРА -->
+    <div id="stepPhone" class="auth-step">
+      <div class="country-selector">
+        <div class="selected-country" id="selectedCountry">
+          <span class="flag">RU</span>
+          <span class="code">+7</span>
+          <i class="fas fa-chevron-down"></i>
         </div>
-    </div>
-
-    <!-- === НОВАЯ МОДАЛКА ОФОРМЛЕНИЯ — КРАСИВАЯ, КОМПАКТНАЯ === -->
-    <div id="checkoutModal" class="modal">
-        <div class="checkout-content">
-            <div class="checkout-header">
-                <h2>Оформление заказа</h2>
-                <button class="close-btn" id="closeCheckout">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <div class="checkout-body">
-                <div class="form-group">
-                    <label for="fullName">
-                        <i class="fas fa-user"></i> ФИО
-                    </label>
-                    <input type="text" id="fullName" placeholder="Иванов Иван Иванович" autocomplete="name">
-                </div>
-
-                <!-- КРАСИВЫЙ НОМЕР ТЕЛЕФОНА В ОФОРМЛЕНИИ ЗАКАЗА -->
-                <div class="form-group">
-                    <label>
-                        <i class="fas fa-phone"></i> Телефон
-                    </label>
-                    <div class="phone-display-premium" id="checkoutPhonePremium" style="display: none;">
-                        <div class="phone-icon">
-                            <i class="fas fa-mobile-alt"></i>
-                        </div>
-                        <div class="phone-info">
-                            <div class="phone-label">Ваш номер телефона</div>
-                            <div class="phone-number" id="checkoutPhoneFormatted">—</div>
-                        </div>
-                    </div>
-
-                    <!-- РЕЗЕРВНЫЙ ИНПУТ (скрыт, но нужен для отправки) -->
-                    <input type="hidden" id="checkoutPhone" name="phone">
-                </div>
-
-                <div class="checkout-summary">
-                    <div class="summary-row">
-                        <span>Товаров:</span>
-                        <strong id="checkoutCount">0</strong>
-                    </div>
-                    <div class="summary-row total">
-                        <span>Итого:</span>
-                        <strong id="checkoutTotal">0 ₽</strong>
-                    </div>
-                </div>
-            </div>
-
-            <div class="checkout-footer">
-                <button id="confirmOrderBtn" class="btn-gradient">
-                    <i class="fas fa-check"></i> Оформить заказ
-                </button>
-            </div>
+        <div class="country-dropdown" id="countryDropdown">
+          <div class="country-item" data-code="+7" data-flag="RU">Россия +7</div>
+          <div class="country-item" data-code="+1" data-flag="US">USA +1</div>
+          <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
         </div>
+      </div>
+
+      <input type="tel" id="phoneInput" placeholder="(999) 999 99 99" class="auth-input">
+
+      <label class="checkbox-label required">
+        <input type="checkbox" id="privacyCheck">
+        <span class="custom-checkbox"></span>
+        Согласен с <a href="/policy" target="_blank" class="privacy-link">политикой конфиденциальности</a>
+      </label>
+
+      <label class="checkbox-label">
+        <input type="checkbox" id="subscribeCheck" checked>
+        <span class="custom-checkbox"></span>
+        Подписаться на SMS и email рассылку
+      </label>
+
+      <button id="sendCodeBtn" class="auth-btn" disabled>Получить код</button>
     </div>
 
-    <!-- БЛОКИРОВКА -->
-    <div class="modal-overlay" id="blockedModal" style="display: none;">
-        <div class="modal" style="max-width: 500px; text-align: center;">
-            <div class="modal-header">
-                <h2 style="color: #ff6666;">Доступ запрещён</h2>
-            </div>
-            <div style="padding: 1rem 0; font-size: 1.1rem; color: #ccc;">
-                <i class="fas fa-ban" style="font-size: 3rem; color: #ff6666; margin-bottom: 1rem;"></i><br>
-                Вы были <strong>заблокированы</strong> администратором.<br>
-                Обратитесь в поддержку.
-            </div>
-            <div class="modal-actions">
-                <button class="cancel-btn" onclick="document.getElementById('blockedModal').style.display='none'">
-                    Закрыть
-                </button>
-            </div>
-        </div>
+    <!-- ШАГ 2 — ВВОД КОДА -->
+    <div id="stepCode" class="auth-step" style="display:none;">
+      <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
+      <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
+      <button id="verifyCodeBtn" class="auth-btn">Войти</button>
+      <button id="resendCode" class="auth-link">Отправить повторно</button>
     </div>
 
-    <!-- ТОСТ КОРЗИНЫ -->
-    <div class="toast" id="cartToast">
-        <div class="toast-icon"><i class="fas fa-check"></i></div>
-        <div><strong id="toastTitle">Готово!</strong><br><span id="toastMessage"></span></div>
+    <!-- ШАГ 3 — УСПЕШНЫЙ ВХОД -->
+    <div id="stepSuccess" class="auth-step" style="display:none;">
+      <i class="fas fa-check-circle success-icon"></i>
+      <h3>Добро пожаловаться!</h3>
+      <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
+      <button id="closeSuccess" class="auth-btn">Продолжить</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОДАЛКА ОБРАТНОЙ СВЯЗИ — ТОЧНО КАК НА КОНТАКТАХ (работает 100%) -->
+<div class="custom-alert" id="feedbackModal" style="display:none;">
+  <div class="alert-content">
+    <button class="alert-close" id="closeFeedbackModal">×</button>
+
+    <div class="alert-icon">
+      <i class="fas fa-envelope-open-text"></i>
     </div>
 
-    <!-- ОТЗЫВ -->
-    <div class="modal-overlay" id="reviewModal">
-        <div class="modal-content" style="max-width:600px; width:90%;">
-            <button class="modal-close" id="closeReview">x</button>
-            <h2 class="modal-title" id="reviewItemName">Оцените товар</h2>
-            <div class="input-group">
-                <label>Ваша оценка</label>
-                <div id="reviewStars" style="display:flex; gap:0.5rem; justify-content:center; margin:1rem 0;">
-                    <i class="far fa-star" data-value="1"></i>
-                    <i class="far fa-star" data-value="2"></i>
-                    <i class="far fa-star" data-value="3"></i>
-                    <i class="far fa-star" data-value="4"></i>
-                    <i class="far fa-star" data-value="5"></i>
-                </div>
-            </div>
-            <div class="input-group">
-                <label>Ваш отзыв</label>
-                <textarea id="reviewText" class="review-textarea" placeholder="Поделитесь впечатлениями..." style="width:100%; height:120px; padding:1rem; border-radius:18px; background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.2); color:#fff;"></textarea>
-            </div>
-            <div style="display:flex; gap:1rem; margin-top:1.5rem; justify-content:center;">
-                <button class="btn-primary" id="submitReview">Отправить</button>
-                <button class="btn-secondary" id="skipReview">Пропустить</button>
-            </div>
-        </div>
+    <div class="alert-text">
+      <strong>Обратная связь</strong>
+      <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
     </div>
 
-    <!-- СКРИПТЫ -->
-    <script src="/static/js/bin.js" defer></script>
-    <script src="/static/js/statuschain.js" defer></script>
-    <script defer>
-        // Закрытие обратной связи
-        window.closeFeedbackModal = () => {
-            document.getElementById('feedbackModal').style.display = 'none';
-        };
+    <form class="contact-form" novalidate id="feedbackForm">
+      <input type="text" name="name" placeholder="Ваше имя" required />
 
-        // Показ телефона в форме обратной связи
-        document.getElementById('openFeedbackBtn')?.addEventListener('click', () => {
-            const phone = sessionStorage.getItem('phone') || '—';
-            document.getElementById('feedbackPhone').textContent = phone;
-            document.getElementById('feedbackModal').style.display = 'flex';
-        });
+      <div class="phone-field-wrapper">
+        <!-- Если авторизован — показываем номер и кнопку "Изменить" -->
+        <input type="tel" 
+               placeholder="+7 (___) ___-__-__" 
+               name="phone" 
+               id="feedbackPhoneInput"
+               pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" 
+               required 
+               readonly />
+        <button type="button" class="edit-phone-btn" id="editPhoneBtn">Изменить</button>
+      </div>
 
-        // Блокировка
-        document.addEventListener("DOMContentLoaded", () => {
-            const flashError = document.querySelector('.flash.error');
-            if (flashError && flashError.textContent.includes('заблокированы')) {
-                document.getElementById('blockedModal').style.display = 'flex';
+      <input type="email" name="email" placeholder="Email" required />
+      <textarea name="message" placeholder="Ваше сообщение" required></textarea>
+
+      <button type="submit" id="feedbackSubmitBtn" class="alert-login-btn">
+        <span class="btn-text">Отправить сообщение</span>
+        <span class="btn-cooldown" style="display:none;">Отправка... <span class="timer">30</span>с</span>
+      </button>
+    </form>
+  </div>
+</div>
+  <!-- СКРИПТЫ -->
+  <script src="/static/js/search.js"></script>
+  <script src="/static/js/auth.js"></script>      
+  <script src="/static/js/cart.js" defer></script>
+  <script src="/static/js/feedback.js"></script>
+  <script src="/static/js/contacts.js" defer></script>
+  <script src="/static/js/ai.js"></script>
+  <script src="/static/js/bin.js"></script>
+  <script src="/static/js/statuschain.js" defer></script>
+
+<script>
+// === ОБНОВЛЕНИЕ КОРЗИНЫ С ПОДДЕРЖКОЙ ПАГИНАЦИИ (по 4 товара на странице) ===
+let allCartItems = [];
+let currentPage = 1;
+const ITEMS_PER_PAGE = 4;
+
+// 1. ГЛАВНОЕ: Ловим финальный статус из statuschain.js
+document.addEventListener('orderStatusChanged', (e) => {
+    const { orderId, status, isFinal } = e.detail;
+
+    if (!isFinal) return; // нам только завершённые и отменённые
+
+    if (status === 'completed' || status === 'cancelled') {
+        console.log(`Заказ #${orderId} завершён/отменён → принудительно чистим корзину`);
+
+        // ЖЁСТКО обнуляем всё
+        allCartItems = [];
+        localStorage.removeItem('clientCart');
+
+        // Обновляем интерфейс
+        document.getElementById('cartCount').textContent = '0';
+        document.getElementById('miniCartItems').innerHTML = '<div class="mini-cart-empty">Корзина пуста</div>';
+        document.getElementById('miniCartTotal').textContent = 'Итого: 0 ₽';
+
+        // Кидаем событие — чтобы перерисовалась основная корзина
+        document.dispatchEvent(new CustomEvent('cartUpdated', {
+            detail: { items: [], count: 0, total: '0 ₽' }
+        }));
+    }
+});
+
+// 2. Загрузка корзины при открытии страницы
+function loadCartFromStorage() {
+    try {
+        const saved = localStorage.getItem('clientCart');
+        if (saved) {
+            allCartItems = JSON.parse(saved) || [];
+            if (allCartItems.length > 0) {
+                const count = allCartItems.reduce((s, i) => s + i.quantity, 0);
+                const total = allCartItems.reduce((s, i) => s + i.price * i.quantity, 0);
+                document.dispatchEvent(new CustomEvent('cartUpdated', {
+                    detail: { items: allCartItems, count, total: total + ' ₽' }
+                }));
             }
+        }
+    } catch (e) {
+        allCartItems = [];
+    }
+}
+document.addEventListener('DOMContentLoaded', loadCartFromStorage);
+
+// 3. Обычное обновление корзины (добавление/удаление товаров)
+document.addEventListener('cartUpdated', (e) => {
+    const { items, count, total } = e.detail;
+
+    allCartItems = items || [];
+    currentPage = 1;
+
+    // Обновляем шапку
+    document.getElementById('cartCount').textContent = count || 0;
+
+    // Обновляем боковую панель
+    document.getElementById('summaryCount').textContent = count || 0;
+    document.getElementById('summaryTotal').textContent = total || '0 ₽';
+
+    // Кнопка оформления
+    const btn = document.getElementById('checkoutBtn');
+    btn.disabled = (count || 0) === 0;
+    btn.textContent = count === 0 ? 'Оформить заказ' : 'Оформить заказ';
+
+    renderCartPage();
+});
+
+// 4. Твой старый рендер (ничего не трогаем — он и так идеальный)
+function renderCartPage() {
+    const list = document.getElementById('cartItemsList');
+    const pagination = document.getElementById('pagination');
+
+    if (allCartItems.length === 0) {
+        list.innerHTML = '<div class="cart-empty">Корзина пуста</div>';
+        pagination.style.display = 'none';
+        return;
+    }
+
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    const pageItems = allCartItems.slice(start, end);
+
+    list.innerHTML = pageItems.map(item => `
+        <div class="cart-item">
+            <img src="${item.image_url || '/static/assets/no-image.png'}" alt="${item.title}">
+            <div style="flex:1;">
+                <div class="cart-item-title">${item.title}</div>
+                <div class="cart-item-price">${item.price_str}</div>
+                <div style="margin-top:1rem;display:flex;align-items:center;gap:1rem;">
+                    <div class="quantity-controls" style="display:flex;align-items:center;gap:0.8rem;background:rgba(255,255,255,0.08);padding:0.5rem 1rem;border-radius:16px;">
+                        <button onclick="updateQuantity('${item.title.replace(/'/g, "\\'")}', '${item.type}', -1)" style="background:none;border:none;color:white;font-size:1.4rem;">−</button>
+                        <span style="min-width:30px;text-align:center;font-weight:600;">${item.quantity}</span>
+                        <button onclick="updateQuantity('${item.title.replace(/'/g, "\\'")}', '${item.type}', 1)" style="background:none;border:none;color:white;font-size:1.4rem;">+</button>
+                    </div>
+                    <button onclick="removeFromCart('${item.title.replace(/'/g, "\\'")}', '${item.type}')" style="background:none;border:none;color:#ff6b6b;font-size:1.3rem;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    // === Пагинация ===
+    const totalPages = Math.ceil(allCartItems.length / ITEMS_PER_PAGE);
+    if (totalPages <= 1) {
+        pagination.style.display = 'none';
+        return;
+    }
+
+    pagination.style.display = 'flex';
+    pagination.innerHTML = '';
+
+    // Кнопка «Назад»
+    if (currentPage > 1) {
+        const prev = document.createElement('button');
+        prev.textContent = '‹';
+        prev.className = 'pagination-btn';
+        prev.onclick = () => {
+            currentPage--;
+            renderCartPage();
+            document.querySelector('main > div').scrollIntoView({ behavior: 'smooth' });
+        };
+        pagination.appendChild(prev);
+    }
+
+    // Номера страниц (умная логика: показываем до 5 кнопок)
+    const maxButtons = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+    let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+    if (endPage - startPage + 1 < maxButtons) {
+        startPage = Math.max(1, endPage - maxButtons + 1);
+    }
+
+    if (startPage > 1) {
+        const first = document.createElement('button');
+        first.textContent = '1';
+        first.className = 'pagination-btn';
+        first.onclick = () => { currentPage = 1; renderCartPage(); scrollToCart(); };
+        pagination.appendChild(first);
+
+        if (startPage > 2) {
+            const dots = document.createElement('span');
+            dots.textContent = '...';
+            dots.style.padding = '0 0.8rem';
+            dots.style.color = '#888';
+            pagination.appendChild(dots);
+        }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        btn.className = 'pagination-btn';
+        if (i === currentPage) {
+            btn.style.background = '#00ff95';
+            btn.style.color = '#000';
+            btn.style.fontWeight = '600';
+        }
+        btn.onclick = () => {
+            currentPage = i;
+            renderCartPage();
+            scrollToCart();
+        };
+        pagination.appendChild(btn);
+    }
+
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const dots = document.createElement('span');
+            dots.textContent = '...';
+            dots.style.padding = '0 0.8rem';
+            dots.style.color = '#888';
+            pagination.appendChild(dots);
+        }
+
+        const last = document.createElement('button');
+        last.textContent = totalPages;
+        last.className = 'pagination-btn';
+        last.onclick = () => { currentPage = totalPages; renderCartPage(); scrollToCart(); };
+        pagination.appendChild(last);
+    }
+
+    // Кнопка «Вперёд»
+    if (currentPage < totalPages) {
+        const next = document.createElement('button');
+        next.textContent = '›';
+        next.className = 'pagination-btn';
+        next.onclick = () => {
+            currentPage++;
+            renderCartPage();
+            scrollToCart();
+        };
+        pagination.appendChild(next);
+    }
+}
+
+function scrollToCart() {
+    document.querySelector('main > div').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// === Глобальное обновление корзины ===
+document.addEventListener('cartUpdated', (e) => {
+    const { items, count, total } = e.detail;
+
+    allCartItems = items;
+    currentPage = 1; // сбрасываем на первую страницу при обновлении
+
+    // Обновляем счётчики
+    document.getElementById('summaryCount').textContent = count;
+    document.getElementById('summaryTotal').textContent = total;
+
+    // Кнопка оформления
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    checkoutBtn.disabled = count === 0;
+    checkoutBtn.textContent = count === 0 ? 'Оформить заказ' : 'Оформить заказ';
+
+    renderCartPage();
+});
+
+// При загрузке страницы — тоже рендерим (если корзина уже есть в localStorage)
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (allCartItems.length > 0) renderCartPage();
+    }, 100);
+});
+</script>
+
+<script>
+// /static/js/bin.js — ВСЁ, КРОМЕ КОРЗИНЫ (корзина теперь живёт в cart.js)
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = (id) => document.getElementById(id);
+
+  const elements = {
+    authBtn: $('authBtn'),
+    feedbackBtn: $('feedbackBtn'),
+    openArchiveBtn: $('openArchiveBtn'),
+    checkoutBtn: $('checkoutBtn'),
+    feedbackModal: $('feedbackModal'),
+    checkoutModal: $('checkoutModal'),
+    reviewModal: $('reviewModal'),
+    archiveModal: $('archiveModal'),
+    feedbackForm: $('feedbackForm'),
+    confirmOrderBtn: $('confirmOrderBtn'),
+    fullName: $('fullName'),
+    checkoutPhone: $('checkoutPhone'),
+    reviewItemName: $('reviewItemName'),
+    reviewStars: $('reviewStars'),
+    submitReview: $('submitReview'),
+    skipReview: $('skipReview'),
+    reviewText: $('reviewText'),
+    closeFeedbackModal: $('closeFeedbackModal'),
+    closeCheckout: $('closeCheckout'),
+    closeReview: $('closeReview'),
+    closeArchive: $('closeArchive'),
+  };
+
+  // Глобальные переменные для отзывов
+  let reviewQueue = [];
+  let currentReviewItem = null;
+  let selectedStars = 0;
+
+  // Универсальные тосты
+  const showToast = (title, message = '', error = false, duration = 3000) => {
+    const toast = document.createElement('div');
+    toast.className = `toast-alert ${error ? 'error' : 'success'}`;
+    toast.innerHTML = `
+      <div class="alert-content">
+        <i class="fas ${error ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>
+        <div class="alert-text">
+          <strong>${title}</strong>
+          <span>${message}</span>
+        </div>
+        <button class="alert-close">×</button>
+      </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 500);
+    }, duration);
+    toast.querySelector('.alert-close').onclick = () => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 500);
+    };
+  };
+
+  const reliableToast = (title, message = '', isError = false, duration = 3500) => {
+    document.querySelectorAll('.reliable-toast').forEach(t => t.remove());
+    const toast = document.createElement('div');
+    toast.className = `reliable-toast ${isError ? 'error' : 'success'}`;
+    toast.innerHTML = `
+      <div class="toast-content">
+        <i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>
+        <div>
+          <strong>${title}</strong>
+          ${message ? `<div style="font-size:0.9rem;opacity:0.9;margin-top:0.3rem;">${message}</div>` : ''}
+        </div>
+        <button class="toast-close">×</button>
+      </div>
+    `;
+    toast.style.cssText = `
+      position:fixed;bottom:30px;left:50%;transform:translateX(-50%);
+      background:${isError?'#ff4444':'#4ade80'};color:white;padding:1rem 1.5rem;
+      border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.3);z-index:10000;
+      display:flex;align-items:center;gap:1rem;font-size:1.1rem;font-weight:600;
+      min-width:300px;max-width:90%;animation:toastSlide 0.4s ease;
+    `;
+    document.body.appendChild(toast);
+    toast.querySelector('.toast-close').onclick = () => toast.remove();
+    setTimeout(() => {
+      toast.style.animation = 'toastFade 0.4s ease forwards';
+      setTimeout(() => toast.remove(), 400);
+    }, duration);
+  };
+
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes toastSlide { from { transform: translateX(-50%) translateY(100px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+    @keyframes toastFade { to { transform: translateX(-50%) translateY(100px); opacity: 0; } }
+    .reliable-toast .toast-close { background:none;border:none;color:white;font-size:1.6rem;cursor:pointer;opacity:0.8; }
+    .reliable-toast .toast-close:hover { opacity:1; }
+  `;
+  document.head.appendChild(style);
+
+// Красивая модалка "Лимит достигнут"
+document.body.insertAdjacentHTML('beforeend', `
+<div id="activeOrdersLimitModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); backdrop-filter:blur(28px); z-index:99999; justify-content:center; align-items:center; padding:16px;">
+  <div style="background:rgba(20,20,35,0.98); border-radius:28px; max-width:420px; width:100%; text-align:center; padding:2.5rem 2rem; box-shadow:0 40px 100px rgba(0,0,0,0.8); border:1px solid rgba(255,255,255,0.1);">
+    <div style="width:90px; height:90px; margin:0 auto 1.5rem; background:#ff4444; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+      <i class="fas fa-exclamation-triangle" style="font-size:3rem; color:white;"></i>
+    </div>
+    <h2 style="margin:0 0 1rem; font-size:1.9rem; color:#fff;">Лимит активных заказов</h2>
+    <p style="margin:0 0 2rem; color:#ccc; font-size:1.1rem; line-height:1.5;">
+      У вас уже есть <strong>3 активных заказа</strong>.<br>
+      Дождитесь завершения хотя бы одного, чтобы оформить новый.
+    </p>
+    <button onclick="document.getElementById('activeOrdersLimitModal').style.display='none'" 
+            style="background:#00ff95; color:#000; border:none; padding:1rem 2.5rem; border-radius:22px; font-size:1.1rem; font-weight:700; cursor:pointer; width:100%;">
+      Понятно, жду
+    </button>
+    <div style="margin-top:1.5rem;">
+      <button onclick="openMultiOrderModal(); document.getElementById('activeOrdersLimitModal').style.display='none'" 
+              style="background:transparent; color:#00ff95; border:none; font-size:1rem; cursor:pointer; text-decoration:underline;">
+        Посмотреть текущие заказы →
+      </button>
+    </div>
+  </div>
+</div>
+`);
+
+// Проверка лимита перед открытием оформления
+async function checkActiveOrdersLimit() {
+  try {
+    const res = await fetch('/api/user_orders?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return true;
+    const orders = await res.json();
+    const active = orders.filter(o => !['completed', 'cancelled'].includes(o.status));
+    return active.length < 3;
+  } catch {
+    return true; // на случай ошибки сети — не блокируем пользователя
+  }
+}
+
+// === ОБНОВЛЁННЫЙ ОБРАБОТЧИК КНОПКИ "ОФОРМИТЬ ЗАКАЗ" ===
+elements.checkoutBtn?.addEventListener('click', async () => {
+  try {
+    // Проверка авторизации
+    const sessionRes = await fetch('/api/session');
+    const sessionData = await sessionRes.json();
+    if (!sessionData.logged_in) {
+      elements.authBtn.click();
+
+      return;
+    }
+
+    // === ГЛАВНАЯ ПРОВЕРКА: НЕТ ЛИ УЖЕ 3 АКТИВНЫХ? ===
+    const canPlaceOrder = await checkActiveOrdersLimit();
+    if (!canPlaceOrder) {
+      document.getElementById('activeOrdersLimitModal').style.display = 'flex';
+      return;
+    }
+
+    // Если всё ок — открываем обычную модалку оформления
+    const rawPhone = sessionData.phone || sessionStorage.getItem('phone') || '—';
+    const formatted = rawPhone === '—' ? '—' : `+7 (${rawPhone.slice(1,4)}) ${rawPhone.slice(4,7)}-${rawPhone.slice(7,9)}-${rawPhone.slice(9,11)}`;
+
+    const premiumBlock = document.getElementById('checkoutPhonePremium');
+    const formattedEl = document.getElementById('checkoutPhoneFormatted');
+    if (premiumBlock && formattedEl) {
+      formattedEl.textContent = formatted;
+      premiumBlock.style.display = 'flex';
+      elements.checkoutPhone.style.display = 'none';
+    }
+
+    document.getElementById('checkoutCount').textContent = document.getElementById('summaryCount')?.textContent || '0';
+    document.getElementById('checkoutTotal').textContent = document.getElementById('summaryTotal')?.textContent || '0 ₽';
+    elements.checkoutModal.style.display = 'flex';
+    elements.fullName.focus();
+
+  } catch (e) {
+    showToast('Ошибка связи', 'Попробуйте позже', true);
+  }
+});
+
+// === НОВЫЙ ФИНАЛЬНЫЙ ОБРАБОТЧИК ОФОРМЛЕНИЯ ЗАКАЗА (2025) ===
+elements.confirmOrderBtn?.addEventListener('click', async () => {
+  const fullName = elements.fullName.value.trim();
+  if (!fullName) return showToast('Введите ФИО', '', true);
+
+  const phone = sessionStorage.getItem('phone') || elements.checkoutPhone.value.trim();
+  if (!phone || phone === '—') return showToast('Укажите номер телефона', '', true);
+
+  elements.confirmOrderBtn.disabled = true;
+  document.querySelector('.btn-text').style.display = 'none';
+  document.querySelector('.btn-loader').style.display = 'inline';
+
+  try {
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ full_name: fullName, phone }),
+    });
+    const data = await res.json();
+
+    if (data.success && data.order_id) {
+      // 1. Закрываем модалку оформления
+      elements.checkoutModal.style.display = 'none';
+
+      // 2. Очищаем корзину
+      localStorage.removeItem('clientCart');
+      allCartItems = [];
+      document.dispatchEvent(new CustomEvent('cartUpdated', {
+        detail: { items: [], count: 0, total: '0 ₽' }
+      }));
+
+      // 3. ГЛАВНОЕ: МГНОВЕННО ДОБАВЛЯЕМ НОВЫЙ ЗАКАЗ В ПЛАШКУ И МОДАЛКУ
+      const newOrder = {
+        id: data.order_id,
+        status: 'pending',
+        total_str: document.getElementById('summaryTotal').textContent,
+        created_at: new Date().toISOString(),
+        items: allCartItems.map(i => ({ title: i.title })) // хотя бы заглушка
+      };
+
+      // Добавляем в начало списка активных
+      activeOrders.unshift(newOrder);
+      if (activeOrders.length > 3) activeOrders.pop();
+
+      // Обновляем плашку снизу
+      updateFloatingPill();
+
+      // Автоматически открываем модалку с заказами
+      openMultiOrderModal();
+
+      // Показываем красивый тост
+      reliableToast('Заказ №' + data.order_id + ' создан!', 'Он уже в работе', false, 4000);
+
+      // Запускаем цепочку статусов (чтобы сразу показало "Ожидает оплаты")
+      setTimeout(() => window.startOrderChain(data.order_id), 800);
+
+      // Отзывы (если нужны)
+      if (data.items?.length) {
+        reviewQueue = data.items.map(i => ({ id: i.id, type: i.type, title: i.title }));
+        showNextReview();
+      }
+    } else {
+      showToast('Ошибка оформления', data.error || 'Попробуйте позже', true);
+    }
+  } catch (e) {
+    console.error(e);
+    showToast('Нет связи с сервером', 'Проверьте интернет', true);
+  } finally {
+    elements.confirmOrderBtn.disabled = false;
+    document.querySelector('.btn-text').style.display = 'inline';
+    document.querySelector('.btn-loader').style.display = 'none';
+  }
+});
+
+  // === ОТЗЫВЫ ===
+  const showNextReview = async () => {
+    if (reviewQueue.length === 0) {
+      elements.reviewModal.style.display = 'none';
+      return;
+    }
+    currentReviewItem = reviewQueue.shift();
+    const title = currentReviewItem.title || 'Товар/Услуга';
+    elements.reviewItemName.textContent = `Оцените: ${title}`;
+    elements.reviewModal.style.display = 'flex';
+    selectedStars = 0;
+    elements.reviewStars.querySelectorAll('i').forEach(s => s.className = 'far fa-star');
+
+    elements.reviewStars.querySelectorAll('i').forEach(star => {
+      star.onclick = () => {
+        selectedStars = parseInt(star.dataset.value);
+        elements.reviewStars.querySelectorAll('i').forEach((s, i) => {
+          s.classList.toggle('fas', i < selectedStars);
+          s.classList.toggle('far', i >= selectedStars);
         });
-    </script>
+      };
+    });
+  };
+
+  elements.skipReview?.addEventListener('click', () => {
+    elements.reviewText.value = '';
+    elements.reviewModal.style.display = 'none';
+    showNextReview();
+  });
+
+  elements.submitReview?.addEventListener('click', async () => {
+    if (selectedStars === 0) return showToast('Выберите оценку', '', true);
+    const phone = sessionStorage.getItem('phone') || 'Аноним';
+    const title = currentReviewItem.title || 'Без названия';
+
+    const payload = {
+      item_id: currentReviewItem.id,
+      item_type: currentReviewItem.type,
+      title,
+      rating: selectedStars,
+      text: elements.reviewText.value.trim(),
+      user_phone: phone,
+    };
+
+    try {
+      const res = await fetch('/api/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('Спасибо за отзыв!', '', false, 2000);
+        elements.reviewText.value = '';
+        elements.reviewModal.style.display = 'none';
+        showNextReview();
+      } else {
+        throw new Error(data.error || 'Ошибка');
+      }
+    } catch (e) {
+      showToast('Ошибка отправки', e.message || 'Попробуйте позже', true);
+    }
+  });
+
+// ОТКРЫТИЕ АРХИВА — ОДИН РАЗ + ЗАЩИТА ОТ ДУБЛИРОВАНИЯ
+document.getElementById('openArchiveBtn')?.addEventListener('click', function () {
+    const modal = document.getElementById('archiveModal');
+    if (!modal) return;
+
+    modal.style.display = 'flex';
+
+    // Если данные уже загружены — просто рендерим, НЕ грузим заново
+    if (allOrders.length > 0) {
+        renderOrders();
+        return;
+    }
+
+    // Если ещё нет — загружаем один раз
+    loadOrders(true); // true = полная перезагрузка
+});
+
+// Глобальные переменные (должны быть объявлены снаружи!)
+let allOrders = [];
+let currentTab = 'active';
+let currentPage = 1;
+const PER_PAGE = 10;
+
+// ЗАГРУЗКА ЗАКАЗОВ — БЕЗ ДУБЛИРОВАНИЯ
+async function loadOrders(forceReload = false) {
+    if (forceReload) {
+        allOrders = [];
+        currentPage = 1;
+    }
+
+    const list = document.getElementById('ordersList');
+    const loadMoreContainer = document.getElementById('loadMoreContainer');
+
+    // Показываем лоадер только при первой загрузке
+    if (currentPage === 1 && allOrders.length === 0) {
+        list.innerHTML = '<div style="text-align:center;padding:3rem;color:#aaa;">Загружаем заказы...</div>';
+    }
+
+    try {
+        const res = await fetch(`/api/user_orders?page=${currentPage}&per=${PER_PAGE}&t=${Date.now()}`, {
+            cache: 'no-store'
+        });
+        if (!res.ok) throw new Error('Server error');
+
+        const newOrders = await res.json();
+
+        if (forceReload) {
+            allOrders = newOrders;
+        } else {
+            allOrders = [...allOrders, ...newOrders];
+        }
+
+        renderOrders();
+
+        // Показать/скрыть "Загрузить ещё"
+        loadMoreContainer.style.display = newOrders.length === PER_PAGE ? 'block' : 'none';
+
+        // Обновляем бейдж активных заказов
+        const activeCount = allOrders.filter(o => !['completed', 'cancelled'].includes(o.status)).length;
+        const badge = document.querySelector('[data-tab="active"] span');
+        if (badge) badge.textContent = activeCount || '';
+
+    } catch (err) {
+        console.error(err);
+        list.innerHTML = '<div style="text-align:center;padding:3rem;color:#ff6b6b;">Ошибка загрузки</div>';
+    }
+}
+// === НОВАЯ ВЕРСИЯ renderOrders() — РЕАЛ-ТАЙМ ЦЕПОЧКИ В АРХИВЕ ===
+function renderOrders() {
+    const list = document.getElementById('ordersList');
+    const search = document.getElementById('orderSearch').value.toLowerCase();
+    
+    let filtered = allOrders.filter(order => {
+        if (currentTab === 'active') return !['completed','cancelled'].includes(order.status);
+        if (currentTab === 'completed') return ['completed','cancelled'].includes(order.status);
+        return true;
+    });
+    
+    if (search) {
+        filtered = filtered.filter(order =>
+            order.id.toString().includes(search) ||
+            order.items.some(i => i.title.toLowerCase().includes(search))
+        );
+    }
+
+    if (filtered.length === 0) {
+        list.innerHTML = '';
+        const emptyId = currentTab === 'all' ? 'emptyAll' : 'emptyActive';
+        document.getElementById(emptyId).style.display = 'block';
+        return;
+    }
+
+    document.querySelectorAll('.archive-empty').forEach(el => el.style.display = 'none');
+    const activeCount = allOrders.filter(o => !['completed','cancelled'].includes(o.status)).length;
+    document.getElementById('activeCount').textContent = activeCount ? activeCount : '';
+
+    // === ГЕНЕРИРУЕМ КАРТОЧКИ ===
+    list.innerHTML = filtered.map(order => {
+        const statusInfo = {
+            pending: { text: 'Ожидает оплаты', color: '#ffa726' },
+            processing: { text: 'В обработке', color: '#00ff95' },
+            shipping: { text: 'В доставке', color: '#00bfff' },
+            completed: { text: 'Завершён', color: '#4ade80' },
+            cancelled: { text: 'Отменён', color: '#ff6b6b' },
+        };
+        const current = statusInfo[order.status] || { text: order.status, color: '#aaa' };
+        const isActive = !['completed','cancelled'].includes(order.status);
+
+        return `
+            <div class="cart-item archive-item clickable-order" data-order-id="${order.id}">
+                <div style="width:100%;">
+                    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1rem;">
+                        <div>
+                            <h3 style="margin:0;font-size:1.4rem;font-weight:600;">
+                                Заказ №${order.id}
+                                <span style="color:${current.color};font-size:0.9rem;margin-left:0.8rem;font-weight:500;">
+                                    ${current.text}
+                                </span>
+                            </h3>
+                            <div style="color:#888;font-size:0.9rem;">
+                                ${new Date(order.created_at).toLocaleString('ru-RU')}
+                            </div>
+                        </div>
+                        <div style="text-align:right;font-size:1.6rem;font-weight:700;color:#00ff95;">
+                            ${order.total_str}
+                        </div>
+                    </div>
+
+                    <!-- МИНИ-ЦЕПОЧКА, КОТОРАЯ БУДЕТ ОБНОВЛЯТЬСЯ В РЕАЛ-ТАЙМ -->
+                    ${isActive ? `
+                    <div class="mini-status-chain" id="archive-chain-${order.id}">
+                        <div class="mini-step ${order.status !== 'pending' ? 'active' : ''}">
+                            <div class="mini-dot"></div><div class="mini-label">Принят</div>
+                        </div>
+                        <div class="mini-connector ${['shipping','completed'].includes(order.status) ? 'active' : ''}"></div>
+                        <div class="mini-step ${['shipping','completed'].includes(order.status) ? 'active' : ''}">
+                            <div class="mini-dot"></div><div class="mini-label">В обработке</div>
+                        </div>
+                        <div class="mini-connector ${order.status === 'completed' ? 'active' : ''}"></div>
+                        <div class="mini-step ${order.status === 'completed' ? 'active' : ''}">
+                            <div class="mini-dot"></div><div class="mini-label">Готово</div>
+                        </div>
+                    </div>` : ''}
+
+                    <!-- Завершённые заказы — иконка -->
+                    ${!isActive ? `
+                    <div style="margin:1.5rem 0;text-align:center;">
+                        <i class="fas ${order.status === 'completed' ? 'fa-check-circle' : 'fa-times-circle'}"
+                           style="font-size:2.8rem;color:${current.color};opacity:0.8;"></i>
+                    </div>` : ''}
+
+                    <!-- Товары -->
+                    <div style="margin-top:1.5rem;display:grid;gap:0.8rem;">
+                        ${order.items.slice(0, 3).map(item => `
+                            <div style="display:flex;align-items:center;gap:1rem;padding:0.8rem;background:rgba(255,255,255,0.05);border-radius:14px;">
+                                <img src="${item.image_url || '/static/assets/no-image.png'}" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
+                                <div style="flex:1;">
+                                    <div style="font-weight:600;">${item.title}</div>
+                                    <div style="color:#aaa;font-size:0.9rem;">${item.quantity} × ${item.price_str}</div>
+                                </div>
+                                <button onclick="event.stopPropagation();addToCart('${item.title.replace(/'/g, "\\'")}', '${item.type}')"
+                                        style="padding:0.5rem 1rem;background:#fff;color:#000;border-radius:12px;font-weight:600;font-size:0.85rem;">
+                                    Повторить
+                                </button>
+                            </div>
+                        `).join('')}
+                        ${order.items.length > 3 ? `<div style="text-align:center;color:#888;padding:0.5rem;">…и ещё ${order.items.length - 3}</div>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // === ДЕЛЕГИРОВАНИЕ КЛИКА — ОДИН РАЗ НАВСЕГДА ===
+    list.onclick = function(e) {
+        let card = e.target.closest('.clickable-order');
+        if (!card) return;
+        if (e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+
+        const orderId = card.dataset.orderId;
+        const container = document.getElementById('orderChainContainer');
+        container.style.display = 'block';
+        container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        if (window.pollInterval) {
+            clearInterval(window.pollInterval);
+            window.pollInterval = null;
+        }
+        window.startOrderChain(orderId);
+    };
+}
+
+// === ГЛАВНОЕ: ЛОВИМ ИЗМЕНЕНИЕ СТАТУСА И ОБНОВЛЯЕМ МИНИ-ЦЕПОЧКУ В АРХИВЕ ===
+document.addEventListener('orderStatusChanged', (e) => {
+    const { orderId, status, isFinal } = e.detail;
+    const chainElement = document.getElementById(`archive-chain-${orderId}`);
+    if (!chainElement) return; // если заказ не в активных — ничего не делаем
+
+    // Обновляем классы у шагов
+    const steps = chainElement.querySelectorAll('.mini-step');
+    const connectors = chainElement.querySelectorAll('.mini-connector');
+
+    // Сброс
+    steps.forEach(s => s.classList.remove('active'));
+    connectors.forEach(c => c.classList.remove('active'));
+
+    if (status === 'pending') {
+        steps[0].classList.add('active');
+    } else if (status === 'processing' || status === 'shipping') {
+        steps[0].classList.add('active');
+        steps[1].classList.add('active');
+        connectors[0].classList.add('active');
+    } else if (status === 'completed') {
+        steps.forEach(s => s.classList.add('active'));
+        connectors.forEach(c => c.classList.add('active'));
+    }
+
+    // Если завершён — можно убрать карточку или перерисовать весь список
+    if (isFinal) {
+        setTimeout(() => {
+            loadOrders(true); // полная перезагрузка архива — чисто и надёжно
+        }, 1500);
+    }
+});
+
+// Переключение табов
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTab = btn.dataset.tab;
+        renderOrders();
+    });
+});
+
+// Поиск
+document.getElementById('orderSearch').addEventListener('input', () => renderOrders());
+
+// Загрузить ещё
+document.getElementById('loadMoreBtn')?.addEventListener('click', () => {
+    currentPage++;
+    loadOrders();
+});
+
+  // === ОБРАТНАЯ СВЯЗЬ ===
+  elements.feedbackBtn?.addEventListener('click', () => {
+    if (!sessionStorage.getItem('user_id')) {
+      elements.authBtn.click();
+      return;
+    }
+    const phoneInput = $('feedbackPhoneInput');
+    const editBtn = $('editPhoneBtn');
+    const rawPhone = sessionStorage.getItem('phone') || '';
+    if (rawPhone && rawPhone !== '—') {
+      phoneInput.value = `+7 (${rawPhone.slice(1,4)}) ${rawPhone.slice(4,7)}-${rawPhone.slice(7,9)}-${rawPhone.slice(9,11)}`;
+      phoneInput.readOnly = true;
+      editBtn.style.display = 'block';
+    } else {
+      phoneInput.value = '';
+      phoneInput.readOnly = false;
+      editBtn.style.display = 'none';
+    }
+    elements.feedbackModal.style.display = 'flex';
+    editBtn.onclick = () => { phoneInput.readOnly = false; phoneInput.focus(); editBtn.style.display = 'none'; };
+  });
+
+  $('closeFeedbackModal')?.addEventListener('click', () => elements.feedbackModal.style.display = 'none');
+  elements.feedbackModal?.addEventListener('click', e => { if (e.target === elements.feedbackModal) elements.feedbackModal.style.display = 'none'; });
+
+  $('feedbackForm')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const form = e.target;
+    const name = form.name.value.trim();
+    const phone = form.phone.value.trim();
+    const email = form.email.value.trim();
+    const message = form.message.value.trim();
+    if (!name || !phone || !email || !message) return reliableToast('Заполните все поля', '', true);
+
+    const submitBtn = $('feedbackSubmitBtn');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const cooldown = submitBtn.querySelector('.btn-cooldown');
+    const timer = cooldown.querySelector('.timer');
+    submitBtn.disabled = true; btnText.style.display = 'none'; cooldown.style.display = 'inline';
+    let seconds = 30; timer.textContent = seconds;
+    const interval = setInterval(() => { seconds--; timer.textContent = seconds; if (seconds <= 0) { clearInterval(interval); submitBtn.disabled = false; btnText.style.display = 'inline'; cooldown.style.display = 'none'; } }, 1000);
+
+    try {
+      const res = await fetch('/api/feedback', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, phone, email, message}) });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        reliableToast('Спасибо! Сообщение отправлено', 'Мы свяжемся с вами скоро', false, 5000);
+        elements.feedbackModal.style.display = 'none';
+        form.reset();
+      } else {
+        reliableToast('Ошибка отправки', data.error || 'Попробуйте позже', true);
+      }
+    } catch (err) {
+      reliableToast('Нет связи с сервером', 'Проверьте интернет', true);
+    }
+  });
+  // Закрытие цепочки по кнопке
+document.getElementById('orderChainToggle')?.addEventListener('click', () => {
+    document.getElementById('orderChainContainer').style.display = 'none';
+    if (window.pollInterval) clearInterval(window.pollInterval);
+});
+  // === ЗАКРЫТИЕ МОДАЛОК ===
+  elements.closeFeedbackModal?.addEventListener('click', () => elements.feedbackModal.style.display = 'none');
+  elements.feedbackModal?.addEventListener('click', e => { if (e.target === elements.feedbackModal) elements.feedbackModal.style.display = 'none'; });
+  elements.closeCheckout?.addEventListener('click', () => elements.checkoutModal.style.display = 'none');
+  elements.checkoutModal?.addEventListener('click', e => { if (e.target === elements.checkoutModal) elements.checkoutModal.style.display = 'none'; });
+  elements.closeReview?.addEventListener('click', () => elements.reviewModal.style.display = 'none');
+  elements.closeArchive?.addEventListener('click', () => elements.archiveModal.style.display = 'none');
+  elements.archiveModal?.addEventListener('click', e => { if (e.target === elements.archiveModal) elements.archiveModal.style.display = 'none'; });
+  
+});
+</script>
+
+<!-- САМАЯ КРАСИВАЯ ЧЁРНО-БЕЛАЯ МОДАЛКА 2025 ГОДА -->
+<div id="checkoutModal" class="modal" style="display:none;">
+  <div class="checkout-modal-beauty">
+    <button class="close-modal" id="closeCheckout">×</button>
+
+    <div class="checkout-header">
+      <div class="checkout-icon">
+        <i class="fas fa-shopping-bag"></i>
+      </div>
+      <h2>Оформление заказа</h2>
+      <p>Осталось только подтвердить</p>
+    </div>
+
+    <div class="checkout-summary">
+      <div class="summary-item">
+        <span>Товаров в корзине</span>
+        <strong id="checkoutCount">0</strong>
+      </div>
+      <div class="summary-item total">
+        <span>К оплате</span>
+        <strong id="checkoutTotal">0 ₽</strong>
+      </div>
+    </div>
+
+    <form id="checkoutForm" class="checkout-form">
+      <div class="input-group">
+        <i class="fas fa-user"></i>
+        <input type="text" id="fullName" placeholder="ФИО полностью" required autocomplete="name">
+      </div>
+
+      <!-- Номер телефона — если авторизован -->
+      <div id="checkoutPhonePremium" class="phone-premium" style="display:none;">
+        <div class="phone-premium-inner">
+          <i class="fas fa-check-circle"></i>
+          <div>
+            <small>Вы вошли как</small>
+            <div id="checkoutPhoneFormatted" class="phone-number-big"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ручной ввод номера — если вдруг не авторизован -->
+      <div class="input-group" id="checkoutPhoneManual" style="display:none;">
+        <i class="fas fa-phone"></i>
+        <input type="tel" id="checkoutPhone" placeholder="+7 (999) 999-99-99" required autocomplete="tel">
+      </div>
+
+      <button type="button" id="confirmOrderBtn" class="confirm-beauty-btn">
+        <span class="btn-text">Подтвердить заказ</span>
+        <span class="btn-loader" style="display:none;">
+          <i class="fas fa-spinner fa-spin"></i> Оформляем...
+        </span>
+      </button>
+    </form>
+
+    <div class="checkout-footer">
+      <small>Нажимая кнопку, вы соглашаетесь с <a href="/policy" target="_blank">политикой конфиденциальности</a></small>
+    </div>
+  </div>
+</div>
+
+
+<!-- НОВАЯ УМНАЯ МОДАЛКА ЗАКАЗОВ (заменяешь старую #archiveModal полностью) -->
+<div id="archiveModal" class="modal" style="display:none;">
+  <div class="archive-modal-beauty" style="max-width:920px;">
+    <button class="close-modal" id="closeArchive">×</button>
+
+    <div class="archive-header">
+      <div class="archive-icon"><i class="fas fa-receipt"></i></div>
+      <h2>Мои заказы</h2>
+      <p id="archiveSubtitle">Все ваши заказы в одном месте</p>
+    </div>
+
+    <!-- ТАБЫ — САМОЕ ГЛАВНОЕ -->
+    <div class="orders-tabs">
+      <button class="tab-btn active" data-tab="active">Активные <span id="activeCount">0</span></button>
+      <button class="tab-btn" data-tab="completed">Завершённые</button>
+      <button class="tab-btn" data-tab="all">Все заказы</button>
+    </div>
+
+    <!-- Поиск -->
+    <div class="orders-search">
+      <i class="fas fa-search"></i>
+      <input type="text" id="orderSearch" placeholder="Поиск по номеру или товару...">
+    </div>
+
+    <!-- Список заказов -->
+    <div id="ordersList" class="orders-list">
+      <!-- Здесь будет подгрузка -->
+    </div>
+
+    <!-- Кнопка "Загрузить ещё" -->
+    <div id="loadMoreContainer" style="text-align:center;padding:2rem 0;display:none;">
+      <button id="loadMoreBtn" class="archive-btn" style="padding:0.9rem 2rem;font-size:1rem;">
+        Показать ещё <i class="fas fa-chevron-down" style="margin-left:0.5rem;"></i>
+      </button>
+    </div>
+
+    <!-- Пустые состояния -->
+    <div class="archive-empty" id="emptyActive" style="display:none;">
+      <i class="fas fa-truck" style="font-size:3.5rem;margin-bottom:1rem;opacity:0.3;"></i>
+      <div style="font-size:1.4rem;">Активных заказов нет</div>
+      <div style="font-size:1rem;color:#888;margin-top:0.5rem;">Ваши новые заказы появятся здесь</div>
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+// Кнопка закрытия цепочки (с очисткой поллинга)
+document.getElementById('orderChainToggle')?.addEventListener('click', () => {
+    document.getElementById('orderChainContainer').style.display = 'none';
+    if (window.pollInterval) {
+        clearInterval(window.pollInterval);
+        window.pollInterval = null;
+    }
+});
+</script>
+
+
+<script>
+  // Автоматом показываем красивую пустоту, если архив пуст
+  document.addEventListener('DOMContentLoaded', () => {
+    const ordersList = document.getElementById('ordersList');
+    const emptyState = document.querySelector('.archive-empty');
+
+    const checkEmpty = () => {
+      if (ordersList && ordersList.children.length === 1 && 
+          ordersList.querySelector('.empty-cart') && 
+          ordersList.querySelector('.empty-cart').textContent.includes('пуст')) {
+        ordersList.style.display = 'none';
+        emptyState.style.display = 'block';
+      }
+    };
+
+    // Проверяем сразу и после обновления
+    setTimeout(checkEmpty, 100);
+    const observer = new MutationObserver(checkEmpty);
+    if (ordersList) observer.observe(ordersList, { childList: true, subtree: true });
+  });
+</script>
+
+
+
+
+<!-- APPLE-LEVEL МОДАЛКА ОТЗЫВОВ — МИНИМАЛИЗМ 2025 -->
+<div id="reviewModal" class="modal" style="display:none;">
+  <div class="review-modal-apple">
+    <button class="close-modal" id="closeReview">×</button>
+
+    <div class="review-header-apple">
+      <h2>Оцените покупку</h2>
+      <p id="reviewItemName">Товар</p>
+    </div>
+
+    <div class="review-stars-apple" id="reviewStars">
+      <i class="far fa-star" data-value="1"></i>
+      <i class="far fa-star" data-value="2"></i>
+      <i class="far fa-star" data-value="3"></i>
+      <i class="far fa-star" data-value="4"></i>
+      <i class="far fa-star" data-value="5"></i>
+    </div>
+
+    <textarea 
+      id="reviewText" 
+      placeholder="Поделитесь впечатлениями (по желанию)" 
+      class="review-textarea-apple"></textarea>
+
+    <div class="review-buttons-apple">
+      <button id="submitReview" class="review-btn-primary">Отправить</button>
+      <button id="skipReview" class="review-btn-secondary">Пропустить</button>
+    </div>
+  </div>
+</div>
+<script>
+// ГОРЯЧИЙ ФИКС 2025: делаем так, чтобы старый statuschain.js работал с новой разметкой
+document.addEventListener('DOMContentLoaded', () => {
+    // Создаём виртуальный #orderChain, который старый скрипт ищет
+    if (!document.getElementById('orderChain')) {
+        const fakeChain = document.createElement('div');
+        fakeChain.id = 'orderChain';
+        fakeChain.style.display = 'none';
+        document.body.appendChild(fakeChain);
+
+        // Перехватываем window.startOrderChain и перенаправляем в новый контейнер
+        const oldStart = window.startOrderChain;
+        window.startOrderChain = function(orderId) {
+            // Показываем твой красивый контейнер
+            const container = document.getElementById('orderChainContainer');
+            if (container) {
+                container.style.display = 'block';
+                document.getElementById('chainOrderId').textContent = orderId;
+            }
+
+            // А теперь пускаем старый код — он нарисует в #orderChain (который мы создали выше)
+            if (typeof oldStart === 'function') {
+                oldStart(orderId);
+            }
+        };
+    }
+});
+</script>
+<style>
+@keyframes modalPop {
+  from { transform:scale(0.9); opacity:0; }
+  to { transform:scale(1); opacity:1; }
+}
+#multiOrderModal.show { animation:modalPop 0.5s cubic-bezier(0.22,0.61,0.36,1); }
+#ordersCarousel::-webkit-scrollbar { display:none; }
+</style>
+
+<script>
+// === ФИНАЛЬНАЯ ВЕРТИКАЛЬНАЯ ВЕРСИЯ 2025 — КРАСИВО, ЧИТАЕМО, БЕЗ ГОРИЗОНТАЛЬНОГО СКРОЛЛА ===
+let activeOrders = [];
+
+// Блокировка глобального рендера цепочки
+function blockGlobalChain() {
+  const orig = Document.prototype.getElementById;
+  Document.prototype.getElementById = function(id) {
+    if (id === 'orderChain') {
+      const fake = document.createElement('div');
+      fake.id = 'fake-chain';
+      fake.style.display = 'none';
+      return fake;
+    }
+    return orig.call(this, id);
+  };
+}
+blockGlobalChain();
+
+// Обновление плашки снизу
+function updateFloatingPill() {
+  const pill = document.getElementById('floatingOrderBar');
+  const badge = document.getElementById('activeOrdersBadge');
+  const main = document.getElementById('pillMainText');
+  const sub = document.getElementById('pillSubText');
+
+  if (!activeOrders.length) {
+    pill.classList.remove('show');
+    pill.classList.add('hide');
+    setTimeout(() => pill.style.display = 'none', 400);
+    return;
+  }
+
+  pill.style.display = 'block';
+  pill.classList.remove('hide');
+  pill.classList.add('show');
+
+  badge.textContent = activeOrders.length;
+  badge.style.display = activeOrders.length > 1 ? 'flex' : 'none';
+
+  main.textContent = activeOrders.length === 1
+  ? `Заказ ${activeOrders[0].display_id || '№' + activeOrders[0].id} в работе`
+  : `${activeOrders.length} заказа в работе`;
+
+  sub.textContent = activeOrders.length === 1 
+    ? "Нажмите для подробностей" 
+    : "Нажмите, чтобы посмотреть все";
+}
+
+// Рендер вертикального списка
+function renderVerticalOrders() {
+  const container = document.getElementById('ordersVerticalList');
+  container.innerHTML = '';
+
+  activeOrders.forEach(order => {
+    const block = document.createElement('div');
+    block.style.cssText = `background:rgba(255,255,255,0.06); border-radius:20px; padding:1.6rem; border:1px solid rgba(255,255,255,0.08); box-shadow:0 8px 25px rgba(0,0,0,0.15); margin-bottom:1rem;`;
+
+block.innerHTML = `
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <div style="font-size:1.5rem; font-weight:700; color:#fff;">
+      Заказ ${order.display_id || '№' + order.id}
+    </div>
+    <div style="padding:0.4rem 1rem; background:rgba(0,255,149,0.2); color:#00ff95; border-radius:12px; font-size:0.9rem; font-weight:600;">
+      В работе
+    </div>
+  </div>
+  <div style="color:#aaa; font-size:0.95rem; margin-bottom:1.5rem;">
+    ${order.total_str || '—'} • ${new Date(order.created_at || Date.now()).toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' })}
+  </div>
+  <div id="chain-${order.id}" class="order-chain-mini"></div>
+`;
+
+    container.appendChild(block);
+
+    // ВАЖНО: временно подменяем getElementById только для этого заказа
+    setTimeout(() => {
+      const target = document.getElementById(`chain-${order.id}`);
+      if (!target) return;
+
+      const realGetElementById = Document.prototype.getElementById;
+      Document.prototype.getElementById = function(id) {
+        return id === 'orderChain' ? target : realGetElementById.call(this, id);
+      };
+
+      window.startOrderChain(order.id);
+
+      // Возвращаем обратно защиту
+      Document.prototype.getElementById = function(id) {
+        if (id === 'orderChain') {
+          const fake = document.createElement('div');
+          fake.style.display = 'none';
+          return fake;
+        }
+        return realGetElementById.call(this, id);
+      };
+    }, 100);
+  });
+}
+
+// Открытие/закрытие
+function openMultiOrderModal() {
+  const modal = document.getElementById('multiOrderModal');
+  modal.style.display = 'flex';
+  setTimeout(renderVerticalOrders, 180);
+}
+
+function closeMultiOrderModal() {
+  document.getElementById('multiOrderModal').style.display = 'none';
+}
+
+// Закрытие по клику вне
+document.getElementById('multiOrderModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('multiOrderModal')) closeMultiOrderModal();
+});
+
+// Перехват оформления заказа
+window.startOrderChain = async function(orderId) {
+  try {
+    const res = await fetch(`/api/order/${orderId}?t=${Date.now()}`);
+    const order = res.ok ? await res.json() : { id: orderId };
+
+    // Добавляем в начало, максимум 3
+    if (!activeOrders.find(o => o.id === order.id)) {
+      activeOrders.unshift(order);
+      if (activeOrders.length > 3) activeOrders.pop();
+    }
+
+    updateFloatingPill();
+    
+    // Автоматически открываем модалку при новом заказе
+    if (document.getElementById('multiOrderModal').style.display !== 'flex') {
+      openMultiOrderModal();
+    } else {
+      renderVerticalOrders();
+    }
+  } catch (err) {
+    console.warn('Не удалось загрузить заказ', orderId);
+    if (!activeOrders.find(o => o.id === orderId)) {
+      activeOrders.unshift({ id: orderId });
+      if (activeOrders.length > 3) activeOrders.pop();
+    }
+    updateFloatingPill();
+    openMultiOrderModal();
+  }
+};
+
+// Автозагрузка при входе
+document.addEventListener('DOMContentLoaded', () => {
+  const userId = sessionStorage.getItem('user_id');
+  if (!userId) return;
+
+  fetch('/api/user_orders?t=' + Date.now(), { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : [])
+    .then(orders => {
+      activeOrders = orders
+        .filter(o => !['completed', 'cancelled'].includes(o.status))
+        .slice(0, 3); // максимум 3
+
+      if (activeOrders.length > 0) {
+        updateFloatingPill();
+      }
+    })
+    .catch(() => console.warn('Не удалось загрузить активные заказы при старте'));
+});
+</script>
+
+
+<script>
+// === ЛОВИМ СОБЫТИЯ ИЗ statuschain.js И МГНОВЕННО ОБНОВЛЯЕМ МОДАЛКУ ===
+document.addEventListener('orderStatusChanged', (e) => {
+  const { orderId, status, isFinal } = e.detail;
+
+  if (isFinal && ['completed', 'cancelled'].includes(status)) {
+    activeOrders = activeOrders.filter(o => o.id !== orderId);
+    updateFloatingPill();
+
+    // Если модалка открыта — обновляем
+    if (document.getElementById('multiOrderModal').style.display === 'flex') {
+      renderVerticalOrders();
+    }
+  }
+});
+// Также обновляем при любом изменении статуса (даже промежуточном)
+document.addEventListener('orderStatusChanged', () => {
+    if (document.getElementById('multiOrderModal').style.display === 'flex') {
+        setTimeout(() => refreshActiveOrders(true), 600);
+    }
+});
+</script>
+<!-- МОДАЛКА АРХИВА ЗАКАЗОВ — ОБЯЗАТЕЛЬНО ВСТАВЬТЕ ЭТОТ БЛОК! -->
+<div id="archiveModal" class="modal" style="display:none;">
+  <div class="archive-modal-beauty" style="max-width:920px;">
+    <button class="close-modal" id="closeArchive">×</button>
+    <div class="archive-header">
+      <div class="archive-icon"><i class="fas fa-receipt"></i></div>
+      <h2>Мои заказы</h2>
+      <p id="archiveSubtitle">Все ваши заказы в одном месте</p>
+    </div>
+
+    <!-- ТАБЫ -->
+    <div class="orders-tabs">
+      <button class="tab-btn active" data-tab="active">Активные <span id="activeCount"></span></button>
+      <button class="tab-btn" data-tab="completed">Завершённые</button>
+      <button class="tab-btn" data-tab="all">Все заказы</button>
+    </div>
+
+    <!-- Поиск -->
+    <div class="orders-search">
+      <i class="fas fa-search"></i>
+      <input type="text" id="orderSearch" placeholder="Поиск по номеру или товару...">
+    </div>
+
+    <!-- Список заказов -->
+    <div id="ordersList" class="orders-list">
+      <!-- Здесь будут заказы -->
+    </div>
+
+    <!-- Кнопка "Загрузить ещё" -->
+    <div id="loadMoreContainer" style="text-align:center;padding:2rem 0;display:none;">
+      <button id="loadMoreBtn" class="archive-btn" style="padding:0.9rem 2rem;font-size:1rem;">
+        Показать ещё
+      </button>
+    </div>
+
+    <!-- Пустые состояния -->
+    <div class="archive-empty" id="emptyActive" style="display:none;text-align:center;padding:3rem 1rem;color:#aaa;">
+      <i class="fas fa-truck" style="font-size:3.5rem;margin-bottom:1rem;opacity:0.4;"></i>
+      <div style="font-size:1.4rem;">Активных заказов нет</div>
+      <div style="font-size:1rem;margin-top:0.5rem;">Новые заказы появятся здесь автоматически</div>
+    </div>
+
+    <div class="archive-empty" id="emptyAll" style="display:none;text-align:center;padding:3rem 1rem;color:#aaa;">
+      <i class="fas fa-history" style="font-size:3.5rem;margin-bottom:1rem;opacity:0.4;"></i>
+      <div style="font-size:1.4rem;">У вас пока нет заказов</div>
+      <div style="font-size:1rem;margin-top:0.5rem;">Они появятся после первого оформления</div>
+    </div>
+  </div>
+</div>
+<!-- ЕДИНСТВЕННАЯ РАБОЧАЯ МОДАЛКА АРХИВА — ОСТАВЬТЕ ТОЛЬКО ЭТУ! -->
+<div id="archiveModal" class="modal" style="display:none;">
+  <div class="archive-modal-beauty" style="max-width:920px;">
+    <button class="close-modal" id="closeArchive">×</button>
+    <div class="archive-header">
+      <div class="archive-icon"><i class="fas fa-receipt"></i></div>
+      <h2>Мои заказы</h2>
+      <p id="archiveSubtitle">Все ваши заказы в одном месте</p>
+    </div>
+
+    <div class="orders-tabs">
+      <button class="tab-btn active" data-tab="active">Активные <span id="activeCount"></span></button>
+      <button class="tab-btn" data-tab="completed">Завершённые</button>
+      <button class="tab-btn" data-tab="all">Все заказы</button>
+    </div>
+
+    <div class="orders-search">
+      <i class="fas fa-search"></i>
+      <input type="text" id="orderSearch" placeholder="Поиск по номеру или товару...">
+    </div>
+
+    <div id="ordersList" class="orders-list"></div>
+
+    <div id="loadMoreContainer" style="text-align:center;padding:2rem 0;display:none;">
+      <button id="loadMoreBtn" class="archive-btn" style="padding:0.9rem 2rem;font-size:1rem;">
+        Показать ещё
+      </button>
+    </div>
+
+    <div class="archive-empty" id="emptyActive" style="display:none;text-align:center;padding:3rem 1rem;color:#aaa;">
+      <i class="fas fa-truck" style="font-size:3.5rem;margin-bottom:1rem;opacity:0.4;"></i>
+      <div style="font-size:1.4rem;">Активных заказов нет</div>
+      <div style="font-size:1rem;margin-top:0.5rem;">Новые заказы появятся здесь автоматически</div>
+    </div>
+
+    <div class="archive-empty" id="emptyAll" style="display:none;text-align:center;padding:3rem 1rem;color:#aaa;">
+      <i class="fas fa-history" style="font-size:3.5rem;margin-bottom:1rem;opacity:0.4;"></i>
+      <div style="font-size:1.4rem;">У вас пока нет заказов</div>
+      <div style="font-size:1rem;margin-top:0.5rem;">Они появятся после первого оформления</div>
+    </div>
+  </div>
+</div>
+<!-- КРАСИВАЯ APPLE-МОДАЛКА ОТМЕНЫ ЗАКАЗА -->
+<div id="cancelOrderModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); backdrop-filter:blur(32px); z-index:99999; justify-content:center; align-items:center; padding:16px;">
+  <div style="background:rgba(15,15,30,0.98); border-radius:28px; max-width:460px; width:100%; padding:2rem 2rem 2.5rem; box-shadow:0 40px 100px rgba(0,0,0,0.8); border:1px solid rgba(255,255,255,0.09); text-align:center;">
+    
+    <!-- Граббер как в iOS -->
+    <div style="position:absolute; top:12px; left:50%; transform:translateX(-50%); width:44px; height:5.5px; background:rgba(255,255,255,0.3); border-radius:3px;"></div>
+    
+    <div style="width:84px; height:84px; margin:0 auto 1.5rem; background:#ff4444; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+      <i class="fas fa-times-circle" style="font-size:3rem; color:white;"></i>
+    </div>
+
+    <h2 style="margin:0 0 1rem; font-size:1.9rem; font-weight:700; color:#fff;">Отменить заказ?</h2>
+    <p style="margin:0 0 2rem; color:#ccc; font-size:1.1rem; line-height:1.6;">
+      Заказ №<strong id="cancelModalOrderId">000</strong> будет отменён.<br>
+      Это действие нельзя будет отменить.
+    </p>
+
+    <textarea id="cancelReasonInput" placeholder="Обязательно укажите причину отмены..." 
+              style="width:100%; height:110px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:16px; padding:1rem; color:#fff; font-size:1rem; resize:none; margin-bottom:1.5rem;"
+              required></textarea>
+
+    <div style="display:flex; gap:1rem;">
+      <button id="confirmCancelFinalBtn" 
+              style="flex:1; background:#ff4444; color:white; border:none; padding:1.1rem; border-radius:20px; font-weight:600; font-size:1.1rem; cursor:pointer;">
+        Отменить заказ
+      </button>
+      <button onclick="document.getElementById('cancelOrderModal').style.display='none'" 
+              style="flex:1; background:rgba(255,255,255,0.12); color:#fff; border:none; padding:1.1rem; border-radius:20px; font-weight:600; cursor:pointer;">
+        Не отменять
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ОКОНЧАТЕЛЬНЫЙ НЕПРОБИВАЕМЫЙ КУЛДАУН НА ОТМЕНУ ЗАКАЗОВ — РАБОТАЕТ НА 1000% (2025)
+// 4 отмены за 10 минут → 5 минут полной блокировки
+const COOLDOWN_KEY = 'piligrim_cancel_flood_2025';
+
+function getData() {
+    try {
+        const d = localStorage.getItem(COOLDOWN_KEY);
+        return d ? JSON.parse(d) : { cancels: [], blockedUntil: 0 };
+    } catch { return { cancels: [], blockedUntil: 0 }; }
+}
+
+function saveData(data) {
+    localStorage.setItem(COOLDOWN_KEY, JSON.stringify(data));
+}
+
+function isBlocked() {
+    const data = getData();
+    if (data.blockedUntil > Date.now()) {
+        return Math.ceil((data.blockedUntil - Date.now()) / 1000);
+    }
+    // Очистка старых отмен
+    const now = Date.now();
+    data.cancels = data.cancels.filter(ts => now - ts < 10 * 60 * 1000);
+    if (data.cancels.length >= 4) {
+        data.blockedUntil = now + 5 * 60 * 1000;
+        data.cancels = []; // обнуляем, чтобы не накапливалось
+    }
+    saveData(data);
+    return data.blockedUntil > now ? Math.ceil((data.blockedUntil - now) / 1000) : 0;
+}
+
+function registerCancel() {
+    const data = getData();
+    data.cancels.push(Date.now());
+    saveData(data);
+    // Сразу проверяем — может уже блок
+    const blocked = isBlocked();
+    if (blocked > 0) showAlert(blocked);
+}
+
+// Красивый алерт с таймером
+function showAlert(seconds) {
+    document.querySelectorAll('#cancelFloodAlert').forEach(el => el.remove());
+    const alert = document.createElement('div');
+    alert.id = 'cancelFloodAlert';
+    alert.innerHTML = `
+        <i class="fas fa-ban"></i>
+        <div>
+            <strong>Слишком много отмен</strong><br>
+            <small>Подождите <strong id="timer">${Math.floor(seconds/60)}:${(seconds%60).toString().padStart(2,'0')}</strong></small>
+        </div>
+    `;
+    Object.assign(alert.style, {
+        position:'fixed', top:'24px', left:'50%', transform:'translateX(-50%)', zIndex:'999999',
+        background:'linear-gradient(135deg,#ff3b5c,#ff4444)', color:'white',
+        padding:'16px 32px', borderRadius:'24px', fontSize:'1.15rem', fontWeight:'600',
+        boxShadow:'0 20px 60px rgba(255,68,68,0.6)', display:'flex', alignItems:'center', gap:'16px',
+        backdropFilter:'blur(20px)', animation:'slideDown 0.5s ease'
+    });
+    document.body.appendChild(alert);
+
+    const timer = alert.querySelector('#timer');
+    const int = setInterval(() => {
+        seconds--;
+        if (seconds <= 0) { clearInterval(int); alert.remove(); return; }
+        timer.textContent = `${Math.floor(seconds/60)}:${(seconds%60).toString().padStart(2,'0')}`;
+    }, 1000);
+}
+
+// САМОЕ ГЛАВНОЕ: ЖЁСТКО ПЕРЕХВАТЫВАЕМ КЛИК ПО КНОПКЕ "ОТМЕНИТЬ ЗАКАЗ"
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('#confirmCancelFinalBtn') || 
+                 e.target.closest('button') && e.target.closest('button').textContent.includes('Отменить заказ');
+
+    if (btn) {
+        const blockedSeconds = isBlocked();
+        if (blockedSeconds > 0) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            e.stopPropagation();
+            showAlert(blockedSeconds);
+            return false;
+        }
+    }
+}, true); // true = capture phase — перехватывает ДО всех остальных обработчиков
+
+// Перехват fetch — считаем только УСПЕШНУЮ отмену
+const originalFetch = window.fetch;
+window.fetch = async function(...args) {
+    const url = args[0];
+    const options = args[1] || {};
+
+    if (url.includes('/api/cancel_order') && options.method === 'POST') {
+        const blockedSeconds = isBlocked();
+        if (blockedSeconds > 0) {
+            showAlert(blockedSeconds);
+            // ВОЗВРАЩАЕМ ФЕЙКОВЫЙ ОТВЕТ — запрос даже не уйдёт!
+            return new Response(JSON.stringify({ success: false, error: 'Слишком много отмен' }), {
+                status: 429,
+                statusText: 'Too Many Requests'
+            });
+        }
+    }
+
+    const response = await originalFetch(...args);
+
+    if (url.includes('/api/cancel_order') && response.ok) {
+        const cloned = response.clone();
+        cloned.json().then(data => {
+            if (data.success) {
+                registerCancel();
+            }
+        }).catch(() => {});
+    }
+
+    return response;
+};
+
+// Блокируем кнопку визуально при загрузке
+function updateButtonState() {
+    const seconds = isBlocked();
+    const btn = document.getElementById('confirmCancelFinalBtn');
+    if (!btn) return;
+
+    if (seconds > 0) {
+        btn.disabled = true;
+        btn.style.opacity = '0.4';
+        btn.style.pointerEvents = 'none';
+        btn.textContent = `Подождите ${seconds}с`;
+    } else {
+        btn.disabled = false;
+        btn.style.opacity = '';
+        btn.style.pointerEvents = '';
+        btn.textContent = 'Отменить заказ';
+    }
+}
+
+// Запускаем при загрузке и каждые 2 сек
+document.addEventListener('DOMContentLoaded', () => {
+    updateButtonState();
+    setInterval(updateButtonState, 2000);
+});
+
+// Анимация
+document.head.insertAdjacentHTML('beforeend', `
+<style>
+@keyframes slideDown{from{transform:translateX(-50%) translateY(-100px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+#cancelFloodAlert i {font-size:1.8rem;}
+</style>
+`);
+</script>
+
+
+
 </body>
 </html>

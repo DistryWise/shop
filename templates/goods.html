@@ -1,578 +1,580 @@
 <!DOCTYPE html>
 <html lang="ru" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Товары — Piligrim</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Услуги — Piligrim · 2025</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/goods_dark.css') }}" id="theme-stylesheet">
+  <!-- Шрифты и иконки -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap" rel="stylesheet">
+
+  <!-- Основные стили страницы услуг -->
+  <link rel="stylesheet" href="/static/css/services.css">
+
+  <!-- Стили хедера, поиска, корзины, авторизации, AI и т.д. — ТОЧНО как на about_company -->
+  <link rel="stylesheet" href="/static/css/search.css">
+  <link rel="stylesheet" href="/static/css/auth.css">
+  <link rel="stylesheet" href="/static/css/cart.css">
+  <link rel="stylesheet" href="/static/css/ai.css">
+  <link rel="stylesheet" href="/static/css/contacts.css">
+
+  <!-- ЛОАДЕР + КУРСОР + ОСНОВНЫЕ СТИЛИ (точно как в about_company.css) -->
+  
+
 </head>
-
 <body>
-    <div class="gradient-overlay"></div>
 
-    <!-- NAVBAR БЕЗ ПОИСКА И КОРЗИНЫ -->
-    <header class="navbar">
-        <div class="nav-container">
-            <div class="logo-section">
-                <img src="{{ url_for('static', filename='assets/logo.png') }}" alt="Piligrim" class="logo-img">
-                <span class="logo-text">piligrim</span>
-            </div>
-            <nav class="nav-menu">
-                <a href="/" class="nav-link">Главная</a>
-                <a href="/goods" class="nav-link active">Товары</a>
-                <a href="/services" class="nav-link">Услуги</a>
-                <a href="/news" class="nav-link">Новости</a>
-                <a href="/about_company" class="nav-link">О компании</a>
-                <a href="/contacts" class="nav-link">Контакты</a>
-            </nav>
-            <div class="nav-right">
-                <!-- ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ — ВИСИТ СВЕРХУ В ШАПКЕ -->
-                <div class="rope-switch" id="themeToggle">
-                    <div class="rope"></div>
-                    <div class="theme-ball">
-                        <i class="fas fa-moon"></i>
-                    </div>
-                </div>
-            </div>
+  <!-- ЛОАДЕР -->
+  <div class="loader" id="pageLoader"></div>
+
+
+
+  <!-- КАСТОМНЫЙ КУРСОР (из contacts) -->
+  <div class="custom-cursor"></div>
+
+  <!-- ==================== ПОЛНЫЙ ХЕДЕР ИЗ КОНТАКТОВ (с авторизацией, корзиной, обратной связью) ==================== -->
+  <header>
+    <a href="/" class="logo"><img src="/static/assets/logo.png" alt="Piligrim" class="logo-img"></a>
+    <nav>
+      <a href="/" class="nav-link">Главная</a>
+      <a href="/goods" class="nav-link active">Товары</a>
+      <a href="/services" class="nav-link">Услуги</a>
+      <a href="/news" class="nav-link">Новости</a>
+      <a href="/about_company" class="nav-link">О компании</a>
+      <a href="/contacts" class="nav-link">Контакты</a>
+    </nav>
+    <div class="header-icons">
+      <div class="search-wrapper">
+        <div class="search-container">
+          <div class="search-icon"><i class="fas fa-search"></i></div>
+          <input type="text" class="search-input" id="searchInput" placeholder="Поиск...">
+          <button id="searchClear" class="search-clear">×</button>
         </div>
-    </header>
-
-    <!-- ГЛАВНАЯ СЕКЦИЯ -->
-    <section class="goods-page">
-        <aside class="catalog-sidebar" id="catalogSidebar">
-            <div class="catalog-header" onclick="toggleCatalog()">
-                <h3>Каталог</h3>
-                <i class="fas fa-chevron-up catalog-toggle"></i>
-            </div>
-            <div class="catalog-list open" id="catalogList"></div>
-        </aside>
-
-        <div class="goods-main">
-            <div class="search-filter-bar">
-                <div class="search-box-large">
-                    <input type="text" placeholder="Найти товар..." id="goodsSearch">
-                    <button><i class="fas fa-magnifying-glass"></i></button>
-                </div>
-                <button class="filter-toggle" id="filterToggle">
-                    <i class="fas fa-sliders"></i> Фильтры
-                </button>
-
-                <div class="filters-panel" id="filtersPanel">
-                    <div class="filter-group">
-                        <label>Цена</label>
-                        <div class="price-inputs">
-                            <input type="number" placeholder="от" id="priceFrom">
-                            <input type="number" placeholder="до" id="priceTo">
-                        </div>
-                    </div>
-                    <div class="filter-group">
-                        <label>Сортировка</label>
-                        <select class="sort-select" id="sortSelect">
-                            <option value="default">По умолчанию</option>
-                            <option value="price-asc">Сначала дешевле</option>
-                            <option value="price-desc">Сначала дороже</option>
-                            <option value="name">По названию</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Бренд</label>
-                        <div id="brandCheckboxes" class="brand-checkboxes"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="goods-grid" id="goodsGrid"></div>
+        <div id="autocompleteList" class="autocomplete-list"></div>
+      </div>
+      <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
+      
+      <div style="position: relative;">
+        <button class="icon-btn" id="cartBtn">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <div id="miniCartDropdown">
+          <div class="mini-cart-header"><div class="mini-cart-title">Корзина</div></div>
+          <div class="mini-cart-items" id="miniCartItems"><div class="mini-cart-empty">Корзина пуста</div></div>
+          <div class="mini-cart-footer">
+            <div class="mini-cart-total" id="miniCartTotal">Итого: 0.00 ₽</div>
+            <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
+          </div>
         </div>
-    </section>
+      </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО -->
-    <div class="modal-overlay" id="goodsModal">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeModal()">x</button>
-            <div id="modalBody"></div>
+      <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
+    </div>
+  </header>
+
+  <!-- МОДАЛКА ОБРАТНОЙ СВЯЗИ -->
+  <div class="custom-alert" id="feedbackModal">
+    <div class="alert-content">
+      <button class="alert-close" id="closeFeedback">×</button>
+
+      <div class="alert-icon">
+        <i class="fas fa-envelope-open-text"></i>
+      </div>
+
+      <div class="alert-text">
+        <strong>Обратная связь</strong>
+        <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
+      </div>
+
+      <form class="contact-form" novalidate id="contactForm">
+        <input type="text" placeholder="Ваше имя" name="name" required />
+        
+        <div class="phone-field-wrapper">
+          <input type="tel" placeholder="+7 (___) ___-__-__" name="phone" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+          <button type="button" class="edit-phone-btn" style="display:none;">Изменить</button>
         </div>
+        
+        <input type="email" placeholder="Email" name="email" required />
+        <textarea placeholder="Ваше сообщение" name="message" required></textarea>
+
+        <button type="submit" id="submitBtn" class="alert-login-btn">
+          <span class="btn-text">Отправить сообщение</span>
+          <span class="btn-cooldown">Отправка... <span class="timer">30</span>с</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+<!-- МОДАЛКА АВТОРИЗАЦИИ — ПОЛНОСТЬЮ РАБОЧАЯ ВЕРСИЯ -->
+<div id="authModal" class="auth-modal">
+  <div class="auth-modal-content">
+    <button class="close-modal" id="closeAuthModal">×</button>
+    <h2 class="auth-title">Вход по номеру телефона</h2>
+
+    <!-- ШАГ 1 — ВВОД НОМЕРА -->
+    <div id="stepPhone" class="auth-step">
+      <div class="country-selector">
+        <div class="selected-country" id="selectedCountry">
+          <span class="flag">RU</span>
+          <span class="code">+7</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="country-dropdown" id="countryDropdown">
+          <div class="country-item" data-code="+7" data-flag="RU">Россия +7</div>
+          <div class="country-item" data-code="+1" data-flag="US">USA +1</div>
+          <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
+        </div>
+      </div>
+
+      <input type="tel" id="phoneInput" placeholder="(999) 999 99 99" class="auth-input">
+
+      <!-- Обязательное согласие -->
+      <label class="checkbox-label required">
+        <input type="checkbox" id="privacyCheck">
+        <span class="custom-checkbox"></span>
+        Согласен с <a href="/policy" target="_blank" class="privacy-link">политикой конфиденциальности</a>
+      </label>
+
+      <!-- Автоматическая подписка на рассылку -->
+      <label class="checkbox-label">
+        <input type="checkbox" id="subscribeCheck" checked>
+        <span class="custom-checkbox"></span>
+        Получать SMS с акциями и уведомлениями
+      </label>
+
+      <button id="sendCodeBtn" class="auth-btn" disabled>Получить код</button>
     </div>
 
-    <!-- ЗВУК КЛИКА -->
-    <audio id="clickSound" src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSl+zPDYgjMGHm7A7+OZURE" preload="auto"></audio>
+    <!-- ШАГ 2 — ВВОД КОДА -->
+    <div id="stepCode" class="auth-step" style="display:none;">
+      <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
+      <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
+      <button id="verifyCodeBtn" class="auth-btn">Войти</button>
+      <button id="resendCode" class="auth-link">Отправить повторно</button>
+    </div>
 
-    <script>
-        // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
-        const goodsGrid = document.getElementById('goodsGrid');
-        const catalogList = document.getElementById('catalogList');
-        const goodsSearch = document.getElementById('goodsSearch');
-        const priceFrom = document.getElementById('priceFrom');
-        const priceTo = document.getElementById('priceTo');
-        const sortSelect = document.getElementById('sortSelect');
-        const brandCheckboxes = document.getElementById('brandCheckboxes');
-        const filterToggle = document.getElementById('filterToggle');
-        const filtersPanel = document.getElementById('filtersPanel');
-        let currentCategory = 'all';
+    <!-- ШАГ 3 — УСПЕШНЫЙ ВХОД -->
+    <div id="stepSuccess" class="auth-step" style="display:none;">
+      <i class="fas fa-check-circle success-icon"></i>
+      <h3>Добро пожаловать!</h3>
+      <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
+      <button id="closeSuccess" class="auth-btn">Продолжить</button>
+    </div>
+  </div>
+</div>
+<!-- КАРТОЧКА ТОВАРА — РАБОЧАЯ, КАК В ZAZA -->
+<div class="product-modal" id="productModal">
+  <div class="product-content">
+    <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
+    <div class="product-info">
+      <h3 id="productTitle" class="product-title">Загрузка...</h3>
+      <div class="product-rating">
+        <div class="stars"></div>
+        <span id="productReviewsCount" class="reviews-count">—</span>
+      </div>
+      <div id="productPrice" class="product-price">—</div>
+      <div id="productDescription" class="product-description">Загрузка описания...</div>
+      <button id="addToCartModal" class="add-to-cart-btn">
+        <i class="fas fa-shopping-cart"></i> Купить
+      </button>
+      <div class="product-reviews">
+        <h4 class="reviews-title">Отзывы покупателей</h4>
+        <div class="reviews-list">
+          <div style="text-align:center;padding:2rem;color:#888;">
+            <i class="far fa-star" style="font-size:2.5rem;margin-bottom:0.5rem;display:block;"></i>
+            <p>Загрузка отзывов...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="close-modal"><i class="fas fa-times"></i></div>
+  </div>
+</div>
 
-        // === ЗВЁЗДЫ ===
-        function renderStars(rating) {
-            rating = parseFloat(rating) || 0;
-            if (rating === 0) return '☆☆☆☆☆';
-            const full = Math.floor(rating);
-            const hasHalf = rating - full >= 0.5;
-            const empty = 5 - full - (hasHalf ? 1 : 0);
-            return '★'.repeat(full) + (hasHalf ? '★' : '') + '☆'.repeat(empty);
-        }
 
-        // === АВТОПРОКРУТКА ФОТО В КАРТОЧКЕ ===
-        function startImageSlider(card) {
-            const container = card.querySelector('.good-img-container');
-            const imgs = container.querySelectorAll('.good-img');
-            if (imgs.length <= 1) return;
+  
+  <div class="white-overlay" id="whiteOverlay"></div>
 
-            let current = 0;
-            const next = () => {
-                imgs[current].classList.remove('active');
-                current = (current + 1) % imgs.length;
-                imgs[current].classList.add('active');
-            };
+  <section class="hero" id="hero">
+    <div class="slide active"></div>
+    <div class="slide"></div>
+    <div class="slide"></div>
+    <div class="slide"></div>
+    <div class="void-cut"></div>
+    <div class="scroll-indicator">Скролл вниз для входа</div>
+  </section>
 
-            const interval = setInterval(next, 3000);
-            card.dataset.slider = interval;
+  <nav class="side-catalog" id="sideCatalog">
+    <div class="catalog-toggle">CATALOGUE</div>
+    <ul class="catalog-list"></ul>
+  </nav>
+  <div class="catalog-arrow-hint" id="catalogArrowHint"></div>
 
-            card.addEventListener('mouseenter', () => clearInterval(interval));
-            card.addEventListener('mouseleave', () => {
-                card.dataset.slider = setInterval(next, 3000);
-            });
-        }
+  <section class="light-zone" id="lightZone">
+    <div class="sort-panel">
+      <button class="sort-btn active" data-sort="default">DEFAULT</button>
+      <button class="sort-btn" data-sort="price">PRICE ↑</button>
+    </div>
+    <div class="grid-controls">
+      <button class="grid-btn active" data-cols="3">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      </button>
+      <button class="grid-btn" data-cols="2">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="9" height="18"/><rect x="14" y="3" width="9" height="18"/></svg>
+      </button>
+    </div>
+    <div class="catalog-header"><h1>УСЛУГИ</h1></div>
+<div class="search-wrapper" style="max-width:1100px;margin:0 auto 180px;position:relative;">
+      <div class="search-container" style="position:relative;max-width:900px;margin:0 auto;">
+        
+        <input type="text" 
+               class="search" 
+               id="search" 
+               placeholder="Поиск..." 
+               style="width:100%;background:transparent;border:none;border-bottom:3px solid #000;font-family:'Inter',sans-serif;font-weight:300;font-size:22px;letter-spacing:4px;color:#000;text-align:center;padding:20px 60px 20px 0;outline:none;box-sizing:border-box;"
+               autocomplete="off">
 
-        function stopSlider(card) {
-            if (card.dataset.slider) {
-                clearInterval(card.dataset.slider);
-                delete card.dataset.slider;
-            }
-        }
+<div class="search-icon" style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:40px;height:40px;opacity:0.35;transition:all .8s cubic-bezier(.16,1,.3,1);pointer-events:none;">
+  <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTEiIGN5PSIxMSIgcj0iNyIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjIuNCIvPgo8cGF0aCBkPSJNMTYuNSAxNi41TDIwLjUgMjAuNSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPg==" alt="поиск" style="width:100%;height:100%;display:block;">
+</div>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div id="adBannerSection" class="noir-island-wrapper">
+      <div class="secondary-carousel">
+        <div class="carousel-inner" id="services-carousel-inner"></div>
+        <div class="indicators"></div>
+      </div>
+    </div>
+  </section>
 
-        // === ПРИМЕНЕНИЕ ФИЛЬТРОВ ===
-        async function applyFilters() {
-            const params = new URLSearchParams();
-            if (goodsSearch.value.trim()) params.append('search', goodsSearch.value.trim());
-            if (priceFrom.value) params.append('min_price', priceFrom.value);
-            if (priceTo.value) params.append('max_price', priceTo.value);
-            params.append('category', currentCategory);
-            document.querySelectorAll('#brandCheckboxes input:checked').forEach(cb => params.append('brand', cb.value));
-            if (sortSelect.value !== 'default') params.append('sort', sortSelect.value);
+  <div class="load-more-section">
+    <button class="load-more-btn" type="button">LOAD MORE</button>
+  </div>
 
-            try {
-                const res = await fetch(`/api/products?${params}`);
-                const products = await res.json();
+  <!-- МОДАЛКА -->
+  <div class="modal" id="modal"><button class="modal-close-btn" aria-label="Закрыть">
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+</button><div class="close">×</div>
+    <div class="modal-content">
+      <div class="modal-gallery">
+        <img id="modal-img" src="" alt="">
+        <div class="gallery-thumbs" id="modal-thumbs"></div>
+      </div>
+      <div class="modal-info">
+        <div class="info-header">
+          <h3 id="modal-title"></h3>
+          <div class="price" id="modal-price">₽ —</div>
+        </div>
+        <p id="modal-desc"></p>
+        <div class="rating" id="modal-rating">
+          <span class="stars">★★★★★</span>
+          <span class="value">0.0</span>
+          <span class="count">(0)</span>
+        </div>
+        <button class="order-btn" id="modal-order">ЗАКАЗАТЬ</button>
+        <div class="reviews-section">
+          <h4>ОТЗЫВЫ</h4>
+          <div class="reviews" id="modal-reviews"></div>
+          <p class="no-reviews" id="no-reviews">Отзывов пока нет</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
-                document.querySelectorAll('.good-card').forEach(stopSlider);
-                goodsGrid.innerHTML = '';
+  <footer id="footer">
+    <span>© 2025 Piligrim · NO ADDRESS · NO PHONE</span>
+  </footer>
 
-                if (!products.length) {
-                    goodsGrid.innerHTML = '<p style="color:#888; grid-column:1/-1; text-align:center; padding:2rem;">Товары не найдены</p>';
-                    return;
-                }
+  <!-- УВЕДОМЛЕНИЯ -->
+  <div id="toast-container"></div>
 
-                const reviewPromises = products.map(p => 
-                    fetch(`/api/reviews/${p.id}`)
-                        .then(r => r.ok ? r.json() : { avg_rating: 0, review_count: 0 })
-                        .catch(() => ({ avg_rating: 0, review_count: 0 }))
-                );
-                const reviewsData = await Promise.all(reviewPromises);
 
-                products.forEach((p, i) => {
-                    const rev = reviewsData[i];
-                    const avgRating = parseFloat(rev.avg_rating) || 0;
-                    const reviewCount = parseInt(rev.review_count) || 0;
 
-                    const card = document.createElement('div');
-                    card.className = 'good-card';
-                    card.dataset.id = p.id;
-                    card.onclick = () => openModal(p.id);
+<!-- КРАСИВАЯ КНОПКА ВЫХОДА ИЗ БЕЛОЙ ЗОНЫ — ФИНАЛЬНАЯ ВЕРСИЯ 2025 -->
+<div id="exitWhiteZoneBtn">
+  <span class="exit-text">НАВЕРХ · В NOIR</span>
+  <div class="exit-arrow">
+    <svg viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.7">
+      <path d="M19 8v18M11 16l8-8 8 8"/>
+    </svg>
+  </div>
+</div>
 
-                    const imageHtml = p.image_urls?.length 
-                        ? p.image_urls.map((url, idx) => 
-                            `<img src="${url}" alt="${p.title}" class="good-img ${idx === 0 ? 'active' : ''}" loading="lazy">`
-                        ).join('')
-                        : '<img src="https://via.placeholder.com/600x400/111/888?text=No+Image" class="good-img active">';
+<script src="static/js/service.js"></script>
+<script src="/static/js/search.js"></script>
+<script src="/static/js/auth.js"></script>
+<script src="/static/js/cart.js" defer></script>
+<script src="/static/js/feedback.js"></script>
+<script src="/static/js/ai.js"></script>
+<script src="/static/js/contacts.js"></script>
 
-                    const starsHtml = avgRating > 0.1 ? `
-                        <div class="rating-stars">
-                            <span class="stars">${renderStars(avgRating)}</span>
-                            <span>${avgRating.toFixed(1)} <small>(${reviewCount})</small></span>
-                        </div>
-                    ` : '';
+<script>
+      document.getElementById('search')?.addEventListener('focus', e => {
+        e.target.nextElementSibling.style.opacity = '0.8';
+        e.target.nextElementSibling.style.transform = 'translateY(-50%) scale(1.15)';
+      });
+      document.getElementById('search')?.addEventListener('blur', e => {
+        e.target.nextElementSibling.style.opacity = '0.3';
+        e.target.nextElementSibling.style.transform = 'translateY(-50%) scale(1)';
+      });
+</script>
+    
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.body.classList.add('loaded');
+      const loader = document.getElementById('pageLoader');
+      setTimeout(() => loader.classList.add('hidden'), 900);
 
-                    card.innerHTML = `
-                        <div class="good-img-container">
-                            ${imageHtml}
-                            ${starsHtml}
-                        </div>
-                        <div class="good-info">
-                            <h3 class="good-title">${p.title}</h3>
-                            <div class="good-price">${p.price_str}</div>
-                            <div class="good-stock">
-                                ${parseInt(p.stock) === -1 ? 'В наличии' : 
-                                parseInt(p.stock) > 0 ? `В наличии (${parseInt(p.stock)} шт.)` : 'Нет в наличии'}
-                            </div>
-                            <p class="good-desc">${p.description || ''}</p>
-                            <div class="good-actions">
-                                <button class="good-add-cart ${p.stock === 0 ? 'disabled' : ''}" onclick="event.stopPropagation(); addToCart(this, event)" style="display:none;">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    goodsGrid.appendChild(card);
-                    setTimeout(() => {
-                        card.classList.add('visible');
-                        startImageSlider(card);
-                    }, i * 80);
-                });
-            } catch (err) {
-                console.error('Ошибка:', err);
-            }
-        }
-
-        // === МОДАЛКА ===
-        async function openModal(productId) {
-            try {
-                const [productRes, reviewsRes] = await Promise.all([
-                    fetch(`/api/product/${productId}`),
-                    fetch(`/api/reviews/${productId}`)
-                ]);
-
-                const p = await productRes.json();
-                const revData = await reviewsRes.json();
-                if (!revData.success) throw new Error('Нет отзывов');
-
-                const reviews = revData.reviews || [];
-                const avgRating = parseFloat(revData.avg_rating) || 0;
-                const reviewCount = parseInt(revData.review_count) || 0;
-
-                const images = p.image_urls || [];
-                const mainImg = images.length ? images[0] : 'https://via.placeholder.com/600';
-
-                const thumbsHtml = images.length > 1 ? `
-                    <div class="modal-thumbs" style="display:flex; gap:8px; margin-top:12px; overflow-x:auto; padding:4px 0;">
-                        ${images.map((url, i) => `
-                            <img src="${url}" alt="thumb" 
-                                style="width:70px; height:70px; object-fit:cover; border-radius:12px; cursor:pointer; border:2px solid ${i===0?'var(--accent)':'transparent'}; transition:all .3s;"
-                                onclick="document.querySelector('.modal-main-img').src=this.src; 
-                                        document.querySelectorAll('.modal-thumbs img').forEach(t=>t.style.border='2px solid transparent');
-                                        this.style.border='2px solid var(--accent)'">
-                        `).join('')}
-                    </div>
-                ` : '';
-
-                const reviewsHtml = reviews.length ? reviews.map(r => {
-                    const author = r.author || 'Аноним';
-                    return `
-                        <div class="review-item">
-                            <div class="review-avatar">
-                                <div class="avatar-initial">${author[0].toUpperCase()}</div>
-                            </div>
-                            <div class="review-content">
-                                <div class="review-header">
-                                    <strong>${author}</strong>
-                                    <span class="review-rating">
-                                        <span style="color:#FFD60A; letter-spacing:-2px; font-size:1rem;">
-                                            ${renderStars(r.rating)}
-                                        </span>
-                                        <small style="margin-left:4px; opacity:0.9;">${r.rating}.0</small>
-                                    </span>
-                                </div>
-                                <p class="review-text">${r.text || ''}</p>
-                                <small class="review-date">
-                                    ${new Date(r.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
-                                </small>
-                            </div>
-                        </div>
-                    `;
-                }).join('') : `
-                    <div class="no-reviews">
-                        <i class="far fa-star"></i>
-                        <p>Отзывов пока нет</p>
-                        <small>Будьте первым!</small>
-                    </div>
-                `;
-
-                document.getElementById('modalBody').innerHTML = `
-                    <div class="modal-product">
-                        <div class="modal-gallery">
-                            <img src="${mainImg}" alt="${p.title}" class="modal-main-img">
-                            ${thumbsHtml}
-                        </div>
-                        <div class="modal-details">
-                            <h2>${p.title}</h2>
-                            <div class="modal-rating-big">
-                                ${reviewCount > 0 ? `
-                                    <div class="big-stars" style="font-size:2.6rem; letter-spacing:-3px;">
-                                        ${renderStars(avgRating)}
-                                    </div>
-                                    <div class="big-rating">${avgRating.toFixed(1)}</div>
-                                    <small>${reviewCount} отзыв${reviewCount === 1 ? '' : 'а'}</small>
-                                ` : '<small style="opacity:0.7;">Нет оценок</small>'}
-                            </div>
-                            <p class="modal-price">${p.price_str}</p>
-                            <p><strong>Наличие:</strong> 
-                                ${parseInt(p.stock) === -1 ? 'В наличии' : 
-                                parseInt(p.stock) > 0 ? `В наличии (${parseInt(p.stock)} шт.)` : 'Нет в наличии'}
-                            </p>
-                            <p class="modal-desc">${p.description || 'Описание отсутствует'}</p>
-                        </div>
-                    </div>
-
-                    <div class="reviews-section">
-                        <h3>Отзывы покупателей</h3>
-                        <div class="reviews-list">${reviewsHtml}</div>
-                    </div>
-                `;
-
-                document.getElementById('goodsModal').classList.add('active');
-                document.body.style.overflow = 'hidden';
-            } catch (err) {
-                console.error('Ошибка:', err);
-                document.getElementById('modalBody').innerHTML = `<div style="text-align:center;padding:3rem;color:#aaa"><p>Не удалось загрузить данные</p></div>`;
-                document.getElementById('goodsModal').classList.add('active');
-            }
-        }
-
-        // === ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ В ШАПКЕ ===
-        const themeToggle = document.getElementById('themeToggle');
-        const themeBall = themeToggle.querySelector('.theme-ball');
-        const html = document.documentElement;
-        const clickSound = document.getElementById('clickSound');
-        const themeStylesheet = document.getElementById('theme-stylesheet');
-        let isLight = false;
-
-        function updateTheme() {
-            if (isLight) {
-                themeBall.innerHTML = `<i class="fas fa-sun"></i>`;
-                html.setAttribute('data-theme', 'light');
-                themeStylesheet.href = "{{ url_for('static', filename='css/goods_light.css') }}";
-            } else {
-                themeBall.innerHTML = `<i class="fas fa-moon"></i>`;
-                html.setAttribute('data-theme', 'dark');
-                themeStylesheet.href = "{{ url_for('static', filename='css/goods_dark.css') }}";
-            }
-            localStorage.setItem('theme', isLight ? 'light' : 'dark');
-        }
-
-        themeToggle.addEventListener('click', () => {
-            themeToggle.classList.add('clicked');
-            clickSound.currentTime = 0;
-            clickSound.play().catch(() => {});
-
-            setTimeout(() => {
-                themeToggle.classList.remove('clicked');
-            }, 700);
-
-            setTimeout(() => {
-                isLight = !isLight;
-                updateTheme();
-            }, 300);
+      // Кастомный курсор
+      const cursor = document.querySelector('.custom-cursor');
+      if(cursor){
+        document.body.style.cursor = 'none';
+        document.addEventListener('mousemove', e => {
+          cursor.style.left = e.clientX + 'px';
+          cursor.style.top = e.clientY + 'px';
         });
+        document.querySelectorAll('a, button, input, textarea, [onclick], .clickable, .nav-link').forEach(el => {
+          el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+          el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+        });
+      }
 
-        // === ИНИЦИАЛИЗАЦИЯ ===
-        window.addEventListener('load', () => {
-            const saved = localStorage.getItem('theme');
-            if (saved === 'light') {
-                isLight = true;
+      // Хедер + кнопка наверх
+      const header = document.querySelector('header');
+      const backToTop = document.querySelector('.back-to-top');
+      window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        header.classList.toggle('scrolled', scrolled > 50);
+        backToTop.classList.toggle('visible', scrolled > 500);
+      });
+
+      // Плавный скролл по якорям
+      document.querySelectorAll('a[href^="#"], .nav-link, .back-to-top').forEach(link => {
+        link.addEventListener('click', function(e) {
+          const href = this.getAttribute('href');
+          if (href === '#' || href.startsWith('#')) {
+            e.preventDefault();
+            const target = document.querySelector(href === '#' ? 'html' : href);
+            if (target) {
+              const offset = 80;
+              const pos = target.getBoundingClientRect().top + window.pageYOffset - offset;
+              window.scrollTo({top: pos, behavior: 'smooth'});
             }
-            updateTheme();
-
-            loadCategories();
-            loadBrands();
-            applyFilters();
-            document.querySelector('.gradient-overlay').classList.add('active');
-            document.querySelector('.catalog-sidebar').classList.add('visible');
+          }
         });
+      });
+    });
+  </script>
 
-        window.closeModal = function() {
-            const modal = document.getElementById('goodsModal');
-            modal.classList.remove('active');
-            setTimeout(() => { document.body.style.overflow = ''; }, 400);
-        };
+<!-- === КРАСИВЫЕ ТОСТЫ + КОРЗИНА + ЗАЩИТА ОТ СПАМА (2025 FINAL) === -->
+<div id="my-toast-container"></div>
 
-        // === ОСТАЛЬНЫЕ ФУНКЦИИ ===
-        async function loadCategories() {
-            try {
-                const res = await fetch('/api/categories');
-                const cats = await res.json();
-                catalogList.innerHTML = `<div class="catalog-item active" data-category="all"><div class="catalog-icon"><i class="fas fa-cube"></i></div><span>Все товары</span></div>`;
-                cats.forEach(cat => {
-                    const item = document.createElement('div');
-                    item.className = 'catalog-item';
-                    item.dataset.category = cat;
-                    item.innerHTML = `<div class="catalog-icon"><i class="fas fa-tag"></i></div><span>${cat}</span>`;
-                    catalogList.appendChild(item);
-                });
-                attachCategoryListeners();
-            } catch (err) { console.error(err); }
-        }
+<style>
+  #my-toast-container {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 2147483647;
+    pointer-events: none;
+    font-family: 'Inter', sans-serif;
+  }
+  .mytoast {
+    background: rgba(20,20,20,0.96);
+    color: #fff;
+    padding: 18px 28px;
+    margin-top: 12px;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.12);
+    min-width: 360px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transform: translateX(420px);
+    opacity: 0;
+    transition: all 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
+    font-weight: 500;
+  }
+  .mytoast.show { transform: translateX(0); opacity: 1; }
+  .mytoast.success { border-left: 6px solid #00ff9d; }
+  .mytoast.error   { border-left: 6px solid #ff3b30; }
+  .mytoast i { font-size: 1.7em; }
 
-        async function loadBrands() {
-            try {
-                const res = await fetch('/api/brands');
-                const brands = await res.json();
-                brandCheckboxes.innerHTML = '';
-                brands.forEach(b => {
-                    const label = document.createElement('label');
-                    label.innerHTML = `<input type="checkbox" value="${b}"> ${b}`;
-                    brandCheckboxes.appendChild(document.createElement('br'));
-                    brandCheckboxes.appendChild(label);
-                });
-            } catch (err) { console.error(err); }
-        }
+  /* Блокировка кнопки */
+  button[disabled].spam-blocked {
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+    position: relative;
+  }
+  button[disabled].spam-blocked::after {
+    content: "Подождите...";
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.9em;
+    color: #ff3b30;
+    font-weight: 600;
+  }
+  button[disabled].spam-blocked {
+  opacity: 1 !important;
+  pointer-events: none !important;
+  position: relative;
+  background: rgba(20, 20, 20, 0.96) !important;  /* тёмный фон */
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: transparent !important;                /* скрываем оригинальный текст */
+  cursor: default !important;
+  transform: none !important;
+}
 
-        function attachCategoryListeners() {
-            document.querySelectorAll('.catalog-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    document.querySelectorAll('.catalog-item').forEach(i => i.classList.remove('active'));
-                    item.classList.add('active');
-                    currentCategory = item.dataset.category;
-                    applyFilters();
-                });
-            });
-        }
+button[disabled].spam-blocked::after {
+  content: "Подождите...";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1em;
+  font-weight: 600;
+  color: #ff3b30;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  white-space: nowrap;
+  z-index: 10;
+}
 
-        goodsSearch.addEventListener('input', () => setTimeout(applyFilters, 300));
-        [priceFrom, priceTo, sortSelect].forEach(el => el.addEventListener('input', applyFilters));
-        brandCheckboxes.addEventListener('change', applyFilters);
-        filterToggle.addEventListener('click', () => {
-            filterToggle.classList.toggle('active');
-            filtersPanel.classList.toggle('open');
-        });
+/* Если у тебя кнопка заказа имеет свой цвет (например зелёный или белый) — перебиваем его */
+#modal-order[disabled].spam-blocked,
+.add-to-cart-btn[disabled].spam-blocked,
+.go-to-cart-btn[disabled].spam-blocked {
+  background: rgba(20, 20, 20, 0.96) !important;
+}
+</style>
 
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') closeModal();
-        });
+<script>
+// === ТОСТЫ ===
+function toast(message, type = 'success') {
+  const container = document.getElementById('my-toast-container');
+  const t = document.createElement('div');
+  t.className = `mytoast ${type}`;
+  t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-triangle'}"></i><span>${message}</span>`;
+  container.appendChild(t);
+  setTimeout(() => t.classList.add('show'), 50);
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 800);
+  }, 3600);
+}
+window.alert = (msg) => toast(msg, 'error');
 
-        function toggleCatalog() {
-            document.querySelector('.catalog-header').classList.toggle('collapsed');
-            document.getElementById('catalogList').classList.toggle('open');
-        }
+// === ЗАЩИТА ОТ СПАМА (5 кликов → блок 30 сек) ===
+let clickHistory = [];
+let spamBlockedUntil = 0;
 
-        document.addEventListener('click', (e) => {
-            const panel = document.getElementById('filtersPanel');
-            const toggle = document.getElementById('filterToggle');
-            if (!toggle.contains(e.target) && !panel.contains(e.target)) {
-                toggle.classList.remove('active');
-                panel.classList.remove('open');
-            }
-        });
+function isSpamBlocked() {
+  const now = Date.now();
+  clickHistory = clickHistory.filter(t => now - t < 20000);
+  if (clickHistory.length >= 5) {
+    spamBlockedUntil = now + 30000;
+    return true;
+  }
+  return now < spamBlockedUntil;
+}
 
-        document.getElementById('goodsModal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
-        });
+function allowClick(blockedBtn) {
+  if (isSpamBlocked()) {
+    const remaining = Math.ceil((spamBlockedUntil - Date.now()) / 1000);
+    toast(`Слишком быстро! Подождите ${remaining} сек.`, 'error');
+    
+    blockedBtn.disabled = true;
+    blockedBtn.classList.add('spam-blocked');
+    setTimeout(() => {
+      blockedBtn.disabled = false;
+      blockedBtn.classList.remove('spam-blocked');
+    }, spamBlockedUntil - Date.now() + 100);
+    return false;
+  }
+  clickHistory.push(Date.now());
+  return true;
+}
 
-        // Функция addToCart оставлена, но кнопка скрыта (на случай, если понадобится в будущем)
-        function addToCart(btn, event) {
-            event.stopPropagation();
-            // Функционал удалён
-        }
-    </script>
+async function addToCartNow(title) {
+  const btn = document.getElementById('modal-order');
+  if (!allowClick(btn)) return;
 
-    <!-- СТИЛИ ДЛЯ ПЕРЕКЛЮЧАТЕЛЯ В ШАПКЕ -->
-    <style>
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
+  const isService = location.pathname === '/services';
 
-        .rope-switch {
-            cursor: pointer;
-            user-select: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            top: 105px;
-        }
+  // ЗАКРЫВАЕМ ВСЕ ВОЗМОЖНЫЕ МОДАЛКИ
+  document.getElementById('modal')?.classList.remove('active');
+  document.getElementById('productModal')?.classList.remove('active');
+  document.getElementById('whiteOverlay')?.classList.remove('active');
 
-        .rope {
-            width: 4px;
-            height: 60px;
-            background: #a8a8a8;
-            position: relative;
-            border-radius: 2px;
-            box-shadow: 0 0 8px rgba(0,0,0,0.4), inset 0 0 3px rgba(255,255,255,0.5);
-            transition: all 0.4s ease;
-            transform-origin: top center;
-            overflow: hidden;
-            margin-bottom: -12px;
-        }
+  // === ГЛАВНОЕ: УНИВЕРСАЛЬНЫЙ ПОИСК КАРТИНКИ ===
+  let imageUrl = '/static/assets/no-image.png';
 
-        .rope::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: repeating-linear-gradient(0deg, #f0f0f0 0px, #f0f0f0 1px, #a8a8a8 2px, #a8a8a8 4px);
-            opacity: 0.9;
-        }
+  // 1. Пробуем из старой модалки (услуги)
+  const oldImg = document.getElementById('modal-img');
+  if (oldImg?.src && oldImg.src.includes('http')) {
+    imageUrl = oldImg.src;
+    console.log('Картинка из #modal-img:', imageUrl);
+  }
+  // 2. Пробуем из новой модалки (товары)
+  else {
+    const newImg = document.getElementById('productImg');
+    if (newImg?.src && newImg.src.includes('http')) {
+      imageUrl = newImg.src;
+      console.log('Картинка из #productImg:', imageUrl);
+    }
+  }
 
-        .theme-ball {
-            width: 40px;
-            height: 40px;
-            background: #f5f5f5;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.35), inset 0 5px 10px rgba(255,255,255,0.8), inset 0 -5px 10px rgba(0,0,0,0.2);
-            transition: all 0.4s ease;
-            font-size: 1.3rem;
-            color: #333;
-            text-shadow: 0 1px 1px rgba(255,255,255,0.8);
-            border: 1.5px solid #ccc;
-            z-index: 10;
-        }
 
-        [data-theme="light"] .rope {
-            background: #e8e8e8;
-            box-shadow: 0 0 8px rgba(0,0,0,0.15), inset 0 0 3px rgba(255,255,255,0.7);
-        }
 
-        [data-theme="light"] .rope::before {
-            background: repeating-linear-gradient(0deg, #ffffff 0px, #ffffff 1px, #e8e8e8 2px, #e8e8e8 4px);
-        }
+  // АНИМАЦИЯ КНОПКИ
+  btn.style.transform = 'scale(0.93)';
+  setTimeout(() => btn.style.transform = '', 200);
 
-        [data-theme="light"] .theme-ball {
-            background: #fdfdfd;
-            color: #222;
-            box-shadow: 0 8px 20px rgba(0,0,0,.15), inset 0 5px 10px rgba(255,255,255,.9), inset 0 -5px 10px rgba(0,0,0,.1);
-            border: 1.5px solid #ddd;
-        }
+  // ДОБАВЛЯЕМ С КАРТИНКОЙ
+  if (typeof window.addToCart === 'function') {
+    await window.addToCart(title, isService ? 'service' : 'product', imageUrl);
+  } else {
+    setTimeout(() => window.addToCart?.(title, isService ? 'service' : 'product', imageUrl), 300);
+  }
+}
+// === КНОПКА "ЗАКАЗАТЬ" В МОДАЛКЕ ===
+document.getElementById('modal-order')?.addEventListener('click', function() {
+  const title = document.getElementById('modal-title')?.textContent.trim();
+  if (title && title !== 'Загрузка...') {
+    addToCartNow(title);
+  } else {
+    toast('Дождитесь загрузки', 'error');
+  }
+});
 
-        .rope-switch.clicked .rope {
-            animation: pull-rope 0.7s cubic-bezier(0.2, 1.5, 0.4, 1);
-        }
+// === УБИРАЕМ ДУБЛИРОВАНИЕ ТОСТА ИЗ cart.js ===
+// Перехватываем showToast из cart.js, чтобы он не показывал "Добавлено в корзину"
+document.addEventListener('DOMContentLoaded', () => {
+  // Ждём загрузки cart.js
+  const checkCartJs = setInterval(() => {
+    if (window.addToCart) {
+      clearInterval(checkCartJs);
 
-        .rope-switch.clicked .theme-ball {
-            animation: pull-ball 0.7s cubic-bezier(0.2, 1.5, 0.4, 1);
-        }
-
-        @keyframes pull-rope {
-            0% { transform: translateY(0) rotate(0); height: 60px; }
-            40% { transform: translateY(18px) rotate(6deg); height: 42px; }
-            100% { transform: translateY(0) rotate(0); height: 60px; }
-        }
-
-        @keyframes pull-ball {
-            0% { transform: translateY(0); }
-            40% { transform: translateY(18px); }
-            100% { transform: translateY(0); }
-        }
-
-        @media (max-width: 768px) {
-            .rope-switch {
-                display: none;
-            }
-        }
-    </style>
+      // Подменяем showToast — теперь он ничего не показывает при добавлении
+      const originalShowToast = window.showToast || (() => {});
+      window.showToast = (title, message, error) => {
+        if (title === 'Добавлено в корзину') return; // БЛОКИРУЕМ ДУБЛЬ!
+        if (title === 'Удалено') return;
+        originalShowToast(title, message, error);
+      };
+    }
+  }, 50);
+});
+</script>
 
 </body>
 </html>

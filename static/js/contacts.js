@@ -1,8 +1,8 @@
-// =================== contacts.js — ИСПРАВЛЕНО 11.11.2025 05:33 CET ===================
+// =================== contacts.js — ФИНАЛЬНАЯ РАБОЧАЯ ВЕРСИЯ 19.11.2025 ===================
 document.addEventListener("DOMContentLoaded", () => {
   document.documentElement.style.visibility = 'visible';
 
-  // === КУРСОР, BACK TO TOP, ТИПОГРАФ — без изменений ===
+  // === КАСТОМНЫЙ КУРСОР ===
   const cursor = document.querySelector('.custom-cursor');
   if (cursor) {
     document.addEventListener('mousemove', e => {
@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // === BACK TO TOP + HEADER SCROLL ===
   const backToTop = document.querySelector('.back-to-top');
   if (backToTop) {
     window.addEventListener('scroll', () => {
@@ -23,51 +24,50 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // === ТИПОГРАФ ===
   const typewriter = document.getElementById('typewriter');
   if (typewriter) {
-    const fullText = `«Мы создаём вещи, которые не кричат.<br>Они шепчут. Но слышат их только те,<br>кто готов слушать.»`;
+    const fullText = `«Мы не продаём товар и не оказываем услуги.\nМы открываем доступ.\nТишина, в которой слышно только то,\nчто действительно имеет значение<span class="center-last">`;
     let i = 0;
     const type = () => {
-      if (i < fullText.length) {
-        if (fullText.substr(i, 4) === '<br>') {
-          typewriter.innerHTML += '<br>';
-          i += 4;
-        } else {
-          typewriter.innerHTML += fullText[i];
-          i++;
-        }
-        setTimeout(type, 60);
+      if (i >= fullText.length) return;
+      const remaining = fullText.substring(i);
+      if (remaining.startsWith('<span class="center-last">')) {
+        typewriter.insertAdjacentHTML('beforeend', '<span class="center-last">');
+        i += 26;
+      } else if (remaining.startsWith('</span>')) {
+        typewriter.insertAdjacentHTML('beforeend', '</span>');
+        i += 7;
+      } else if (remaining[0] === '\n') {
+        typewriter.insertAdjacentHTML('beforeend', '<br>');
+        i++;
+      } else {
+        typewriter.insertAdjacentHTML('beforeend', remaining[0]);
+        i++;
       }
+      setTimeout(type, 65);
     };
-    setTimeout(type, 800);
+    setTimeout(type, 1200);
   }
 
-  // === ТОСТ-АЛЕРТЫ — ИСПРАВЛЕНО: УБРАН alert.className! ===
+  // === УНИВЕРСАЛЬНЫЙ ТОСТ-АЛЕРТ ===
   const showCustomAlert = (text, isError = false, isSuccess = false) => {
     document.querySelectorAll('.toast-alert').forEach(el => el.remove());
-
     const toast = document.createElement('div');
     toast.className = `toast-alert ${isError ? 'error' : ''} ${isSuccess ? 'success' : ''}`;
-
     toast.innerHTML = `
-    <div class="alert-text">
+      <div class="alert-text">
         <strong>${isError ? 'Ошибка' : 'Успех'}</strong>
         <span>${text}</span>
-    </div>
-    <button class="alert-close">×</button>
+      </div>
+      <button class="alert-close">×</button>
     `;
-
     document.body.appendChild(toast);
-
-    requestAnimationFrame(() => {
-      toast.classList.add('show');
-    });
-
+    requestAnimationFrame(() => toast.classList.add('show'));
     toast.querySelector('.alert-close').addEventListener('click', () => {
       toast.classList.remove('show');
       setTimeout(() => toast.remove(), 500);
     });
-
     setTimeout(() => {
       if (toast.isConnected) {
         toast.classList.remove('show');
@@ -75,6 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }, 5000);
   };
+  window.showCustomAlert = showCustomAlert;
 
   // === АВТОРИЗАЦИЯ ===
   const isAuthenticated = () => !!(sessionStorage.getItem('phone') || localStorage.getItem('phone'));
@@ -88,58 +89,27 @@ document.addEventListener("DOMContentLoaded", () => {
     return raw;
   };
 
-  // === КОРЗИНА — ИСПРАВЛЕНО: НЕ ДЕРГАЕТСЯ ПРИ НАВЕДЕНИИ ===
+  // === МИНИ-КОРЗИНА ===
   const cartBtn = document.getElementById('cartBtn');
   const miniCart = document.getElementById('miniCartDropdown');
   if (cartBtn && miniCart) {
     const cartWrapper = cartBtn.parentElement;
     let hoverTimeout;
-
     const openCart = () => {
       clearTimeout(hoverTimeout);
       miniCart.classList.add('show');
       if (typeof updateCart === 'function') updateCart();
     };
-
     const closeCart = () => {
-      hoverTimeout = setTimeout(() => {
-        miniCart.classList.remove('show');
-      }, 300);
+      hoverTimeout = setTimeout(() => miniCart.classList.remove('show'), 300);
     };
-
-    cartBtn.addEventListener('mouseenter', () => {
-      if (window.innerWidth > 860) openCart();
-    });
-
-    miniCart.addEventListener('mouseenter', () => {
-      clearTimeout(hoverTimeout);
-    });
-
-    cartBtn.addEventListener('mouseleave', (e) => {
-      if (window.innerWidth > 860 && !e.relatedTarget?.closest('#miniCartDropdown')) {
-        closeCart();
-      }
-    });
-
-    miniCart.addEventListener('mouseleave', () => {
-      if (window.innerWidth > 860) closeCart();
-    });
-
-    cartBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      miniCart.classList.toggle('show');
-      if (typeof updateCart === 'function') updateCart();
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!cartWrapper.contains(e.target)) {
-        miniCart.classList.remove('show');
-      }
-    });
-
-    document.getElementById('goToCartBtn')?.addEventListener('click', () => {
-      window.location.href = '/cart';
-    });
+    cartBtn.addEventListener('mouseenter', () => window.innerWidth > 860 && openCart());
+    miniCart.addEventListener('mouseenter', () => clearTimeout(hoverTimeout));
+    cartBtn.addEventListener('mouseleave', e => window.innerWidth > 860 && !e.relatedTarget?.closest('#miniCartDropdown') && closeCart());
+    miniCart.addEventListener('mouseleave', () => window.innerWidth > 860 && closeCart());
+    cartBtn.addEventListener('click', e => { e.stopPropagation(); miniCart.classList.toggle('show'); updateCart?.(); });
+    document.addEventListener('click', e => !cartWrapper.contains(e.target) && miniCart.classList.remove('show'));
+    document.getElementById('goToCartBtn')?.addEventListener('click', () => location.href = '/bin');
   }
 
   // === ОБРАТНАЯ СВЯЗЬ ===
@@ -147,17 +117,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const contactForm = document.getElementById('contactForm');
   const submitBtn = document.getElementById('submitBtn');
   const btnText = submitBtn?.querySelector('.btn-text');
-  const btnCooldown = submitBtn?.querySelector('.btn-cooldown');
-  const timerEl = submitBtn?.querySelector('.timer');
   const editPhoneBtn = document.querySelector('.edit-phone-btn');
   const phoneInput = contactForm?.querySelector('input[type="tel"]');
-  let cooldownInterval = null;
 
   document.getElementById('feedbackBtn')?.addEventListener('click', () => {
-    if (!isAuthenticated()) {
-      showCustomAlert('Войдите в аккаунт', true);
-      return;
-    }
+    if (!isAuthenticated()) return showCustomAlert('Войдите в аккаунт', true);
     feedbackModal.classList.add('show');
     document.body.style.overflow = 'hidden';
     contactForm.reset();
@@ -192,11 +156,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // === МАСКА ТЕЛЕФОНА ===
   if (phoneInput) {
-    const formatPhone = (value) => {
+    const formatPhone = value => {
       let digits = value.replace(/\D/g, '').slice(0, 11);
       if (digits.startsWith('8')) digits = '7' + digits.slice(1);
       if (digits === '8') digits = '7';
-      if (digits.length === 0) return '';
       if (digits.length <= 1) return '+7 (';
       if (digits.length <= 4) return `+7 (${digits.slice(1)}`;
       if (digits.length <= 7) return `+7 (${digits.slice(1,4)}) ${digits.slice(4)}`;
@@ -221,36 +184,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // === КУЛДАУН ===
-  const startCooldown = (seconds) => {
-    let remaining = seconds;
-    submitBtn.disabled = true;
-    submitBtn.classList.add('cooldown');
-    btnCooldown.classList.add('active');
-    timerEl.textContent = remaining;
-
-    clearInterval(cooldownInterval);
-    cooldownInterval = setInterval(() => {
-      remaining--;
-      timerEl.textContent = remaining;
-      if (remaining <= 0) {
-        clearInterval(cooldownInterval);
-        submitBtn.disabled = false;
-        submitBtn.classList.remove('cooldown');
-        btnCooldown.classList.remove('active');
-      }
-    }, 1000);
-  };
-
-  // === ОТПРАВКА ФОРМЫ ===
-  contactForm?.addEventListener('submit', async (e) => {
+  // === ОТПРАВКА ОБРАТНОЙ СВЯЗИ ===
+  contactForm?.addEventListener('submit', async e => {
     e.preventDefault();
     contactForm.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
 
-    const name = contactForm.querySelector('input[type="text"], .name-input').value.trim();
-    const phone = phoneInput.value.replace(/\D/g, '');
-    const email = contactForm.querySelector('input[type="email"]').value.trim();
-    const message = contactForm.querySelector('textarea').value.trim();
+    const name = contactForm.querySelector('input[type="text"], .name-input')?.value.trim() || '';
+    const phone = phoneInput?.value.replace(/\D/g, '') || '';
+    const email = contactForm.querySelector('input[type="email"]')?.value.trim() || '';
+    const message = contactForm.querySelector('textarea')?.value.trim() || '';
 
     if (!name || name.length < 2) return showFieldError(contactForm.querySelector('input[type="text"], .name-input'), 'Укажите имя');
     if (phone.length !== 11) return showFieldError(phoneInput, 'Неверный номер');
@@ -258,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!message || message.length < 10) return showFieldError(contactForm.querySelector('textarea'), 'Сообщение слишком короткое');
 
     submitBtn.disabled = true;
-    btnText.textContent = 'Отправка...';
+    btnText && (btnText.textContent = 'Отправка...');
 
     try {
       const res = await fetch('/api/feedback', {
@@ -274,184 +216,159 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.style.overflow = '';
         contactForm.reset();
         editPhoneBtn.style.display = 'none';
-      } else if (res.status === 429 && data.retry_after) {
-        startCooldown(data.retry_after);
-        showCustomAlert(`Подождите ${data.retry_after} секунд`, true);
       } else {
-        showCustomAlert(data.error || 'Ошибка отправки', true);
-        submitBtn.disabled = false;
-        btnText.textContent = 'Отправить сообщение';
+        throw new Error(data.error || 'Ошибка отправки');
       }
     } catch (err) {
       showCustomAlert('Нет соединения с сервером', true);
       submitBtn.disabled = false;
-      btnText.textContent = 'Отправить сообщение';
+      btnText && (btnText.textContent = 'Отправить сообщение');
     }
   });
 
   const showFieldError = (field, msg) => {
-    field.classList.add('error');
-    field.focus();
+    field?.classList.add('error');
+    field?.focus();
     showCustomAlert(msg, true);
   };
 
 
-    // Универсальная функция показа тоста
-    window.showToast = function(type, title, text) {
-    document.querySelectorAll('.toast-alert').forEach(el => el.remove());
+// === РАССЫЛКА — УМНАЯ ПОДПИСКА (ФИНАЛЬНАЯ ВЕРСИЯ — ПРИВЯЗКА К ТЕЛЕФОНУ) ===
+const newsletterForm = document.getElementById('newsletterForm');
+if (newsletterForm) {
+  const SUBSCRIBED_KEY = 'piligrim_newsletter_subscribed_v2'; // новая версия ключа
 
-    const toast = document.createElement('div');
-    toast.className = `toast-alert ${type}`;
-    toast.innerHTML = `
-        <div class="alert-text">
-        <strong>${title}</strong>
-        <span>${text}</span>
-        </div>
-        <button class="alert-close">×</button>
-    `;
+  // Получаем текущий телефон (или null, если не залогинен)
+  const getCurrentPhone = () => {
+    const phone = sessionStorage.getItem('phone') || localStorage.getItem('phone');
+    return phone ? phone.replace(/\D/g, '') : null;
+  };
 
-    document.body.appendChild(toast);
-    setTimeout(() => toast.classList.add('show'), 50);
-    toast.querySelector('.alert-close').onclick = () => toast.remove();
-    setTimeout(() => toast.remove(), 5000);
-    };
-
-
-  // === ЗАКРЫТИЕ МОДАЛКИ ===
-  function closeFeedbackModal() {
-    const modal = document.getElementById('feedbackModal');
-    modal.classList.remove('show');
-    setTimeout(() => modal.style.display = 'none', 400);
-  }
-
-  // === ПОЛНЫЙ РАБОЧИЙ КУЛДАУН + ЗАКРЫТИЕ ===
-  function showCooldown(seconds) {
-    const btn = document.getElementById('submitBtn');
-    if (!btn) return;
-
-    btn.classList.add('cooldown');
-    const cooldown = btn.querySelector('.btn-cooldown');
-    const timer = cooldown.querySelector('.timer');
-    cooldown.classList.add('active');
-
-    let timeLeft = seconds;
-    timer.textContent = timeLeft;
-
-    const interval = setInterval(() => {
-      timeLeft--;
-      timer.textContent = timeLeft;
-      if (timeLeft <= 0) {
-        clearInterval(interval);
-        btn.classList.remove('cooldown');
-        cooldown.classList.remove('active');
-      }
-    }, 1000);
-  }
-
-  // === ОБРАБОТКА ФОРМЫ (вместо feedback.js) ===
-  document.getElementById('contactForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-
-    const formData = new FormData(this);
-    const btn = document.getElementById('submitBtn');
-    const isResend = btn.classList.contains('cooldown');
-
-    if (isResend) {
-      showCooldown(30);
-      showToast('error', 'Подождите', 'Повторная отправка через 30 сек');
-      return;
+  // Проверяем статус подписки — только для текущего пользователя!
+  const checkSubscriptionStatus = () => {
+    const currentPhone = getCurrentPhone();
+    const saved = localStorage.getItem(SUBSCRIBED_KEY);
+    
+    // Если нет телефона — считаем, что не подписан (для анонимов)
+    if (!currentPhone) {
+      return false;
     }
 
     try {
-      btn.disabled = true;
-      showCooldown(30);
-
-
-    } catch (err) {
-      showToast('error', 'Ошибка', 'Не удалось отправить');
-    } finally {
-      btn.disabled = false;
+      const data = JSON.parse(saved || '{}');
+      return data[currentPhone] === true;
+    } catch {
+      return false;
     }
-  });
-
-  // === ТОСТ (оставляем) ===
-  window.showToast = function(type, title, text) {
-    document.querySelectorAll('.toast-alert').forEach(el => el.remove());
-    const toast = document.createElement('div');
-    toast.className = `toast-alert ${type}`;
-    toast.innerHTML = `
-      <div class="alert-text">
-        <strong>${title}</strong>
-        <span>${text}</span>
-      </div>
-      <button class="alert-close">×</button>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.classList.add('show'), 50);
-    toast.querySelector('.alert-close').onclick = () => toast.remove();
-    setTimeout(() => toast.remove(), 5000);
   };
 
-  // === ГАРАНТИРОВАННОЕ ОТКРЫТИЕ КАРТОЧКИ ТОВАРА ===
-  document.addEventListener('DOMContentLoaded', () => {
-    const modal = document.getElementById('productModal');
-    if (!modal) return;
+  // Сохраняем подписку для текущего пользователя
+  const markAsSubscribed = () => {
+    const currentPhone = getCurrentPhone();
+    if (!currentPhone) return;
 
-    // Следим за display (search.js меняет style.display)
-    const observer = new MutationObserver(() => {
-      const display = window.getComputedStyle(modal).display;
-      if (display !== 'none') {
-        openProductModal();
-      } else {
-        closeProductModal();
-      }
-    });
-    observer.observe(modal, { attributes: true, attributeFilter: ['style'] });
+    let data = {};
+    try {
+      data = JSON.parse(localStorage.getItem(SUBSCRIBED_KEY) || '{}');
+    } catch {}
+    
+    data[currentPhone] = true;
+    localStorage.setItem(SUBSCRIBED_KEY, JSON.stringify(data));
+  };
 
-    // Функции
-    function openProductModal() {
-      modal.classList.add('active');
-      document.body.style.overflow = 'hidden';
+  // Блокируем форму, если текущий пользователь уже подписан
+  const updateFormState = () => {
+    const btn = newsletterForm.querySelector('button');
+    const input = newsletterForm.querySelector('.newsletter-input');
+
+    if (checkSubscriptionStatus()) {
+      btn.disabled = true;
+      btn.innerHTML = 'Подписан';
+      btn.style.opacity = '0.7';
+      input.placeholder = 'Вы уже в рассылке';
+      input.disabled = true;
+    } else {
+      // Можно подписаться
+      btn.disabled = false;
+      btn.innerHTML = btn.dataset.originalText || 'Подписаться';
+      input.placeholder = input.dataset.originalPlaceholder || 'Ваш email';
+      input.disabled = false;
     }
+  };
 
-    function closeProductModal() {
-      modal.classList.remove('active');
-      document.body.style.overflow = '';
-    }
+  // Сохраняем оригинальный текст при загрузке
+  const submitBtn = newsletterForm.querySelector('button');
+  const emailInput = newsletterForm.querySelector('.newsletter-input');
+  if (submitBtn && !submitBtn.dataset.originalText) {
+    submitBtn.dataset.originalText = submitBtn.innerHTML;
+  }
+  if (emailInput && !emailInput.dataset.originalPlaceholder) {
+    emailInput.dataset.originalPlaceholder = emailInput.placeholder;
+  }
 
-    // Клик по фону или крестику
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal || e.target.closest('.close-modal')) {
-        modal.style.display = 'none';
-        closeProductModal();
-      }
-    });
-
-    // Esc
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && modal.classList.contains('active')) {
-        modal.style.display = 'none';
-        closeProductModal();
-      }
-    });
-
-
-  // === РАССЫЛКА ===
-  document.getElementById('newsletterForm')?.addEventListener('submit', e => {
+  // Обработчик формы
+  newsletterForm.addEventListener('submit', async function (e) {
     e.preventDefault();
-    const email = e.target.querySelector('input').value.trim();
+
+    const email = emailInput?.value.trim().toLowerCase();
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
       showCustomAlert('Введите корректный email', true);
+      emailInput?.focus();
       return;
     }
-    showCustomAlert('Спасибо за подписку!', false, true);
-    e.target.reset();
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Отправка...';
+
+    try {
+      const payload = { email, source: 'newsletter_bottom' };
+      const savedPhone = getCurrentPhone();
+      if (savedPhone) payload.phone = savedPhone;
+
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (res.ok && (data.success || data.already_subscribed || data.new_subscription)) {
+        // УСПЕШНО — помечаем как подписанного (даже если уже был)
+        markAsSubscribed();
+        updateFormState();
+
+        showCustomAlert(
+          data.new_subscription 
+            ? 'Спасибо! Вы успешно подписаны!' 
+            : 'Вы уже подписаны на рассылку',
+          false, true
+        );
+
+        emailInput.value = '';
+      } else {
+        showCustomAlert(data.error || 'Ошибка подписки', true);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = submitBtn.dataset.originalText;
+      }
+    } catch (err) {
+      console.error(err);
+      showCustomAlert('Ошибка сети', true);
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = submitBtn.dataset.originalText;
+    }
   });
 
-  // === КАРТОЧКА ТОВАРА — ИСПРАВЛЕНО: РАБОТАЕТ С search.js ===
+  // Обновляем состояние при загрузке и при изменении авторизации
+  updateFormState();
+
+  // Перепроверяем при любом изменении session/localStorage (вход/выход)
+  window.addEventListener('storage', updateFormState);
+  setInterval(updateFormState, 2000); // на всякий случай
+}
+  // === КАРТОЧКА ТОВАРА ===
   const productModal = document.getElementById('productModal');
   if (productModal) {
-    // Следим за display (search.js меняет style.display)
     const observer = new MutationObserver(() => {
       const display = window.getComputedStyle(productModal).display;
       if (display !== 'none') {
@@ -464,8 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     observer.observe(productModal, { attributes: true, attributeFilter: ['style'] });
 
-    // Клик вне или на крестик
-    productModal.addEventListener('click', (e) => {
+    productModal.addEventListener('click', e => {
       if (e.target === productModal || e.target.closest('.close-modal')) {
         productModal.style.display = 'none';
         productModal.classList.remove('active');
@@ -473,8 +389,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Esc
-    document.addEventListener('keydown', (e) => {
+
+  // И разблокируем только если успешно подписались (внутри формы)
+    document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && productModal.classList.contains('active')) {
         productModal.style.display = 'none';
         productModal.classList.remove('active');
@@ -482,32 +399,25 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // Принудительно скрываем при загрузке
     productModal.style.display = 'none';
     productModal.classList.remove('active');
   }
 
+
+
   // === ИНИЦИАЛИЗАЦИЯ КОРЗИНЫ ===
   if (typeof updateCart === 'function') updateCart();
-});
 
- // Инициализация
-    modal.style.display = 'none';
-    closeProductModal();
-  });
-
-  document.addEventListener('DOMContentLoaded', () => {
+  // === ПРЕЛОАДЕР ===
   document.body.style.overflow = 'hidden';
-
   setTimeout(() => {
     const loader = document.getElementById('loader');
-    loader.style.transition = 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
-    loader.style.opacity = '0';
-
-    setTimeout(() => {
-      loader.remove();
-      document.body.style.overflow = '';
-      document.body.style.opacity = '1';
-    }, 600);
+    if (loader) {
+      loader.style.opacity = '0';
+      setTimeout(() => {
+        loader.remove();
+        document.body.style.overflow = '';
+      }, 600);
+    }
   }, 800);
 });

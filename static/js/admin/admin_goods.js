@@ -800,5 +800,16 @@ function openFullscreenGallery(images, startIndex = 0) {
     window.closeFullscreenGallery = () => {
         overlay.style.opacity = '0';
         setTimeout(() => overlay.remove(), 400);
-    };
+    };  
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.product-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (e.target.closest('.action-buttons') || e.target.closest('.action-btn')) {
+                return;
+            }
+            showProductDetail(this);
+        });
+    });
+});

@@ -529,3 +529,172 @@
     font-size: 1rem;
   }
 }
+
+/* ==================================================================
+   СВЕТЛАЯ ТЕМА — ПОЛНАЯ ПОДДЕРЖКА ПОИСКА И МОДАЛКИ ТОВАРА (2025)
+   ================================================================== */
+html[data-theme="light"] .search-container,
+html[data-theme="light"] .search-container:hover,
+html[data-theme="light"] .search-container.active {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1.5px solid rgba(15, 15, 15, 0.18) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+html[data-theme="light"] .search-input,
+html[data-theme="light"] .search-input::placeholder {
+  color: #000 !important;
+}
+
+html[data-theme="light"] .search-icon i,
+html[data-theme="light"] .search-clear {
+  color: #000 !important;
+}
+
+html[data-theme="light"] .search-clear {
+  background: rgba(15, 15, 15, 0.12) !important;
+}
+html[data-theme="light"] .search-clear:hover {
+  background: rgba(15, 15, 15, 0.22) !important;
+}
+
+/* Автодополнение */
+html[data-theme="light"] .autocomplete-list {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1.5px solid rgba(15, 15, 15, 0.15) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.14) !important;
+}
+html[data-theme="light"] .autocomplete-item {
+  color: #222 !important;
+  border-bottom-color: rgba(15, 15, 15, 0.08) !important;
+}
+html[data-theme="light"] .autocomplete-item:hover,
+html[data-theme="light"] .autocomplete-item.highlighted {
+  background: rgba(15, 15, 15, 0.1) !important;
+  color: #000 !important;
+  border-left-color: #000 !important;
+}
+html[data-theme="light"] .autocomplete-item .item-title { color: #000 !important; }
+html[data-theme="light"] .autocomplete-item .item-type { color: #555 !important; }
+
+/* МОДАЛКА ТОВАРА — СВЕТЛАЯ ТЕМА */
+html[data-theme="light"] .product-modal {
+  background: rgba(250, 250, 250, 0.96) !important;
+  backdrop-filter: blur(32px) !important;
+}
+
+html[data-theme="light"] .product-content {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 1.5px solid rgba(15, 15, 15, 0.15) !important;
+  box-shadow: 
+    0 35px 90px rgba(0,0,0,0.12),
+    0 0 0 1.5px rgba(15,15,15,0.08),
+    0 70px 160px rgba(0,0,0,0.1) !important;
+  backdrop-filter: blur(28px) !important;
+}
+
+html[data-theme="light"] .product-title,
+html[data-theme="light"] .product-price,
+html[data-theme="light"] .reviews-title,
+html[data-theme="light"] .review-header strong {
+  color: #000 !important;
+}
+
+html[data-theme="light"] .product-description,
+html[data-theme="light"] .review p {
+  color: #333 !important;
+  background: rgba(15, 15, 15, 0.05) !important;
+  border-color: rgba(15, 15, 15, 0.1) !important;
+}
+
+html[data-theme="light"] .stars,
+html[data-theme="light"] .review-stars {
+  color: #ffb800 !important;
+  text-shadow: 0 0 12px rgba(255, 184, 0, 0.6) !important;
+}
+
+html[data-theme="light"] .reviews-count,
+html[data-theme="light"] .review small {
+  color: #666 !important;
+}
+
+html[data-theme="light"] .add-to-cart-btn {
+  background: #000 !important;
+  color: #fff !important;
+  border-color: rgba(15, 15, 15, 0.3) !important;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.25) !important;
+}
+html[data-theme="light"] .add-to-cart-btn:hover {
+  background: #222 !important;
+  transform: translateY(-6px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4) !important;
+}
+
+/* Крестик закрытия */
+html[data-theme="light"] .close-modal {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1.5px solid rgba(15, 15, 15, 0.2) !important;
+  box-shadow: 0 10px 35px rgba(0,0,0,0.15) !important;
+}
+html[data-theme="light"] .close-modal i {
+  color: #000 !important;
+}
+html[data-theme="light"] .close-modal:hover {
+  background: rgba(15, 15, 15, 0.9) !important;
+}
+html[data-theme="light"] .close-modal:hover i {
+  color: #fff !important;
+}
+
+/* Аватарки в отзывах */
+html[data-theme="light"] .review-header > div:first-child {
+  background: linear-gradient(135deg, #f5f5f5, #e0e0e0) !important;
+  border-color: rgba(15, 15, 15, 0.2) !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12) !important;
+}
+
+/* Скроллбар */
+html[data-theme="light"] .product-content::-webkit-scrollbar-track {
+  background: rgba(15, 15, 15, 0.06) !important;
+}
+html[data-theme="light"] .product-content::-webkit-scrollbar-thumb {
+  background: rgba(15, 15, 15, 0.25) !important;
+}
+html[data-theme="light"] .product-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 15, 15, 0.4) !important;
+}
+
+/* 1. Фон за картинкой товара — белый в светлой теме */
+html[data-theme="light"] .product-img {
+  background: #ffffff !important;
+  border-bottom: 1px solid rgba(15, 15, 15, 0.1) !important;
+}
+
+/* 2. ПОЛНОСТЬЮ УБИРАЕМ СКРОЛЛБАРЫ В МОДАЛКЕ ТОВАРА (в обеих темах) */
+/* Видимый скролл остаётся, но сама полоса — невидимая (как у Apple) */
+.product-content,
+.product-modal {
+  scrollbar-width: none !important;           /* Firefox */
+  -ms-overflow-style: none !important;        /* IE/Edge */
+}
+
+.product-content::-webkit-scrollbar,
+.product-modal::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+/* На всякий случай — и в светлой теме тоже */
+html[data-theme="light"] .product-content,
+html[data-theme="light"] .product-modal {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+html[data-theme="light"] .product-content::-webkit-scrollbar,
+html[data-theme="light"] .product-modal::-webkit-scrollbar {
+  display: none !important;
+}

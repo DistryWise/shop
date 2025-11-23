@@ -178,6 +178,8 @@
     from { transform: translateY(50px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
+
+
 </style>
 </head>
 <body>
@@ -321,9 +323,46 @@
         </div>
     </header>
 
-    <div id="orderChain" class="order-chain-top" style="display:none; padding: 1.5rem 1rem; background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center;">
-        <div class="chain-loading">Проверяем статус заказа...</div>
+    <!-- Вставь это вместо текущего пустого #orderChain -->
+<div id="orderChain" class="order-chain-top" style="display:none;">
+    <div class="container">
+        <div class="order-chain">
+            <div class="chain-item" data-status="created">
+                <div class="chain-icon"><i class="fas fa-shopping-cart"></i></div>
+                <div class="chain-label">Заказ создан</div>
+                <div class="chain-time" id="time-created">-</div>
+            </div>
+            <div class="chain-connector"><div class="connector-line"></div></div>
+
+            <div class="chain-item" data-status="processing">
+                <div class="chain-icon"><i class="fas fa-cog"></i></div>
+                <div class="chain-label">В обработке</div>
+                <div class="chain-time" id="time-processing">-</div>
+            </div>
+            <div class="chain-connector"><div class="connector-line"></div></div>
+
+            <div class="chain-item" data-status="paid">
+                <div class="chain-icon"><i class="fas fa-ruble-sign"></i></div>
+                <div class="chain-label">Оплачен</div>
+                <div class="chain-time" id="time-paid">-</div>
+            </div>
+            <div class="chain-connector"><div class="connector-line"></div></div>
+
+            <div class="chain-item" data-status="shipped">
+                <div class="chain-icon"><i class="fas fa-truck"></i></div>
+                <div class="chain-label">Отправлен</div>
+                <div class="chain-time" id="time-shipped">-</div>
+            </div>
+            <div class="chain-connector"><div class="connector-line"></div></div>
+
+            <div class="chain-item" data-status="delivered">
+                <div class="chain-icon"><i class="fas fa-check"></i></div>
+                <div class="chain-label">Доставлен</div>
+                <div class="chain-time" id="time-delivered">-</div>
+            </div>
+        </div>
     </div>
+</div>
 
     <section class="bin-page" style="padding-top: 1rem;">
         <div class="bin-header" style="text-align:center; margin-bottom: 1.5rem;">

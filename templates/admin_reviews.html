@@ -21,23 +21,25 @@
         <nav>
             <a href="/" class="nav-link">Главная</a>
         </nav>
+
     </header>
 
 
     <!-- Сайдбар (точно как в новой версии) -->
 <aside class="sidebar">
-        <h3 class="sidebar-title">Админка</h3>
-        <div class="sidebar-menu">
-            <a href="/admin" class="sidebar-item"><i class="fas fa-box"></i><span>Товары</span></a>
-            <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
-            <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
-            <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
-            <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
-            <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
-            <a href="/admin_reviews" class="sidebar-item active"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews | e }}</div></span></a>
-            <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders | e }}</div></span></a>
-        </div>
-    </aside>
+    <h3 class="sidebar-title">Админка</h3>
+    <div class="sidebar-menu">
+        <a href="/admin" class="sidebar-item"><i class="fas fa-box"></i><span>Товары</span></a>
+        <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
+        <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
+        <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
+        <a href="/admin_dispatch" class="sidebar-item"><i class="fas fa-paper-plane"></i><span>Рассылки</span></a>
+        <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
+        <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
+        <a href="/admin_reviews" class="sidebar-item activate"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews }}</div></span></a>
+        <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders }}</div></span></a>
+    </div>
+</aside>
 
     <main class="main-content">
         <div class="admin-container">
@@ -334,6 +336,18 @@ span>
     </div>
 </div>
 
+<!-- ВИСЯЩИЙ ТУМБЛЕР ТЕМЫ (ZAZA STYLE 2025) -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
 
 <script>
 // МГНОВЕННАЯ ПРОВЕРКА IP ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
@@ -1066,7 +1080,29 @@ function confirmPasswordAction() {
         delete window.pendingReviewData;
     }
 }
+// === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ (ZAZA TOGGLE) ===
+const themeToggle = document.getElementById('theme-toggle');
+const html = document.documentElement;
 
+// Восстанавливаем сохранённую тему
+if (localStorage.getItem('theme') === 'light') {
+  html.setAttribute('data-theme', 'light');
+  themeToggle.checked = true;
+} else {
+  html.setAttribute('data-theme', 'dark');
+  localStorage.setItem('theme', 'dark');
+}
+
+// Переключение при клике
+themeToggle.addEventListener('change', () => {
+  if (themeToggle.checked) {
+    html.setAttribute('data-theme', 'light');
+    localStorage.setItem('theme', 'light');
+  } else {
+    html.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+  }
+});
 // === РАБОЧАЯ МАСКА ДЛЯ ТЕЛЕФОНА (вешаем один раз!) ===
 document.getElementById('create_user_phone').addEventListener('input', function(e) {
     let input = e.target;
@@ -1100,6 +1136,36 @@ document.getElementById('create_user_phone').addEventListener('input', function(
     }
 });
 
+</script>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', () => {
+    const currentPath = window.location.pathname;
+
+    // Сопоставление путей с текстом пункта меню
+    const menuMap = {
+        '/admin': 'товары',
+        '/admin_services': 'услуги',
+        '/admin_news': 'новости',
+        '/carousel-editor': 'редактор баннеров',
+        '/admin_feedback': 'обратная связь',
+        '/admin_users': 'пользователи',
+        '/admin_reviews': 'отзывы',
+        '/admin_orders': 'заказы'
+    };
+
+    const activeText = menuMap[currentPath] || null;
+
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+        item.classList.remove('active');
+        const spanText = item.querySelector('span')?.textContent?.trim().toLowerCase();
+
+        if (activeText && spanText === activeText) {
+            item.classList.add('active');
+        }
+    });
+});
 </script>
 </body>
 </html>

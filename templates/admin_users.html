@@ -122,44 +122,54 @@
     color: #fff;
     cursor: pointer;
 }
-        /* Сайдбар */
+       /* САЙДБАР С ДЕРЕВОМ */
         .sidebar {
             position: fixed;
-            left: 0;
-            top: 90px;
-            width: 300px;
+            left: 0; top: 90px;
+            width: 320px;
             height: calc(100vh - 90px);
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(20px);
-
-            padding: 2rem;
+            padding: 2rem 2rem 2rem 3rem;
             z-index: 900;
             overflow-y: auto;
         }
         .sidebar-title {
             font-family: 'Shadows Into Light', cursive;
-            font-size: 2rem;
+            font-size: 2.1rem;
             color: var(--white);
-            margin-bottom: 2rem;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+            margin-bottom: 3rem;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.6);
         }
-        .sidebar-menu { position: relative; width: 100%; }
+        .sidebar-menu {
+            position: relative;
+        }
+        .sidebar-menu::before {
+            content: '';
+            position: absolute;
+            left: 17px;
+            top: 10px;
+            bottom: 20px;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.25);
+            z-index: 1;
+        }
         .sidebar-item {
             display: flex;
             align-items: center;
             gap: 1rem;
+            padding: 1rem 0;
             color: var(--gray);
             text-decoration: none;
             font-weight: 500;
             font-size: 1.1rem;
-            padding: 0.8rem 0;
             position: relative;
-            transition: var(--transition);
             z-index: 2;
+            transition: var(--transition);
         }
         .sidebar-item i {
             font-size: 1.4rem;
-            width: 28px;
+            width: 34px;
             text-align: center;
             color: var(--white);
             transition: transform 0.4s ease;
@@ -174,21 +184,19 @@
             background: var(--glass);
             border: 1px solid var(--border);
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            width: 26px; height: 26px;
+            font-size: 0.8rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.8rem;
-            font-weight: 600;
         }
         .sidebar-item::before {
             content: '';
             position: absolute;
             left: 14px;
             top: 50%;
-            width: 8px;
-            height: 8px;
+            width: 10px; height: 10px;
             background: var(--white);
             border-radius: 50%;
             transform: translateY(-50%);
@@ -196,20 +204,14 @@
             transition: opacity 0.4s ease;
             z-index: 3;
         }
-        .sidebar-item:hover i,
-        .sidebar-item.active i { transform: translateX(6px); color: #fff; }
-        .sidebar-item:hover span,
-        .sidebar-item.active span { color: #fff; }
         .sidebar-item:hover::before,
         .sidebar-item.active::before { opacity: 1; }
+        .sidebar-item:hover i,
+        .sidebar-item.active i { transform: translateX(6px); }
+        .sidebar-item:hover,
+        .sidebar-item.active { color: #fff; }
         .sidebar-item.active { font-weight: 700; }
-        .sidebar-line {
-            position: absolute;
-            left: 17px;
-            width: 2px;
-            background: rgba(255, 255, 255, 0.4);
-            z-index: 1;
-        }
+
         .line-1 { top: 70px; height: 50px; }
         .line-2 { top: 120px; height: 60px; }
         .line-3 { top: 180px; height: 60px; }
@@ -822,7 +824,123 @@
             .stats-container { grid-template-columns: 1fr; }
             .filter-container { flex-direction: column; }
         }
+[data-theme="light"] .sidebar,
+[data-theme="light"] aside,
+[data-theme="light"] .admin-sidebar,
+[data-theme="light"] nav.sidebar {
+  background: #ffffff;
+  border-right: 1px solid rgba(0,0,0,0.1);
+  box-shadow: 8px 0 40px rgba(0,0,0,0.08);
+}
 
+/* Заголовок сайдбара */
+[data-theme="light"] .sidebar-header,
+[data-theme="light"] .sidebar-title {
+  background: linear-gradient(135deg, #f8f9fa, #ffffff);
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  color: #111;
+}
+
+/* Пункты меню */
+[data-theme="light"] .sidebar-menu a,
+[data-theme="light"] .sidebar-link,
+[data-theme="light"] .nav-item a {
+  color: #444 !important;
+  background: transparent;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+[data-theme="light"] .sidebar-menu a:hover,
+[data-theme="light"] .sidebar-link:hover,
+[data-theme="light"] .nav-item a:hover {
+  color: #111 !important;
+  background: rgba(0,0,0,0.05);
+  border-left-color: var(--accent, #00ff9d);
+  padding-left: 1.4rem !important;
+}
+
+/* Активный пункт */
+[data-theme="light"] .sidebar-menu a.active,
+[data-theme="light"] .sidebar-link.active,
+[data-theme="light"] .nav-item a.active {
+  color: #000 !important;
+  background: linear-gradient(90deg, rgba(0,255,157,0.08), transparent);
+  border-left: 4px solid #00ff9d;
+  font-weight: 600;
+  box-shadow: inset 0 0 20px rgba(0,255,157,0.08);
+}
+
+/* Иконки в сайдбаре */
+[data-theme="light"] .sidebar-menu i,
+[data-theme="light"] .sidebar-link i,
+[data-theme="light"] .nav-item i {
+  color: #666 !important;
+  transition: color 0.3s;
+}
+[data-theme="light"] .sidebar-menu a:hover i,
+[data-theme="light"] .sidebar-link:hover i,
+[data-theme="light"] .active i {
+  color: #00ff9d !important;
+}
+
+/* Подменю (если есть) */
+[data-theme="light"] .sidebar-submenu,
+[data-theme="light"] .dropdown-menu {
+  background: #f9f9f9;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+[data-theme="light"] .sidebar-submenu a {
+  color: #555 !important;
+  padding-left: 3rem !important;
+}
+[data-theme="light"] .sidebar-submenu a:hover {
+  background: rgba(0,255,157,0.1);
+  color: #111 !important;
+}
+
+/* Скроллбар в сайдбаре */
+[data-theme="light"] .sidebar::-webkit-scrollbar,
+[data-theme="light"] aside::-webkit-scrollbar {
+  width: 6px;
+}
+[data-theme="light"] .sidebar::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2);
+  border-radius: 3px;
+}
+[data-theme="light"] .sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.35);
+}
+
+/* Логотип/аватар в сайдбаре */
+[data-theme="light"] .sidebar-logo img,
+[data-theme="light"] .user-avatar {
+  filter: brightness(0) saturate(100%);
+}
+
+/* Нижняя часть сайдбара (выход, профиль и т.д.) */
+[data-theme="light"] .sidebar-footer,
+[data-theme="light"] .user-info {
+  background: linear-gradient(to top, #f8f9fa, transparent);
+  border-top: 1px solid rgba(0,0,0,0.08);
+  color: #444;
+}
+[data-theme="light"] .logout-btn,
+[data-theme="light"] .sidebar-footer a {
+  color: #ff3b5c !important;
+}
+[data-theme="light"] .logout-btn:hover {
+  background: rgba(255,59,92,0.1);
+  color: #e02848 !important;
+}
+
+/* Мобильная версия — бургер и оверлей */
+[data-theme="light"] .sidebar-overlay {
+  background: rgba(0,0,0,0.4);
+}
+[data-theme="light"] .mobile-sidebar {
+  box-shadow: 0 0 60px rgba(0,0,0,0.2);
+}
 
         /* === ВИСЯЩИЙ СВЕТИЛЬНИК-ТУМБЛЕР === */
 .theme-toggle-hanging {
@@ -1097,6 +1215,40 @@ header.scrolled ~ body .theme-toggle-hanging { top: 76px; }
 [data-theme="light"] .rope.top::before { 
   background: linear-gradient(90deg, transparent, rgba(0,0,0,0.15), transparent);
 }
+/* ──────────────────────────────────────────────────────────────
+   ИСПРАВЛЯЕМ ВЫПАДАЮЩЕЕ МЕНЮ <select> В ТЁМНОЙ ТЕМЕ
+   (убираем белую шторку навсегда)
+   ────────────────────────────────────────────────────────────── */
+
+/* Тёмная тема — выпадающая шторка */
+select option,
+select::-webkit-calendar-picker-indicator {
+    background-color: #111111 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+/* Подсветка выбранного пункта */
+select option:checked,
+select option:hover {
+    background-color: #00ff9d !important;
+    color: #000000 !important;
+}
+
+/* Светлая тема — оставляем красиво (по желанию) */
+[data-theme="light"] select option {
+    background-color: #ffffff !important;
+    color: #111111 !important;
+}
+
+[data-theme="light"] select option:checked,
+[data-theme="light"] select option:hover {
+    background-color: #00ff9d !important;
+    color: #000000 !important;
+}
+
+
+
     </style>
 </head>
 <body>
@@ -1112,18 +1264,19 @@ header.scrolled ~ body .theme-toggle-hanging { top: 76px; }
 
  <!-- САЙДБАР -->
 <aside class="sidebar">
-        <h3 class="sidebar-title">Админка</h3>
-        <div class="sidebar-menu">
-            <a href="/admin" class="sidebar-item"><i class="fas fa-box"></i><span>Товары</span></a>
-            <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
-            <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
-            <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
-            <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
-            <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
-            <a href="/admin_reviews" class="sidebar-item active"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews | e }}</div></span></a>
-            <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders | e }}</div></span></a>
-        </div>
-    </aside>
+    <h3 class="sidebar-title">Админка</h3>
+    <div class="sidebar-menu">
+        <a href="/admin" class="sidebar-item"><i class="fas fa-box"></i><span>Товары</span></a>
+        <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
+        <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
+        <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
+        <a href="/admin_dispatch" class="sidebar-item active"><i class="fas fa-paper-plane"></i><span>Рассылки</span></a>
+        <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
+        <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
+        <a href="/admin_reviews" class="sidebar-item"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews }}</div></span></a>
+        <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders }}</div></span></a>
+    </div>
+</aside>
 
     <!-- Основной контент -->
     <main class="main-content">
@@ -1209,7 +1362,7 @@ header.scrolled ~ body .theme-toggle-hanging { top: 76px; }
                             </label>
                         </div>
                         <div class="data">
-                            <i class="fas fa-calendar"></i> {{ u.created_at[:10] }}
+                            <i class="fas fa-calendar"></i> {{ u.created_at|format_date }}
                             {% if u.is_blocked %}
                                 <i class="fas fa-lock" style="color:#ff6666;" title="Заблокирован"></i>
                             {% else %}
@@ -1467,50 +1620,49 @@ toggle?.addEventListener('change', () => {
 
 function showChart(type) {
     if (!currentStatsData) return;
-
     currentChartType = type;
-
     const container = document.getElementById('dynamicChartContainer');
-    const canvas = document.getElementById('dynamicChart');
     const loading = document.getElementById('chartLoading');
 
-    // Всегда показываем контейнер
     container.style.display = 'block';
-
-    // Уничтожаем старый график
     if (dynamicChart) {
         dynamicChart.destroy();
         dynamicChart = null;
     }
 
-    // Специальные случаи — просто текст
-    if (type === 'avg-time') {
-        const secs = currentStatsData.avg_time_on_site || 0;
-        const mins = Math.floor(secs / 60);
-        const sec = secs % 60;
+    // === ТЕКСТОВЫЕ БЛОКИ: онлайн и среднее время (единственный рабочий блок!) ===
+    if (type === 'avg-time' || type === 'online') {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        const textColor     = isLight ? '#111111' : '#ffffff';
+        const accentColor   = isLight ? '#00ff9d'  : '#ffffff';
 
-        canvas.style.display = 'none';
-        loading.style.display = 'none';
-        container.innerHTML = '<canvas id="dynamicChart" style="display:none;"></canvas>' +
-            '<div class="chart-loading" id="chartLoading" style="display:none;"></div>' +
-            `<p style="text-align:center;padding:6rem 0;color:#fff;font-size:2rem;">
-                Среднее время: <strong>${mins} мин ${sec} сек</strong>
-            </p>`;
+        let text = '';
+        if (type === 'avg-time') {
+            const secs = currentStatsData.avg_time_on_site || 0;
+            const mins = Math.floor(secs / 60);
+            const sec  = secs % 60;
+            text = `Среднее время: <strong>${mins} мин ${sec} сек</strong>`;
+        } else {
+            text = `Сейчас онлайн: <strong>${currentStatsData.current_online || 0}</strong>`;
+        }
+
+        container.innerHTML = `
+            <div style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100%;
+                font-size: 2.4rem;
+                font-weight: 500;
+                color: ${textColor};
+                text-align: center;
+            ">
+                ${text.replace('<strong>', `<strong style="color:${accentColor}; font-weight:800;">`)}
+            </div>`;
         return;
     }
 
-    if (type === 'online') {
-        canvas.style.display = 'none';
-        loading.style.display = 'none';
-        container.innerHTML = '<canvas id="dynamicChart" style="display:none;"></canvas>' +
-            '<div class="chart-loading" id="chartLoading" style="display:none;"></div>' +
-            `<p style="text-align:center;padding:6rem 0;color:#fff;font-size:2rem;">
-                Сейчас онлайн: <strong>${currentStatsData.current_online || 0}</strong>
-            </p>`;
-        return;
-    }
-
-    // === Обычные графики ===
+    // === Если данных нет ===
     let rawData = [];
     switch (type) {
         case 'visits':      rawData = currentStatsData.visits_data || []; break;
@@ -1521,15 +1673,13 @@ function showChart(type) {
     }
 
     if (!rawData || rawData.length === 0) {
-        canvas.style.display = 'none';
-        loading.style.display = 'none';
-        container.innerHTML = '<canvas id="dynamicChart" style="display:none;"></canvas>' +
-            '<div class="chart-loading" id="chartLoading" style="display:none;"></div>' +
-            `<p style="text-align:center;padding:6rem 0;color:#aaa;">Нет данных</p>`;
+        container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:1.5rem;">
+            Нет данных за выбранный период
+        </div>`;
         return;
     }
 
-    // Восстанавливаем canvas и loading
+    // === Восстанавливаем canvas для обычных графиков ===
     container.innerHTML = '<canvas id="dynamicChart"></canvas><div class="chart-loading" id="chartLoading">Загрузка...</div>';
     loading.style.display = 'block';
 
@@ -1540,6 +1690,8 @@ function showChart(type) {
         const values = rawData.map(x => x.value || x.views || x.active_sessions || 0);
         const isBar = type === 'top-pages';
 
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
         const config = {
             type: isBar ? 'bar' : 'line',
             data: {
@@ -1547,30 +1699,33 @@ function showChart(type) {
                 datasets: [{
                     label: isBar ? 'Просмотры' : 'Количество',
                     data: values,
-                    backgroundColor: isBar ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.15)',
-                    borderColor: '#ffffff',
-                    borderWidth: 2,
+                    backgroundColor: isBar
+                        ? (isLight ? 'rgba(0, 255, 157, 0.85)' : 'rgba(255,255,255,0.9)')
+                        : (isLight ? 'rgba(0, 255, 157, 0.18)' : 'rgba(255,255,255,0.15)'),
+                    borderColor: isLight ? '#00ff9d' : '#ffffff',
+                    borderWidth: isLight ? 3 : 2,
                     fill: !isBar,
                     tension: 0.4,
                     pointRadius: 5,
-                    pointHoverRadius: 8
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: isLight ? '#00ff9d' : '#ffffff',
+                    pointBorderColor: isLight ? '#000000' : '#ffffff',
+                    pointBorderWidth: isLight ? 2 : 0
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: !isBar } },
+                plugins: { legend: { display: !isBar, labels: { color: isLight ? '#333' : '#ccc' } } },
                 scales: {
-                    y: { beginAtZero: true, ticks: { color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.08)' } },
-                    x: { ticks: { color: '#ccc' }, grid: { color: 'rgba(255,255,255,0.08)' } }
+                    y: { beginAtZero: true, ticks: { color: isLight ? '#333' : '#ccc' }, grid: { color: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)' } },
+                    x: { ticks: { color: isLight ? '#333' : '#ccc' }, grid: { color: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.08)' } }
                 }
             }
         };
 
-        const newCanvas = document.getElementById('dynamicChart');
-        if (newCanvas) {
-            dynamicChart = new Chart(newCanvas, config);
-        }
+        const canvas = document.getElementById('dynamicChart');
+        if (canvas) dynamicChart = new Chart(canvas, config);
     });
 }
     // === Очистка конкретного типа ===

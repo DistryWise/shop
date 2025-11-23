@@ -1,4 +1,6 @@
-// static/js/cart.js
+let cartActionCount = 0;
+let cartActionTimer = null;
+let cartBlockedUntil = 0;
 document.addEventListener('DOMContentLoaded', () => {
     const $ = (id) => document.getElementById(id);
     const $$ = (sel) => document.querySelector(sel);
@@ -21,6 +23,56 @@ document.addEventListener('DOMContentLoaded', () => {
     let cartAnimating = false;
     let overlay = null;
 
+    // === АНТИСПАМ ДЛЯ МИНИ-КОРЗИНЫ (10+ действий за 30 сек → блок на 10 сек) ===
+let cartActionCount = 0;
+let cartActionTimer = null;
+let cartBlockedUntil = 0;
+
+const blockCartActions = () => {
+  cartBlockedUntil = Date.now() + 10000; // 10 секунд блокировки
+  showToast('Слишком быстро!', 'Подожди 10 секунд', true, 5000);
+
+  // Визуально блокируем кнопки
+  document.querySelectorAll('.quantity-btn, .clear-cart-btn').forEach(btn => {
+    btn.disabled = true;
+    btn.style.opacity = '0.4';
+    btn.style.pointerEvents = 'none';
+  });
+
+  // Разблокируем через 10 секунд
+  setTimeout(() => {
+    document.querySelectorAll('.quantity-btn, .clear-cart-btn').forEach(btn => {
+      btn.disabled = false;
+      btn.style.opacity = '';
+      btn.style.pointerEvents = '';
+    });
+  }, 10000);
+};
+
+const registerCartAction = () => {
+  const now = Date.now();
+
+  // Если уже заблокировано — игнорируем
+  if (now < cartBlockedUntil) return false;
+
+  cartActionCount++;
+
+  // Сбрасываем счётчик через 30 секунд
+  clearTimeout(cartActionTimer);
+  cartActionTimer = setTimeout(() => {
+    cartActionCount = 0;
+  }, 30000);
+
+  // Если больше 10 действий — блок
+  if (cartActionCount > 10) {
+    blockCartActions();
+    cartActionCount = 0; // сбрасываем, чтобы не спамить алертами
+    return false;
+  }
+
+  return true;
+};
+
     // === УТИЛИТЫ ===
     const formatPrice = (cents) => {
         const rub = Math.floor(cents / 100);
@@ -40,6 +92,19 @@ document.addEventListener('DOMContentLoaded', () => {
         .replace(/"/g, '\\"')
         .replace(/\n/g, '\\n')
         .replace(/\r/g, '\\r');
+
+        const notifyCartUpdated = () => {
+        const { count, sumStr } = calculateTotal(cartItems);
+        document.dispatchEvent(new CustomEvent('cartUpdated', {
+            detail: {
+                items: cartItems,
+                count,
+                total: sumStr
+            }
+        }));
+    };
+
+
 
     const showToast = (title, message = '', error = false, duration = 3000) => {
         const toast = document.createElement('div');
@@ -74,21 +139,22 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // === ДОБАВЛЕНИЕ В КОРЗИНУ ===
-    window.addToCart = async (title, type = 'product', quantity = 1) => {
-        const isLoggedIn = !!sessionStorage.getItem('user_id');
+window.addToCart = async (title, type = 'product', image_url = '/static/assets/no-image.png', price_str = 'Цена по запросу', quantity = 1) => {
+  const isLoggedIn = !!sessionStorage.getItem('user_id');
 
-        if (!isLoggedIn) {
-            const existing = clientCart.find(i => i.title === title && i.type === type);
-            if (existing) {
-                existing.quantity += quantity;
-            } else {
-                clientCart.push({ title, type, quantity, price_cents: 0, price_str: 'Цена по запросу', image_url: '/static/assets/no-image.png' });
-            }
-            localStorage.setItem('clientCart', JSON.stringify(clientCart));
-            showToast('Добавлено в корзину');
-            await loadCart();
-            return;
-        }
+  if (!isLoggedIn) {
+    const existing = clientCart.find(i => i.title === title && i.type === type);
+    if (existing) {
+      existing.quantity += quantity;
+    } else {
+      clientCart.push({ title, type, quantity, price_cents: 0, price_str, image_url });
+    }
+    localStorage.setItem('clientCart', JSON.stringify(clientCart));
+    showToast('Добавлено в корзину');
+    await loadCart();
+    notifyCartUpdated();
+    return;
+  }
 
         const { ok, data } = await api('/api/cart/add', {
             method: 'POST',
@@ -98,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ok) {
             showToast('Добавлено в корзину');
             await loadCart();
+            notifyCartUpdated();
         } else {
             showToast('Ошибка', data.error || 'Не удалось добавить', true);
         }
@@ -115,6 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('clientCart', JSON.stringify(clientCart));
         }
         await loadCart();
+        notifyCartUpdated();
         showToast('Удалено');
     };
 
@@ -143,29 +211,39 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('clientCart', JSON.stringify(clientCart));
         }
         await loadCart();
+        notifyCartUpdated();
     };
 
     // === ЗАГРУЗКА КОРЗИНЫ ===
-    const loadCart = async () => {
-        const isLoggedIn = !!sessionStorage.getItem('user_id');
-        let items = [];
+// === ЗАГРУЗКА КОРЗИНЫ — ФИНАЛЬНАЯ ВЕРСИЯ 2025 ===
+const loadCart = async () => {
+    const isLoggedIn = !!sessionStorage.getItem('user_id');
+    let items = [];
 
-        if (isLoggedIn) {
-            const { ok, data } = await api('/api/cart/get');
-            items = ok ? data.map(i => ({
+    if (isLoggedIn) {
+        // Авторизованный пользователь — берём с сервера
+        const { ok, data } = await api('/api/cart/get');
+        if (ok && Array.isArray(data)) {
+            items = data.map(i => ({
                 ...i,
-                image_url: i.image_url || '/static/assets/no-image.png'
-            })) : [];
-        } else {
-            items = clientCart.map(i => ({
-                ...i,
-                image_url: i.image_url || '/static/assets/no-image.png'
+                // Сервер может присылать image или image_url — берём любой
+                image_url: i.image_url || i.image || '/static/assets/no-image.png'
             }));
         }
+    } else {
+        // Неавторизованный — берём из localStorage (clientCart)
+        // ВАЖНО: НЕ ПЕРЕТИРАЕМ image_url — он уже сохранён при добавлении!
+        items = clientCart.map(i => ({
+            ...i,
+            // Просто копируем как есть. Если нет — ставим заглушку
+            image_url: i.image_url || '/static/assets/no-image.png'
+        }));
+    }
 
-        cartItems = items;
-        renderMiniCart();
-    };
+    cartItems = items;
+    renderMiniCart();
+    notifyCartUpdated();
+};
 
     const renderMiniCart = () => {
         const { count, sumStr } = calculateTotal(cartItems);
@@ -304,6 +382,16 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        
+
+        // И вызывай её везде после изменения корзины:
+        const loadCart = async () => {
+            // ... загрузка ...
+            cartItems = items;
+            renderMiniCart();
+            notifyCartUpdated(); // ← добавь
+        };
+
         // === ОБЩИЕ СОБЫТИЯ ===
         elements.closeCartModal?.addEventListener('click', closeCartModal);
         elements.goToCartBtn?.addEventListener('click', () => location.href = '/bin');
@@ -320,4 +408,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === ИНИЦИАЛИЗАЦИЯ ===
     loadCart();
+        // === АКТИВАЦИЯ АНТИСПАМА НА КНОПКАХ КОРЗИНЫ ===
+    // Перехватываем ВСЕХ кликов по кнопкам изменения количества и удаления
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.quantity-btn, .clear-cart-btn');
+        if (!btn) return;
+
+        // Если сейчас кулдаун — просто игнорируем клик
+        if (Date.now() < cartBlockedUntil) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return false;
+        }
+
+        // Регистрируем действие (считаем +1 к счётчику)
+        if (!registerCartAction()) {
+            // registerCartAction вернёт false, если превышен лимит → уже вызван блок
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return false;
+        }
+
+        // Если всё ок — ничего не делаем, клик пройдёт в оригинальный onclick
+    }, true); // ← capturing phase, чтобы сработает ДО onclick в разметке
 });

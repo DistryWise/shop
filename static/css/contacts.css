@@ -164,7 +164,7 @@ main { padding: calc(90px + 15vh) 8% 20vh; display: flex; flex-direction: column
   max-width: 90%;
 }
 .philosophy cite {
-  display: block; margin-top: 3rem; font-size: 1rem; letter-spacing: 4px; color: var(--gray);
+  display: block; margin-top: -15rem; font-size: 1rem; letter-spacing: 4px; color: var(--gray);
 }
 
 .instagram-feed { margin: 18rem 0; width: 100%; max-width: 1200px; }
@@ -203,10 +203,40 @@ main { padding: calc(90px + 15vh) 8% 20vh; display: flex; flex-direction: column
   filter: grayscale(0%) brightness(1.3);
 }
 
-.requisites-wrapper { margin-top: 16rem; width: 100%; max-width: 900px; }
+.requisites-wrapper {
+  margin-top: 18rem;
+  width: 100%;
+  max-width: 860px;
+  margin-left: 29vw;        /* мощный сдвиг вправо */
+  margin-right: auto;
+}
+
 .requisites-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 3rem 6rem;
-  font-size: 1.15rem; font-weight: 300; letter-spacing: 0.5px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3rem 6rem;
+  font-size: 1.15rem;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+}
+
+/* На планшетах и мобильных возвращаем по центру или чуть меньше сдвиг */
+@media (max-width: 1024px) {
+  .requisites-wrapper {
+    margin-left: 8%;
+  }
+}
+
+@media (max-width: 860px) {
+  .requisites-wrapper {
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 5%;
+  }
+  .requisites-grid {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
 }
 .req-title {
   font-size: 0.85rem; font-weight: 400; letter-spacing: 2px;
@@ -728,25 +758,7 @@ html[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,
 /* Курсор */
 html[data-theme="light"] .custom-cursor { background: #000; }
 
-/* ХЕДЕР — САМОЕ ГЛАВНОЕ */
-html[data-theme="light"] header {
-  background: rgba(250,250,250,0.88) !important;
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border) !important;
-}
-html[data-theme="light"] header.scrolled {
-  background: rgba(250,250,250,0.98) !important;
-}
-html[data-theme="light"] .logo-img {
-  filter: none !important;
-}
 
-/* Иконки хедера */
-html[data-theme="light"] .header-icons .icon-btn,
-html[data-theme="light"] .header-icons button[id*="Btn"] {
-  background: rgba(15,15,15,0.08) !important;
-  border: 1.2px solid rgba(15,15,15,0.15) !important;
-}
 html[data-theme="light"] .icon-btn:hover {
   background: rgba(15,15,15,0.18) !important;
   border-color: var(--text) !important;
@@ -762,13 +774,7 @@ html[data-theme="light"] #miniCartDropdown {
   border: 1.5px solid rgba(15,15,15,0.12) !important;
   box-shadow: 0 30px 80px rgba(0,0,0,0.12) !important;
 }
-html[data-theme="light"] .mini-cart-header { border-bottom: 1px solid rgba(15,15,15,0.1); }
-html[data-theme="light"] .mini-cart-item { border-bottom: 1px solid rgba(15,15,15,0.06); }
-html[data-theme="light"] .mini-cart-footer { border-top: 1px solid rgba(15,15,15,0.1); }
-html[data-theme="light"] .go-to-cart-btn {
-  background: #000 !important;
-  color: #fff !important;
-}
+
 html[data-theme="light"] .go-to-cart-btn:hover { background: #333 !important; }
 
 /* Делитель, бэк-то-топ, футер */
@@ -828,4 +834,225 @@ html[data-theme="light"] .auth-btn:hover {
   background: #333 !important;
 }
 
-/* Тосты оставляем тёмными — они и в светлой теме выглядят круто */
+.center-last {
+  display: block;
+  text-align: center;
+  margin-top: 10px;
+  font-weight: 700;
+  font-size: 1.1em;
+}
+/* ────────────────────────────────
+   TYPEWRITER ЦИТАТА — ЛУЧШАЯ ВЕРСИЯ
+   Поддержка тёмной/светлой темы + подчёркивание снизу
+   ──────────────────────────────── */
+#typewriter {
+  font-family: 'Georgia', 'Times New Roman', Georgia, serif;
+  font-size: 2.4rem;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.05em;
+  color: var(--text);
+  text-align: center;
+
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 6rem 1rem;
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+#typewriter br {
+  display: block;
+  content: "";
+  margin-top: 1.2em;
+}
+
+/* Ключевая строка */
+#typewriter .center-last {
+  display: block;
+  margin: 4rem auto 0;
+  font-size: 3rem;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  color: var(--text);
+  position: relative;
+}
+
+/* Подчёркивание — отдельная строка ПОД текстом */
+#typewriter .center-last::after {
+  content: '';
+  display: block;
+  width: 90px;
+  height: 1px;
+  background: var(--text);
+  opacity: 0.6;
+  margin: 3.5rem auto 0;
+  transition: all 0.4s ease;
+}
+
+/* При наведении — линия становится ярче (по желанию) */
+#typewriter:hover .center-last::after {
+  opacity: 1;
+  width: 120px;
+}
+
+/* Адаптивность */
+@media (max-width: 1024px) {
+  #typewriter {
+    font-size: 2.1rem;
+    padding: 4rem 1rem;
+  }
+  #typewriter .center-last {
+    font-size: 2.6rem;
+    margin-top: 3.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  #typewriter {
+    font-size: 1.8rem;
+    min-height: 60vh;
+  }
+  #typewriter .center-last {
+    font-size: 2.2rem;
+    margin-top: 3rem;
+  }
+  #typewriter .center-last::after {
+    margin-top: 3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  #typewriter {
+    font-size: 1.55rem;
+  }
+  #typewriter .center-last {
+    font-size: 1.9rem;
+  }
+}
+
+/* ФИКС: ВЕРНУТЬ КУРСОР НА КНОПКЕ "НАВЕРХ" */
+.back-to-top,
+.back-to-top i,
+.back-to-top * {
+  cursor: pointer !important;
+}
+
+/* Дополнительно — чуть ярче при наведении (по желанию) */
+.back-to-top:hover {
+  background: rgba(255,255,255,0.18) !important;
+  border-color: #fff !important;
+  transform: translateY(-4px);
+}
+html[data-theme="light"] .back-to-top:hover {
+  background: rgba(0,0,0,0.18) !important;
+  border-color: #000 !important;
+}
+
+/* СВЕТЛАЯ ТЕМА — ФИНАЛЬНЫЙ ВИД ХЕДЕРА (то, что ты хотел) */
+html[data-theme="light"] header {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(15,15,15,0.12) !important;
+  backdrop-filter: blur(20px);
+  transition: all .4s ease;
+}
+
+html[data-theme="light"] header.scrolled {
+  background: rgba(250, 250, 250, 0.92) !important;   /* белый стеклянный бар */
+  backdrop-filter: blur(24px) !important;
+  border-bottom: 1px solid rgba(15,15,15,0.15) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08) !important;
+}
+
+/* Логотип и иконки — всегда чёрные в светлой теме (и вверху, и после скролла) */
+html[data-theme="light"] .logo-img {
+  filter: none !important;                  /* чёрный логотип */
+}
+html[data-theme="light"] header.scrolled .logo-img {
+  height: 100px;
+  filter: none !important;                  /* остаётся чёрным */
+}
+
+html[data-theme="light"] .nav-link,
+html[data-theme="light"] .header-icons .icon-btn,
+html[data-theme="light"] .header-icons i,
+html[data-theme="light"] .header-icons button {
+  color: #000 !important;
+  border-color: rgba(15,15,15,0.22) !important;
+}
+html[data-theme="light"] header.scrolled .nav-link,
+html[data-theme="light"] header.scrolled .header-icons .icon-btn,
+html[data-theme="light"] header.scrolled .header-icons i {
+  color: #000 !important;
+  border-color: rgba(15,15,15,0.28) !important;
+}
+
+/* При ховере — чуть темнее (как в macOS) */
+html[data-theme="light"] .icon-btn:hover,
+html[data-theme="light"] header.scrolled .icon-btn:hover {
+  background: rgba(15,15,15,0.12) !important;
+  border-color: rgba(15,15,15,0.4) !important;
+}
+
+/* 1. Человечек до входа — ЧЁРНЫЙ в светлой теме */
+html[data-theme="light"] .icon-btn i.fas.fa-user {
+  color: #000000 !important;
+}
+html[data-theme="light"] header.scrolled .icon-btn i.fas.fa-user {
+  color: #000000 !important;
+}
+
+/* После входа — если у тебя там эмодзи, он и так чёрный, но на всякий случай */
+html[data-theme="light"] .logged-in .live-emoji {
+  color: #000000 !important;
+}
+
+/* 2. ВНУТРЕННЯЯ ПОИСКОВАЯ СТРОКА — ТЁМНАЯ В СВЕТЛОЙ ТЕМЕ */
+html[data-theme="light"] .search-input {
+  background: rgba(15, 15, 15, 0.08) !important;
+  border: 1.5px solid rgba(15, 15, 15, 0.22) !important;
+  color: #000000 !important;
+  backdrop-filter: blur(12px) !important;
+}
+html[data-theme="light"] .search-input::placeholder {
+  color: rgba(0, 0, 0, 0.55) !important;
+}
+html[data-theme="light"] .search-input:focus {
+  background: rgba(15, 15, 15, 0.14) !important;
+  border-color: #000000 !important;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Иконка лупы в поиске — тоже чёрная */
+html[data-theme="light"] .search-icon i {
+  color: #000000 !important;
+}
+
+/* Кнопка очистки × — чёрная */
+html[data-theme="light"] .search-clear {
+  color: #000000 !important;
+  background: rgba(15, 15, 15, 0.1) !important;
+}
+html[data-theme="light"] .search-clear:hover {
+  background: rgba(15, 15, 15, 0.2) !important;
+}
+
+/* СВЕТЛАЯ ТЕМА — ДЕЛАЕМ КУРСОР ВИДНЫМ НА БЕЛОМ ФОНЕ */
+html[data-theme="light"] .custom-cursor {
+  background: #000 !important;
+  mix-blend-mode: normal !important;     /* ← САМОЕ ГЛАВНОЕ! */
+  opacity: 0.85;
+  box-shadow: 0 0 8px rgba(0,0,0,0.3);
+}
+
+html[data-theme="light"] .custom-cursor.hover {
+  background: #000 !important;
+  transform: translate(-50%, -50%) scale(2.6);
+  opacity: 1;
+  box-shadow: 0 0 16px rgba(0,0,0,0.4);
+}

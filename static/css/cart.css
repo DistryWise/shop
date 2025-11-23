@@ -244,3 +244,119 @@
     transform: translateY(0);
     box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
 }
+
+/* ====================== СВЕТЛАЯ ТЕМА — КОРЗИНА ====================== */
+[data-theme="light"] .cart-modal {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .cart-modal-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .cart-modal-title {
+    color: #000;
+}
+
+[data-theme="light"] .cart-modal-close {
+    color: #666;
+}
+
+[data-theme="light"] .cart-modal-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #000;
+}
+
+[data-theme="light"] .mini-cart-items {
+    scrollbar-color: rgba(0,0,0,0.3) transparent;
+}
+
+[data-theme="light"] .mini-cart-item {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .mini-cart-info h4 {
+    color: #000;
+}
+
+[data-theme="light"] .mini-cart-price {
+    color: #16a34a; /* чуть потемнее зелёного, чтобы на белом было видно */
+}
+
+[data-theme="light"] .quantity-btn {
+    background: rgba(0, 0, 0, 0.07);
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    color: #000;
+}
+
+[data-theme="light"] .quantity-btn:hover {
+    background: rgba(0, 0, 0, 0.14);
+}
+
+[data-theme="light"] .clear-cart-btn {
+    background: rgba(255, 107, 107, 0.12);
+    color: #e03e3e;
+}
+
+[data-theme="light"] .clear-cart-btn:hover {
+    background: rgba(255, 107, 107, 0.22);
+}
+
+[data-theme="light"] .cart-modal-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .mini-cart-total {
+    color: #000 !important;
+    text-shadow: none;
+}
+
+/* Кнопка "Оформить" в светлой теме — чёрная на белом фоне */
+[data-theme="light"] .go-to-cart-btn {
+    background: #000000;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="light"] .go-to-cart-btn:hover {
+    background: #1a1a1a;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .go-to-cart-btn::before {
+    background: #1a1a1a;
+}
+
+/* Бейджик количества товаров — теперь красный, чтобы был виден на светлом фоне */
+[data-theme="light"] .cart-count {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+/* УСИЛИВАЕМ ДВЕ СУЩЕСТВУЮЩИЕ ПОЛОСКИ В МИНИ-КОРЗИНЕ */
+#miniCartDropdown .mini-cart-header {
+  border-bottom: 1px solid rgba(255,255,255,0.18) !important;
+  padding-bottom: 1rem;
+}
+
+#miniCartDropdown .mini-cart-footer {
+  border-top: 1px solid rgba(255,255,255,0.18) !important;
+  padding-top: 1rem;
+}
+
+/* Светлая тема — чёрные чёткие полоски */
+html[data-theme="light"] #miniCartDropdown .mini-cart-header {
+  border-bottom-color: rgba(15,15,15,0.22) !important;
+}
+
+html[data-theme="light"] #miniCartDropdown .mini-cart-footer {
+  border-top-color: rgba(15,15,15,0.22) !important;
+}
+

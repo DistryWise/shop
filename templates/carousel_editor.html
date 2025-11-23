@@ -398,6 +398,8 @@ fonts.googleapis.com https://cdnjs.cloudflare.com;
 .back-btn:hover {
   background: #ff5f57 !important;
 }
+
+
   </style>
 
 </head>
@@ -406,7 +408,7 @@ fonts.googleapis.com https://cdnjs.cloudflare.com;
 <header>
   <div class="logo">Piligrim редактор</div>
   <div style="display: flex; gap: 12px; align-items: center;">
-<button class="nav-btn back-btn" id="back-button">
+<button class="nav-btn back-btn" id="back-button" onclick="history.back()">
   ← Назад
 </button>
     <button class="nav-btn" onclick="location.href='/'">
@@ -1760,7 +1762,9 @@ function updateRotationTool() {
 window.addEventListener('load', () => {
   loadCarousel(); // ← Просто вызываем новую функцию
 });
-
+document.getElementById('back-button').addEventListener('click', () => {
+  window.history.back();
+});
 
 </script>
 

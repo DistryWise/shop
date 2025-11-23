@@ -43,11 +43,24 @@ document.querySelectorAll('a[href^="#"], .nav-link, .back-to-top').forEach(link 
   });
 });
 
-/* ---------- КАСТОМНЫЙ КУРСОР ---------- */
+/* ---------- КАСТОМНЫЙ КУРСОР — ТОЧНО КАК НА contacts.html ---------- */
 const cursor = document.querySelector('.custom-cursor');
-document.addEventListener('mousemove', e => {
-  cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
-});
+
+if (cursor) {
+  // Скрываем обычный курсор
+  document.body.style.cursor = 'none';
+
+  document.addEventListener('mousemove', e => {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+  });
+
+  // При наведении на интерактив — эффект "hover"
+  document.querySelectorAll('a, button, input, textarea, [onclick], .clickable, .nav-link').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+  });
+}
 
 /* ---------- АНИМАЦИЯ ПОЯВЛЕНИЯ ---------- */
 const observer = new IntersectionObserver((entries) => {

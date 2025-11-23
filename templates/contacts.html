@@ -222,42 +222,63 @@ header.scrolled + .theme-toggle-hanging {
     </div>
   </div>
 
-  <!-- МОДАЛКА АВТОРИЗАЦИИ -->
-  <div id="authModal" class="auth-modal">
-    <div class="auth-modal-content">
-      <button class="close-modal" id="closeAuthModal">×</button>
-      <h2 class="auth-title">Вход по номеру телефона</h2>
-      <div id="stepPhone" class="auth-step">
-        <div class="country-selector">
-          <div class="selected-country" id="selectedCountry">
-            <span class="flag">RU</span>
-            <span class="code">+7</span>
-            <i class="fas fa-chevron-down"></i>
-          </div>
-          <div class="country-dropdown" id="countryDropdown">
-            <div class="country-item" data-code="+7" data-flag="RU">Россия +7</div>
-            <div class="country-item" data-code="+1" data-flag="US">USA +1</div>
-            <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
-          </div>
+<!-- МОДАЛКА АВТОРИЗАЦИИ — ПОЛНОСТЬЮ РАБОЧАЯ ВЕРСИЯ -->
+<div id="authModal" class="auth-modal">
+  <div class="auth-modal-content">
+    <button class="close-modal" id="closeAuthModal">×</button>
+    <h2 class="auth-title">Вход по номеру телефона</h2>
+
+    <!-- ШАГ 1 — ВВОД НОМЕРА -->
+    <div id="stepPhone" class="auth-step">
+      <div class="country-selector">
+        <div class="selected-country" id="selectedCountry">
+          <span class="flag">RU</span>
+          <span class="code">+7</span>
+          <i class="fas fa-chevron-down"></i>
         </div>
-        <input type="tel" id="phoneInput" placeholder="___ ___ ___" maxlength="12" class="auth-input">
-        <button id="sendCodeBtn" class="auth-btn">Получить код</button>
+        <div class="country-dropdown" id="countryDropdown">
+          <div class="country-item" data-code="+7" data-flag="RU">Россия +7</div>
+          <div class="country-item" data-code="+1" data-flag="US">USA +1</div>
+          <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
+        </div>
       </div>
-      <div id="stepCode" class="auth-step" style="display:none;">
-        <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
-        <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
-        <button id="verifyCodeBtn" class="auth-btn">Войти</button>
-        <button id="resendCode" class="auth-link">Отправить повторно</button>
-      </div>
-      <div id="stepSuccess" class="auth-step" style="display:none;">
-        <i class="fas fa-check-circle success-icon"></i>
-        <h3>Добро пожаловать!</h3>
-        <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
-        <button id="closeSuccess" class="auth-btn">Продолжить</button>
-      </div>
+
+      <input type="tel" id="phoneInput" placeholder="(999) 999 99 99" class="auth-input">
+
+      <!-- Обязательное согласие -->
+      <label class="checkbox-label required">
+        <input type="checkbox" id="privacyCheck">
+        <span class="custom-checkbox"></span>
+        Согласен с <a href="/policy" target="_blank" class="privacy-link">политикой конфиденциальности</a>
+      </label>
+
+      <!-- Автоматическая подписка на рассылку -->
+      <label class="checkbox-label">
+        <input type="checkbox" id="subscribeCheck" checked>
+        <span class="custom-checkbox"></span>
+        Получать SMS с акциями и уведомлениями
+      </label>
+
+      <button id="sendCodeBtn" class="auth-btn" disabled>Получить код</button>
+    </div>
+
+    <!-- ШАГ 2 — ВВОД КОДА -->
+    <div id="stepCode" class="auth-step" style="display:none;">
+      <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
+      <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
+      <button id="verifyCodeBtn" class="auth-btn">Войти</button>
+      <button id="resendCode" class="auth-link">Отправить повторно</button>
+    </div>
+
+    <!-- ШАГ 3 — УСПЕШНЫЙ ВХОД -->
+    <div id="stepSuccess" class="auth-step" style="display:none;">
+      <i class="fas fa-check-circle success-icon"></i>
+      <h3>Добро пожаловать!</h3>
+      <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
+      <button id="closeSuccess" class="auth-btn">Продолжить</button>
     </div>
   </div>
-
+</div>
 <!-- КАРТОЧКА ТОВАРА — РАБОЧАЯ, КАК В ZAZA -->
 <div class="product-modal" id="productModal">
   <div class="product-content">
@@ -293,14 +314,14 @@ header.scrolled + .theme-toggle-hanging {
     <h1 class="page-title">Контакты</h1>
     <p class="page-subtitle">Связаться с нами</p>
     <div class="contacts-wrapper">
-      <div class="contact-block"><span class="contact-label">Телефон</span><p class="contact-value"><a href="tel:+78121234567">+7 (812) 123-45-67</a></p></div>
-      <div class="contact-block"><span class="contact-label">Адрес</span><p class="contact-value">Санкт-Петербург<br>Невский пр., 1</p></div>
-      <div class="contact-block"><span class="contact-label">E-mail</span><p class="contact-value"><a href="mailto:info@piligrim.ru">info@piligrim.ru</a></p></div>
+      <div class="contact-block"><span class="contact-label">Телефон</span><p class="contact-value"><a href="tel:+78121234567">+7 (906) 217-38-69</a></p></div>
+      <div class="contact-block"><span class="contact-label">Адрес</span><p class="contact-value">Калининград<br>ул. Балашовская,4</p></div>
+      <div class="contact-block"><span class="contact-label">E-mail</span><p class="contact-value"><a href="mailto:info@piligrim.ru">piligrim_service39@mail.ru</a></p></div>
       <div class="contact-block"><span class="contact-label">Время работы</span><p class="contact-value">24 / 7</p></div>
     </div>
-    <div class="visit-us"><h2>VISIT US</h2><p>Мы всегда рады видеть вас в нашем шоуруме. Запишитесь на примерку коллекции.</p></div>
+    <div class="visit-us"><h2>VISIT US</h2><p>Мы всегда рады видеть вас в нашем магазине. Подпишитесь,чтобы быть в курсе новых событий.</p></div>
     <div class="divider"></div>
-    <div class="showroom"><h2>SHOWROOM</h2><p>По предварительной записи<br>Невский пр., 1, Санкт-Петербург</p></div>
+    <div class="showroom"><h2>SHOWROOM</h2><p>Приходите в любое время<br>Калининград, ул. Балашовская,4</p></div>
     <div class="philosophy"><blockquote><span class="typewriter" id="typewriter"></span></blockquote><cite>— PILIGRIM MANIFESTO</cite></div>
     <div class="instagram-feed"><h2>INSTAGRAM</h2><div class="insta-grid">
       <div class="insta-item"><i class="fab fa-instagram"></i></div>
@@ -310,23 +331,23 @@ header.scrolled + .theme-toggle-hanging {
       <div class="insta-item"><i class="fab fa-instagram"></i></div>
       <div class="insta-item"><i class="fab fa-instagram"></i></div>
     </div></div>
-    <div class="newsletter"><h2>SUBSCRIBE</h2><p>Получайте первые новости о новых коллекциях и приватных событиях.</p>
+    <div class="newsletter"><h2>SUBSCRIBE</h2><p>Получайте первые новости о новых товарах и услугах.</p>
       <form class="newsletter-form" id="newsletterForm">
         <input type="email" class="newsletter-input" placeholder="YOUR EMAIL">
         <button type="submit" class="newsletter-btn">Отправить</button>
       </form>
     </div>
     <div class="social-wrapper">
-      <a href="https://t.me/piligrim"><i class="fab fa-telegram-plane"></i></a>
-      <a href="https://vk.com/piligrim"><i class="fab fa-vk"></i></a>
-      <a href="https://wa.me/79111234567"><i class="fab fa-whatsapp"></i></a>
+      <a href="https://t.me/+79062173869"><i class="fab fa-telegram-plane"></i></a>
+      <a href="https://m.vk.com/club233690981"><i class="fab fa-vk"></i></a>
+      <a href="https://wa.me/+79062173869"><i class="fab fa-whatsapp"></i></a>
     </div>
     <div class="requisites-wrapper">
       <div class="requisites-grid">
-        <div><span class="req-title">ООО «ПИЛИГРИМ»</span><p>ИНН 7812345678</p></div>
-        <div><span class="req-title">ОГРН</span><p>1234567890123</p></div>
-        <div><span class="req-title">Юр. адрес</span><p>191186, Санкт-Петербург,<br>Невский пр., д. 1</p></div>
-        <div><span class="req-title">Р/с</span><p>40702810123456789012</p></div>
+        <div><span class="req-title">ООО «ПИЛИГРИМ»</span><p>ИНН 3900046405</p></div>
+        <div><span class="req-title">ОГРН</span><p>1253900010880</p></div>
+        <div><span class="req-title">Юр. адрес</span><p>236003, Калининград,<br>Балашовская ул, д. 4, помещ. 14 </p></div>
+        <div><span class="req-title">Р/с</span><p>40702810420710001349</p></div>
       </div>
     </div>
 <!-- === AI АССИСТЕНТ — ИКОНКА И МОДАЛКА (из zaza.html, не в ai.css) === -->
@@ -416,7 +437,7 @@ header.scrolled + .theme-toggle-hanging {
     <div class="footer-center"><a href="/" class="footer-logo-link"><img src="/static/assets/logo.png" alt="Piligrim" class="footer-logo"></a></div>
     <div class="footer-right">
       <div class="footer-links">
-        <a href="/privacy">Политика конфиденциальности</a>
+        <a href="/policy">Политика конфиденциальности</a>
         <a href="/terms">Условия использования</a>
         <a href="/delivery">Доставка и оплата</a>
       </div>
@@ -457,5 +478,6 @@ themeToggle?.addEventListener('change', () => {
   }
 });
   </script>
+  
 </body>
 </html>

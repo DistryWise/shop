@@ -5,59 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Обратная связь — Админка | ZAZA</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Shadows+Into+Light&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
-    
-    <style>
-        .sidebar-item span { display: flex; align-items: center; gap: 0.6rem; flex-wrap: nowrap; white-space: nowrap; overflow: hidden; }
-        .sidebar-badge { flex-shrink: 0; min-width: 26px; width: 26px; height: 26px; font-size: 0.75rem; background: var(--glass); border: 1px solid var(--border); }
 
-        .bulk-actions {
-            display: flex; gap: 1rem; margin: 1.5rem 0; flex-wrap: wrap; align-items: center;
-        }
-        .select-all-wrapper { display: flex; align-items: center; gap: 0.5rem; color: #aaa; font-size: 0.95rem; }
-        .review-item { position: relative; padding-left: 3.2rem; transition: all 0.3s; cursor: pointer; }
-        .review-item::before {
-            content: ''; position: absolute; left: 0.8rem; top: 1.4rem; width: 18px; height: 18px;
-            border: 2px solid #444; border-radius: 6px; background: transparent; transition: all 0.2s;
-        }
-        .review-item.selected::before {
-            background: #00ff9d; border-color: #00ff9d;
-        }
-        .review-item.selected::after {
-            content: '✓'; position: absolute; left: 0.85rem; top: 1.32rem; color: #000; font-weight: bold; font-size: 0.9rem;
-        }
-        .review-text { 
-            display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; 
-            line-height: 1.5; margin-top: 0.8rem; color: #ddd;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
+    <link rel="stylesheet" href="/static/css/admin/admin_feedback.css">
+
 </head>
 <body>
 
     <header>
-        <a href="/" class="logo">
-            <img src="/static/assets/logo.png" alt="ZAZA" class="logo-img">
-        </a>
-        <nav style="margin-left: auto;">
-            <a href="/" class="nav-link">Главная</a>
-        </nav>
+        <a href="/" class="logo"><img src="/static/assets/logo.png" alt="ZAZA" class="logo-img"></a>
+        <nav style="margin-left: auto;"><a href="/" class="nav-link">Главная</a></nav>
     </header>
 
-    <aside class="sidebar">
-        <h3 class="sidebar-title">Админка</h3>
-        <div class="sidebar-menu">
-            <a href="/admin" class="sidebar-item"><i class="fas fa-box"></i><span>Товары</span></a>
-            <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
-            <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
-            <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
-            <a href="/admin_feedback" class="sidebar-item active"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
-            <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
-            <a href="/admin_reviews" class="sidebar-item"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews | e }}</div></span></a>
-            <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders | e }}</div></span></a>
-        </div>
-    </aside>
+<aside class="sidebar">
+    <h3 class="sidebar-title">Админка</h3>
+    <div class="sidebar-menu">
+        <a href="/admin" class="sidebar-item"><i class="fas fa-box"></i><span>Товары</span></a>
+        <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
+        <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
+        <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
+        <a href="/admin_dispatch" class="sidebar-item"><i class="fas fa-paper-plane"></i><span>Рассылки</span></a>
+        <a href="/admin_feedback" class="sidebar-item active"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
+        <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
+        <a href="/admin_reviews" class="sidebar-item"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews }}</div></span></a>
+        <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders }}</div></span></a>
+    </div>
+</aside>
 
     <main class="main-content">
         <div class="admin-container">
@@ -75,10 +50,7 @@
                 <input type="text" id="searchInput" class="search-input" placeholder="Поиск по ФИО, email, телефону, тексту..." autocomplete="off">
 
                 <div class="custom-select">
-                    <div class="custom-select-trigger">
-                        <span class="custom-select-text">За всё время</span>
-                        <i class="fas fa-chevron-down custom-select-arrow"></i>
-                    </div>
+                    <div class="custom-select-trigger"><span class="custom-select-text">За всё время</span><i class="fas fa-chevron-down custom-select-arrow"></i></div>
                     <div class="custom-select-options">
                         <div class="custom-select-option" data-value="">За всё время</div>
                         <div class="custom-select-option" data-value="today">Сегодня</div>
@@ -90,18 +62,15 @@
                 </div>
             </div>
 
-            <!-- Массовые действия -->
-            <div class="bulk-actions">
-                <div class="select-all-wrapper">
-                    <input type="checkbox" id="selectAll">
-                    <label for="selectAll">Выбрать все на странице</label>
+            <div class="selection-controls">
+                <button class="btn-zaza-primary" id="startSelectionBtn" onclick="enterSelectionMode()">Выбрать</button>
+                <div class="bulk-actions" id="bulkActions">
+                    <button class="btn-zaza-primary" id="deleteSelectedBtn" onclick="prepareBulkDelete()">
+                        Удалить выбранные (<span id="selectedCount">0</span>)
+                    </button>
+                    <button class="btn-zaza-danger" onclick="prepareDeleteAll()">Удалить все</button>
+                    <button style="background:#444;color:#fff;padding:0.7rem 1.3rem;border-radius:12px;border:none;cursor:pointer;" onclick="exitSelectionMode()">Отмена</button>
                 </div>
-                <button class="btn-zaza-primary" id="deleteSelectedBtn" style="display:none;" onclick="prepareBulkDelete()">
-                    <i class="fas fa-trash-alt"></i> Удалить выбранные (<span id="selectedCount">0</span>)
-                </button>
-                <button class="btn-zaza-danger" onclick="prepareDeleteAll()">
-                    <i class="fas fa-dumpster-fire"></i> Удалить все заявки
-                </button>
             </div>
 
             <input type="date" id="dateFrom" style="display:none;">
@@ -110,40 +79,44 @@
             <div id="feedbackContainer">
                 {% if feedbacks|length == 0 %}
                 <div style="text-align:center;padding:8rem 0;color:var(--gray);">
-                    <i class="fas fa-inbox" style="font-size:6rem;margin-bottom:1.5rem;display:block;opacity:0.6;"></i>
+                    <i class="fas fa-inbox" style="font-size:6rem;margin-bottom:1.5rem;opacity:0.6;"></i>
                     <p style="font-size:1.6rem;">Пока нет заявок</p>
                 </div>
                 {% else %}
                 {% for f in feedbacks %}
-                <div class="review-item" data-id="{{ f.id }}" data-date="{{ f.created_at[:10] }}">
-                    <div class="review-header">
-                        <div class="review-meta">
-                            <div class="review-user" title="{{ f.name }}">
-                                {{ f.name|truncate(40, True, '...') }}
-                            </div>
-                            <div class="review-date">
-                                <i class="far fa-calendar-alt"></i> {{ f.created_at[:16] }}
-                            </div>
+                <div class="review-item clickable-feedback"
+                     data-id="{{ f.id }}"
+                     data-name="{{ f.name|e }}"
+                     data-email="{{ f.email|e }}"
+                     data-phone="{{ f.phone|e if f.phone else '' }}"
+                     data-message="{{ f.message|replace('\n', '[BR]')|e }}"
+                     data-created="{{ f.created_at[:16] }}">
+                     
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                        <div>
+                            <div class="review-user">{{ f.name }}</div>
+                            <div class="review-date"><i class="far fa-calendar-alt"></i> {{ f.created_at[:16] }}</div>
                         </div>
-                        <div class="review-actions">
-                            <button class="action-btn delete" onclick="event.stopPropagation(); prepareSingleDelete({{ f.id }})">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
+                        <button class="action-btn delete" onclick="event.stopPropagation(); prepareSingleDelete({{ f.id }})" style="background:none;border:none;color:#ff4444;font-size:1.4rem;cursor:pointer;">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </div>
 
-                    <div class="review-product" style="cursor:pointer;" onclick="copyToClipboard('{{ f.email }}')" title="{{ f.email }}">
-                        <i class="fas fa-envelope"></i> {{ f.email|truncate(50, True, '...') }}
+                    <div class="review-info-line" onclick="event.stopPropagation(); copyToClipboard('{{ f.email|e }}')">
+                        <i class="fas fa-envelope"></i> {{ f.email }}
                     </div>
 
                     {% if f.phone %}
-                    <div class="review-product" style="cursor:pointer;margin-top:0.5rem;" onclick="copyToClipboard('{{ f.phone }}')" title="{{ f.phone }}">
-                        <i class="fas fa-phone"></i> {{ f.phone|truncate(30, True, '...') }}
+                    <div class="review-info-line" style="margin-top:0.5rem;" onclick="event.stopPropagation(); copyToClipboard('{{ f.phone|e }}')">
+                        <i class="fas fa-phone"></i> {{ f.phone }}
                     </div>
                     {% endif %}
 
-                    <div class="review-text" title="{{ f.message|replace('\n', ' ') }}">
+                    <div class="review-text-preview">
                         {{ f.message|replace('\n', '<br>')|safe }}
+                        <span class="read-more" onclick="event.stopPropagation(); openFullFeedback(this.closest('.review-item'))">
+                            Читать полностью
+                        </span>
                     </div>
                 </div>
                 {% endfor %}
@@ -158,250 +131,72 @@
         </div>
     </main>
 
-    <!-- Модалка выбора периода -->
-    <div id="dateRangeModal" class="modal-overlay">
-        <div class="modal" style="max-width:480px;">
+    <!-- Модалки -->
+    <div id="dateRangeModal" class="modal-overlay" onclick="if(event.target===this) closeModal('dateRangeModal')">
+        <div class="modal">
             <button class="modal-close" onclick="closeModal('dateRangeModal')">×</button>
             <h3>Выберите период</h3>
-            <div style="display:flex;flex-direction:column;gap:1.8rem;margin-top:1.5rem;">
-                <div class="form-group">
-                    <label>С даты</label>
-                    <input type="date" id="modalDateFrom" class="search-input">
-                </div>
-                <div class="form-group">
-                    <label>По дату (включительно)</label>
-                    <input type="date" id="modalDateTo" class="search-input">
-                </div>
+            <div style="margin-top:1.5rem;">
+                <label>С даты</label><input type="date" id="modalDateFrom" class="search-input">
+                <label style="margin-top:1rem;display:block;">По дату</label><input type="date" id="modalDateTo" class="search-input">
             </div>
-            <div class="modal-actions" style="margin-top:2.5rem;">
-                <button class="btn-primary" onclick="applyCustomDateRange()">Применить</button>
-                <button class="cancel-btn" onclick="closeModal('dateRangeModal')">Отмена</button>
+            <div style="margin-top:2rem;display:flex;gap:1rem;">
+                <button id="applyDateBtn" class="btn-zaza-primary" disabled>Применить</button>
+                <button style="background:#444;color:#fff;padding:0.7rem 1.3rem;border-radius:12px;border:none;cursor:pointer;" onclick="closeModal('dateRangeModal')">Отмена</button>
             </div>
         </div>
     </div>
 
-    <!-- Красивая модалка удаления -->
-    <div id="deleteConfirmModal" class="modal-overlay">
-        <div class="modal" style="max-width: 520px;">
+    <div id="deleteConfirmModal" class="modal-overlay" onclick="if(event.target===this) closeModal('deleteConfirmModal')">
+        <div class="modal">
             <button class="modal-close" onclick="closeModal('deleteConfirmModal')">×</button>
             <h3><i class="fas fa-exclamation-triangle" style="color:#ff4444;"></i> Подтвердите удаление</h3>
             <p id="deleteConfirmText" style="margin:1.5rem 0; color:#ddd; line-height:1.6;"></p>
-            <div class="form-group" style="margin-top:1rem;">
-                <input type="password" id="deletePassword" placeholder="Пароль администратора" autofocus autocomplete="off">
-            </div>
-            <div class="flash error" id="deletePasswordError" style="display:none; margin-top:0.5rem;"></div>
-            <div class="modal-actions" style="margin-top:2rem;">
-                <button class="btn-zaza-danger" onclick="executeDelete()">
-                    <i class="fas fa-trash-alt"></i> Удалить
-                </button>
-                <button class="cancel-btn" onclick="closeModal('deleteConfirmModal')">Отмена</button>
+            <input type="password" id="deletePassword" placeholder="Пароль администратора" autofocus autocomplete="off" style="width:100%;padding:1rem;background:#222;border:1px solid #444;border-radius:12px;color:#fff;">
+            <div class="flash error" id="deletePasswordError" style="display:none;margin-top:0.5rem;"></div>
+            <div style="margin-top:2rem;display:flex;gap:1rem;">
+                <button class="btn-zaza-danger" onclick="executeDelete()">Удалить</button>
+                <button style="background:#444;color:#fff;padding:0.7rem 1.3rem;border-radius:12px;border:none;cursor:pointer;" onclick="closeModal('deleteConfirmModal')">Отмена</button>
             </div>
         </div>
     </div>
 
-<script>
-fetch('/api/check_admin').then(r => r.json()).then(d => { if (!d.is_admin) location.href = '/404'; });
+    <div id="fullFeedbackModal" class="modal-overlay" onclick="if(event.target===this) closeModal('fullFeedbackModal')">
+        <div class="modal" style="max-width:720px;">
+            <button class="modal-close" onclick="closeModal('fullFeedbackModal')">×</button>
+            <h2 style="margin:0 0 1.8rem; color:var(--accent);">Полная заявка</h2>
+            <div style="background:rgba(30,30,35,0.9); border-radius:16px; padding:1.8rem; border:1px solid #333;">
+                <div style="margin-bottom:1.2rem;"><strong style="color:#888;">Имя:</strong> <span id="modalName" style="margin-left:0.8rem; color:#fff; font-size:1.1rem;"></span></div>
+                <div style="margin-bottom:1.2rem;"><strong style="color:#888;">Дата:</strong> <span id="modalDate" style="margin-left:0.8rem; color:var(--accent);"></span></div>
+                <div style="margin-bottom:1.2rem;"><strong style="color:#888;">Email:</strong> <span id="modalEmail" style="margin-left:0.8rem; color:#fff; word-break:break-all;"></span></div>
+                <div id="modalPhoneWrapper" style="margin-bottom:1.2rem; display:none;">
+                    <strong style="color:#888;">Телефон:</strong> <span id="modalPhone" style="margin-left:0.8rem; color:#fff;"></span>
+                </div>
+                <div style="margin-top:2rem; padding-top:1.5rem; border-top:1px solid #444;">
+                    <strong style="color:#888; display:block; margin-bottom:0.8rem;">Сообщение:</strong>
+                    <div id="modalMessage" style="color:#ddd; line-height:1.75; white-space: pre-wrap; background:#111; padding:1.2rem; border-radius:12px; border:1px solid #333; max-height:60vh; overflow-y:auto;"></div>
+                </div>
+            </div>
+            <div style="margin-top:2rem;">
+                <button class="btn-zaza-primary" onclick="closeModal('fullFeedbackModal')">Закрыть</button>
+            </div>
+        </div>
+    </div>
 
-let currentPage = 1;
-const itemsPerPage = 10;
-let allFeedback = [];
-let filteredFeedback = [];
-let deleteMode = null;
-let deleteIds = [];
+    <div class="theme-toggle-hanging">
+    <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+    <label for="theme-toggle" class="theme-toggle-label" aria-label="Переключить тему">
+        <div class="rope top"></div>
+        <div class="bulb">
+            <div class="bulb-light"></div>
+            <div class="bulb-glow"></div>
+        </div>
+        <div class="rope bottom"></div>
+    </label>
+</div>
 
-document.addEventListener("DOMContentLoaded", () => {
-    allFeedback = Array.from(document.querySelectorAll('.review-item')).map(el => ({
-        element: el.cloneNode(true),
-        id: el.dataset.id,
-        date: el.dataset.date ? new Date(el.dataset.date) : null,
-        name: el.querySelector('.review-user').textContent.trim().toLowerCase(),
-        email: el.querySelector('.review-product')?.textContent.toLowerCase() || '',
-        text: el.querySelector('.review-text').textContent.toLowerCase()
-    }));
+<script src="/static/js/admin/admin_feedback.js" defer></script>
 
-    filteredFeedback = [...allFeedback];
-    renderPage();
 
-    document.getElementById('searchInput').addEventListener('input', applyFilters);
-    document.getElementById('selectAll').addEventListener('change', toggleSelectAll);
-    document.getElementById('feedbackContainer').addEventListener('click', e => {
-        const item = e.target.closest('.review-item');
-        if (!item || e.target.closest('.action-btn')) return;
-        item.classList.toggle('selected');
-        updateBulkButton();
-    });
-});
-
-function toggleSelectAll() {
-    const checked = this.checked;
-    document.querySelectorAll('#feedbackContainer .review-item').forEach(el => {
-        checked ? el.classList.add('selected') : el.classList.remove('selected');
-    });
-    updateBulkButton();
-}
-
-function updateBulkButton() {
-    const selected = document.querySelectorAll('#feedbackContainer .review-item.selected').length;
-    const btn = document.getElementById('deleteSelectedBtn');
-    document.getElementById('selectedCount').textContent = selected;
-    btn.style.display = selected > 0 ? 'inline-flex' : 'none';
-    document.getElementById('selectAll').checked = selected === document.querySelectorAll('#feedbackContainer .review-item').length && selected > 0;
-}
-
-function prepareSingleDelete(id) {
-    deleteMode = 'single';
-    deleteIds = [id];
-    document.getElementById('deleteConfirmText').textContent = 'Удалить эту заявку навсегда?';
-    openModal('deleteConfirmModal');
-}
-
-function prepareBulkDelete() {
-    const selected = document.querySelectorAll('#feedbackContainer .review-item.selected');
-    deleteIds = Array.from(selected).map(el => el.dataset.id);
-    if (!deleteIds.length) return;
-    deleteMode = 'bulk';
-    document.getElementById('deleteConfirmText').textContent = `Удалить ${deleteIds.length} выбранных заявок?`;
-    openModal('deleteConfirmModal');
-}
-
-function prepareDeleteAll() {
-    deleteMode = 'all';
-    deleteIds = allFeedback.map(f => f.id);
-    document.getElementById('deleteConfirmText').innerHTML = `Вы уверены, что хотите <strong style="color:#ff4444;">удалить ВСЕ заявки</strong> (${deleteIds.length} шт.)?`;
-    openModal('deleteConfirmModal');
-}
-
-async function executeDelete() {
-    const password = document.getElementById('deletePassword').value.trim();
-    const error = document.getElementById('deletePasswordError');
-    error.style.display = 'none';
-    if (!password) { error.textContent = 'Введите пароль'; error.style.display = 'block'; return; }
-
-    const fd = new FormData();
-    fd.append('action', 'delete_feedback');
-    fd.append('password', password);
-    if (deleteMode !== 'all') fd.append('ids', JSON.stringify(deleteIds));
-    else fd.append('delete_all', '1');
-
-    try {
-        const res = await fetch('/admin_feedback', { method: 'POST', body: fd });
-        const data = await res.json();
-        if (data.success) {
-            showToast(`Удалено: ${deleteMode === 'all' ? 'все заявки' : deleteIds.length + ' шт.'}`, 'success');
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            error.textContent = data.message || 'Неверный пароль';
-            error.style.display = 'block';
-        }
-    } catch {
-        error.textContent = 'Ошибка сервера';
-        error.style.display = 'block';
-    }
-}
-
-function applyFilters() {
-    const query = document.getElementById('searchInput').value.trim().toLowerCase();
-    const mode = document.getElementById('dateFilter').value;
-    const from = document.getElementById('dateFrom').value ? new Date(document.getElementById('dateFrom').value) : null;
-    const to = document.getElementById('dateTo').value ? new Date(document.getElementById('dateTo').value) : null;
-    if (to) to.setHours(23,59,59,999);
-
-    const now = new Date();
-    filteredFeedback = allFeedback.filter(f => {
-        if (query && ![f.name, f.email, f.text].some(t => t.includes(query))) return false;
-        if (!f.date) return true;
-        switch (mode) {
-            case 'today': return f.date >= new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            case '7days': return f.date >= new Date(now - 7*24*60*60*1000);
-            case '30days': return f.date >= new Date(now - 30*24*60*60*1000);
-            case 'custom': return (!from || f.date >= from) && (!to || f.date <= to);
-            default: return true;
-        }
-    });
-
-    currentPage = 1;
-    document.getElementById('selectAll').checked = false;
-    renderPage();
-}
-
-function renderPage() {
-    const container = document.getElementById('feedbackContainer');
-    const start = (currentPage - 1) * itemsPerPage;
-    const end = start + itemsPerPage;
-    const page = filteredFeedback.slice(start, end);
-
-    container.innerHTML = page.length ? '' : `<div style="text-align:center;padding:8rem 0;color:var(--gray);"><i class="fas fa-inbox" style="font-size:6rem;margin-bottom:1.5rem;opacity:0.6;"></i><p style="font-size:1.6rem;">Заявки не найдены</p></div>`;
-    page.forEach(f => container.appendChild(f.element.cloneNode(true)));
-
-    const total = Math.ceil(filteredFeedback.length / itemsPerPage) || 1;
-    document.getElementById('pageInfo').textContent = `Страница ${currentPage} из ${total}`;
-    document.getElementById('prevBtn').disabled = currentPage === 1;
-    document.getElementById('nextBtn').disabled = currentPage >= total;
-    updateBulkButton();
-}
-
-function changePage(d) {
-    const total = Math.ceil(filteredFeedback.length / itemsPerPage);
-    const next = currentPage + d;
-    if (next >= 1 && next <= total) { currentPage = next; renderPage(); }
-}
-
-function showToast(msg, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `zaza-toast ${type}`;
-    toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i><span>${msg}</span>`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.style.opacity = '1', 100);
-    setTimeout(() => toast.remove(), 4000);
-}
-
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => showToast('Скопировано!'));
-}
-
-function openModal(id) { document.getElementById(id).classList.add('active'); }
-function closeModal(id) { 
-    document.getElementById(id).classList.remove('active');
-    document.getElementById('deletePassword').value = '';
-    document.getElementById('deletePasswordError').style.display = 'none';
-}
-
-// Остальное (селект даты и т.д.) — без изменений
-document.addEventListener('click', e => {
-    const trigger = e.target.closest('.custom-select-trigger');
-    const option = e.target.closest('.custom-select-option');
-    const select = e.target.closest('.custom-select');
-
-    if (trigger) {
-        document.querySelectorAll('.custom-select').forEach(s => s !== trigger.parentElement && s.classList.remove('open'));
-        trigger.parentElement.classList.toggle('open');
-    }
-    else if (option && option.dataset.value === 'custom') {
-        option.closest('.custom-select').classList.remove('open');
-        openModal('dateRangeModal');
-    }
-    else if (option) {
-        const parent = option.closest('.custom-select');
-        parent.querySelector('.custom-select-text').textContent = option.textContent;
-        document.getElementById('dateFilter').value = option.dataset.value || '';
-        parent.classList.remove('open');
-        applyFilters();
-    }
-    else if (!select) document.querySelectorAll('.custom-select').forEach(s => s.classList.remove('open'));
-});
-
-function applyCustomDateRange() {
-    const from = document.getElementById('modalDateFrom').value;
-    const to = document.getElementById('modalDateTo').value;
-    if (!from || !to) return showToast('Выберите обе даты', 'error');
-
-    document.getElementById('dateFrom').value = from;
-    document.getElementById('dateTo').value = to;
-    document.getElementById('dateFilter').value = 'custom';
-    document.querySelector('.custom-select-text').textContent = `${new Date(from).toLocaleDateString('ru-RU')} – ${new Date(to).toLocaleDateString('ru-RU')}`;
-    closeModal('dateRangeModal');
-    applyFilters();
-}
-</script>
 </body>
 </html>

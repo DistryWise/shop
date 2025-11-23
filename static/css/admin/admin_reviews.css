@@ -52,7 +52,7 @@
         .sidebar {
             position: fixed;
             left: 0; top: 90px;
-            width: 300px;
+            width: 320px;
             height: calc(100vh - 90px);
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(20px);
@@ -987,5 +987,510 @@ input[type="range"]:focus {
     }
 }
 
+/* 1. Жёсткая обрезка имени — максимум 8 символов */
+.review-user {
+    font-size: 1.5rem;
+    font-weight: 700;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+    display: block;
+    /* Самое главное — обрезаем до 8 символов + троеточие */
+    max-width: 16ch !important;        /* ← 8 символов (ch = ширина символа "0") */
+}
 
+/* 2. Жёсткая обрезка текста сообщения в карточке — тоже максимум 8 символов */
+.review-text {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: rgba(255,255,255,0.92);
+    
+    /* Обязательные свойства для обрезки */
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    
+    /* Главная строчка — ровно 8 символов + троеточие */
+    max-width: 8ch !important;
+    display: block;
+}
 
+/* 3. На всякий случай — если у тебя где-то остался .review-text-preview (из старой версии) */
+.review-text-preview {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 16ch !important;
+    display: block;
+}
+
+/* ====================== МОДАЛЬНОЕ ОКНО — ПРАВИЛЬНЫЕ ПЕРЕНОСЫ ====================== */
+
+/* 1. Имя в модалке — переносим, если больше ~20 символов */
+#modalName {
+    word-break: break-word !important;     /* переносит длинные слова */
+    overflow-wrap: anywhere !important;    /* современный стандарт */
+    hyphens: auto;                         /* опционально: дефисы в длинных словах */
+    max-width: 100%;
+    line-height: 1.4;
+}
+
+/* 2. Текст сообщения в модалке — идеальные переносы по словам */
+#modalMessage {
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    white-space: pre-wrap !important;      /* сохраняет переносы строк от пользователя + переносит длинные слова */
+    line-height: 1.8;
+    max-width: 100%;
+}
+
+/* 3. На всякий случай — телефон и email тоже не должны ломать */
+#modalEmail,
+#modalPhone {
+    word-break: break-all !important;      /* email и телефон могут быть очень длинными — ломаем по символам */
+    overflow-wrap: anywhere !important;
+}
+
+            /* === ВИСЯЩИЙ ТУМБЛЕР ТЕМЫ === */
+.theme-toggle-hanging {
+  position: fixed;
+  top: 90px;
+  right: 6%;
+  transform: translateY(-50%);
+  z-index: 999;
+  pointer-events: auto;
+}
+
+/* Адаптация под скролл хедера */
+header.scrolled ~ .theme-toggle-hanging,
+header.scrolled + .theme-toggle-hanging { top: 76px; }
+
+@media (max-width: 992px) { .theme-toggle-hanging { right: 5%; } }
+
+.theme-toggle-input { display: none; }
+
+.theme-toggle-label {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.theme-toggle-label:hover { transform: translateY(-2px); }
+
+/* Верёвка сверху */
+.rope.top {
+  width: 2px;
+  height: 100px;
+  background: linear-gradient(to bottom,
+    rgba(255,255,255,0.15),
+    rgba(255,255,255,0.35),
+    rgba(255,255,255,0.15));
+  box-shadow: 0 0 6px rgba(255,255,255,0.2);
+  position: relative;
+  transition: all 1.6s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+[data-theme="light"] .rope.top {
+  background: linear-gradient(to bottom,
+    rgba(0,0,0,0.1),
+    rgba(0,0,0,0.25),
+    rgba(0,0,0,0.1));
+  box-shadow: 0 0 6px rgba(0,0,0,0.15);
+}
+.rope.top::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  border-radius: 1px;
+  animation: rope-shine 2.5s infinite ease-in-out;
+}
+[data-theme="light"] .rope.top::before {
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.15), transparent);
+}
+@keyframes rope-shine {
+  0%,100% { opacity: .3; }
+  50% { opacity: .7; }
+}
+
+/* Лампочка */
+.bulb {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fffbe6, #ffd700);
+  border: 1px solid rgba(255,215,0,0.6);
+  position: relative;
+  box-shadow: 0 0 20px rgba(255,215,0,0.4),
+              inset 0 0 10px rgba(255,255,255,0.6),
+              0 4px 8px rgba(0,0,0,0.2);
+  transition: all 1.6s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+.bulb::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #fffbe6, #ffed9e);
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.15);
+}
+.bulb-light {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center,
+    rgba(255,255,150,0.9) 0%,
+    rgba(255,235,100,0.6) 40%,
+    transparent 70%);
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.theme-toggle-input:checked + .theme-toggle-label .bulb-light { opacity: 1; }
+
+.bulb-glow {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 60px; height: 60px;
+  background: radial-gradient(circle, rgba(255,220,100,0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.theme-toggle-input:checked + .theme-toggle-label .bulb-glow { opacity: 1; }
+
+.rope.bottom {
+  width: 2px;
+  height: 20px;
+  background: inherit;
+  margin-top: -2px;
+}
+
+/* Светлая тема — лампочка "выключена" */
+[data-theme="light"] .bulb {
+  background: radial-gradient(circle at 30% 30%, #ccc, #888);
+  border-color: rgba(0,0,0,0.2);
+  box-shadow: 0 0 8px rgba(0,0,0,0.1),
+              inset 0 0 6px rgba(0,0,0,0.1),
+              0 4px 8px rgba(0,0,0,0.15);
+}
+[data-theme="light"] .bulb::before {
+  background: radial-gradient(circle at 40% 40%, #ddd, #aaa);
+}
+[data-theme="light"] .bulb-light,
+[data-theme="light"] .bulb-glow { display: none; }
+
+/* Анимация дёргания */
+.theme-toggle-label:active { transform: translateY(4px) !important; }
+
+/* ==================================================
+   СВЕТЛАЯ ТЕМА — ZAZA ADMIN REVIEWS 2025
+   Полностью совместима с твоим HTML и тумблером
+   ================================================== */
+
+[data-theme="light"] {
+  --bg: #f8f9fc;
+  --bg-alt: #ffffff;
+  --text: #1a1a1a;
+  --text-light: #555555;
+  --gray: #888888;
+  --border: rgba(0,0,0,0.1);
+  --card-bg: rgba(255,255,255,0.95);
+  --card-shadow: 0 8px 32px rgba(0,0,0,0.08);
+  --accent: #00ff9d;
+  --accent-hover: #00cc7a;
+  --danger: #ff4444;
+  --input-bg: rgba(255,255,255,0.9);
+  --input-border: rgba(0,0,0,0.12);
+  --modal-overlay: rgba(0,0,0,0.45);
+  --scrollbar-track: #f0f0f0;
+  --scrollbar-thumb: #c0c0c0;
+}
+
+/* Основные стили — переопределяем только где нужно */
+[data-theme="light"] body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+[data-theme="light"] header {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+
+[data-theme="light"] .logo-img { filter: brightness(0.9) contrast(1.1); }
+
+[data-theme="light"] .sidebar {
+  background: rgba(255,255,255,0.95);
+  border-right: 1px solid var(--border);
+  box-shadow: 8px 0 30px rgba(0,0,0,0.08);
+}
+
+[data-theme="light"] .sidebar-item {
+  color: var(--text-light);
+}
+[data-theme="light"] .sidebar-item.active,
+[data-theme="light"] .sidebar-item:hover {
+  background: rgba(0,255,149,0.12);
+  color: var(--accent);
+}
+[data-theme="light"] .sidebar-badge {
+  background: var(--accent);
+  color: #000;
+}
+
+[data-theme="light"] .admin-container,
+[data-theme="light"] .review-item,
+[data-theme="light"] .modal,
+[data-theme="light"] .item-modal {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
+  backdrop-filter: blur(10px);
+}
+
+[data-theme="light"] .section-title {
+  color: var(--text);
+}
+
+[data-theme="light"] input,
+[data-theme="light"] textarea,
+[data-theme="light"] .search-input {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text);
+}
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: #999;
+}
+
+[data-theme="light"] .custom-select-trigger {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text);
+}
+[data-theme="light"] .custom-select-options {
+  background: var(--card-bg);
+  border: 1px solid var(--input-border);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+[data-theme="light"] .custom-select-option:hover {
+  background: rgba(0,255,149,0.15);
+  color: var(--accent);
+}
+
+/* ВЫПАДАЮЩИЕ ШТОРКИ <select> — БОЛЬШЕ НЕ БЕЛЫЕ! */
+[data-theme="light"] select,
+[data-theme="light"] select option {
+  background-color: #ffffff !important;
+  color: #111111 !important;
+}
+[data-theme="light"] select option:checked,
+[data-theme="light"] select option:hover {
+  background-color: #00ff9d !important;
+  color: #000000 !important;
+}
+
+/* Кнопки */
+[data-theme="light"] .btn-primary {
+  background: var(--accent);
+  color: #000;
+}
+[data-theme="light"] .btn-primary:hover {
+  background: var(--accent-hover);
+}
+[data-theme="light"] .cancel-btn {
+  background: #eeeeee;
+  color: #333;
+}
+[data-theme="light"] .action-btn.delete:hover {
+  background: #ff4444;
+  color: white;
+}
+
+/* Модалки */
+[data-theme="light"] .modal-overlay {
+  background: var(--modal-overlay);
+}
+[data-theme="light"] .modal-close {
+  color: #888;
+}
+[data-theme="light"] .modal-close:hover {
+  color: #000;
+}
+
+/* Звёздочки */
+[data-theme="light"] .star.filled {
+  color: #ffd700;
+}
+[data-theme="light"] .rating-star {
+  color: #cccccc;
+}
+[data-theme="light"] .rating-star.selected {
+  color: #00ff9d;
+}
+
+/* Пагинация */
+[data-theme="light"] .page-link {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text);
+}
+[data-theme="light"] .page-link:hover:not(:disabled) {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+
+/* Флешки */
+[data-theme="light"] .flash.success {
+  background: rgba(0,255,149,0.15);
+  color: #00aa6e;
+  border-left: 4px solid var(--accent);
+}
+[data-theme="light"] .flash.error {
+  background: rgba(255,68,68,0.1);
+  color: #d63031;
+}
+
+/* Скроллбары */
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+}
+
+/* Плюсик создания отзыва */
+[data-theme="light"] .add-review-btn {
+  background: var(--accent);
+  color: #000;
+  box-shadow: 0 6px 20px rgba(0,255,149,0.4);
+}
+[data-theme="light"] .add-review-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px) scale(1.1);
+}
+
+/* ────────────────────────────────
+   CUSTOM-SCROLL-THINNER В СВЕТЛОЙ ТЕМЕ
+   (модалка создания отзыва)
+   ──────────────────────────────── */
+[data-theme="light"] .custom-scroll-thinner {
+    background: rgba(245, 248, 255, 0.85) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.07);
+}
+
+/* Заголовки разделов "Товары" и "Услуги" */
+[data-theme="light"] .custom-scroll-thinner div[style*="color:#00ff95"],
+[data-theme="light"] .custom-scroll-thinner div[style*="color:#ff6bff"] {
+    color: #00cc7a !important;           /* зелёный для товаров */
+}
+[data-theme="light"] .custom-scroll-thinner div[style*="color:#ff6bff"] {
+    color: #e04aff !important;           /* фиолетовый для услуг — чуть потемнее, чтобы читалось */
+}
+
+/* Полоска-разделитель */
+[data-theme="light"] .custom-scroll-thinner div[style*="background:rgba(0,255,149"],
+[data-theme="light"] .custom-scroll-thinner div[style*="background:rgba(255,107,255"] {
+    background: rgba(0,0,0,0.15) !important;
+}
+
+/* Сами карточки товаров/услуг */
+[data-theme="light"] .item-option {
+    background: rgba(255,255,255,0.92);
+    border: 1px solid rgba(0,0,0,0.08);
+    color: var(--text);
+}
+[data-theme="light"] .item-option:hover {
+    background: rgba(0,255,149,0.18);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+[data-theme="light"] .item-option.selected {
+    background: var(--accent);
+    color: #000;
+    box-shadow: 0 6px 20px rgba(0,255,149,0.4);
+}
+
+/* Скроллбар внутри модалки */
+[data-theme="light"] .custom-scroll-thinner::-webkit-scrollbar {
+    width: 8px;
+}
+[data-theme="light"] .custom-scroll-thinner::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.05);
+    border-radius: 10px;
+}
+[data-theme="light"] .custom-scroll-thinner::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.25);
+    border-radius: 10px;
+}
+[data-theme="light"] .custom-scroll-thinner::-webkit-scrollbar-thumb:hover {
+    background: rgba(0,0,0,0.4);
+}
+
+[data-theme="light"] .items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+    gap: 1rem;
+    padding: 0.4rem;
+}
+
+/* Каждая карточка в сетке */
+[data-theme="light"] .item-option {
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    padding: 1rem 0.8rem;
+    text-align: center;
+    font-size: 0.94rem;
+    font-weight: 500;
+    color: #222222;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Hover */
+[data-theme="light"] .item-option:hover {
+    background: rgba(0, 255, 149, 0.14);
+    border-color: #00ff9d;
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 10px 25px rgba(0, 255, 149, 0.25);
+    color: #000;
+}
+
+/* Выбранный элемент */
+[data-theme="light"] .item-option.selected {
+    background: #00ff9d;
+    color: #000000 !important;
+    border-color: #00ff9d;
+    font-weight: 700;
+    box-shadow: 0 12px 30px rgba(0, 255, 149, 0.45);
+    transform: translateY(-3px) scale(1.02);
+}
+
+/* Иконки внутри карточек */
+[data-theme="light"] .item-option i {
+    color: #00cc7a;
+    margin-bottom: 0.5rem;
+    font-size: 1.3rem;
+    opacity: 0.9;
+}
+[data-theme="light"] .item-option.selected i {
+    color: #000;
+}
+
+/* Если нет товаров/услуг — сообщение */
+[data-theme="light"] .items-grid p {
+    color: #777777;
+    font-style: italic;
+    opacity: 0.8;
+}

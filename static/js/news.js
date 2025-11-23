@@ -12,32 +12,122 @@ const contactForm = document.getElementById('contactForm');
 const submitBtn = document.getElementById('submitBtn');
 const feedbackModal = document.getElementById('feedbackModal');
 
-// === ОТКРЫТИЕ КРАСИВОЙ МОДАЛКИ НОВОСТИ ===
+let currentSlide = 0;
+let slideInterval = null;
+
 window.openNewsModal = function(index) {
   const item = newsData[index];
   if (!item) return;
 
-  const modal = document.getElementById('newsModal');
-  if (!modal) return;
+  const modal        = document.getElementById('finalNewsModal');
+  const hero         = document.getElementById('finalHero');
+  const content      = document.getElementById('finalContent');
+  const carousel     = document.getElementById('finalCarousel');
+  const dots         = document.getElementById('finalDots');
+  const scrollContainer = modal.querySelector('.final-container'); // ← ЭТО КЛЮЧ
 
-  document.getElementById('modalNewsImg').src = item.image || '/static/assets/no-image.png';
-  document.getElementById('modalNewsDate').textContent = item.date;
-  document.getElementById('modalNewsTitle').textContent = item.title;
-  document.getElementById('modalNewsContent').innerHTML = `<p>${item.full_desc || item.short_desc}</p>`;
+  // === Заполняем контент ===
+  const images = (item.images && item.images.length) ? item.images : [item.image || '/static/assets/no-image.png'];
+  
+  carousel.innerHTML = images.map(src => 
+    `<div class="final-slide" style="background-image:url('${src}')"></div>`
+  ).join('');
+  
+  dots.innerHTML = images.map((_, i) => 
+    `<div class="final-dot ${i === 0 ? 'active' : ''}" onclick="goToSlide(${i})"></div>`
+  ).join('');
 
-  modal.classList.add('show');
+  document.getElementById('finalDate').textContent  = item.date || '';
+  document.getElementById('finalTitle').textContent = item.title || '';
+  document.getElementById('finalLead').textContent  = item.short_desc || '';
+  document.getElementById('finalBody').innerHTML    = (item.full_desc || item.short_desc || '').replace(/\n/g, '<br><br>');
+
+  // === Открываем модалку ===
+  modal.classList.add('active');
   document.body.style.overflow = 'hidden';
+
+  // Сброс состояния
+  hero.classList.remove('scrolled');
+  content.classList.remove('visible');
+  scrollContainer.scrollTop = 0;
+
+  // === ОТСЛЕЖИВАНИЕ СКРОЛЛА (РАБОТАЕТ НА 100%) ===
+  const handleScroll = () => {
+    const scrolled = scrollContainer.scrollTop > 80; // можно 50, 100 — как нравится
+
+    if (scrolled) {
+      hero.classList.add('scrolled');
+      content.classList.add('visible');
+    } else {
+      hero.classList.remove('scrolled');
+      content.classList.remove('visible');
+    }
+  };
+
+  // Убираем старый обработчик (чтобы не было дублей)
+  scrollContainer.onscroll = null;
+  scrollContainer.onscroll = handleScroll;
+
+  // Проверка сразу (если контент короткий)
+  handleScroll();
+  currentSlide = 0;
+  goToSlide(0);
+  startAutoSlide();
 };
 
-// === ЗАКРЫТИЕ МОДАЛКИ ===
-window.closeNewsModal = function() {
-  const modal = document.getElementById('newsModal');
-  if (modal) {
-    modal.classList.remove('show');
-    document.body.style.overflow = '';
+window.closeFinalModal = function() {
+  const modal = document.getElementById('finalNewsModal');
+  const scrollContainer = modal.querySelector('.final-container');
+  
+  if (scrollContainer) scrollContainer.onscroll = null;
+  
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+};
+
+window.goToSlide = function(index) {
+  const carousel = document.getElementById('finalCarousel');
+  const dots = document.querySelectorAll('.final-dot');
+  const totalSlides = dots.length;
+
+  if (!carousel || totalSlides === 0) return;
+
+  currentSlide = (index + totalSlides) % totalSlides;
+
+  // Сдвигаем карусель
+  carousel.style.transform = `translateX(-${currentSlide * 100}%)`;
+
+  // Обновляем точки
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('active', i === currentSlide);
+  });
+};
+
+// Автопрокрутка каждые 5 секунд
+function startAutoSlide() {
+  stopAutoSlide(); // на всякий случай
+  const totalSlides = document.querySelectorAll('.final-slide').length;
+  if (totalSlides <= 1) return;
+
+  slideInterval = setInterval(() => {
+    currentSlide = (currentSlide + 1) % totalSlides;
+    goToSlide(currentSlide);
+  }, 5000);
+}
+
+function stopAutoSlide() {
+  if (slideInterval) {
+    clearInterval(slideInterval);
+    slideInterval = null;
   }
-};
+}
 
+// Перезапуск автопрокрутки при клике по точке
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('final-dot')) {
+    startAutoSlide(); // обновляем таймер после ручного переключения
+  }
+});
 // === СТАРТ ===
 document.addEventListener('DOMContentLoaded', () => {
   const observer = new IntersectionObserver(e => e.forEach(en => en.isIntersecting && en.target.classList.add('visible')), { threshold: 0.15 });
@@ -52,40 +142,50 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // === ЗАГРУЗКА НОВОСТЕЙ ===
-  async function loadNews() {
-    try {
-      const r = await fetch('/api/home_news');
-      newsData = r.ok ? await r.json() : sampleNews;
-    } catch {
-      newsData = sampleNews;
-    }
-
-    const container = document.getElementById('newsFeed');
-    if (!container) return;
-
-    container.innerHTML = '';
-    newsData.forEach((item, i) => {
-      const card = document.createElement('div');
-      card.className = 'news-card';
-      card.innerHTML = `
-        <img src="${item.image}" alt="${item.title}" class="news-card-image" onerror="this.src='https://via.placeholder.com/800x600/111/fff?text=NO+IMAGE'">
-        <div class="news-card-content">
-          <h3>${item.title}</h3>
-          <p class="news-card-date">${item.date}</p>
-          <p class="news-card-excerpt">${item.short_desc}</p>
-          <a href="#" class="news-card-link" onclick="${
-            item.product_id 
-              ? `openProductModal(${item.product_id})` 
-              : `openNewsModal(${i})`
-          }; return false;">
-            ${item.product_id ? 'Посмотреть товар' : 'Читать далее'}
-          </a>
-        </div>
-      `;
-      container.appendChild(card);
-      setTimeout(() => observer.observe(card), i * 250);
-    });
+async function loadNews() {
+  try {
+    const r = await fetch('/api/home_news');
+    if (!r.ok) throw new Error('Failed to fetch');
+    newsData = await r.json();
+  } catch (err) {
+    console.warn('Используем sampleNews:', err);
+    newsData = sampleNews;
   }
+
+  const container = document.getElementById('newsFeed');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  newsData.forEach((item, i) => {
+    const card = document.createElement('div');
+    card.className = 'news-card';
+    card.dataset.category = item.category || ''; // ← обязательно!
+
+    const mainImg = item.images?.[0] || item.image || '/static/assets/no-image.png';
+
+    card.innerHTML = `
+      <div class="news-card-image-wrapper">
+        <img src="${mainImg}" alt="${item.title}" class="news-card-image" 
+             onerror="this.src='/static/assets/no-image.png'">
+      </div>
+      <div class="news-card-content">
+        ${item.category ? `<span class="news-card-category">${item.category}</span>` : ''}
+        <h3>${item.title}</h3>
+        <p class="news-card-date">${item.date}</p>
+        <p class="news-card-excerpt">${item.short_desc}</p>
+        <a href="#" class="news-card-link" onclick="openNewsModal(${i}); return false;">
+          Читать далее →
+        </a>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+
+  // ← ВАЖНО: вызываем после того, как newsData заполнена!
+  initNewsFilters();
+}
 
   // === КАРТОЧКА ТОВАРА ===
   const productModal = document.getElementById('productModal');
@@ -265,4 +365,103 @@ if (cartBtn && miniCart) {
   cartBtn.addEventListener('mouseleave', hideCart);
   miniCart.addEventListener('mouseenter', () => clearTimeout(timeout));
   miniCart.addEventListener('mouseleave', hideCart);
+}
+
+
+// ФИНАЛЬНАЯ ВЕРСИЯ — РАБОТАЕТ С ПЕРВОЙ СЕКУНДЫ
+function initNewsFilters() {
+  const filtersContainer = document.getElementById('newsFilters');
+  if (!filtersContainer) return;
+
+  // Генерируем кнопки категорий (если их ещё нет)
+  const categories = [...new Set(newsData.map(n => n.category).filter(Boolean))];
+  if (filtersContainer.children.length === 1) {
+    categories.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn';
+      btn.dataset.category = cat;
+      btn.textContent = cat;
+      filtersContainer.appendChild(btn);
+    });
+  }
+
+  // Один обработчик на весь контейнер
+  filtersContainer.addEventListener('click', function(e) {
+    const btn = e.target.closest('.filter-btn');
+    if (!btn) return;
+
+    // Активируем кнопку
+    filtersContainer.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const category = btn.dataset.category;
+
+    // Фильтрация
+    document.querySelectorAll('.news-card').forEach(card => {
+      const cardCat = card.dataset.category || '';
+      if (category === 'all' || cardCat === '' || cardCat === category) {
+        card.style.display = '';
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        setTimeout(() => {
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }, 50);
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  });
+
+  // ВАЖНО: АВТОМАТИЧЕСКИ АКТИВИРУЕМ "ВСЕ НОВОСТИ" ПРИ ЗАГРУЗКЕ
+  const allBtn = filtersContainer.querySelector('[data-category="all"]');
+  if (allBtn) {
+    allBtn.classList.add('active');
+    allBtn.click(); // ← ЭТА СТРОКА ВСЁ ИСПРАВЛЯЕТ!
+  }
+}
+
+// === ПЕРЕПИСАННАЯ ФУНКЦИЯ loadNews() — только заменить в ней генерацию карточек ===
+async function loadNews() {
+  try {
+    const r = await fetch('/api/home_news');
+    newsData = r.ok ? await r.json() : sampleNews;
+  } catch {
+    newsData = sampleNews;
+  }
+
+  const container = document.getElementById('newsFeed');
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  newsData.forEach((item, i) => {
+    const card = document.createElement('div');
+    card.className = 'news-card visible';
+    card.dataset.category = item.category || ''; // ← ВОТ ЭТО КЛЮЧЕВОЕ!
+
+    const images = item.images || [];
+    const mainImg = images[0] || '/static/assets/no-image.png';
+
+    card.innerHTML = `
+      <div class="news-card-image-wrapper">
+        <img src="${mainImg}" alt="${item.title}" onerror="this.src='/static/assets/no-image.png'">
+      </div>
+      <div class="news-card-content">
+        ${item.category ? `<span class="news-card-category">${item.category}</span>` : ''}
+        <h3>${item.title}</h3>
+        <p class="news-card-date">${item.date}</p>
+        <p class="news-card-excerpt">${item.short_desc}</p>
+        <a href="#" class="news-card-link" onclick="openNewsModal(${i}); return false;">
+          Читать далее
+        </a>
+      </div>
+    `;
+
+    container.appendChild(card);
+    setTimeout(() => card.classList.add('visible'), i * 150);
+  });
+
+  // После загрузки новостей — инициализируем фильтры
+  initNewsFilters();
 }

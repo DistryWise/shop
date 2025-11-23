@@ -39,10 +39,7 @@
     }
     .slide.active{opacity:1;}
 
-    .logo{
-      position:absolute;top:50px;left:90px;font-size:48px;letter-spacing:32px;font-weight:100;
-      z-index:10;mix-blend-mode:difference;opacity:0;animation:fade 3s forwards 0.8s;
-    }
+
     @keyframes fade{to{opacity:1;}}
 
     .void-cut{
@@ -156,19 +153,8 @@
     .grid-btn:not(.active) svg{stroke:#000;}
 
     .catalog-header h1{font-size:100px;font-weight:100;letter-spacing:36px;text-align:center;margin-bottom:160px;}
-    .search-wrapper{max-width:1100px;margin:0 auto 180px;position:relative;}
-    .search-container{position:relative;max-width:900px;margin:0 auto;}
-    .search{
-      width:100%;background:transparent;border:none;border-bottom:3px solid #000;
-      font-size:22px;padding:20px 60px 20px 0;outline:none;letter-spacing:4px;text-align:center;color:#000;
-    }
-    .search::placeholder{color:#000;opacity:0.25;letter-spacing:8px;}
-    .search-icon{
-      position:absolute;right:0;top:50%;transform:translateY(-50%);
-      width:36px;height:36px;pointer-events:none;opacity:0.3;transition:all 0.8s;
-    }
-    .search:focus + .search-icon{opacity:0.8;transform:translateY(-50%) scale(1.15);}
-    .search-icon svg{width:100%;height:100%;stroke:#000;stroke-width:2.4;fill:none;}
+
+
 
     .grid{
       display:grid;grid-template-columns:repeat(3,1fr);gap:100px;
@@ -535,3 +521,792 @@
   .gallery-thumbs img { width: 50px; height: 50px; }
 }
 
+  /* Тонкая вибрация */
+  @keyframes softHit {
+    0%,100% { transform: translateX(0); }
+    25%,75% { transform: translateX(-3px); }
+    50% { transform: translateX(3px); }
+  }
+  .light-zone-hit { animation: softHit 0.4s ease-out; }
+
+  
+
+    .hero {
+  position: relative;
+  overflow: hidden;
+  z-index: 0; /* Убедимся, что hero не перекрывает hotspots */
+}
+
+.slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1; /* Слайды ниже hotspots */
+}
+
+.hotspot {
+  position: absolute;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  cursor: pointer;
+  pointer-events: auto !important;
+  z-index: 9999 !important;
+
+  -webkit-touch-callout: none;   /* iOS Safari */
+  -webkit-user-select: none;     /* Safari */
+  -khtml-user-select: none;      /* Konqueror HTML */
+  -moz-user-select: none;        /* Firefox */
+  -ms-user-select: none;         /* Internet Explorer/Edge */
+  user-select: none;             /* Все современные */
+
+}
+
+
+
+
+    .ad-banner-carousel {
+      position: relative;
+      overflow: hidden;
+      max-width: 1900px;
+      margin: 0 auto;
+      border-radius: 16px;
+    }
+
+    .ad-banner-carousel .carousel-track {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 60px;
+      transition: transform 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .ad-banner-carousel .carousel-prev,
+    .ad-banner-carousel .carousel-next {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 70px; height: 70px;
+      background: rgba(0,0,0,0.75);
+      border: none;
+      color: #fff;
+      font-size: 32px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.6s, background 0.4s;
+      backdrop-filter: blur(12px);
+      border-radius: 50%;
+      z-index: 10;
+    }
+
+    .ad-banner-carousel .carousel-prev { left: 20px; }
+    .ad-banner-carousel .carousel-next { right: 20px; }
+
+    .ad-banner-carousel:hover .carousel-prev,
+    .ad-banner-carousel .carousel-next {
+      opacity: 1;
+    }
+
+    .ad-banner-carousel .carousel-prev:hover,
+    .ad-banner-carousel .carousel-next:hover {
+      background: #000;
+    }
+
+    @media (max-width: 900px) {
+      .ad-banner-carousel .carousel-track {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+    }
+
+    .ad-banner-wrapper {
+      grid-column: 1 / -1;
+      width: 100%;
+      max-width: 1900px;
+      margin: 0 auto;
+      padding: 0 40px;
+      box-sizing: border-box;
+    }
+
+    /* === LOAD MORE BUTTON — ГАРАНТИРОВАННО РАБОТАЕТ === */
+    .load-more-section {
+      text-align: center;
+      margin: 160px 0;
+      display: none;
+      padding: 40px 0;
+      background: #ffffff;
+      z-index: 1000;
+    }
+
+    .load-more-btn {
+      background: none;
+      border: 2px solid #fff !important;
+      color: #fff !important;
+      padding: 16px 48px;
+      font-size: 13px;
+      letter-spacing: 12px;
+      text-transform: uppercase;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.4s ease;
+      position: relative;
+      z-index: 1;
+      outline: none;
+    }
+
+    .load-more-btn:hover {
+      background: #fff !important;
+      color: #000 !important;
+    }
+
+    /* === НА БЕЛОМ ФОНЕ === */
+    body.white .load-more-btn {
+      border-color: #000000 !important;
+      color: #000 !important;
+    }
+
+    body.white .load-more-btn:hover {
+      background: #ffffff !important;
+      color: #000000 !important;
+    }
+
+
+    .carousel-slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 1.4s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    .carousel-slide.active {
+      opacity: 1;
+    }
+
+    .carousel-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .indicators {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.4);
+      cursor: pointer;
+      transition: all 0.4s ease;
+    }
+
+    .indicator.active {
+      background: #fff;
+      transform: scale(1.4);
+    }
+
+  
+    .hotspot:hover {
+      /* Лёгкий эффект при наведении, если нужно */
+      background: rgba(255,255,255,0.05);
+    }
+
+    .hotspot-tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #000;
+      color: #0f0;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 100;
+    }
+
+    .hotspot:hover .hotspot-tooltip {
+      opacity: 1;
+    }
+
+    .hotspot-preview {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      background: rgba(0,0,0,0.95);
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      color: #0f0;
+      white-space: nowrap;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      min-width: 180px;
+      max-width: 300px;
+      pointer-events: none;
+    }
+
+    .hotspot-preview.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-12px);
+    }
+
+    .hotspot-preview .url {
+      color: #0f0;
+      font-family: monospace;
+      word-break: break-all;
+      margin-bottom: 6px;
+    }
+
+    .hotspot-preview .thumb {
+      width: 100%;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
+      background: #222;
+      margin-top: 6px;
+      display: none;
+    }
+
+    .hotspot-preview .thumb.loading {
+      background: #222 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1zm0 15a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0v-2a1 1 0 0 1 1-1zm8.66-10.66a1 1 0 0 1 0 1.42l-1.42 1.42a1 1 0 1 1-1.42-1.42l1.42-1.42a1 1 0 0 1 1.42 0zM7.76 14.24a1 1 0 0 1 0 1.42l-1.42 1.42a1 1 0 1 1-1.42-1.42l1.42-1.42a1 1 0 0 1 1.42 0zm13.9 3.9a1 1 0 0 1-1.42 0l-1.42-1.42a1 1 0 1 1 1.42-1.42l1.42 1.42a1 1 0 0 1 0 1.42zM5.18 4.58a1 1 0 0 1 0 1.42L3.76 7.42a1 1 0 1 1-1.42-1.42L3.76 4.58a1 1 0 0 1 1.42 0z' fill='%23666'/%3E%3C/svg%3E") center/24px no-repeat;
+    }
+
+    /* Уведомления */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111;
+      color: #fff;
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      z-index: 9999;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+      transition: all 0.4s ease;
+      min-width: 280px;
+      max-width: 400px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      bottom: 40px;
+    }
+
+    .toast.success {
+      border-left: 4px solid #00ff88;
+    }
+
+    .toast.error {
+      border-left: 4px solid #ff3b30;
+    }
+
+    .toast .icon {
+      font-size: 1.4rem;
+    }
+
+    /* ВИЗУАЛЬНО ПОЛНОСТЬЮ СКРЫВАЕМ СКРОЛЛБАР — СКРОЛЛ РАБОТАЕТ КАК РАНЬШЕ */
+html {
+  scrollbar-width: none;          /* Firefox — убирает ползунок */
+  -ms-overflow-style: none;       /* IE и Edge — убирает ползунок */
+}
+
+html::-webkit-scrollbar {
+  display: none;                  /* Chrome, Safari, новый Edge — убирает ползунок */
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+/* На всякий случай — и для body тоже (иногда нужно) */
+body {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+}
+
+/* ХОТСПТЫ НА ГЛАВНОМ БАННЕРЕ — ГАРАНТИРОВАННО РАБОТАЮТ */
+.hero > .hotspot {
+  z-index: 99999 !important;
+  pointer-events: auto !important;
+}
+
+.logo, .scroll-indicator, .void-cut {
+  pointer-events: none !important;
+}
+
+/* === ПОЛНОЕ СКРЫТИЕ ССЫЛКИ В ХОТСПТАХ (больше никогда не увидишь зелёный текст) === */
+.hotspot,
+.hotspot:hover,
+.hotspot:focus,
+.hotspot:active {
+  color: transparent !important;
+  text-decoration: none !important;
+  outline: none !important;
+}
+.hotspot::before,
+.hotspot::after {
+  display: none !important;
+}
+#adBannerSection {
+  margin: 160px auto;
+  padding: 0 20px;
+}
+
+/* Очень тонкая линия-разделитель сверху и снизу */
+#adBannerSection::before,
+#adBannerSection::after {
+  content: '';
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #333 20%, #333 80%, transparent);
+  position: absolute;
+  left: 50%; right: 50%;
+  transform: translateX(-50%);
+}
+#adBannerSection::before { top: -60px; width: 60%; }
+#adBannerSection::after  { bottom: -60px; width: 60%; }
+
+/* Усиливаем тень самой карусели */
+.secondary-carousel {
+  box-shadow: 0 50px 100px rgba(0,0,0,0.35);
+}
+
+/* ────── NOIR ISLAND — ПОЛНОСТЬЮ НА ВСЮ ШИРИНУ, ИДЕАЛЬНО ПОД ТВОЙ ДИЗАЙН ────── */
+.noir-island-wrapper {
+  grid-column: 1 / -1;
+  margin: 220px 0 180px !important;
+  padding: 0;
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #0a0a0a 0%, #111 100%);
+  overflow: hidden;
+}
+
+/* Тонкая неоновая рамка по всему периметру */
+.noir-island-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(0, 255, 136, 0.16);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Плавные переходы в белый фон сверху и снизу */
+.noir-island-wrapper::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 340px;
+  background: linear-gradient(to top, #0a0a0a 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+.noir-island-wrapper > .secondary-carousel::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 340px;
+  background: linear-gradient(to bottom, #0a0a0a 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Сама карусель — центрируется, но не шире 2700px */
+.noir-island-wrapper .secondary-carousel {
+  max-width: 2700px;
+  margin: 0 auto;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 
+    0 80px 160px rgba(0,0,0,0.7),
+    0 0 0 1px rgba(0,255,136,0.08);
+  position: relative;
+  z-index: 0;
+}
+
+/* SECONDARY CAROUSEL — ЧИСТАЯ БЕЛАЯ ПОЛОСКА-ТАЙМЛАЙН (БЕЗ ЗЕЛЁНОГО!) */
+.secondary-carousel {
+  position: relative;
+  width: 100%;
+  max-width: 2700px;
+  height: 920px;
+  margin: 50px auto;
+  overflow: hidden;
+  border-radius: 28px;
+  box-shadow: 0 50px 100px rgba(0,0,0,0.35);
+}
+
+
+/* Активный — чисто белый */
+.secondary-carousel .indicator.active,
+.noir-island-wrapper .indicator.active {
+  background: #ffffff !important;
+  box-shadow: 0 0 20px rgba(255,255,255,0.7) !important;
+}
+
+/* Прогресс внутри активного сегмента */
+.secondary-carousel .indicator::after,
+.noir-island-wrapper .indicator::after {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: var(--progress, 0%) !important;
+  background: #ffffff !important;
+  transition: width 0.1s linear !important;
+  box-shadow: 0 0 16px rgba(255,255,255,0.9) !important;
+}
+
+/* Hover — лёгкий намёк */
+.secondary-carousel .indicator:hover,
+.noir-island-wrapper .indicator:hover {
+  background: rgba(255,255,255,0.25) !important;
+}
+.secondary-carousel .indicator.active:hover,
+.noir-island-wrapper .indicator.active:hover {
+  background: #ffffff !important;
+}
+
+/* УБИРАЕМ ЛЮБЫЕ ЗЕЛЁНЫЕ ОСТАТКИ НАВСЕГДА */
+.noir-island-wrapper .indicator,
+.noir-island-wrapper .indicator.active,
+.noir-island-wrapper .indicator::after {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+  /* ПОИСК В БЕЛОЙ ЗОНЕ — ФИНАЛЬНАЯ ВЕРСИЯ (строка + чёрная лупа) */
+  #lightZone .search-wrapper * { all: unset; } /* сбрасываем только лишнее */
+
+  #lightZone .search {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid #000;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    font-size: 22px;
+    letter-spacing: 4px;
+    text-align: center;
+    color: #000;
+    padding: 20px 60px 20px 0;
+    outline: none;
+    box-sizing: border-box;
+  }
+
+  #lightZone .search::placeholder {
+    color: #000;
+    opacity: 0.25;
+    letter-spacing: 8px;
+  }
+
+  #lightZone .search-icon {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    pointer-events: none;
+    opacity: 0.3;
+    transition: all 0.8s cubic-bezier(0.16,1,0.3,1);
+  }
+
+  #lightZone .search:focus + .search-icon {
+    opacity: 0.8;
+    transform: translateY(-50%) scale(1.15);
+  }
+
+  /* САМОЕ ГЛАВНОЕ — перекрашиваем именно SVG */
+  #lightZone .search-icon svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  #lightZone .search-icon svg * {
+    stroke: #000 !important;
+    fill: none !important;
+  }
+.custom-cursor {
+  position: fixed;
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid #fff;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 999999;
+  mix-blend-mode: difference;
+  /* УБИРАЕМ left/top — теперь только transform! */
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+}
+
+
+  /* КРАСИВЫЙ КРЕСТИК ДЛЯ ТВОЕЙ СТАРОЙ МОДАЛКИ — 100% РАБОТАЕТ */
+  .modal-close-btn {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    width: 56px;
+    height: 56px;
+    background: rgba(255,255,255,0.96);
+    border: 1.5px solid rgba(0,0,0,0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 999999;
+    transition: all .4s cubic-bezier(.16,1,.3,1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    backdrop-filter: blur(20px);
+  }
+
+  .modal-close-btn:hover {
+    background: #000;
+    transform: scale(1.1) rotate(90deg);
+  }
+
+  .modal-close-btn:hover svg {
+    stroke: #fff;
+  }
+
+  .modal-close-btn svg {
+    stroke: #000;
+    transition: stroke .4s;
+  }
+
+  /* На мобилках */
+  @media (max-width: 768px) {
+    .modal-close-btn {
+      top: 16px;
+      right: 16px;
+      width: 48px;
+      height: 48px;
+    }
+  }
+
+  /* На всякий случай — старый .close скрываем */
+  .modal > .close { display: none !important; }
+  /* ────────────────────────────────
+   КНОПКА ВЫХОДА ИЗ БЕЛОЙ ЗОНЫ — 2025
+   ──────────────────────────────── */
+#exitWhiteZoneBtn {
+  position: fixed;
+  top: 83px;                     /* идеально под хедером */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  z-index: 900;
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+  transition: opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1), transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  font-family: 'Inter', sans-serif;
+  user-select: none;
+}
+#exitWhiteZoneBtn.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(-10px);
+}
+#exitWhiteZoneBtn.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(-10px);
+}
+
+/* Текст */
+.exit-text {
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 9px;
+  color: #000;
+  text-transform: uppercase;
+  opacity: 0.7;
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.exit-text::before {
+  content: '';
+  position: absolute;
+  left: -24px;
+  right: -24px;
+  top: 50%;
+  height: 1px;
+  background: #000;
+  opacity: 0.15;
+  transform: translateY(-50%);
+}
+
+/* Стрелка */
+.exit-arrow {
+  width: 44px;
+  height: 44px;
+  color: #000;
+  opacity: 0.8;
+}
+
+.exit-arrow svg {
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: drawUp 2.4s cubic-bezier(0.65, 0, 0.35, 1) forwards,
+             floatUp 4s ease-in-out infinite 1.2s;
+}
+
+/* Анимации */
+@keyframes drawUp {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes floatUp {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-11px); }
+}
+
+/* Ховер — чистый Rick Owens */
+#exitWhiteZoneBtn:hover .exit-text {
+  opacity: 1;
+  letter-spacing: 12px;
+}
+
+#exitWhiteZoneBtn:hover .exit-arrow {
+  opacity: 1;
+  transform: translateY(-8px);
+}
+
+#exitWhiteZoneBtn:hover svg {
+  stroke-width: 2.2;
+  animation-duration: 0.6s;
+}
+
+/* Когда уже в белой зоне — сразу показываем */
+body.white #exitWhiteZoneBtn {
+  opacity: 0.85;
+  pointer-events: auto;
+}
+
+body.white #exitWhiteZoneBtn.visible {
+  opacity: 1;
+}
+
+/* Мобильная версия */
+@media (max-width: 768px) {
+  #exitWhiteZoneBtn { top: 94px; gap: 14px; }
+  .exit-text { font-size: 10px; letter-spacing: 7px; }
+  .exit-text::before { left: -18px; right: -18px; }
+  .exit-arrow { width: 38px; height: 38px; }
+}
+
+/* HOTSPOT — ПОЛНОСТЬЮ НЕВИДИМЫЙ, НО КЛИКАБЕЛЬНЫЙ (2025 финальная версия) */
+.hotspot,
+.hotspot:hover,
+.hotspot:focus,
+.hotspot:active {
+  /* Сбрасываем всё визуальное */
+  background: transparent !important;
+  background-color: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  text-decoration: none !important;
+
+  /* ОСТАВЛЯЕМ ТОЛЬКО ТО, ЧТО НУЖНО ДЛЯ КЛИКА */
+  display: block !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  z-index: 99999 !important;
+
+  /* Убиваем любые остаточные эффекты браузера */
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Убираем всё внутри hotspot (чтобы ничего не наследовалось) */
+.hotspot * {
+  all: unset !important;
+  display: none !important;
+}
+
+/* Убираем любые псевдоэлементы */
+.hotspot::before,
+.hotspot::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* ────── НАДПИСЬ НАВЕРХУ (NOIR и т.п.) — СКРЫВАЕТСЯ ПОСЛЕ ФЛИПА ────── */
+.top-persistent-title {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 997;
+  font-size: 11px;
+  letter-spacing: 18px;
+  text-transform: uppercase;
+  color: #fff;
+  opacity: 0.7;
+  pointer-events: none;
+  transition: opacity 1.6s cubic-bezier(0.16, 1, 0.3, 1), transform 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+  font-weight: 300;
+}
+
+/* Когда белая зона уже поднялась — прячем надпись */
+.white-overlay.snapped ~ .top-persistent-title,
+body.scrolled-past-hero .top-persistent-title {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-30px);
+}
+
+/* На белом фоне — чёрная надпись (если нужно) */
+body.white .top-persistent-title { color: #000; opacity: 0.6; }

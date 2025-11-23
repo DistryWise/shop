@@ -391,7 +391,7 @@
     .back-to-top {
     position: fixed;
     bottom: 100px !important;
-    right: 280px;
+    right: 80px;
     width: 56px;
     height: 66px;
     background: rgba(255, 255, 255, 0.18);

@@ -1074,3 +1074,77 @@ header.scrolled + .theme-toggle-hanging { top: 76px; }
   opacity: 1; visibility: visible; transform: translateY(8px);
 }
 
+/* ==================================================================
+   ИСПРАВЛЕНИЕ ОБВОДКИ ИКОНОК В ХЕДЕРЕ — ДЛЯ ТЁМНОЙ И СВЕТЛОЙ ТЕМЫ
+   Добавь в самый конец CSS — перебивает всё
+================================================================== */
+
+/* 1. БАЗОВЫЕ СТИЛИ — ТЁМНАЯ ТЕМА (всегда должна быть обводка) */
+.icon-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.22) !important;
+  backdrop-filter: blur(12px) !important;
+  transition: all 0.35s ease !important;
+}
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: #ffffff !important;
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.2) !important;
+}
+
+/* 2. СВЕТЛАЯ ТЕМА — чёрная обводка + лёгкий фон */
+html[data-theme="light"] .icon-btn,
+[data-theme="light"] .icon-btn {
+  background: rgba(0, 0, 0, 0.06) !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.28) !important;
+  backdrop-filter: blur(12px) !important;
+}
+html[data-theme="light"] .icon-btn:hover,
+[data-theme="light"] .icon-btn:hover {
+  background: rgba(0, 0, 0, 0.14) !important;
+  border-color: #000000 !important;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* 3. Иконки внутри — правильный цвет (чтобы не перекрашивались случайно) */
+.icon-btn i {
+  color: var(--text) !important;
+}
+
+/* 4. При скролле хедера — обводка остаётся (иногда сбивалось) */
+header.scrolled .icon-btn {
+  background: rgba(255, 255, 255, 0.09) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+}
+header.scrolled .icon-btn:hover {
+  background: rgba(255, 255, 255, 0.22) !important;
+  border-color: #fff !important;
+}
+
+/* 5. Счётчик в корзине — правильный цвет в обеих темах */
+.cart-count {
+  background: #000 !important;
+  color: #fff !important;
+}
+html[data-theme="light"] .cart-count {
+  background: #000 !important;
+  color: #fff !important;
+}
+
+/* === КУРСОР В СВЕТЛОЙ ТЕМЕ — ТОЧНО КАК В CONTACTS.CSS === */
+html[data-theme="light"] .custom-cursor,
+[data-theme="light"] .custom-cursor {
+  background: #000 !important;
+  mix-blend-mode: normal !important;
+  opacity: 0.88;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.32);
+  transition: transform 0.14s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+}
+
+html[data-theme="light"] .custom-cursor.hover,
+[data-theme="light"] .custom-cursor:hover {
+  transform: translate(-50%, -50%) scale(2.8) !important;
+  opacity: 1;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.45);
+  background: #000 !important;
+}

@@ -28,12 +28,16 @@
             <a href="/admin_services" class="sidebar-item active"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
             <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
             <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
+             <a href="/admin_dispatch" class="sidebar-item"><i class="fas fa-paper-plane"></i><span>Рассылки</span></a>
             <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
             <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
             <a href="/admin_reviews" class="sidebar-item"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews | e }}</div></span></a>
             <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders | e }}</div></span></a>
         </div>
     </aside>
+
+
+
 
     <main class="main-content">
         <div class="admin-container">
@@ -157,7 +161,7 @@
                     data-short_desc="{{ s.short_desc|e|replace('"', '&quot;') }}"
                     data-full_desc="{{ s.full_desc|e|replace('"', '&quot;') }}"
                     data-category="{{ (s.category or '')|e|replace('"', '&quot;') }}"
-                    data-images="{{ s.image_urls | tojson | e }}">
+                    data-images='{{ (s.image_urls or []) | tojson }}'>
                     <i class="fas fa-edit"></i>
                 </button>
                 <button class="action-btn delete" onclick="event.stopPropagation(); prepareAction('delete', {{ s.id }})">
@@ -165,7 +169,7 @@
                 </button>
             </div>
 
-            <div class="hidden-images-data" style="display:none;" data-images="{{ s.image_urls | tojson | e }}"></div>
+            <div class="hidden-images-data" style="display:none;" data-images="{{ ([] if not s.image_urls or s.image_urls == '[' or s.image_urls == '' else s.image_urls) | tojson | safe }}"></div>
         </td>
     </tr>
     {% endfor %}
@@ -287,12 +291,11 @@
     </div>
 
 <script>
-        fetch('/api/check_admin').then(r => r.json()).then(d => { if (!d.is_admin) location.href = '/404'; });
+fetch('/api/check_admin').then(r => r.json()).then(d => { if (!d.is_admin) location.href = '/404'; });
 
         let pendingAction = null;
         let pendingFormData = null;
 
-        // ТОСТЫ
         function showAlert(message, type = 'success') {
             document.querySelectorAll('.zaza-toast').forEach(t => t.remove());
             const toast = document.createElement('div');
@@ -304,7 +307,6 @@
             setTimeout(() => toast.remove(), 5000);
         }
 
-        // ВАЛИДАЦИЯ
         function validateForm(form) {
             let ok = true;
             form.querySelectorAll('.input-wrapper.error').forEach(el => el.classList.remove('error'));
@@ -337,178 +339,168 @@
             input.value = v;
         }
 
-        // ФОТО — РАБОЧАЯ СИСТЕМА
         const MAX_PHOTOS = 4;
 
-        function initPhotoUploader(dropZoneId, fileInputId, previewId) {
+        // ГЛОБАЛЬНЫЕ ХРАНИЛИЩА ФАЙЛОВ (ЭТО РЕШЕНИЕ ВСЕХ ПРОБЛЕМ)
+        const fileStorage = {
+            add: [],
+            edit: []
+        };
+
+        function initPhotoUploader(dropZoneId, fileInputId, previewId, storageKey) {
             const dropZone = document.getElementById(dropZoneId);
             const fileInput = document.getElementById(fileInputId);
             const preview = document.getElementById(previewId);
 
             dropZone.addEventListener('click', () => fileInput.click());
 
-            dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
-            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-            dropZone.addEventListener('drop', e => {
-                e.preventDefault();
-                dropZone.classList.remove('dragover');
-                if (e.dataTransfer.files.length) processFiles(e.dataTransfer.files);
-            });
+            ['dragover', 'dragenter'].forEach(evt => dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.add('dragover'); }));
+            ['dragleave', 'drop'].forEach(evt => dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.remove('dragover'); }));
 
-            fileInput.addEventListener('change', () => {
-                if (fileInput.files.length) processFiles(fileInput.files);
-            });
+            dropZone.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+            fileInput.addEventListener('change', e => handleFiles(e.target.files));
 
-            function processFiles(fileList) {
+            function handleFiles(fileList) {
                 const newFiles = Array.from(fileList).filter(f => f.type.startsWith('image/'));
                 if (!newFiles.length) return;
 
-                const current = Array.from(fileInput.files);
+                // Берём текущие из хранилища + новые
+                const current = fileStorage[storageKey];
                 const all = [...current, ...newFiles];
 
+                // Убираем дубли
                 const unique = new Map();
-                all.forEach(file => {
-                    const key = `${file.name}_${file.size}_${file.lastModified}`;
-                    if (!unique.has(key)) unique.set(key, file);
+                all.forEach(f => {
+                    const key = `${f.name}_${f.size}_${f.lastModified}`;
+                    if (!unique.has(key)) unique.set(key, f);
                 });
 
-                const finalFiles = Array.from(unique.values()).slice(0, MAX_PHOTOS);
+                const final = Array.from(unique.values()).slice(0, MAX_PHOTOS);
+                fileStorage[storageKey] = final;
 
+                // Обновляем input (важно!)
                 const dt = new DataTransfer();
-                finalFiles.forEach(f => dt.items.add(f));
+                final.forEach(f => dt.items.add(f));
                 fileInput.files = dt.files;
 
-                renderPreview(finalFiles);
+                render(final);
 
-                if (finalFiles.length === MAX_PHOTOS && newFiles.length > 0) {
-                    showAlert('Максимум 4 фото. Лишние удалены.', 'info');
+                if (final.length === MAX_PHOTOS) {
+                    showAlert('Максимум 4 фото', 'info');
                 }
             }
 
-            function renderPreview(files) {
+            function render(files) {
                 preview.innerHTML = '';
                 files.forEach((file, i) => {
                     const reader = new FileReader();
                     reader.onload = e => {
-                        const item = document.createElement('div');
-                        item.className = 'image-item';
-                        item.draggable = true;
-                        item.dataset.index = i;
-                        item.innerHTML = `
+                        const div = document.createElement('div');
+                        div.className = 'image-item';
+                        div.draggable = true;
+                        div.dataset.index = i;
+                        div.innerHTML = `
                             <img src="${e.target.result}" style="width:80px;height:80px;object-fit:cover;border-radius:12px;">
                             ${i === 0 ? '<div class="main-badge">Главная</div>' : ''}
-                            <button type="button" class="image-remove" onclick="removePhoto(this)">×</button>
+                            <button type="button" class="image-remove" onclick="removeFile(${i}, '${storageKey}')">×</button>
                         `;
-                        preview.appendChild(item);
+                        preview.appendChild(div);
                     };
                     reader.readAsDataURL(file);
                 });
-
-                preview.addEventListener('dragstart', e => {
-                    const item = e.target.closest('.image-item');
-                    if (item) {
-                        item.classList.add('dragging');
-                        e.dataTransfer.setData('text/plain', item.dataset.index);
-                    }
-                });
-
-                preview.addEventListener('dragover', e => e.preventDefault());
-                preview.addEventListener('dragend', () => preview.querySelectorAll('.image-item').forEach(el => el.classList.remove('dragging')));
-
-                preview.addEventListener('drop', e => {
-                    e.preventDefault();
-                    const fromIndex = Number(e.dataTransfer.getData('text/plain'));
-                    const toItem = e.target.closest('.image-item');
-                    if (!toItem || fromIndex === Number(toItem.dataset.index)) return;
-
-                    const files = Array.from(fileInput.files);
-                    const [moved] = files.splice(fromIndex, 1);
-                    files.splice(Number(toItem.dataset.index), 0, moved);
-
-                    const dt = new DataTransfer();
-                    files.forEach(f => dt.items.add(f));
-                    fileInput.files = dt.files;
-                    renderPreview(files);
-                    showAlert('Порядок фото изменён', 'success');
-                });
             }
 
-            window.removePhoto = function(btn) {
-                const item = btn.parentElement;
-                const index = Array.from(preview.children).indexOf(item);
-                const files = Array.from(fileInput.files);
-                files.splice(index, 1);
+            window.removeFile = function(index, key) {
+                fileStorage[key].splice(index, 1);
+                const dt = new DataTransfer();
+                fileStorage[key].forEach(f => dt.items.add(f));
+                fileInput.files = dt.files;
+                render(fileStorage[key]);
+            };
+
+            // Перетаскивание порядка
+            preview.addEventListener('dragstart', e => {
+                const item = e.target.closest('.image-item');
+                if (item) {
+                    item.classList.add('dragging');
+                    e.dataTransfer.setData('text/plain', item.dataset.index);
+                }
+            });
+
+            preview.addEventListener('dragover', e => e.preventDefault());
+            preview.addEventListener('drop', e => {
+                e.preventDefault();
+                const from = Number(e.dataTransfer.getData('text/plain'));
+                const toItem = e.target.closest('.image-item');
+                if (!toItem) return;
+                const to = Number(toItem.dataset.index);
+                if (from === to) return;
+
+                const [moved] = fileStorage[storageKey].splice(from, 1);
+                fileStorage[storageKey].splice(to, 0, moved);
 
                 const dt = new DataTransfer();
-                files.forEach(f => dt.items.add(f));
+                fileStorage[storageKey].forEach(f => dt.items.add(f));
                 fileInput.files = dt.files;
-                renderPreview(files);
-            };
+
+                render(fileStorage[storageKey]);
+                showAlert('Порядок изменён', 'success');
+            });
+
+            preview.addEventListener('dragend', () => preview.querySelectorAll('.image-item').forEach(el => el.classList.remove('dragging')));
         }
 
-        initPhotoUploader('addDropZone', 'addFileInput', 'addPreview');
-        initPhotoUploader('editDropZone', 'editFileInput', 'editNewPreview');
+        // Инициализация
+        initPhotoUploader('addDropZone', 'addFileInput', 'addPreview', 'add');
 
-        // ПЕРЕТАСКИВАНИЕ УСЛУГ
-        const tbody = document.getElementById('productsTableBody');
-        let draggedRow = null;
+// ← ВАЖНО: инициализируем и для редактирования!
+initPhotoUploader('editDropZone', 'editFileInput', 'editNewPreview', 'edit');
 
-        tbody.addEventListener('dragstart', e => {
-            if (!e.target.closest('tr')) return;
-            draggedRow = e.target.closest('tr');
-            draggedRow.style.opacity = '0.5';
-            e.dataTransfer.effectAllowed = 'move';
-        });
 
-        tbody.addEventListener('dragend', () => {
-            if (draggedRow) draggedRow.style.opacity = '1';
-            draggedRow = null;
-        });
+function loadExistingImagesIntoPreview(imagesArray, previewId) {
+    const preview = document.getElementById(previewId);
+    if (!preview || !Array.isArray(imagesArray) || imagesArray.length === 0) return;
 
-        tbody.addEventListener('dragover', e => e.preventDefault());
+    preview.innerHTML = '';
 
-        tbody.addEventListener('drop', async e => {
-            e.preventDefault();
-            if (!draggedRow) return;
+    imagesArray.forEach((url, i) => {
+        const div = document.createElement('div');
+        div.className = 'image-item';
+        div.innerHTML = `
+            <img src="${url}" 
+                 style="width:80px;height:80px;object-fit:cover;border-radius:12px;border:2px solid #333;"
+                 onerror="this.src='/static/assets/no-image.png'">
+            ${i === 0 ? '<div class="main-badge">Главная</div>' : ''}
+            <input type="hidden" name="keep_images" value="${url}">
+            <button type="button" class="image-remove" onclick="this.parentElement.remove()">×</button>
+        `;
+        preview.appendChild(div);
+    });
+}
 
-            const targetRow = e.target.closest('tr');
-            if (!targetRow || targetRow === draggedRow) return;
-
-            tbody.insertBefore(draggedRow, targetRow);
-
-            const newOrder = Array.from(tbody.querySelectorAll('tr')).map(row => row.dataset.id);
-
-            const formData = new FormData();
-            formData.append('action', 'reorder_services');
-            formData.append('order', JSON.stringify(newOrder));
-
-            try {
-                const resp = await fetch('/admin_services', { method: 'POST', body: formData });
-                if (resp.ok) showAlert('Порядок услуг сохранён', 'success');
-                else showAlert('Ошибка сохранения порядка', 'error');
-            } catch (err) {
-                showAlert('Нет связи с сервером', 'error');
-            }
-        });
-
-        document.querySelectorAll('.product-row').forEach(row => {
-            row.draggable = true;
-            row.style.cursor = 'grab';
-            row.title = 'Перетащите, чтобы изменить порядок';
-        });
-
-        // ФОРМЫ
+        // Остальной код (формы, модалки и т.д.) — оставь как есть
         document.getElementById('addForm').onsubmit = function(e) {
             e.preventDefault();
             if (!validateForm(this)) return;
-            this.querySelector('[name="price"]').value = this.querySelector('[name="price"]').value.replace(/\s/g, '');
+
+            const priceInput = this.querySelector('[name="price"]');
+            priceInput.value = priceInput.value.replace(/\s/g, '');
+
             pendingAction = 'add';
-            pendingFormData = new FormData(this);
+            pendingFormData = new FormData();
+
             pendingFormData.append('action', 'add');
+            pendingFormData.append('title', this.querySelector('[name="title"]').value.trim());
+            pendingFormData.append('price', priceInput.value);
+            pendingFormData.append('short_desc', this.querySelector('[name="short_desc"]').value.trim());
+            pendingFormData.append('full_desc', this.querySelector('[name="full_desc"]').value);
+            pendingFormData.append('category', this.querySelector('[name="category"]').value.trim());
+
+            fileStorage.add.forEach(file => pendingFormData.append('images', file));
+
             document.getElementById('passwordModal').classList.add('active');
             document.getElementById('adminPassword').focus();
         };
-
         document.querySelector('#editModal .btn-zaza-primary').onclick = function() {
             const form = document.getElementById('editForm');
             if (!validateForm(form)) return;
@@ -575,39 +567,35 @@
             }
         }
 
-        function openEditModal(btn) {
-            const d = btn.dataset;
-            document.getElementById('edit_id').value = d.id;
-            document.getElementById('edit_title').value = (d.title || '').replace(/&quot;/g, '"');
-            document.getElementById('edit_price').value = (d.price || '').replace(/&quot;/g, '"');
-            document.getElementById('edit_short_desc').value = (d.short_desc || '').replace(/&quot;/g, '"');
-            document.getElementById('edit_full_desc').value = (d.full_desc || '').replace(/&quot;/g, '"');
-            document.getElementById('edit_category').value = (d.category || '').replace(/&quot;/g, '"');
+function openEditModal(btn) {
+    const d = btn.dataset;
 
-            const currentPreview = document.getElementById('editCurrentPreview');
-            currentPreview.innerHTML = '';
-            let images = [];
-            try {
-                images = JSON.parse(d.images || '[]'); // ← Исправлено: d.images, а не btn!
-            } catch (e) { console.error(e); }
+    document.getElementById('edit_id').value = d.id;
+    document.getElementById('edit_title').value = (d.title || '').replace(/&quot;/g, '"');
+    document.getElementById('edit_price').value = (d.price || '').replace(/&quot;/g, '"');
+    document.getElementById('edit_short_desc').value = (d.short_desc || '').replace(/&quot;/g, '"');
+    document.getElementById('edit_full_desc').value = (d.full_desc || '').replace(/&quot;/g, '"');
+    document.getElementById('edit_category').value = (d.category || '').replace(/&quot;/g, '"');
 
-            if (Array.isArray(images) && images.length > 0) {
-                images.forEach(img => {
-                    const div = document.createElement('div');
-                    div.className = 'image-item';
-                    div.innerHTML = `
-                        // ИСПРАВЛЕНИЕ: Используем полный URL, который уже есть в переменной img
-<img src="${img}" style="width:80px;height:80px;object-fit:cover;border-radius:12px;border:2px solid #333;" onerror="this.src='/static/assets/no-image.png'">
-                        <input type="hidden" name="keep_images" value="${img}">
-                        <button type="button" class="image-remove" onclick="this.parentElement.remove()">×</button>
-                    `;
-                    currentPreview.appendChild(div);
-                });
-            }
+    // Очищаем превью
+    document.getElementById('editCurrentPreview').innerHTML = '';
+    document.getElementById('editNewPreview').innerHTML = '';
+    fileStorage.edit = [];
 
-            document.getElementById('editNewPreview').innerHTML = '';
-            document.getElementById('editModal').classList.add('active');
-        }
+    // ← БЕЗОПАСНЫЙ ПАРСИНГ
+    let images = [];
+    try {
+        const raw = d.images || '[]';
+        images = JSON.parse(raw);
+        if (!Array.isArray(images)) images = [];
+    } catch (e) {
+        console.error('Ошибка парсинга изображений в openEditModal:', e);
+        images = [];
+    }
+
+    loadExistingImagesIntoPreview(images, 'editCurrentPreview');
+    document.getElementById('editModal').classList.add('active');
+}
 
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
@@ -625,109 +613,148 @@
             document.querySelectorAll('.product-row').forEach(r => r.classList.remove('active'));
         }
 
-        function showProductDetail(row) {
-            const cells = row.cells;
+// ← УДАЛИ СТАРЫЙ ОБРАБОТЧИК И ЭТУ ФУНКЦИЮ, ВСТАВЬ ВМЕСТО НИХ ЭТО:
 
-            document.getElementById('detailTitle').textContent = cells[1].querySelector('div')?.textContent || '—';
-            document.getElementById('detailPrice').textContent = cells[2].textContent || '—';
-            document.getElementById('detailCategory').textContent = 'Категория: ' + (cells[4].textContent || '—');
-            document.getElementById('detailShortDesc').textContent = cells[3].textContent || '—';
+document.addEventListener('click', function(e) {
+    const row = e.target.closest('.product-row');
+    if (!row) return;
 
-            // ← ИСПРАВЛЕНО: берём полное описание из data-full_desc кнопки edit
-            const editBtn = row.querySelector('.action-btn.edit');
-            const fullDesc = editBtn?.dataset.full_desc?.replace(/&quot;/g, '"') || 'Нет подробного описания';
-            document.getElementById('detailFullDesc').textContent = fullDesc;
+    // Если клик по кнопкам действия — не открывать карточку
+    if (e.target.closest('.action-btn')) return;
 
-            const imagesDiv = document.getElementById('detailImages');
-            imagesDiv.innerHTML = '';
+    showProductDetail(row);
+});
 
-            const hiddenData = row.querySelector('.hidden-images-data');
-            let images = [];
-            try {
-                images = JSON.parse(hiddenData?.dataset.images || '[]');
-                if (!Array.isArray(images)) images = [];
-            } catch (e) {
-                images = [];
-            }
+function showProductDetail(row) {
+    if (!row || !row.dataset?.id) return;
 
-            if (images.length === 0) {
-                imagesDiv.innerHTML = '<div style="width:320px;height:160px;background:#222;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#666;font-size:1rem;">Нет фото</div>';
-            } else {
-                const galleryWrapper = document.createElement('div');
-                galleryWrapper.style.cssText = `position:relative;width:100%;max-width:460px;aspect-ratio:1/1;border-radius:20px;overflow:hidden;border:1.5px solid #333;box-shadow:0 15px 50px rgba(0,0,0,0.7);background:#000;`;
-                const mainImg = document.createElement('img');
-                mainImg.src = `${images[0]}`;
-                mainImg.style.cssText = `width:100%;height:100%;object-fit:contain;transition:opacity .4s ease;`;
-                galleryWrapper.appendChild(mainImg);
+    // Получаем данные из data-атрибутов кнопки редактирования (там всё уже есть и безопасно)
+    const editBtn = row.querySelector('.action-btn.edit');
+    if (!editBtn) return;
 
-                if (images.length > 1) {
-                    const thumbs = document.createElement('div');
-                    thumbs.style.cssText = `position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.8));padding:12px 8px 8px;display:flex;gap:6px;justify-content:center;`;
-                    images.slice(0, 4).forEach((img, i) => {
-                        const t = document.createElement('div');
-                        t.textContent = i + 1;
-                        t.style.cssText = `width:32px;height:32px;border-radius:8px;background:${i===0?'#fff':'rgba(255,255,255,0.2)'};color:${i===0?'#000':'#fff'};display:flex;align-items:center;justify-content:center;font-weight:600;cursor:pointer;transition:all .3s;backdrop-filter:blur(4px);`;
-                        t.onclick = e => {
-                            e.stopPropagation();
-                            mainImg.style.opacity = '0';
-                            setTimeout(() => { mainImg.src = `${img}`; mainImg.style.opacity = '1'; }, 200);
-                            thumbs.querySelectorAll('div').forEach((tt, j) => {
-                                tt.style.background = j === i ? '#fff' : 'rgba(255,255,255,0.2)';
-                                tt.style.color = j === i ? '#000' : '#fff';
-                            });
-                        };
-                        thumbs.appendChild(t);
-                    });
-                    if (images.length > 4) {
-                        const more = document.createElement('div');
-                        more.textContent = `+${images.length - 4}`;
-                        more.style.cssText = `width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.15);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;`;
-                        more.onclick = e => { e.stopPropagation(); openFullscreenGallery(images, 4); };
-                        thumbs.appendChild(more);
-                    }
-                    galleryWrapper.appendChild(thumbs);
-                }
-                imagesDiv.appendChild(galleryWrapper);
-            }
+    const d = editBtn.dataset;
 
-            document.querySelectorAll('.product-row').forEach(r => r.classList.remove('active'));
-            row.classList.add('active');
-            document.getElementById('productDetail').classList.add('active');
-        }
+    document.getElementById('detailTitle').textContent = d.title || '—';
+    document.getElementById('detailPrice').textContent = d.price || '—';
+    document.getElementById('detailCategory').textContent = 'Категория: ' + (d.category || '—');
+    document.getElementById('detailShortDesc').textContent = d.short_desc || '—';
+    document.getElementById('detailFullDesc').textContent = (d.full_desc || 'Нет подробного описания').replace(/&quot;/g, '"');
 
-    function openFullscreenGallery(images, start = 0) {
-        const existing = document.getElementById('fullscreenGallery');
-        if (existing) existing.remove();
+    // === ГАЛЕРЕЯ ===
+    const imagesDiv = document.getElementById('detailImages');
+    imagesDiv.innerHTML = '';
 
-        const overlay = document.createElement('div');
-        overlay.id = 'fullscreenGallery';
-        overlay.style.cssText = `position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.98);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .4s;cursor:zoom-out;`;
-        overlay.innerHTML = `
-            <button style="position:absolute;top:20px;right:20px;background:none;border:none;color:white;font-size:3.5rem;cursor:pointer;z-index:10;opacity:0.8;" onclick="closeFullscreenGallery()">×</button>
-            <button id="prevBtn" style="position:absolute;left:30px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);border:none;color:white;font-size:4rem;padding:20px 15px;border-radius:50%;cursor:pointer;backdrop-filter:blur(10px);">‹</button>
-            <button id="nextBtn" style="position:absolute;right:30px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);border:none;color:white;font-size:4rem;padding:20px 15px;border-radius:50%;cursor:pointer;backdrop-filter:blur(10px);">›</button>
-            <img id="fullImg" src="/static/uploads/services/${images[start]}" style="max-width:94%;max-height:94vh;object-fit:contain;border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,0.9);">
-        `;
-        document.body.appendChild(overlay);
-        setTimeout(() => overlay.style.opacity = '1', 10);
-
-        let current = start;
-        const img = overlay.querySelector('#fullImg');
-        const show = () => img.src = `/static/uploads/services/${images[current]}`;
-
-        overlay.querySelector('#prevBtn').onclick = e => { e.stopPropagation(); current = (current - 1 + images.length) % images.length; show(); };
-        overlay.querySelector('#nextBtn').onclick = e => { e.stopPropagation(); current = (current + 1) % images.length; show(); };
-        overlay.onclick = e => { if (e.target === overlay) closeFullscreenGallery(); };
-
-        const escHandler = e => { if (e.key === 'Escape') closeFullscreenGallery(); };
-        document.addEventListener('keydown', escHandler);
-
-        window.closeFullscreenGallery = () => {
-            overlay.style.opacity = '0';
-            setTimeout(() => { overlay.remove(); document.removeEventListener('keydown', escHandler); delete window.closeFullscreenGallery; }, 400);
-        };
+    let images = [];
+    try {
+        const raw = editBtn.dataset.images || '[]';
+        images = JSON.parse(raw);
+        if (!Array.isArray(images)) images = [];
+    } catch (e) {
+        console.error('Ошибка парсинга изображений:', e);
+        images = [];
     }
 
+    if (images.length === 0) {
+        imagesDiv.innerHTML = '<div style="width:320px;height:320px;background:#222;border-radius:16px;display:flex;align-items:center;justify-content:center;color:#666;font-size:1.1rem;">Нет фото</div>';
+    } else {
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'position:relative;width:100%;max-width:480px;aspect-ratio:1;background:#000;border-radius:20px;overflow:hidden;border:2px solid #333;box-shadow:0 20px 60px rgba(0,0,0,0.6);';
+
+        const mainImg = document.createElement('img');
+        mainImg.src = images[0];
+        mainImg.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+        mainImg.onerror = () => mainImg.src = '/static/assets/no-image.png';
+        wrapper.appendChild(mainImg);
+
+        if (images.length > 1) {
+            const thumbs = document.createElement('div');
+            thumbs.style.cssText = 'position:absolute;bottom:0;left:0;right:0;padding:16px 12px;background:linear-gradient(transparent,rgba(0,0,0,0.85));display:flex;gap:8px;justify-content:center;';
+
+            images.slice(0, 6).forEach((url, i) => {
+                const thumb = document.createElement('div');
+                thumb.style.cssText = `width:40px;height:40px;border-radius:10px;background:url(${url}) center/cover no-repeat;border:2px solid ${i===0?'#00ff9d':'transparent'};cursor:pointer;transition:all .3s;`;
+                thumb.onclick = (e) => {
+                    e.stopPropagation();
+                    mainImg.src = url;
+                    thumbs.querySelectorAll('div').forEach((t, j) => {
+                        t.style.borderColor = j === i ? '#00ff9d' : 'transparent';
+                    });
+                };
+                thumbs.appendChild(thumb);
+            });
+
+            if (images.length > 6) {
+                const more = document.createElement('div');
+                more.textContent = `+${images.length - 6}`;
+                more.style.cssText = 'width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,0.15);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;cursor:pointer;';
+                more.onclick = (e) => { e.stopPropagation(); openFullscreenGallery(images); };
+                thumbs.appendChild(more);
+            }
+
+            wrapper.appendChild(thumbs);
+        }
+
+        imagesDiv.appendChild(wrapper);
+    }
+
+    // Активация
+    document.querySelectorAll('.product-row').forEach(r => r.classList.remove('active'));
+    row.classList.add('active');
+    document.getElementById('productDetail').classList.add('active');
+}
+
+function openFullscreenGallery(images, start = 0) {
+    const existing = document.getElementById('fullscreenGallery');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'fullscreenGallery';
+    overlay.style.cssText = `position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.98);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .4s;cursor:zoom-out;`;
+
+    const mainImg = document.createElement('img');
+    mainImg.src = images[start];
+    mainImg.style.cssText = `max-width:94%;max-height:94vh;object-fit:contain;border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,0.9);transition:opacity .3s ease;`;
+    mainImg.onerror = () => mainImg.src = '/static/assets/no-image.png';
+
+    overlay.innerHTML = `
+        <button style="position:absolute;top:20px;right:20px;background:none;border:none;color:white;font-size:3.5rem;cursor:pointer;z-index:10;opacity:0.8;" onclick="closeFullscreenGallery()">×</button>
+        <button id="prevBtn" style="position:absolute;left:30px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);border:none;color:white;font-size:4rem;padding:20px 15px;border-radius:50%;cursor:pointer;backdrop-filter:blur(10px);">‹</button>
+        <button id="nextBtn" style="position:absolute;right:30px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.15);border:none;color:white;font-size:4rem;padding:20px 15px;border-radius:50%;cursor:pointer;backdrop-filter:blur(10px);">›</button>
+    `;
+    overlay.appendChild(mainImg);
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay.style.opacity = '1', 10);
+
+    let current = start;
+
+    const show = () => {
+        mainImg.style.opacity = '0';
+        setTimeout(() => {
+            mainImg.src = images[current];
+            mainImg.style.opacity = '1';
+        }, 200);
+    };
+
+    const prevBtn = overlay.querySelector('#prevBtn');
+    const nextBtn = overlay.querySelector('#nextBtn');
+
+    if (prevBtn) prevBtn.onclick = e => { e.stopPropagation(); current = (current - 1 + images.length) % images.length; show(); };
+    if (nextBtn) nextBtn.onclick = e => { e.stopPropagation(); current = (current + 1) % images.length; show(); };
+
+    overlay.onclick = e => { if (e.target === overlay) closeFullscreenGallery(); };
+
+    const escHandler = e => { if (e.key === 'Escape') closeFullscreenGallery(); };
+    document.addEventListener('keydown', escHandler);
+
+    window.closeFullscreenGallery = () => {
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            overlay.remove();
+            document.removeEventListener('keydown', escHandler);
+            delete window.closeFullscreenGallery;
+        }, 400);
+    };
+}
     function filterProducts() {
         const term = document.getElementById('searchInput').value.toLowerCase();
         const rows = Array.from(document.querySelectorAll('.product-row'));
@@ -750,12 +777,14 @@
 
     filterProducts();
 
-            document.querySelectorAll('.product-row').forEach(row => {
-                row.addEventListener('click', e => {
-                    if (e.target.closest('.action-btn')) return;
-                    showProductDetail(row);
-                });
-            });
+    document.addEventListener('click', function(e) {
+        const row = e.target.closest('.product-row');
+        if (!row) return;
+        if (e.target.closest('.action-btn')) return; // не открывать при клике на кнопки
+        showProductDetail(row);
+    });
+
+
 </script>
 
 </body>

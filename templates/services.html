@@ -1,333 +1,204 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NOIR · 2025</title>
-  <style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Услуги — Piligrim · 2025</title>
 
-    .hero {
-  position: relative;
-  overflow: hidden;
-  z-index: 0; /* Убедимся, что hero не перекрывает hotspots */
-}
+  <!-- Шрифты и иконки -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap" rel="stylesheet">
 
-.slide {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1; /* Слайды ниже hotspots */
-}
-
-.hotspot {
-  position: absolute;
-background: rgba(255, 255, 255, 0.1) !important; /* Лёгкий фон для видимости */
-  border: 1px solid rgba(255, 255, 255, 0.3) !important; /* Граница для видимости */
-  border-radius: 8px;
-  z-index: 20 !important; /* Выше слайдов и текстовых слоёв */
-  cursor: pointer;
-  pointer-events: auto !important;
-}
-
-.hotspot:hover {
-  background: rgba(255,255,255,0.05) !important;
-}
-    .ad-banner-carousel {
-      position: relative;
-      overflow: hidden;
-      max-width: 1900px;
-      margin: 0 auto;
-      border-radius: 16px;
-    }
-
-    .ad-banner-carousel .carousel-track {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 60px;
-      transition: transform 1.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .ad-banner-carousel .carousel-prev,
-    .ad-banner-carousel .carousel-next {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 70px; height: 70px;
-      background: rgba(0,0,0,0.75);
-      border: none;
-      color: #fff;
-      font-size: 32px;
-      cursor: pointer;
-      opacity: 0;
-      transition: opacity 0.6s, background 0.4s;
-      backdrop-filter: blur(12px);
-      border-radius: 50%;
-      z-index: 10;
-    }
-
-    .ad-banner-carousel .carousel-prev { left: 20px; }
-    .ad-banner-carousel .carousel-next { right: 20px; }
-
-    .ad-banner-carousel:hover .carousel-prev,
-    .ad-banner-carousel .carousel-next {
-      opacity: 1;
-    }
-
-    .ad-banner-carousel .carousel-prev:hover,
-    .ad-banner-carousel .carousel-next:hover {
-      background: #000;
-    }
-
-    @media (max-width: 900px) {
-      .ad-banner-carousel .carousel-track {
-        grid-template-columns: 1fr;
-        gap: 40px;
-      }
-    }
-
-    .ad-banner-wrapper {
-      grid-column: 1 / -1;
-      width: 100%;
-      max-width: 1900px;
-      margin: 0 auto;
-      padding: 0 40px;
-      box-sizing: border-box;
-    }
-
-    /* === LOAD MORE BUTTON — ГАРАНТИРОВАННО РАБОТАЕТ === */
-    .load-more-section {
-      text-align: center;
-      margin: 160px 0;
-      display: none;
-      padding: 40px 0;
-      background: #ffffff;
-      z-index: 1000;
-    }
-
-    .load-more-btn {
-      background: none;
-      border: 2px solid #fff !important;
-      color: #fff !important;
-      padding: 16px 48px;
-      font-size: 13px;
-      letter-spacing: 12px;
-      text-transform: uppercase;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.4s ease;
-      position: relative;
-      z-index: 1;
-      outline: none;
-    }
-
-    .load-more-btn:hover {
-      background: #fff !important;
-      color: #000 !important;
-    }
-
-    /* === НА БЕЛОМ ФОНЕ === */
-    body.white .load-more-btn {
-      border-color: #000000 !important;
-      color: #000 !important;
-    }
-
-    body.white .load-more-btn:hover {
-      background: #ffffff !important;
-      color: #000000 !important;
-    }
-
-    .secondary-carousel {
-      position: relative;
-      width: 100%;
-      max-width: 2700px;
-      height: 920px;
-      margin-top: 50px; /* Отступ сверху */
-      margin-bottom: 50px; /* Отступ снизу */
-      overflow: hidden;
-      border-radius: 16px;
-      box-shadow: 0 30px 60px rgba(0,0,0,0.3);
-    }
-
-    .secondary-carousel .carousel-inner {
-      position: relative;
-      width: 100%;
-      height: 100%;
-    }
-
-    .carousel-slide {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      transition: opacity 1.4s cubic-bezier(0.16,1,0.3,1);
-    }
-
-    .carousel-slide.active {
-      opacity: 1;
-    }
-
-    .carousel-slide img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .indicators {
-      position: absolute;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 12px;
-      z-index: 10;
-    }
-
-    .indicator {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.4);
-      cursor: pointer;
-      transition: all 0.4s ease;
-    }
-
-    .indicator.active {
-      background: #fff;
-      transform: scale(1.4);
-    }
-
-    /* === СТИЛИ ДЛЯ HOTSPOTS (обновлены для невидимости) === */
-    .hotspot {
-      position: absolute;
-      /* Убраны граница и фон для невидимости */
-      background: transparent;
-      border: none;
-      border-radius: 8px;
-      z-index: 20;
-      cursor: pointer;
-    }
-
-    .hotspot:hover {
-      /* Лёгкий эффект при наведении, если нужно */
-      background: rgba(255,255,255,0.05);
-    }
-
-    .hotspot-tooltip {
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #000;
-      color: #0f0;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s;
-      z-index: 100;
-    }
-
-    .hotspot:hover .hotspot-tooltip {
-      opacity: 1;
-    }
-
-    .hotspot-preview {
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%) translateY(-8px);
-      background: rgba(0,0,0,0.95);
-      border: 1px solid #333;
-      border-radius: 12px;
-      padding: 8px 12px;
-      font-size: 0.8rem;
-      color: #0f0;
-      white-space: nowrap;
-      z-index: 10000;
-      opacity: 0;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-      min-width: 180px;
-      max-width: 300px;
-      pointer-events: none;
-    }
-
-    .hotspot-preview.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(-12px);
-    }
-
-    .hotspot-preview .url {
-      color: #0f0;
-      font-family: monospace;
-      word-break: break-all;
-      margin-bottom: 6px;
-    }
-
-    .hotspot-preview .thumb {
-      width: 100%;
-      height: 60px;
-      object-fit: cover;
-      border-radius: 8px;
-      background: #222;
-      margin-top: 6px;
-      display: none;
-    }
-
-    .hotspot-preview .thumb.loading {
-      background: #222 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1zm0 15a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0v-2a1 1 0 0 1 1-1zm8.66-10.66a1 1 0 0 1 0 1.42l-1.42 1.42a1 1 0 1 1-1.42-1.42l1.42-1.42a1 1 0 0 1 1.42 0zM7.76 14.24a1 1 0 0 1 0 1.42l-1.42 1.42a1 1 0 1 1-1.42-1.42l1.42-1.42a1 1 0 0 1 1.42 0zm13.9 3.9a1 1 0 0 1-1.42 0l-1.42-1.42a1 1 0 1 1 1.42-1.42l1.42 1.42a1 1 0 0 1 0 1.42zM5.18 4.58a1 1 0 0 1 0 1.42L3.76 7.42a1 1 0 1 1-1.42-1.42L3.76 4.58a1 1 0 0 1 1.42 0z' fill='%23666'/%3E%3C/svg%3E") center/24px no-repeat;
-    }
-
-    /* Уведомления */
-    .toast {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #111;
-      color: #fff;
-      padding: 16px 24px;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-      z-index: 9999;
-      font-size: 0.95rem;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      opacity: 0;
-      transition: all 0.4s ease;
-      min-width: 280px;
-      max-width: 400px;
-    }
-
-    .toast.show {
-      opacity: 1;
-      bottom: 40px;
-    }
-
-    .toast.success {
-      border-left: 4px solid #00ff88;
-    }
-
-    .toast.error {
-      border-left: 4px solid #ff3b30;
-    }
-
-    .toast .icon {
-      font-size: 1.4rem;
-    }
-  </style>
+  <!-- Основные стили страницы услуг -->
   <link rel="stylesheet" href="/static/css/services.css">
+
+  <!-- Стили хедера, поиска, корзины, авторизации, AI и т.д. — ТОЧНО как на about_company -->
+  <link rel="stylesheet" href="/static/css/search.css">
+  <link rel="stylesheet" href="/static/css/auth.css">
+  <link rel="stylesheet" href="/static/css/cart.css">
+  <link rel="stylesheet" href="/static/css/ai.css">
+  <link rel="stylesheet" href="/static/css/contacts.css">
+
+  <!-- ЛОАДЕР + КУРСОР + ОСНОВНЫЕ СТИЛИ (точно как в about_company.css) -->
+  
+
 </head>
 <body>
+
+  <!-- ЛОАДЕР -->
+  <div class="loader" id="pageLoader"></div>
+
+
+
+  <!-- КАСТОМНЫЙ КУРСОР (из contacts) -->
+  <div class="custom-cursor"></div>
+
+  <!-- ==================== ПОЛНЫЙ ХЕДЕР ИЗ КОНТАКТОВ (с авторизацией, корзиной, обратной связью) ==================== -->
+  <header>
+    <a href="/" class="logo"><img src="/static/assets/logo.png" alt="Piligrim" class="logo-img"></a>
+    <nav>
+      <a href="/" class="nav-link">Главная</a>
+      <a href="/goods" class="nav-link">Товары</a>
+      <a href="/services" class="nav-link active">Услуги</a>
+      <a href="/news" class="nav-link">Новости</a>
+      <a href="/about_company" class="nav-link">О компании</a>
+      <a href="/contacts" class="nav-link">Контакты</a>
+    </nav>
+    <div class="header-icons">
+      <div class="search-wrapper">
+        <div class="search-container">
+          <div class="search-icon"><i class="fas fa-search"></i></div>
+          <input type="text" class="search-input" id="searchInput" placeholder="Поиск...">
+          <button id="searchClear" class="search-clear">×</button>
+        </div>
+        <div id="autocompleteList" class="autocomplete-list"></div>
+      </div>
+      <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
+      
+      <div style="position: relative;">
+        <button class="icon-btn" id="cartBtn">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <div id="miniCartDropdown">
+          <div class="mini-cart-header"><div class="mini-cart-title">Корзина</div></div>
+          <div class="mini-cart-items" id="miniCartItems"><div class="mini-cart-empty">Корзина пуста</div></div>
+          <div class="mini-cart-footer">
+            <div class="mini-cart-total" id="miniCartTotal">Итого: 0.00 ₽</div>
+            <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
+    </div>
+  </header>
+
+  <!-- МОДАЛКА ОБРАТНОЙ СВЯЗИ -->
+  <div class="custom-alert" id="feedbackModal">
+    <div class="alert-content">
+      <button class="alert-close" id="closeFeedback">×</button>
+
+      <div class="alert-icon">
+        <i class="fas fa-envelope-open-text"></i>
+      </div>
+
+      <div class="alert-text">
+        <strong>Обратная связь</strong>
+        <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
+      </div>
+
+      <form class="contact-form" novalidate id="contactForm">
+        <input type="text" placeholder="Ваше имя" name="name" required />
+        
+        <div class="phone-field-wrapper">
+          <input type="tel" placeholder="+7 (___) ___-__-__" name="phone" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+          <button type="button" class="edit-phone-btn" style="display:none;">Изменить</button>
+        </div>
+        
+        <input type="email" placeholder="Email" name="email" required />
+        <textarea placeholder="Ваше сообщение" name="message" required></textarea>
+
+        <button type="submit" id="submitBtn" class="alert-login-btn">
+          <span class="btn-text">Отправить сообщение</span>
+          <span class="btn-cooldown">Отправка... <span class="timer">30</span>с</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+<!-- МОДАЛКА АВТОРИЗАЦИИ — ПОЛНОСТЬЮ РАБОЧАЯ ВЕРСИЯ -->
+<div id="authModal" class="auth-modal">
+  <div class="auth-modal-content">
+    <button class="close-modal" id="closeAuthModal">×</button>
+    <h2 class="auth-title">Вход по номеру телефона</h2>
+
+    <!-- ШАГ 1 — ВВОД НОМЕРА -->
+    <div id="stepPhone" class="auth-step">
+      <div class="country-selector">
+        <div class="selected-country" id="selectedCountry">
+          <span class="flag">RU</span>
+          <span class="code">+7</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="country-dropdown" id="countryDropdown">
+          <div class="country-item" data-code="+7" data-flag="RU">Россия +7</div>
+          <div class="country-item" data-code="+1" data-flag="US">USA +1</div>
+          <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
+        </div>
+      </div>
+
+      <input type="tel" id="phoneInput" placeholder="(999) 999 99 99" class="auth-input">
+
+      <!-- Обязательное согласие -->
+      <label class="checkbox-label required">
+        <input type="checkbox" id="privacyCheck">
+        <span class="custom-checkbox"></span>
+        Согласен с <a href="/policy" target="_blank" class="privacy-link">политикой конфиденциальности</a>
+      </label>
+
+      <!-- Автоматическая подписка на рассылку -->
+      <label class="checkbox-label">
+        <input type="checkbox" id="subscribeCheck" checked>
+        <span class="custom-checkbox"></span>
+        Получать SMS с акциями и уведомлениями
+      </label>
+
+      <button id="sendCodeBtn" class="auth-btn" disabled>Получить код</button>
+    </div>
+
+    <!-- ШАГ 2 — ВВОД КОДА -->
+    <div id="stepCode" class="auth-step" style="display:none;">
+      <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
+      <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
+      <button id="verifyCodeBtn" class="auth-btn">Войти</button>
+      <button id="resendCode" class="auth-link">Отправить повторно</button>
+    </div>
+
+    <!-- ШАГ 3 — УСПЕШНЫЙ ВХОД -->
+    <div id="stepSuccess" class="auth-step" style="display:none;">
+      <i class="fas fa-check-circle success-icon"></i>
+      <h3>Добро пожаловать!</h3>
+      <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
+      <button id="closeSuccess" class="auth-btn">Продолжить</button>
+    </div>
+  </div>
+</div>
+<!-- КАРТОЧКА ТОВАРА — РАБОЧАЯ, КАК В ZAZA -->
+<div class="product-modal" id="productModal">
+  <div class="product-content">
+    <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
+    <div class="product-info">
+      <h3 id="productTitle" class="product-title">Загрузка...</h3>
+      <div class="product-rating">
+        <div class="stars"></div>
+        <span id="productReviewsCount" class="reviews-count">—</span>
+      </div>
+      <div id="productPrice" class="product-price">—</div>
+      <div id="productDescription" class="product-description">Загрузка описания...</div>
+      <button id="addToCartModal" class="add-to-cart-btn">
+        <i class="fas fa-shopping-cart"></i> Купить
+      </button>
+      <div class="product-reviews">
+        <h4 class="reviews-title">Отзывы покупателей</h4>
+        <div class="reviews-list">
+          <div style="text-align:center;padding:2rem;color:#888;">
+            <i class="far fa-star" style="font-size:2.5rem;margin-bottom:0.5rem;display:block;"></i>
+            <p>Загрузка отзывов...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="close-modal"><i class="fas fa-times"></i></div>
+  </div>
+</div>
+
+
+  
   <div class="white-overlay" id="whiteOverlay"></div>
 
   <section class="hero" id="hero">
-    <div class="logo">NOIR</div>
     <div class="slide active"></div>
     <div class="slide"></div>
     <div class="slide"></div>
@@ -356,16 +227,23 @@ background: rgba(255, 255, 255, 0.1) !important; /* Лёгкий фон для �
       </button>
     </div>
     <div class="catalog-header"><h1>УСЛУГИ</h1></div>
-    <div class="search-wrapper">
-      <div class="search-container">
-        <input type="text" class="search" placeholder="Поиск..." id="search">
-        <div class="search-icon">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><line x1="16.5" y1="16.5" x2="21" y2="21" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-        </div>
+<div class="search-wrapper" style="max-width:1100px;margin:0 auto 180px;position:relative;">
+      <div class="search-container" style="position:relative;max-width:900px;margin:0 auto;">
+        
+        <input type="text" 
+               class="search" 
+               id="search" 
+               placeholder="Поиск..." 
+               style="width:100%;background:transparent;border:none;border-bottom:3px solid #000;font-family:'Inter',sans-serif;font-weight:300;font-size:22px;letter-spacing:4px;color:#000;text-align:center;padding:20px 60px 20px 0;outline:none;box-sizing:border-box;"
+               autocomplete="off">
+
+<div class="search-icon" style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:40px;height:40px;opacity:0.35;transition:all .8s cubic-bezier(.16,1,.3,1);pointer-events:none;">
+  <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTEiIGN5PSIxMSIgcj0iNyIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjIuNCIvPgo8cGF0aCBkPSJNMTYuNSAxNi41TDIwLjUgMjAuNSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPg==" alt="поиск" style="width:100%;height:100%;display:block;">
+</div>
       </div>
     </div>
     <div class="grid" id="grid"></div>
-    <div id="adBannerSection" style="display:none;margin:240px 0;">
+    <div id="adBannerSection" class="noir-island-wrapper">
       <div class="secondary-carousel">
         <div class="carousel-inner" id="services-carousel-inner"></div>
         <div class="indicators"></div>
@@ -378,8 +256,12 @@ background: rgba(255, 255, 255, 0.1) !important; /* Лёгкий фон для �
   </div>
 
   <!-- МОДАЛКА -->
-  <div class="modal" id="modal">
-    <div class="close">×</div>
+  <div class="modal" id="modal"><button class="modal-close-btn" aria-label="Закрыть">
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+</button><div class="close">×</div>
     <div class="modal-content">
       <div class="modal-gallery">
         <img id="modal-img" src="" alt="">
@@ -407,1047 +289,292 @@ background: rgba(255, 255, 255, 0.1) !important; /* Лёгкий фон для �
   </div>
 
   <footer id="footer">
-    <span>© 2025 NOIR · NO ADDRESS · NO PHONE</span>
+    <span>© 2025 Piligrim · NO ADDRESS · NO PHONE</span>
   </footer>
 
   <!-- УВЕДОМЛЕНИЯ -->
   <div id="toast-container"></div>
 
-  <script>
-    // === ОТСЛЕЖИВАНИЕ ПОПАДАНИЯ В БЕЛУЮ ЗОНУ ДЛЯ ШТОРКИ ===
-    const lightZone = document.getElementById('lightZone');
-    const sideCatalog = document.getElementById('sideCatalog');
 
-    const catalogObserver = new IntersectionObserver(
-        ([entry]) => {
-            if (entry.isIntersecting) {
-                lightZone.classList.add('active-catalog');
-            } else {
-                lightZone.classList.remove('active-catalog');
-            }
-        },
-        { threshold: 0.3, rootMargin: '0px 0px -10% 0px' }
-    );
-    catalogObserver.observe(lightZone);
 
+<!-- КРАСИВАЯ КНОПКА ВЫХОДА ИЗ БЕЛОЙ ЗОНЫ — ФИНАЛЬНАЯ ВЕРСИЯ 2025 -->
+<div id="exitWhiteZoneBtn">
+  <span class="exit-text">НАВЕРХ · В NOIR</span>
+  <div class="exit-arrow">
+    <svg viewBox="0 0 38 38" fill="none" stroke="currentColor" stroke-width="1.7">
+      <path d="M19 8v18M11 16l8-8 8 8"/>
+    </svg>
+  </div>
+</div>
+
+<script src="static/js/goods.js"></script>
+<script src="/static/js/search.js"></script>
+<script src="/static/js/auth.js"></script>
+<script src="/static/js/cart.js" defer></script>
+<script src="/static/js/feedback.js"></script>
+<script src="/static/js/ai.js"></script>
+<script src="/static/js/contacts.js"></script>
+
+<script>
+      document.getElementById('search')?.addEventListener('focus', e => {
+        e.target.nextElementSibling.style.opacity = '0.8';
+        e.target.nextElementSibling.style.transform = 'translateY(-50%) scale(1.15)';
+      });
+      document.getElementById('search')?.addEventListener('blur', e => {
+        e.target.nextElementSibling.style.opacity = '0.3';
+        e.target.nextElementSibling.style.transform = 'translateY(-50%) scale(1)';
+      });
+</script>
+    
+<script>
     document.addEventListener('DOMContentLoaded', () => {
-      const lightZone = document.getElementById('lightZone');
-      const whiteOverlay = document.getElementById('whiteOverlay');
-      const hero = document.getElementById('hero');
-      const footer = document.getElementById('footer');
-      const sideCatalog = document.getElementById('sideCatalog');
-      const grid = document.getElementById('grid');
-      const modal = document.getElementById('modal');
-      const catalogList = document.querySelector('.catalog-list');
-      const searchInput = document.getElementById('search');
-      const catalogArrowHint = document.getElementById('catalogArrowHint');
+      document.body.classList.add('loaded');
+      const loader = document.getElementById('pageLoader');
+      setTimeout(() => loader.classList.add('hidden'), 900);
 
-      let allProducts = [];
-      let visibleCards = [];
-
-      // === УВЕДОМЛЕНИЯ ===
-      function showToast(message, type = 'success') {
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `<span class="icon">${type === 'success' ? '✓' : '✗'}</span><span>${message}</span>`;
-        document.getElementById('toast-container').appendChild(toast);
-        setTimeout(() => toast.classList.add('show'), 100);
-        setTimeout(() => {
-          toast.classList.remove('show');
-          setTimeout(() => toast.remove(), 400);
-        }, 3000);
+      // Кастомный курсор
+      const cursor = document.querySelector('.custom-cursor');
+      if(cursor){
+        document.body.style.cursor = 'none';
+        document.addEventListener('mousemove', e => {
+          cursor.style.left = e.clientX + 'px';
+          cursor.style.top = e.clientY + 'px';
+        });
+        document.querySelectorAll('a, button, input, textarea, [onclick], .clickable, .nav-link').forEach(el => {
+          el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+          el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+        });
       }
 
-      // === СКРОЛЛ-ЭФФЕКТ ===
+      // Хедер + кнопка наверх
+      const header = document.querySelector('header');
+      const backToTop = document.querySelector('.back-to-top');
       window.addEventListener('scroll', () => {
-          const rect = lightZone.getBoundingClientRect();
-          const distanceFromTop = rect.top;
-          const startOffset = window.innerHeight * 13.4;
-          const triggerPoint = startOffset;
-          const snapPoint = startOffset * 0.92;
-
-          if (distanceFromTop < triggerPoint) {
-              const progress = (triggerPoint - distanceFromTop) / (triggerPoint + window.innerHeight);
-              const clamped = Math.min(Math.max(progress, 0), 1);
-
-              whiteOverlay.classList.add('active');
-              whiteOverlay.classList.remove('snapped');
-
-              if (clamped > 0.93) {
-                  whiteOverlay.classList.add('snapped');
-                  lightZone.classList.add('normal');
-                  footer.classList.add('normal');
-                  hero.classList.add('hidden');
-                  sideCatalog.classList.add('inverted');
-                  document.body.classList.add('white');
-              } else {
-                  whiteOverlay.classList.remove('snapped');
-                  lightZone.classList.remove('normal');
-                  footer.classList.remove('normal');
-                  hero.classList.remove('hidden');
-                  sideCatalog.classList.remove('inverted'); // Убираем inverted
-                  document.body.classList.remove('white');
-              }
-          } else {
-              whiteOverlay.classList.remove('active', 'snapped');
-              lightZone.classList.remove('normal');
-              footer.classList.remove('normal');
-              hero.classList.remove('hidden');
-              sideCatalog.classList.remove('inverted'); // Убираем inverted
-              document.body.classList.remove('white');
-          }
+        const scrolled = window.pageYOffset;
+        header.classList.toggle('scrolled', scrolled > 50);
+        backToTop.classList.toggle('visible', scrolled > 500);
       });
 
-
-
-      // Футер
-      new IntersectionObserver(([e]) => footer.classList.toggle('visible', e.isIntersecting), { threshold: 0.4 })
-        .observe(footer);
-
-    async function loadMainCarousel() {
-      try {
-        const res = await fetch('/api/landing/carousel/main');
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const slides = await res.json();
-
-        // Отладка: логируем данные API
-        console.log('Main carousel data:', JSON.stringify(slides, null, 2));
-
-        const hero = document.getElementById('hero');
-        const heroSlides = document.querySelectorAll('.slide');
-        heroSlides.forEach(s => s.remove());
-
-        if (!Array.isArray(slides) || slides.length === 0) {
-          console.warn('Нет слайдов для главной карусели');
-          showToast('Нет данных для карусели', 'error');
-          return;
-        }
-
-        slides.forEach((slide, i) => {
-          const slideEl = document.createElement('div');
-          slideEl.className = `slide${i === 0 ? ' active' : ''}`;
-
-          // Фон
-          const img = document.createElement('img');
-          img.src = slide.background?.url || '/static/assets/fallback.jpg';
-          img.alt = '';
-          img.style.cssText = `
-            width: 100%; height: 100%; object-fit: cover;
-            position: absolute; top: 0; left: 0;
-            filter: brightness(0.78) contrast(1.36);
-            z-index: 0;
-            pointer-events: none;
-          `;
-          slideEl.appendChild(img);
-
-          // Текстовые слои
-          (slide.layers || []).forEach(layer => {
-            if (layer.hidden || layer.type !== 'text') return;
-            const text = document.createElement('div');
-            text.textContent = layer.content || '';
-            const s = layer.style || {};
-            text.style.cssText = `
-              position: absolute;
-              left: ${s.left || '20%'}; top: ${s.top || '20%'};
-              font-size: ${s.fontSize || '48px'};
-              color: ${s.color || '#fff'};
-              font-family: ${s.fontFamily || 'Playfair Display'}, serif;
-              text-shadow: 0 2px 8px rgba(0,0,0,0.7);
-              z-index: 10;
-              pointer-events: none;
-              transform: ${s.transform || ''};
-            `;
-            if (s.animation) text.classList.add('animate__animated', `animate__${s.animation}`);
-            slideEl.appendChild(text);
-          });
-
-          // Hotspots
-          const hotspots = slide.hotspots || [];
-          console.log(`Slide ${i + 1} hotspots:`, hotspots); // Отладка: логируем hotspots
-
-          hotspots.forEach((h, hIndex) => {
-            if (h.hidden || !h.url || !h.x || !h.y) {
-              console.warn(`Hotspot ${hIndex} on slide ${i + 1} skipped:`, h);
-              return;
+      // Плавный скролл по якорям
+      document.querySelectorAll('a[href^="#"], .nav-link, .back-to-top').forEach(link => {
+        link.addEventListener('click', function(e) {
+          const href = this.getAttribute('href');
+          if (href === '#' || href.startsWith('#')) {
+            e.preventDefault();
+            const target = document.querySelector(href === '#' ? 'html' : href);
+            if (target) {
+              const offset = 80;
+              const pos = target.getBoundingClientRect().top + window.pageYOffset - offset;
+              window.scrollTo({top: pos, behavior: 'smooth'});
             }
-
-            const hotspotEl = document.createElement('a');
-            hotspotEl.className = 'hotspot';
-            hotspotEl.href = 'javascript:void(0)';
-            hotspotEl.style.cssText = `
-              position: absolute;
-              left: ${h.x}%; top: ${h.y}%;
-              width: ${h.w || 10}%; height: ${h.h || 10}%;
-              z-index: 20;
-              cursor: pointer;
-            `;
-          hotspotEl.onclick = () => {
-            fetch('/api/landing/click', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ kind: 'main', slide: i, url: h.url })
-            }).finally(() => window.open(h.url, '_blank'));
-          };
-
-            // Tooltip
-            const tooltip = document.createElement('div');
-            tooltip.className = 'hotspot-tooltip';
-            tooltip.textContent = h.url;
-            hotspotEl.appendChild(tooltip);
-
-            // Preview
-            const preview = document.createElement('div');
-            preview.className = 'hotspot-preview';
-            preview.innerHTML = `
-              <div class="url">${h.url}</div>
-              <img class="thumb loading" alt="Загрузка...">
-            `;
-            hotspotEl.appendChild(preview);
-
-            // Позиционирование preview
-            const showPreview = () => {
-              const rect = hotspotEl.getBoundingClientRect();
-              const previewRect = preview.getBoundingClientRect();
-              const spaceAbove = rect.top;
-              const spaceBelow = window.innerHeight - rect.bottom;
-
-              preview.style.bottom = spaceAbove < previewRect.height + 20 && spaceBelow > spaceAbove
-                ? 'auto'
-                : '100%';
-              preview.style.top = spaceAbove < previewRect.height + 20 && spaceBelow > spaceAbove
-                ? '100%'
-                : 'auto';
-              preview.style.transform = spaceAbove < previewRect.height + 20 && spaceBelow > spaceAbove
-                ? 'translateX(-50%) translateY(8px)'
-                : 'translateX(-50%) translateY(-8px)';
-              preview.classList.add('show');
-            };
-
-            const hidePreview = () => preview.classList.remove('show');
-
-            hotspotEl.addEventListener('mouseenter', showPreview);
-            hotspotEl.addEventListener('mouseleave', hidePreview);
-
-            // Загрузка og:image
-            fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(h.url)}`)
-              .then(r => r.json())
-              .then(res => {
-                const html = res.contents;
-                const match = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
-                if (match && match[1]) {
-                  const img = preview.querySelector('.thumb');
-                  img.src = match[1];
-                  img.onload = () => {
-                    img.classList.remove('loading');
-                    img.style.display = 'block';
-                  };
-                }
-              })
-              .catch(err => console.warn(`Failed to fetch og:image for ${h.url}:`, err));
-
-            slideEl.appendChild(hotspotEl);
-          });
-
-          hero.appendChild(slideEl);
+          }
         });
-
-        // Автопрокрутка с очисткой previews
-        let i = 0;
-        setInterval(() => {
-          // Скрываем все previews перед сменой слайда
-          document.querySelectorAll('.hotspot-preview').forEach(p => p.classList.remove('show'));
-          
-          document.querySelectorAll('.slide').forEach((s, idx) => {
-            s.classList.toggle('active', idx === i);
-          });
-          i = (i + 1) % slides.length;
-        }, 7000);
-
-      } catch (err) {
-        console.error('Carousel error:', err);
-        showToast('Ошибка загрузки карусели', 'error');
-      }
-    }
-
-      // === ВТОРАЯ КАРУСЕЛЬ ===
-      async function loadSecondaryCarousel() {
-        try {
-          const res = await fetch('/api/landing/carousel/services');
-          const slides = await res.json();
-
-          const container = document.getElementById('services-carousel-inner');
-          const indicatorsContainer = container.parentElement.querySelector('.indicators');
-
-          if (!container || !indicatorsContainer) {
-            console.error('secondary-carousel не найден');
-            showToast('Ошибка: карусель не найдена', 'error');
-            return;
-          }
-
-          container.innerHTML = '';
-          indicatorsContainer.innerHTML = '';
-
-          if (!Array.isArray(slides) || slides.length === 0) {
-            console.warn('Нет слайдов для второй карусели');
-            showToast('Нет данных для карусели', 'error');
-            return;
-          }
-
-          slides.forEach((slide, i) => {
-            const slideEl = document.createElement('div');
-            slideEl.className = 'carousel-slide' + (i === 0 ? ' active' : '');
-
-            const img = document.createElement('img');
-            img.src = slide.background?.url || '/static/assets/fallback.jpg';
-            img.alt = '';
-            img.style.cssText = `
-              width:100%;height:100%;object-fit:cover;
-              position:absolute;top:0;left:0;z-index:1;
-              filter:brightness(0.86) contrast(1.22);
-            `;
-            if (slide.background?.animation) {
-              img.onload = () => img.classList.add('animate__animated', `animate__${slide.background.animation}`);
-            }
-            slideEl.appendChild(img);
-
-            (slide.layers || []).forEach(layer => {
-              if (layer.hidden || layer.type !== 'text') return;
-              const text = document.createElement('div');
-              text.textContent = layer.content || '';
-              const s = layer.style || {};
-              text.style.cssText = `
-                position:absolute;
-                left:${s.left || '20%'}; top:${s.top || '20%'};
-                width:${s.width || 'auto'}; height:${s.height || 'auto'};
-                font-size:${s.fontSize || '36px'};
-                color:${s.color || '#fff'};
-                font-family:${s.fontFamily || 'Inter'},sans-serif;
-                text-shadow:0 2px 8px rgba(0,0,0,0.7);
-                z-index:10; pointer-events:none;
-                transform:${s.transform || ''};
-              `;
-              if (s.animation) {
-                text.classList.add('animate__animated', `animate__${s.animation}`);
-              }
-              slideEl.appendChild(text);
-            });
-
-            (slide.hotspots || []).forEach(h => {
-              if (h.hidden) return;
-              const hotspotEl = document.createElement('a');
-              hotspotEl.className = 'hotspot';
-              hotspotEl.href = 'javascript:void(0)';
-              hotspotEl.style.cssText = `
-                position:absolute;
-                left:${h.x}%; top:${h.y}%;
-                width:${h.w || 10}%; height:${h.h || 10}%;
-                z-index:20; cursor:pointer;
-              `;
-              hotspotEl.onclick = () => {
-                fetch('/api/landing/click', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ kind: 'services', slide: i, url: h.url })
-                }).finally(() => window.open(h.url, '_blank'));
-              };
-
-              const tooltip = document.createElement('div');
-              tooltip.className = 'hotspot-tooltip';
-              tooltip.textContent = h.url;
-              hotspotEl.appendChild(tooltip);
-
-              const preview = document.createElement('div');
-              preview.className = 'hotspot-preview';
-              preview.innerHTML = `
-                <div class="url">${h.url}</div>
-                <img class="thumb loading" alt="Загрузка...">
-              `;
-              hotspotEl.appendChild(preview);
-
-              const showPreview = () => {
-                const rect = hotspotEl.getBoundingClientRect();
-                const previewRect = preview.getBoundingClientRect();
-                const spaceAbove = rect.top;
-                const spaceBelow = window.innerHeight - rect.bottom;
-
-                if (spaceAbove < previewRect.height + 20 && spaceBelow > spaceAbove) {
-                  preview.style.bottom = 'auto';
-                  preview.style.top = '100%';
-                  preview.style.transform = 'translateX(-50%) translateY(8px)';
-                } else {
-                  preview.style.bottom = '100%';
-                  preview.style.top = 'auto';
-                  preview.style.transform = 'translateX(-50%) translateY(-8px)';
-                }
-                preview.classList.add('show');
-              };
-
-              const hidePreview = () => preview.classList.remove('show');
-
-              hotspotEl.addEventListener('mouseenter', showPreview);
-              hotspotEl.addEventListener('mouseleave', hidePreview);
-
-              fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(h.url)}`)
-                .then(r => r.json())
-                .then(res => {
-                  const html = res.contents;
-                  const match = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
-                  if (match && match[1]) {
-                    const img = preview.querySelector('.thumb');
-                    img.src = match[1];
-                    img.onload = () => {
-                      img.classList.remove('loading');
-                      img.style.display = 'block';
-                    };
-                  }
-                })
-                .catch(() => {});
-
-              slideEl.appendChild(hotspotEl);
-            });
-
-            container.appendChild(slideEl);
-          });
-
-          slides.forEach((_, i) => {
-            const ind = document.createElement('div');
-            ind.className = 'indicator' + (i === 0 ? ' active' : '');
-            ind.onclick = () => goToSlide(i);
-            indicatorsContainer.appendChild(ind);
-          });
-
-          let current = 0;
-          const goToSlide = (n) => {
-            current = n;
-            container.querySelectorAll('.carousel-slide').forEach((s, idx) => {
-              s.classList.toggle('active', idx === current);
-            });
-            indicatorsContainer.querySelectorAll('.indicator').forEach((ind, idx) => {
-              ind.classList.toggle('active', idx === current);
-            });
-          };
-
-          setInterval(() => {
-            current = (current + 1) % slides.length;
-            goToSlide(current);
-          }, 6000);
-
-
-        } catch (err) {
-          console.error('Ошибка второй карусели:', err);
-          showToast('Ошибка загрузки карусели', 'error');
-        }
-      }
-
-      // === RICK OWENS ARROW HINT ===
-      let arrowTimeout;
-      function showArrow() {
-        clearTimeout(arrowTimeout);
-        catalogArrowHint.classList.remove('visible');
-        arrowTimeout = setTimeout(() => {
-          catalogArrowHint.classList.add('visible');
-        }, 1400);
-      }
-      function hideArrow() {
-        clearTimeout(arrowTimeout);
-        catalogArrowHint.classList.remove('visible');
-      }
-
-      window.addEventListener('load', showArrow);
-      window.addEventListener('scroll', () => {
-        const snapped = whiteOverlay.classList.contains('snapped');
-        catalogArrowHint.classList.toggle('inverted', snapped);
-        showArrow();
       });
-      sideCatalog.addEventListener('mouseenter', hideArrow);
-      sideCatalog.addEventListener('mouseleave', showArrow);
-
-      // === СОЗДАНИЕ КАРТОЧКИ ===
-      function createCard(p) {
-        if (!p || !p.id) return null;
-
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.dataset.category = p.category || 'all';
-        card.dataset.price = parsePrice(p.price);
-        card.dataset.productId = p.id;
-
-        let imgUrl = '/static/assets/no-image.png';
-        if (p.image_urls && Array.isArray(p.image_urls) && p.image_urls.length > 0) {
-          const first = p.image_urls[0];
-          imgUrl = first.startsWith('/') ? first : `/static/uploads/services/${first}`;
-        }
-
-        const desc = p.full_desc || p.short_desc || 'Описание отсутствует';
-
-        card.innerHTML = `
-          <img src="${imgUrl}" alt="${p.title}" onerror="this.src='/static/assets/no-image.png'">
-          <div class="overlay">
-            <h3>${p.title}</h3>
-            <p>${desc}</p>
-            <span class="price">₽ ${p.price || '—'}</span>
-          </div>
-        `;
-
-        card.addEventListener('click', () => openModal(p.id));
-        return card;
-      }
-
-      // === ПАРСИНГ ЦЕНЫ ===
-      function parsePrice(str) {
-        if (!str) return 0;
-        return parseInt(str.replace(/[^0-9]/g, '')) || 0;
-      }
-
-
-
-      function renderAdBanner() {
-        const track = document.getElementById('adBannerTrack');
-        if (!track) {
-          console.error('adBannerTrack не найден!');
-          return;
-        }
-
-        track.innerHTML = '';
-
-        const start = adIndex * 3;
-        const items = adBannerData.slice(start, start + 3);
-
-        items.forEach(ad => {
-          const card = document.createElement('div');
-          card.style.cssText = `
-            position:relative;height:620px;overflow:hidden;cursor:pointer;
-            border-radius:16px;
-            opacity:0;transform:perspective(2400px) rotateX(14deg) translateY(140px) scale(0.92);
-            transition:all 1.4s cubic-bezier(0.16,1,0.3,1);
-            box-shadow:0 30px 60px rgba(0,0,0,0.3);
-          `;
-
-          const imgUrl = ad.background?.url || '/static/assets/fallback.jpg';
-
-          card.innerHTML = `
-            <img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;filter:brightness(0.86) contrast(1.22);transition:transform 1.8s;">
-            <div style="position:absolute;inset:0;background:linear-gradient(transparent 35%, rgba(0,0,0,0.88));padding:80px 60px;display:flex;flex-direction:column;justify-content:flex-end;color:#fff;">
-              <h3 style="font-size:30px;letter-spacing:18px;margin-bottom:16px;text-transform:uppercase;">${ad.title || 'NOIR EXCLUSIVE'}</h3>
-              <p style="font-size:15px;line-height:1.9;opacity:0.9;max-width:80%;">${ad.desc || 'Доступ только для избранных.'}</p>
-            </div>
-          `;
-
-          if (ad.url) {
-            card.onclick = () => window.open(ad.url, '_blank');
-          }
-
-          card.addEventListener('mouseenter', () => {
-            card.style.transform = 'perspective(2400px) rotateX(3deg) translateY(-50px) scale(1.01)';
-            card.querySelector('img').style.transform = 'scale(1.08)';
-          });
-          card.addEventListener('mouseleave', () => {
-            card.style.transform = 'perspective(2400px) rotateX(0) translateY(0) scale(1)';
-            card.querySelector('img').style.transform = 'scale(1)';
-          });
-
-          track.appendChild(card);
-          setTimeout(() => {
-            card.style.opacity = '1';
-            card.style.transform = 'perspective(2400px) rotateX(0) translateY(0) scale(1)';
-          }, 100);
-        });
-
-        updateAdBannerButtons();
-      }
-
-      function setupAdBannerControls() {
-        const prev = document.getElementById('adPrev');
-        const next = document.getElementById('adNext');
-
-        if (!prev || !next) return;
-
-        prev.onclick = () => {
-          if (adIndex > 0) {
-            adIndex--;
-            renderAdBanner();
-          }
-        };
-
-        next.onclick = () => {
-          if ((adIndex + 1) * 3 < adBannerData.length) {
-            adIndex++;
-            renderAdBanner();
-          }
-        };
-
-        updateAdBannerButtons();
-      }
-
-      function updateAdBannerButtons() {
-        const prev = document.getElementById('adPrev');
-        const next = document.getElementById('adNext');
-        if (prev) prev.style.display = adIndex > 0 ? 'block' : 'none';
-        if (next) next.style.display = (adIndex + 1) * 3 < adBannerData.length ? 'block' : 'none';
-      }
-
-      async function renderInitialCards() {
-          if (!grid) return console.error('grid не найден');
-
-          grid.innerHTML = '';
-          visibleCards = [];
-
-          if (allProducts.length === 0) {
-              updateLoadMore();
-              return;
-          }
-
-          const first9 = allProducts.slice(0, 9);
-          first9.forEach(p => {
-              const card = createCard(p);
-              if (card) {
-                  grid.appendChild(card);
-                  visibleCards.push(card);
-              }
-          });
-
-          if (allProducts.length >= 9) {
-              console.log('Initial render: Showing adBannerSection'); // Отладка
-              const bannerWrapper = document.createElement('div');
-              bannerWrapper.className = 'ad-banner-wrapper';
-              bannerWrapper.style.cssText = 'grid-column:1/-1;margin:120px 0;';
-
-              const bannerSection = document.getElementById('adBannerSection');
-              if (bannerSection) {
-                  bannerSection.style.display = 'block';
-                  bannerWrapper.appendChild(bannerSection);
-                  await loadSecondaryCarousel(); // Перерисовываем карусель
-              } else {
-                  console.error('adBannerSection не найден');
-              }
-              grid.appendChild(bannerWrapper);
-          }
-
-          const next9 = allProducts.slice(9, 18);
-          next9.forEach(p => {
-              const card = createCard(p);
-              if (card) {
-                  grid.appendChild(card);
-                  visibleCards.push(card);
-              }
-          });
-
-          setTimeout(animateCards, 600);
-          updateLoadMore();
-      }
-
-      async function loadProducts() {
-        try {
-          const res = await fetch('/api/services');
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-          const data = await res.json();
-          if (!Array.isArray(data)) throw new Error('API вернул не массив');
-
-          allProducts = data;
-
-          const catalogList = document.querySelector('.catalog-list');
-          catalogList.innerHTML = '';
-
-          const allLi = document.createElement('li');
-          allLi.className = 'active';
-          allLi.dataset.filter = 'all';
-          allLi.innerHTML = '<a>ALL SERVICES</a>';
-          catalogList.appendChild(allLi);
-
-          const categories = [...new Set(allProducts.map(p => p.category).filter(Boolean))];
-
-          if (categories.length === 0) {
-            console.warn('В API нет поля "category" — каталог будет пустым');
-            const fallbackCats = [...new Set(allProducts.map(p => {
-              const words = (p.title || '').trim().split(' ');
-              return words.length > 1 ? words[0].toUpperCase() : 'UNCATEGORIZED';
-            }))];
-            fallbackCats.forEach(cat => {
-              const li = document.createElement('li');
-              li.dataset.filter = cat;
-              li.innerHTML = `<a>${cat}</a>`;
-              catalogList.appendChild(li);
-            });
-          } else {
-            categories.forEach(cat => {
-              const li = document.createElement('li');
-              li.dataset.filter = cat;
-              li.innerHTML = `<a>${cat.toUpperCase()}</a>`;
-              catalogList.appendChild(li);
-            });
-          }
-
-          renderInitialCards();
-          setupEventListeners();
-
-        } catch (err) {
-          console.error('ОШИБКА ЗАГРУЗКИ:', err);
-          grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:200px;color:#000;">Ошибка: ${err.message}</div>`;
-        }
-      }
-
-      async function openModal(id) {
-        try {
-          const res = await fetch(`/api/service/${id}`);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const p = await res.json();
-
-          const mainImg = document.getElementById('modal-img');
-          const thumbs = document.getElementById('modal-thumbs');
-          thumbs.innerHTML = '';
-
-          const images = (p.image_urls || []).map(url => 
-            url.startsWith('/') ? url : `/static/uploads/services/${url}`
-          );
-          if (images.length === 0) images.push('/static/assets/no-image.png');
-          mainImg.src = images[0];
-
-          images.forEach((src, i) => {
-            const thumb = document.createElement('img');
-            thumb.src = src;
-            if (i === 0) thumb.classList.add('active');
-            thumb.onclick = () => {
-              mainImg.src = src;
-              thumbs.querySelectorAll('img').forEach(t => t.classList.remove('active'));
-              thumb.classList.add('active');
-            };
-            thumbs.appendChild(thumb);
-          });
-
-          document.getElementById('modal-title').textContent = p.title || '';
-          document.getElementById('modal-price').textContent = p.price ? `₽ ${p.price}` : 'ПО ЗАПРОСУ';
-          document.getElementById('modal-desc').textContent = p.full_desc || 'Описание отсутствует';
-
-          await loadReviews(id);
-
-          modal.classList.add('active');
-          document.body.style.overflow = 'hidden';
-
-        } catch (err) {
-          console.error('[MODAL] Ошибка:', err);
-          alert('Ошибка загрузки услуги');
-        }
-      }
-
-      async function loadReviews(serviceId) {
-        console.log('[REVIEWS] Загрузка для услуги ID:', serviceId);
-        try {
-          const res = await fetch(`/api/service_reviews/${serviceId}`);
-          if (!res.ok) {
-            console.warn(`[REVIEWS] HTTP ${res.status} → /api/service_reviews/${serviceId}`);
-            throw new Error(`HTTP ${res.status}`);
-          }
-
-          const data = await res.json();
-          if (!data.success) throw new Error('API error');
-
-          const reviews = data.reviews || [];
-          const avgRating = data.avg_rating || 0;
-          const reviewCount = data.review_count || 0;
-
-          const reviewsEl = document.getElementById('modal-reviews');
-          const noReviews = document.getElementById('no-reviews');
-          reviewsEl.innerHTML = '';
-
-          if (reviews.length > 0) {
-            noReviews.style.display = 'none';
-            reviews.forEach(r => {
-              const div = document.createElement('div');
-              div.className = 'review';
-              div.innerHTML = `
-                <div class="review-header">
-                  <div class="review-author">${r.author}</div>
-                  <div class="review-date">${formatDate(r.date)}</div>
-                </div>
-                <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
-                <div class="review-text">${escapeHtml(r.text)}</div>
-              `;
-              reviewsEl.appendChild(div);
-            });
-          } else {
-            noReviews.style.display = 'block';
-          }
-
-          const ratingEl = document.getElementById('modal-rating');
-          const starsEl = ratingEl.querySelector('.stars');
-          const valueEl = ratingEl.querySelector('.value');
-          const countEl = ratingEl.querySelector('.count');
-
-          valueEl.textContent = avgRating;
-          countEl.textContent = `(${reviewCount})`;
-
-          const full = Math.floor(avgRating);
-          const empty = 5 - full;
-          starsEl.innerHTML = '★'.repeat(full) + '<span style="color:#ccc">' + '☆'.repeat(empty) + '</span>';
-
-        } catch (err) {
-          console.error('[REVIEWS] Ошибка:', err);
-          document.getElementById('modal-reviews').innerHTML = '<p style="color:#ccc">Отзывы временно недоступны</p>';
-        }
-      }
-
-      function formatDate(iso) {
-        try {
-          return new Date(iso).toLocaleDateString('ru', { 
-            day: '2-digit', 
-            month: 'short', 
-            year: 'numeric' 
-          });
-        } catch {
-          return '—';
-        }
-      }
-
-      function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-      }
-
-      function setupReviewForm(serviceId) {
-        const form = document.getElementById('reviewForm');
-        const stars = document.querySelectorAll('#starRating span');
-        const submitBtn = document.getElementById('submitReview');
-        let selectedRating = 5;
-
-        stars.forEach(star => {
-          star.onclick = () => {
-            selectedRating = star.dataset.value;
-            stars.forEach(s => {
-              s.classList.toggle('active', s.dataset.value <= selectedRating);
-            });
-          };
-        });
-
-        submitBtn.onclick = async () => {
-          const name = document.getElementById('reviewName').value.trim();
-          const text = document.getElementById('reviewText').value.trim();
-
-          if (!name || !text) {
-            alert('Заполните все поля');
-            return;
-          }
-
-          try {
-            const res = await fetch('/api/reviews', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                serviceId,
-                author: name,
-                stars: parseInt(selectedRating),
-                text
-              })
-            });
-
-            if (res.ok) {
-              alert('Отзыв отправлен!');
-              form.reset();
-              stars.forEach(s => s.classList.remove('active'));
-              stars[4].classList.add('active');
-              await loadReviews(serviceId);
-            } else {
-              alert('Ошибка отправки');
-            }
-          } catch (err) {
-            console.error(err);
-            alert('Ошибка сети');
-          }
-        };
-      }
-
-      document.querySelector('.close').onclick = modal.onclick = e => {
-        if (e.target === modal || e.target.classList.contains('close')) {
-          modal.classList.remove('active');
-          document.body.style.overflow = '';
-        }
-      };
-
-      function animateCards() {
-        const visible = visibleCards.filter(c => c.style.display !== 'none');
-        visibleCards.forEach(c => c.classList.remove('visible'));
-        visible.forEach((c, i) => setTimeout(() => c.classList.add('visible'), 100 + i * 160));
-      }
-
-      function applyFiltersAndSort() {
-          const activeLi = document.querySelector('.catalog-list li.active');
-          const filter = activeLi ? activeLi.dataset.filter : 'all';
-          const query = (searchInput.value || '').trim().toLowerCase();
-          const sort = document.querySelector('.sort-btn.active')?.dataset.sort || 'default';
-
-          let filtered = allProducts.filter(p => {
-              const matchesCategory = filter === 'all' || p.category === filter;
-              const searchText = `${p.title} ${p.full_desc || ''} ${p.short_desc || ''} ${p.price || ''}`.toLowerCase();
-              const matchesSearch = !query || searchText.includes(query);
-              return matchesCategory && matchesSearch;
-          });
-
-          console.log('applyFiltersAndSort: filter:', filter, 'filtered count:', filtered.length); // Отладка
-
-          if (sort === 'price') {
-              filtered.sort((a, b) => parsePrice(a.price) - parsePrice(b.price));
-          }
-
-          renderWithBanner(filtered);
-      }
-      async function renderWithBanner(products) {
-          grid.innerHTML = '';
-          visibleCards = [];
-
-          console.log('renderWithBanner: products count:', products.length); // Отладка
-
-          const first9 = products.slice(0, 9);
-          first9.forEach(p => {
-              const card = createCard(p);
-              if (card) {
-                  grid.appendChild(card);
-                  visibleCards.push(card);
-              }
-          });
-
-          if (products.length >= 9) {
-              console.log('Showing adBannerSection'); // Отладка
-              const bannerWrapper = document.createElement('div');
-              bannerWrapper.className = 'ad-banner-wrapper';
-              bannerWrapper.style.cssText = 'grid-column:1/-1;margin:120px 0;';
-
-              const bannerSection = document.getElementById('adBannerSection');
-              if (bannerSection) {
-                  bannerSection.style.display = 'block';
-                  bannerWrapper.appendChild(bannerSection);
-                  await loadSecondaryCarousel(); // Перерисовываем карусель
-              } else {
-                  console.error('adBannerSection не найден');
-              }
-              grid.appendChild(bannerWrapper);
-          } else {
-              console.log('Hiding adBannerSection'); // Отладка
-              const bannerSection = document.getElementById('adBannerSection');
-              if (bannerSection) bannerSection.style.display = 'none';
-          }
-
-          const next9 = products.slice(9, 18);
-          next9.forEach(p => {
-              const card = createCard(p);
-              if (card) {
-                  grid.appendChild(card);
-                  visibleCards.push(card);
-              }
-          });
-
-          setTimeout(animateCards, 100);
-          updateLoadMore();
-      }
-
-      function allVisibleCards() {
-        return Array.from(grid.querySelectorAll('.card'));
-      }
-
-      function updateLoadMore() {
-        const loadMoreSection = document.querySelector('.load-more-section');
-        if (!loadMoreSection) return;
-
-        const activeFilter = document.querySelector('.catalog-list li.active')?.dataset.filter || 'all';
-        const query = (searchInput.value || '').trim().toLowerCase();
-
-        const totalFiltered = allProducts.filter(p => {
-          const matchesCategory = activeFilter === 'all' || p.category === activeFilter;
-          const searchText = `${p.title} ${p.full_desc || ''} ${p.short_desc || ''} ${p.price || ''}`.toLowerCase();
-          const matchesSearch = !query || searchText.includes(query);
-          return matchesCategory && matchesSearch;
-        }).length;
-
-        const shownCards = visibleCards.length;
-        loadMoreSection.style.display = shownCards < totalFiltered ? 'block' : 'none';
-      }
-
-      document.querySelector('.load-more-btn').addEventListener('click', (e) => {
-        e.preventDefault();
-
-        const activeFilter = document.querySelector('.catalog-list li.active')?.dataset.filter || 'all';
-        const query = (searchInput.value || '').trim().toLowerCase();
-
-        const filtered = allProducts.filter(p => {
-          const matchesCategory = activeFilter === 'all' || p.category === activeFilter;
-          const searchText = `${p.title} ${p.full_desc || ''} ${p.short_desc || ''} ${p.price || ''}`.toLowerCase();
-          const matchesSearch = !query || searchText.includes(query);
-          return matchesCategory && matchesSearch;
-        });
-
-        const start = visibleCards.length;
-        const end = Math.min(start + 6, filtered.length);
-
-        if (start >= end) return;
-
-        const newCards = filtered.slice(start, end).map(createCard);
-        newCards.forEach(c => {
-          if (c) {
-            grid.appendChild(c);
-            visibleCards.push(c);
-          }
-        });
-
-        animateCards();
-        updateLoadMore();
-      });
-
-      document.querySelectorAll('.grid-btn').forEach(b => b.addEventListener('click', () => {
-        document.querySelectorAll('.grid-btn').forEach(x => x.classList.remove('active'));
-        b.classList.add('active');
-        grid.className = 'grid' + (b.dataset.cols === '2' ? ' cols-2' : '');
-      }));
-
-    function setupEventListeners() {
-        document.querySelector('.catalog-list').addEventListener('click', (e) => {
-            const li = e.target.closest('li');
-            if (!li || !li.dataset.filter) return;
-
-            // Сбрасываем активный класс
-            document.querySelectorAll('.catalog-list li').forEach(x => x.classList.remove('active'));
-            li.classList.add('active');
-
-            // Плавный скролл к lightZone, если sideCatalog не инвертирован и lightZone не видима
-            if (!sideCatalog.classList.contains('inverted') && !lightZone.classList.contains('active-catalog')) {
-                const lightZoneTop = lightZone.getBoundingClientRect().top + window.pageYOffset;
-                window.scrollTo({
-                    top: lightZoneTop - 50, // Небольшой отступ сверху
-                    behavior: 'smooth'
-                });
-            }
-
-            applyFiltersAndSort();
-        });
-
-        document.querySelectorAll('.sort-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.sort-btn').forEach(x => x.classList.remove('active'));
-                btn.classList.add('active');
-                applyFiltersAndSort();
-            });
-        });
-
-        searchInput.addEventListener('input', () => {
-            applyFiltersAndSort();
-        });
-    }
-
-      const scrollIndicator = document.querySelector('.scroll-indicator');
-      if (scrollIndicator) {
-        const hide = () => {
-          if (window.scrollY > 100) {
-            scrollIndicator.style.opacity = '0';
-            scrollIndicator.style.pointerEvents = 'none';
-          }
-        };
-        window.addEventListener('scroll', hide);
-        hide();
-      }
-
-      loadMainCarousel();
-      loadProducts();
-      loadSecondaryCarousel();
     });
   </script>
+
+<!-- === КРАСИВЫЕ ТОСТЫ + КОРЗИНА + ЗАЩИТА ОТ СПАМА (2025 FINAL) === -->
+<div id="my-toast-container"></div>
+
+<style>
+  #my-toast-container {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 2147483647;
+    pointer-events: none;
+    font-family: 'Inter', sans-serif;
+  }
+  .mytoast {
+    background: rgba(20,20,20,0.96);
+    color: #fff;
+    padding: 18px 28px;
+    margin-top: 12px;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.12);
+    min-width: 360px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transform: translateX(420px);
+    opacity: 0;
+    transition: all 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
+    font-weight: 500;
+  }
+  .mytoast.show { transform: translateX(0); opacity: 1; }
+  .mytoast.success { border-left: 6px solid #00ff9d; }
+  .mytoast.error   { border-left: 6px solid #ff3b30; }
+  .mytoast i { font-size: 1.7em; }
+
+  /* Блокировка кнопки */
+  button[disabled].spam-blocked {
+    opacity: 0.5 !important;
+    pointer-events: none !important;
+    position: relative;
+  }
+  button[disabled].spam-blocked::after {
+    content: "Подождите...";
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.9em;
+    color: #ff3b30;
+    font-weight: 600;
+  }
+  button[disabled].spam-blocked {
+  opacity: 1 !important;
+  pointer-events: none !important;
+  position: relative;
+  background: rgba(20, 20, 20, 0.96) !important;  /* тёмный фон */
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: transparent !important;                /* скрываем оригинальный текст */
+  cursor: default !important;
+  transform: none !important;
+}
+
+button[disabled].spam-blocked::after {
+  content: "Подождите...";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1em;
+  font-weight: 600;
+  color: #ff3b30;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* Если у тебя кнопка заказа имеет свой цвет (например зелёный или белый) — перебиваем его */
+#modal-order[disabled].spam-blocked,
+.add-to-cart-btn[disabled].spam-blocked,
+.go-to-cart-btn[disabled].spam-blocked {
+  background: rgba(20, 20, 20, 0.96) !important;
+}
+</style>
+
+<script>
+// === ТОСТЫ ===
+function toast(message, type = 'success') {
+  const container = document.getElementById('my-toast-container');
+  const t = document.createElement('div');
+  t.className = `mytoast ${type}`;
+  t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':'exclamation-triangle'}"></i><span>${message}</span>`;
+  container.appendChild(t);
+  setTimeout(() => t.classList.add('show'), 50);
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 800);
+  }, 3600);
+}
+window.alert = (msg) => toast(msg, 'error');
+
+// === ЗАЩИТА ОТ СПАМА (5 кликов → блок 30 сек) ===
+let clickHistory = [];
+let spamBlockedUntil = 0;
+
+function isSpamBlocked() {
+  const now = Date.now();
+  clickHistory = clickHistory.filter(t => now - t < 20000);
+  if (clickHistory.length >= 5) {
+    spamBlockedUntil = now + 30000;
+    return true;
+  }
+  return now < spamBlockedUntil;
+}
+
+function allowClick(blockedBtn) {
+  if (isSpamBlocked()) {
+    const remaining = Math.ceil((spamBlockedUntil - Date.now()) / 1000);
+    toast(`Слишком быстро! Подождите ${remaining} сек.`, 'error');
+    
+    blockedBtn.disabled = true;
+    blockedBtn.classList.add('spam-blocked');
+    setTimeout(() => {
+      blockedBtn.disabled = false;
+      blockedBtn.classList.remove('spam-blocked');
+    }, spamBlockedUntil - Date.now() + 100);
+    return false;
+  }
+  clickHistory.push(Date.now());
+  return true;
+}
+
+async function addToCartNow(title) {
+  const btn = document.getElementById('modal-order');
+  if (!allowClick(btn)) return;
+
+  const isService = location.pathname === '/services';
+
+  // ЗАКРЫВАЕМ ВСЕ ВОЗМОЖНЫЕ МОДАЛКИ
+  document.getElementById('modal')?.classList.remove('active');
+  document.getElementById('productModal')?.classList.remove('active');
+  document.getElementById('whiteOverlay')?.classList.remove('active');
+
+  // === ГЛАВНОЕ: УНИВЕРСАЛЬНЫЙ ПОИСК КАРТИНКИ ===
+  let imageUrl = '/static/assets/no-image.png';
+
+  // 1. Пробуем из старой модалки (услуги)
+  const oldImg = document.getElementById('modal-img');
+  if (oldImg?.src && oldImg.src.includes('http')) {
+    imageUrl = oldImg.src;
+    console.log('Картинка из #modal-img:', imageUrl);
+  }
+  // 2. Пробуем из новой модалки (товары)
+  else {
+    const newImg = document.getElementById('productImg');
+    if (newImg?.src && newImg.src.includes('http')) {
+      imageUrl = newImg.src;
+      console.log('Картинка из #productImg:', imageUrl);
+    }
+  }
+
+
+
+  // АНИМАЦИЯ КНОПКИ
+  btn.style.transform = 'scale(0.93)';
+  setTimeout(() => btn.style.transform = '', 200);
+
+  // ДОБАВЛЯЕМ С КАРТИНКОЙ
+  if (typeof window.addToCart === 'function') {
+    await window.addToCart(title, isService ? 'service' : 'product', imageUrl);
+  } else {
+    setTimeout(() => window.addToCart?.(title, isService ? 'service' : 'product', imageUrl), 300);
+  }
+}
+// === КНОПКА "ЗАКАЗАТЬ" В МОДАЛКЕ ===
+document.getElementById('modal-order')?.addEventListener('click', function() {
+  const title = document.getElementById('modal-title')?.textContent.trim();
+  if (title && title !== 'Загрузка...') {
+    addToCartNow(title);
+  } else {
+    toast('Дождитесь загрузки', 'error');
+  }
+});
+
+// === УБИРАЕМ ДУБЛИРОВАНИЕ ТОСТА ИЗ cart.js ===
+// Перехватываем showToast из cart.js, чтобы он не показывал "Добавлено в корзину"
+document.addEventListener('DOMContentLoaded', () => {
+  // Ждём загрузки cart.js
+  const checkCartJs = setInterval(() => {
+    if (window.addToCart) {
+      clearInterval(checkCartJs);
+
+      // Подменяем showToast — теперь он ничего не показывает при добавлении
+      const originalShowToast = window.showToast || (() => {});
+      window.showToast = (title, message, error) => {
+        if (title === 'Добавлено в корзину') return; // БЛОКИРУЕМ ДУБЛЬ!
+        if (title === 'Удалено') return;
+        originalShowToast(title, message, error);
+      };
+    }
+  }, 50);
+});
+</script>
+
 </body>
 </html>

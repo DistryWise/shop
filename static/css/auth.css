@@ -654,3 +654,250 @@
 #searchToggle:hover i {
   transform: scale(1.1);
 }
+
+
+
+@keyframes successShine {
+  0%   { transform: translateX(-100%) translateY(-100%); }
+  60%  { transform: translateX(100%) translateY(100%); }
+  100% { transform: translateX(100%) translateY(100%); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+  20%, 40%, 60%, 80% { transform: translateX(8px); }
+}
+
+.shake {
+  animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+
+/* ЖИВАЯ ПРЕМИУМ ЭМОДЗИ — 2025 ГОД, НИКТО ТАК НЕ ДЕЛАЕТ */
+#authBtn .live-emoji {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 42px;
+  height: 42px;
+  font-size: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 10;
+
+  /* ВЗРЫВНОЕ ПОЯВЛЕНИЕ ПРИ ВХОДЕ */
+  animation:
+    emojiExplode 1.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards,
+    aliveFloat 6.5s ease-in-out infinite 1.5s,
+    aliveRotate 12s linear infinite 1.5s,
+    aliveRandomJump 8s infinite 2s;
+}
+
+/* 1. Эпичное появление — как в Telegram Premium × Apple */
+@keyframes emojiExplode {
+  0%    { transform: translate(-50%,-50%) scale(0) rotate(-300deg); opacity: 0; }
+  50%   { transform: translate(-50%,-50%) scale(1.25) rotate(15deg)); opacity: 1; }
+  70%   { transform: translate(-50%,-50%) scale(0.92) rotate(-12deg); }
+  100%  { transform: translate(-50%,-50%) scale(1) rotate(0); }
+}
+
+/* 2. Плавное «дыхание» + лёгкое покачивание */
+@keyframes aliveFloat {
+  0%, 100% { transform: translate(-50%,-50%) translateY(0px) scale(1); }
+  50%      { transform: translate(-50%,-50%) translateY(-4px) scale(1.04); }
+}
+
+/* 3. Медленное вращение (едва заметное) */
+@keyframes aliveRotate {
+  0%   { transform: translate(-50%,-50%) rotate(0deg); }
+  100% { transform: translate(-50%,-50%) rotate(360deg); }
+}
+
+/* 4. Случайные «вздрагивания» и прыжки — вот где магия */
+@keyframes aliveRandomJump {
+  0%, 100% { transform: translate(-50%,-50%); }
+  10%      { transform: translate(-50%,-50%) translateX(-2px) rotate(-8deg); }
+  25%      { transform: translate(-50%,-50%) translateY(-7px) scale(1.1); }
+  40%      { transform: translate(-50%,-50%) translateX(3px) rotate(10deg); }
+  60%      { transform: translate(-50%,-50%) translateY(-3px) scale(0.97); }
+  80%      { transform: translate(-50%,-50%) translateX(-1px) rotate(-5deg); }
+}
+
+/* При ховере — эмодзи чуть сжимается и уезжает влево, но остаётся живой */
+#authBtn.logged-in:hover .live-emoji {
+  transform: translate(-50%,-50%) translateX(26px) scale(0.88) !important;
+  animation: 
+    aliveFloat 6.5s ease-in-out infinite,
+    aliveRotate 12s linear infinite,
+    aliveRandomJump 8s infinite 0.5s;
+}
+
+/* ЭМОДЗИ ЛЕТИТ ИЗ ЦЕНТРА */
+.flying-emoji {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  filter: drop-shadow(0 0 30px rgba(255,255,255,0.6));
+}
+
+/* Живая эмодзи в кнопке после прилёта */
+.live-emoji-final {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.7rem;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes aliveBreath {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%      { transform: translate(-50%, -50%) scale(1.07) translateY(-3px); }
+}
+
+@keyframes aliveMicroMove {
+  0%   { transform: translate(-50%, -50%) rotate(0deg); }
+  25%  { transform: translate(-50%, -50%) translateX(2px) rotate(4deg); }
+  50%  { transform: translate(-50%, -50%) translateY(-2px) rotate(-3deg); }
+  75%  { transform: translate(-50%, -50%) translateX(-2px) rotate(5deg); }
+  100% { transform: translate(-50%, -50%) rotate(0deg); }
+}
+
+#authBtn.logged-in:hover .live-emoji-final {
+  transform: translate(-50%, -50%) translateX(-24px) scale(0.9);
+}
+
+/* ЧЕКБОКСЫ — ФИНАЛЬНО, КРАСИВО, БЕЗ ПЕРЕНОСОВ, В ОДНУ СТРОКУ НАВСЕГДА */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 15px 0 11px;
+  font-size: 0.94rem;          /* чуть крупнее — читаемо */
+  color: #ddd;
+  cursor: pointer;
+  user-select: none;
+  line-height: 1.4;
+  width: 100%;
+  flex-wrap: nowrap;           /* ← запрещаем перенос */
+  white-space: nowrap;         /* ← дополнительная страховка */
+}
+
+.checkbox-label.required {
+  color: #fff;
+  font-weight: 500;
+}
+
+/* Скрываем родной чекбокс */
+.checkbox-label input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Кастомный квадратик */
+.custom-checkbox {
+  width: 19px;
+  height: 19px;
+  border: 1.9px solid rgba(255,255,255,0.4);
+  border-radius: 7px;
+  flex-shrink: 0;
+  position: relative;
+  background: transparent;
+  transition: all 0.28s ease;
+  box-shadow: 0 0 8px rgba(0,0,0,0.25);
+}
+
+.checkbox-label input:checked + .custom-checkbox {
+  background: #4ade80;
+  border-color: #4ade80;
+  box-shadow: 0 0 14px rgba(74,222,128,0.55);
+}
+
+.checkbox-label input:checked + .custom-checkbox::after {
+  content: '✓';
+  position: absolute;
+  top: 49%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #000;
+  font-weight: 900;
+  font-size: 13px;
+}
+
+/* ТЕКСТ + ССЫЛКА — САМОЕ ГЛАВНОЕ */
+.checkbox-label span:not(.custom-checkbox) {
+  display: inline-block;
+  white-space: nowrap;          /* ← 100% в одну строку */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 36px); /* минус ширина чекбокса + gap */
+}
+
+/* Ссылка — красиво и без переносов */
+.privacy-link {
+  color: #ffffff;
+  text-decoration: underline;
+  font-weight: 600;
+  margin-left: -4px;
+  white-space: nowrap;          /* ← ещё одна страховка */
+}
+
+.privacy-link:hover {
+  color: #a8ffcb;
+}
+
+/* На очень узких экранах (если вдруг) — уменьшаем шрифт, но НЕ переносим */
+@media (max-width: 360px) {
+  .checkbox-label {
+    font-size: 0.89rem;
+    gap: 9px;
+  }
+  .custom-checkbox {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* СВЕТЛАЯ ТЕМА — КНОПКА ВХОДА: ЧЁРНЫЙ ЧЕЛОВЕЧЕК + ЧЁРНАЯ НАДПИСЬ "ВХОД" */
+html[data-theme="light"] #authBtn:not(.logged-in) {
+  background: rgb(255, 255, 255) !important;
+  border: 1.5px solid rgba(15, 15, 15, 0.22) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+html[data-theme="light"] #authBtn:not(.logged-in) i {
+  color: #000000 !important;
+  font-size: 1.35rem !important;
+}
+
+html[data-theme="light"] #authBtn .login-text {
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+/* При ховере — чуть темнее, как у остальных иконок */
+html[data-theme="light"] #authBtn:not(.logged-in):hover {
+  background: rgba(15, 15, 15, 0.16) !important;
+  border-color: rgba(15, 15, 15, 0.35) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
+}
+
+html[data-theme="light"] #authBtn:not(.logged-in):hover .login-text {
+  opacity: 1 !important;
+  color: #000 !important;
+}
+
+/* После входа — аватарка остаётся с чёрным эмодзи (если нужно) */
+html[data-theme="light"] #authBtn.logged-in .live-emoji,
+html[data-theme="light"] #authBtn.logged-in .auth-avatar {
+  color: #000 !important;
+}
+

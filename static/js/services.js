@@ -171,3 +171,4 @@ window.addEventListener('scroll', () => {
 // Скрываем при наведении
 sideCatalog.addEventListener('mouseenter', hideArrow);
 sideCatalog.addEventListener('mouseleave', showArrow);
+

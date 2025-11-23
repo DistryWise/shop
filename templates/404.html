@@ -259,3 +259,176 @@
     </div>
 </body>
 </html>
+
+
+  <!-- ФИНАЛЬНАЯ СТЕНА + КРАСИВАЯ СТРЕЛКА + БЕЗ ЛАГОВ -->
+<style>
+  /* Тонкая вибрация */
+  @keyframes softHit {
+    0%,100% { transform: translateX(0); }
+    25%,75% { transform: translateX(-3px); }
+    50% { transform: translateX(3px); }
+  }
+  .light-zone-hit { animation: softHit 0.4s ease-out; }
+
+  /* КРАСИВАЯ СТРЕЛКА ВВЕРХ — фиксированная сверху по центру */
+  #exitWhiteZoneBtn {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 56px;
+    height: 56px;
+    background: rgba(0,0,0,0.92);
+    backdrop-filter: blur(16px);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 999999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.6s cubic-bezier(0.16,1,0.3,1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #exitWhiteZoneBtn.show {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateX(-50%) translateY(0);
+  }
+  #exitWhiteZoneBtn::before {
+    content: '';
+    width: 14px;
+    height: 14px;
+    border-left: 2px solid #fff;
+    border-top: 2px solid #fff;
+    transform: rotate(45deg);
+    animation: floatUp 2s infinite ease-in-out;
+  }
+  @keyframes floatUp {
+    0%,100% { transform: rotate(45deg) translateY(0); }
+    50% { transform: rotate(45deg) translateY(-6px); }
+  }
+  #exitWhiteZoneBtn:hover {
+    background: #fff;
+    transform: translateX(-50%) scale(1.12);
+  }
+  #exitWhiteZoneBtn:hover::before {
+    border-color: #000;
+  }
+</style>
+
+<!-- Кнопка выхода -->
+<div id="exitWhiteZoneBtn" title="Вернуться в NOIR"></div>
+
+<script>
+(() => {
+  const lightZone = document.getElementById('lightZone');
+  const header = document.querySelector('.catalog-header h1');
+  const exitBtn = document.getElementById('exitWhiteZoneBtn');
+  let wallY = 0;
+  let locked = false;
+  let vibrating = false;
+
+  const updateWall = () => {
+    if (!header) return;
+    const rect = header.getBoundingClientRect();
+    wallY = window.pageYOffset + rect.top - 120;
+    if (wallY < 0) wallY = 0;
+  };
+
+  const vibrate = () => {
+    if (vibrating || !lightZone) return;
+    vibrating = true;
+    lightZone.classList.add('light-zone-hit');
+    setTimeout(() => lightZone.classList.remove('light-zone-hit'), 400);
+    setTimeout(() => vibrating = false, 500);
+  };
+
+  const checkLock = () => {
+    const inWhiteZone = document.body.classList.contains('white') &&
+                       document.getElementById('whiteOverlay')?.classList.contains('snapped');
+
+    if (inWhiteZone) {
+      if (!locked) {
+        updateWall();
+        locked = true;
+      }
+
+      if (window.pageYOffset < wallY) {
+        window.scrollTo({ top: wallY, behavior: 'instant' });
+        vibrate();
+        exitBtn.classList.add('show');
+      }
+    } else {
+      locked = false;
+      exitBtn.classList.remove('show');
+    }
+  };
+
+  // Основной контроль — без лагов
+  let ticking = false;
+  const onScroll = () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        checkLock();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  };
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  // Колесо и тач — жёстко блочим
+  window.addEventListener('wheel', e => {
+    if (locked && e.deltaY < 0) {
+      e.preventDefault();
+      if (window.pageYOffset <= wallY + 15) {
+        vibrate();
+        exitBtn.classList.add('show');
+      }
+    }
+  }, { passive: false });
+
+  window.addEventListener('touchmove', e => {
+    if (locked && window.pageYOffset <= wallY + 30) {
+      e.preventDefault();
+      vibrate();
+      exitBtn.classList.add('show');
+    }
+  }, { passive: false });
+
+  // КНОПКА ВЫХОДА — ПЛАВНО ВВЕРХ
+  exitBtn.addEventListener('click', () => {
+    exitBtn.classList.remove('show');
+
+    // Открываем шторку обратно
+    document.body.classList.remove('white');
+    document.getElementById('whiteOverlay')?.classList.remove('active', 'snapped');
+    lightZone.classList.remove('normal');
+    document.querySelector('#hero')?.classList.remove('hidden');
+    document.querySelector('#sideCatalog')?.classList.remove('inverted');
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  });
+
+  // Обновление стены при изменении класса
+  const observer = new MutationObserver(() => {
+    if (document.body.classList.contains('white') && 
+        document.getElementById('whiteOverlay')?.classList.contains('snapped')) {
+      setTimeout(updateWall, 150);
+    }
+  });
+  observer.observe(document.body, { attributes: true });
+  observer.observe(document.getElementById('whiteOverlay'), { attributes: true, attributeFilter: ['class'] });
+
+  window.addEventListener('resize', () => locked && updateWall());
+  window.addEventListener('load', () => setTimeout(updateWall, 1000));
+})();
+</script>
