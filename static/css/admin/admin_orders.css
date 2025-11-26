@@ -1,0 +1,436 @@
+
+        /* ====================== ПРЕМИУМ APPLE 2025 СТИЛЬ ====================== */
+        .main-content { margin-left: 320px; padding: 2.5rem 5vw; min-height: 100vh; }
+
+       .apple-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.6rem;
+    margin-bottom: 3rem;
+}
+.apple-stat {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(30px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 28px;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    transition: all 0.4s cubic-bezier(0.22,0.61,0.36,1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+.apple-stat:hover { 
+    transform: translateY(-10px); 
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4); 
+}
+
+/* БАЗОВЫЙ ГРАДИЕНТ (Всего) */
+.apple-stat[data-filter=""] .apple-stat-value {
+    background: linear-gradient(135deg, #00ff95, #00cc7a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ОЖИДАЕТ + В РАБОТЕ (жёлто-оранжевый) */
+.apple-stat[data-filter="pending"] .apple-stat-value,
+.apple-stat[data-filter="processing"] .apple-stat-value,
+.apple-stat[data-filter="shipping"] .apple-stat-value {
+    background: linear-gradient(135deg, #ffb302, #ff8c00);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ВЫПОЛНЕНО (зелёный) */
+.apple-stat[data-filter="completed"] .apple-stat-value {
+    background: linear-gradient(135deg, #4ade80, #22c55e);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ОТМЕНЕНО (красный) */
+.apple-stat[data-filter="cancelled"] .apple-stat-value {
+    background: linear-gradient(135deg, #ff6b6b, #ef4444);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* АКТИВНОЕ СОСТОЯНИЕ — яркая обводка и свечение */
+.apple-stat.active {
+    border-color: #00ff95 !important;
+    box-shadow: 0 0 40px rgba(0,255,149,0.4) !important;
+    transform: translateY(-4px);
+}
+.apple-stat.active .apple-stat-value {
+    transform: scale(1.12);
+}
+
+/* Рипл-эффект при клике */
+.apple-stat::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 0; height: 0;
+    background: rgba(0,255,149,0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+    pointer-events: none;
+}
+.apple-stat:active::after {
+    width: 300px;
+    height: 300px;
+}
+
+.apple-stat-label { 
+    margin-top: 0.6rem; 
+    font-size: 1.1rem; 
+    color: rgba(255,255,255,0.7); 
+}
+        .apple-stat {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 28px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.22,0.61,0.36,1);
+        }
+        .apple-stat:hover { transform: translateY(-10px); box-shadow: 0 20px 50px rgba(0,0,0,0.4); }
+        .apple-stat-value {
+            font-size: 3.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg,#00ff95,#00cc7a);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .apple-stat.pending .apple-stat-value   { background: linear-gradient(135deg,#ffc107,#ff8f00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .apple-stat.completed .apple-stat-value { background: linear-gradient(135deg,#4ade80,#22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .apple-stat.cancelled .apple-stat-value { background: linear-gradient(135deg,#ff6b6b,#ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .apple-stat-label { margin-top: 0.6rem; font-size: 1.1rem; color: rgba(255,255,255,0.7); }
+
+        .apple-filters {
+            display: flex;
+            gap: 1.2rem;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+        }
+        .apple-search {
+            position: relative;
+            flex: 1;
+            min-width: 300px;
+        }
+        .apple-search i {
+            position: absolute;
+            left: 1.2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.5);
+        }
+        .apple-search input {
+            width: 100%;
+            padding: 1.1rem 1.2rem 1.1rem 3rem;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 22px;
+            color: white;
+            font-size: 1.05rem;
+            transition: all 0.3s;
+        }
+        .apple-search input:focus {
+            outline: none;
+            border-color: #00ff95;
+            box-shadow: 0 0 30px rgba(0,255,149,0.3);
+        }
+        .apple-filters select {
+            padding: 1.1rem 1.6rem;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 22px;
+            color: white;
+            font-size: 1rem;
+            min-width: 200px;
+        }
+
+        .apple-order-card {
+            background: rgba(255,255,255,0.07);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 32px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: all 0.5s cubic-bezier(0.22,0.61,0.36,1);
+            position: relative;
+            overflow: hidden;
+        }
+        .apple-order-card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+        }
+        .apple-order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .apple-order-id {
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: white;
+        }
+        .apple-order-meta {
+            color: rgba(255,255,255,0.7);
+            font-size: 1rem;
+        }
+        .apple-status-selector {
+            padding: 0.7rem 1.4rem;
+            background: rgba(0,255,149,0.2);
+            color: #00ff95;
+            border-radius: 18px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(0,255,149,0.3);
+        }
+        .apple-status-selector:hover { background: rgba(0,255,149,0.35); }
+
+        .order-status-chain {
+            margin: 1.8rem 0;
+            padding: 1.6rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 24px;
+            border: 1px dashed rgba(255,255,255,0.15);
+        }
+
+        .apple-items {
+            display: grid;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        .apple-item {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.06);
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+        .apple-item:hover { background: rgba(255,255,255,0.12); transform: translateX(8px); }
+        .apple-item img {
+            width: 64px; height: 64px; object-fit: cover; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .apple-total {
+            font-size: 2.1rem;
+            font-weight: 800;
+            text-align: right;
+            background: linear-gradient(135deg,#00ff95,#00cc7a);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            padding-top: 1rem;
+            border-top: 2px dashed rgba(0,255,149,0.3);
+        }
+
+        .apple-empty {
+            text-align: center;
+            padding: 8rem 2rem;
+            color: rgba(255,255,255,0.4);
+        }
+        .apple-empty i { font-size: 6rem; margin-bottom: 1.5rem; opacity: 0.3; }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(20px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.show { display: flex; }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+        .action-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all .3s;
+            border: none;
+        }
+        .btn-cancel {
+            background: rgba(255,159,0,.2);
+            color: #ff9500;
+            border: 1px solid rgba(255,159,0,.3);
+        }
+        .btn-cancel:hover { background: #ff9500; color: white; transform: scale(1.1); }
+        .btn-delete {
+            background: rgba(255,68,68,.2);
+            color: #ff4444;
+            border: 1px solid rgba(255,68,68,.3);
+        }
+        .btn-delete:hover { background: #ff4444; color: white; transform: scale(1.1); }
+
+        @media (max-width: 768px) {
+            .main-content { margin-left: 0; padding: 2rem 1rem; }
+            .apple-order-header { flex-direction: column; align-items: flex-start; }
+            .apple-filters { flex-direction: column; }
+            .apple-search { min-width: 100%; }
+            .action-buttons { justify-content: center; }
+        }
+
+        .apple-stat {
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+.apple-stat::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 0; height: 0;
+    background: rgba(0,255,149,0.15);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+    pointer-events: none;
+}
+.apple-stat:active::after {
+    width: 300px;
+    height: 300px;
+}
+.apple-stat.active {
+    border-color: #00ff95 !important;
+    box-shadow: 0 0 40px rgba(0,255,149,0.4) !important;
+    transform: translateY(-4px);
+}
+.apple-stat.active .apple-stat-value {
+    transform: scale(1.1);
+    transition: transform 0.3s;
+}
+
+/* ——————— СВЁРТЫВАНИЕ КАРТОЧЕК ЗАКАЗОВ ——————— */
+.apple-order-card {
+    cursor: pointer;
+    overflow: hidden;
+    padding: 1.6rem 2rem !important;
+    transition: all 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.apple-order-card.collapsed {
+    padding-bottom: 1.6rem !important;
+}
+.apple-order-card.collapsed .apple-order-content {
+    height: 0;
+    opacity: 0;
+    transform: translateY(-20px);
+    pointer-events: none;
+}
+.apple-order-content {
+    height: auto;
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+    margin-top: 1.5rem;
+}
+.apple-order-header {
+    margin-bottom: 0 !important;
+    position: relative;
+}
+.apple-order-header::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 0; right: 0;
+    height: 1px;
+    background: rgba(255,255,255,0.12);
+    transition: all 0.4s;
+}
+.apple-order-card.collapsed .apple-order-header::after {
+    opacity: 0;
+}
+.apple-toggle-arrow {
+    margin-left: 12px;
+    transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+    color: rgba(255,255,255,0.6);
+}
+.apple-order-card:not(.collapsed) .apple-toggle-arrow {
+    transform: rotate(180deg);
+}
+.action-buttons {
+    margin-top: 1rem !important;
+    opacity: 1;
+    transition: opacity 0.4s;
+}
+.apple-order-card.collapsed .action-buttons {
+    opacity: 1 !important;
+}
+/* ─────── НОВЫЙ КРАСИВЫЙ ПОИСК ПО ЦЕНТРУ (без селекта) ─────── */
+.apple-search-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 3rem auto 3.5rem;
+    max-width: 720px;
+    padding: 0 1rem;
+}
+
+.apple-search {
+    position: relative;
+    width: 100%;
+}
+
+.apple-search i {
+    position: absolute;
+    left: 1.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255,255,255,0.55);
+    font-size: 1.3rem;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.apple-search input {
+    width: 100%;
+    padding: 1.4rem 1.8rem 1.4rem 4.2rem;
+    background: rgba(255,255,255,0.09);
+    backdrop-filter: blur(32px);
+    border: 1.4px solid rgba(255,255,255,0.16);
+    border-radius: 30px;
+    color: white;
+    font-size: 1.15rem;
+    font-weight: 500;
+    transition: all 0.4s cubic-bezier(0.22,0.61,0.36,1);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+}
+
+.apple-search input::placeholder {
+    color: rgba(255,255,255,0.5);
+}
+
+.apple-search input:focus {
+    outline: none;
+    border-color: #00ff95;
+    box-shadow: 0 0 50px rgba(0,255,149,0.4);
+    transform: scale(1.015);
+    background: rgba(255,255,255,0.12);
+}

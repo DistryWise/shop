@@ -120,15 +120,17 @@ const fetchSuggestions = async (query) => {
 
     const all = [
       ...products.map(p => ({
+        id: p.id,
         title: p.title,
-        price_str: p.price_str,
-        image_url: parseImageUrls(p.image_urls || p.image_url)[0],
+        price_str: p.price_str || formatPrice(p.price_cents || p.price),
+        image_url: p.image_urls?.[0] || p.image_url || '/static/assets/no-image.png',
         type: 'product'
       })),
       ...services.map(s => ({
+        id: s.id,
         title: s.title,
-        price_str: s.price,
-        image_url: parseImageUrls(s.image_urls || s.image_url)[0],
+        price_str: s.price_str || formatPrice(s.price_cents || s.price),
+        image_url: s.image_urls?.[0] || '/static/assets/no-image.png',
         type: 'service'
       }))
     ].slice(0, 6);
@@ -136,7 +138,7 @@ const fetchSuggestions = async (query) => {
     autocompleteList.innerHTML = all.length === 0
       ? `<div class="autocomplete-empty">Ничего не найдено</div>`
       : all.map(item => `
-          <div class="autocomplete-item" onclick="selectAutocomplete('${escapeJS(item.title)}', '${item.type}')">
+          <div class="autocomplete-item" onclick="selectAutocomplete(${item.id}, '${item.type}')">
             <img src="${item.image_url}" onerror="this.src='/static/assets/no-image.png'">
             <div class="item-info">
               <div class="item-title">${item.title.replace(
@@ -146,7 +148,8 @@ const fetchSuggestions = async (query) => {
               <div class="item-type">${item.type === 'product' ? 'Товар' : 'Услуга'}</div>
             </div>
             <small>${item.price_str}</small>
-            <div class="autocomplete-add" onclick="event.stopPropagation(); addToCart('${escapeJS(item.title)}', '${item.type}')">
+            <div class="autocomplete-add" 
+                 onclick="event.stopPropagation(); addToCart(${item.id}, '${item.type}')">
               <i class="fas fa-plus"></i>
             </div>
           </div>
@@ -174,11 +177,19 @@ const parseImageUrls = (urls) => {
 
 const formatPrice = (raw) => {
   if (!raw || raw === 'Цена по запросу') return 'Цена по запросу';
-  const num = parseInt(String(raw).replace(/\D/g, ''), 10);
+
+  // Приводим к числу (может быть строка, число, с пробелами и т.д.)
+  let num = parseInt(String(raw).replace(/\D/g, ''), 10);
   if (isNaN(num)) return 'Цена по запросу';
-  const rub = Math.floor(num / 100);
-  const kop = (num % 100).toString().padStart(2, '0');
-  return `${rub.toLocaleString('ru-RU')}.${kop} ₽`;
+
+  // ЕСЛИ ЦЕНА В КОПЕЙКАХ (например 1000000) — делим на 100
+  // ЕСЛИ ЦЕНА В РУБЛЯХ (например 10000) — оставляем как есть
+  // Автоопределение: если число > 100000 → скорее всего в копейках
+  if (num > 100000) {
+    num = Math.round(num / 100);
+  }
+
+  return `${num.toLocaleString('ru-RU')} ₽`;
 };
 
 const renderStars = (rating) => {
@@ -199,42 +210,22 @@ const renderStars = (rating) => {
   };
 
   // === ГЛОБАЛЬНЫЕ ФУНКЦИИ ===
-  window.selectAutocomplete = (title, type) => {
-    searchInput.value = '';
-    autocompleteList.classList.remove('active');
-    close();
-    openProductModal(title, type);
-  };
+ window.selectAutocomplete = (id, type) => {
+  searchInput.value = '';
+  autocompleteList.classList.remove('active');
+  close();
+  openProductModal(id, type); // ← теперь по ID!
+};
 
-  window.addToCart = async (title, type = 'product') => {
-    const isLoggedIn = !!sessionStorage.getItem('user_id');
-    if (isLoggedIn) {
-      const payload = type === 'product'
-        ? { product_title: title, quantity: 1 }
-        : { service_title: title, quantity: 1 };
-      await fetch('/api/cart/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      showToast('Добавлено!', '', false, 2000);
-      await loadCart();
-    } else {
-      let clientCart = JSON.parse(localStorage.getItem('clientCart') || '[]');
-      const existing = clientCart.find(i => i.title === title && i.type === type);
-      if (existing) existing.quantity += 1;
-      else clientCart.push({ title, type, quantity: 1, price_cents: 0, price_str: 'Цена по запросу', image_url: '/static/assets/no-image.png' });
-      localStorage.setItem('clientCart', JSON.stringify(clientCart));
-      showToast('Добавлено!', '', false, 2000);
-      const { count } = calculateTotal(clientCart);
-      $('cartBadge').textContent = count;
-      $('cartBadge').classList.toggle('show', count > 0);
-    }
-  };
+
 
   // === ОТКРЫТИЕ МОДАЛКИ С ФОРМАТИРОВАНИЕМ ЦЕНЫ ===
  // === ОТКРЫТИЕ МОДАЛКИ С ОТЗЫВАМИ ===
-window.openProductModal = async (title, type = 'product') => {
+window.openProductModal = async (id, type = 'product') => {
   const modal = document.querySelector('.product-modal');
   if (!modal) return;
 
-  // Сброс
+  // Сброс состояния
   modal.querySelector('#productTitle').textContent = 'Загрузка...';
   modal.querySelector('#productPrice').textContent = '—';
   modal.querySelector('#productDescription').textContent = 'Загрузка...';
@@ -244,20 +235,17 @@ window.openProductModal = async (title, type = 'product') => {
   modal.querySelector('#productImg').src = '/static/assets/no-image.png';
 
   try {
-    const searchRes = await fetch(`/api/${type}s?search=${encodeURIComponent(title)}`);
-    if (!searchRes.ok) throw new Error('API не отвечает');
-    const items = await searchRes.json();
-    const item = items.find(i => i.title === title) || items[0];
-    if (!item) throw new Error('Товар не найден');
+    // Прямой запрос по ID — быстро и надёжно
+    const res = await fetch(`/api/${type === 'service' ? 'service' : 'product'}/${id}`);
+    if (!res.ok) throw new Error(`Товар не найден (${res.status})`);
 
-    // === БЕЗОПАСНЫЙ ID ===
-    const itemId = item.id || item.product_id || item.service_id;
-    if (!itemId) throw new Error('Нет ID товара');
+    const item = await res.json();
 
     // === ОТЗЫВЫ ===
     let revData = { avg_rating: 0, review_count: 0, reviews: [] };
     try {
-      const revRes = await fetch(`/api/reviews/${itemId}`);
+      const endpoint = type === 'service' ? `/api/service_reviews/${id}` : `/api/reviews/${id}`;
+const revRes = await fetch(endpoint);
       if (revRes.ok) revData = await revRes.json();
     } catch (e) {
       console.warn('Отзывы не загрузились:', e);
@@ -267,19 +255,24 @@ window.openProductModal = async (title, type = 'product') => {
     const reviewCount = parseInt(revData.review_count) || 0;
     const reviews = revData.reviews || [];
 
-    // === КАРТИНКА ===
+    // Картинка
     const imgUrl = parseImageUrls(item.image_urls || item.image_url)[0];
     modal.querySelector('#productImg').src = imgUrl + '?v=' + Date.now();
 
-    // === ДАННЫЕ ===
-    modal.querySelector('#productTitle').textContent = item.title;
-    modal.querySelector('#productPrice').textContent = formatPrice(item.price_str || item.price);
+    // Данные
+    modal.querySelector('#productTitle').textContent = item.title || 'Без названия';
+    modal.querySelector('#productPrice').textContent = formatPrice(item.price_str || item.price_cents || item.price);
     modal.querySelector('#productDescription').textContent = item.description || 'Описание отсутствует';
     modal.querySelector('.stars').innerHTML = renderStars(avgRating);
-    modal.querySelector('#productReviewsCount').textContent = 
-      `${avgRating.toFixed(1)} • ${reviewCount} отзыв${reviewCount % 10 === 1 && reviewCount !== 11 ? '' : 'ов'}`;
+    const word = reviewCount === 1 ? 'отзыв' : 
+            (reviewCount >= 2 && reviewCount <= 4) ? 'отзыва' : 'отзывов';
 
-    // === ОТЗЫВЫ ===
+modal.querySelector('#productReviewsCount').textContent = 
+  reviewCount > 0 
+    ? `${avgRating.toFixed(1)} ★ ${reviewCount} ${word}`
+    : 'Отзывов пока нет';
+
+    // Отзывы (тот же код, что был)
     const reviewsContainer = modal.querySelector('.product-reviews');
     if (!reviews.length) {
       reviewsContainer.innerHTML = `<div style="text-align:center;padding:2rem;color:#888;">
@@ -290,8 +283,10 @@ window.openProductModal = async (title, type = 'product') => {
       reviewsContainer.innerHTML = '<h4 class="reviews-title">Отзывы покупателей</h4><div class="reviews-list">' + reviews.map(r => {
         const author = r.author || 'Аноним';
         const emojis = ['😊','😎','🥰','🤩','😇','😋','🤔','😴','🥳','🤗','😜','😺','🐶','🐱','🦊','🐼','🦁','🐸','🐵','🤖','👻','🎃','💩','🦄','🍔','🍕'];
-        const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-        const date = new Date(r.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+       const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+        const date = new Date(r.date || r.created_at).toLocaleDateString('ru-RU', {
+  day: 'numeric', month: 'long', year: 'numeric'
+}).replace('.', ''); // убираем точку в конце
         return `
           <div class="review">
             <div class="review-header">
@@ -310,8 +305,9 @@ window.openProductModal = async (title, type = 'product') => {
       }).join('') + '</div>';
     }
 
+    // Кнопка "В корзину" в модалке
     modal.querySelector('#addToCartModal').onclick = () => {
-      addToCart(item.title, type);
+      addToCart(id, type);  // ← теперь передаём ID, а не title!
       modal.classList.remove('active');
     };
 
@@ -319,9 +315,9 @@ window.openProductModal = async (title, type = 'product') => {
     document.body.style.overflow = 'hidden';
 
   } catch (err) {
-    console.error('Ошибка модалки:', err);
+    console.error('Ошибка загрузки товара по ID:', err);
     modal.querySelector('#productTitle').textContent = 'Ошибка';
-    modal.querySelector('#productDescription').textContent = 'Не удалось загрузить товар.';
+    modal.querySelector('#productDescription').textContent = 'Не удалось загрузить товар. Попробуйте позже.';
     modal.classList.add('active');
   }
 };

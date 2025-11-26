@@ -1024,19 +1024,20 @@
 
         <!-- ФОРМА -->
         <!-- ФОРМА — ИДЕАЛЬНАЯ ВЕРСИЯ -->
-        <div class="form-wrapper">
-          <form class="contact-form" novalidate>
-            <input type="text" placeholder="Имя" class="name-input" required />
-            
-            <div class="phone-field-wrapper">
-              <input type="tel" placeholder="+7 (___) ___-__-__" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
-            </div>
-            
-            <input type="email" placeholder="Email" required />
-            <textarea placeholder="Сообщение" required></textarea>
-            <button type="submit">Отправить</button>
-          </form>
-        </div>
+       <div class="form-wrapper">
+  <form class="contact-form" id="feedbackForm" novalidate>
+    <input type="text" id="feedbackName" placeholder="Ваше имя" required />
+    <input type="email" id="feedbackEmail" placeholder="Email" required />
+    <textarea id="feedbackMessage" placeholder="Ваше сообщение" rows="5" required></textarea>
+    
+    <button type="submit" id="feedbackSubmit">
+      <span class="btn-text">Отправить</span>
+      <span class="btn-loading" style="display:none;">Отправка...</span>
+    </button>
+
+    <div class="form-message" id="formMessage"></div>
+  </form>
+
 
         <!-- ПРАВЫЙ БЛОК -->
         <div class="graffiti-right-wrapper">
@@ -1044,12 +1045,12 @@
         </div>
     </div>
 
-</div>
+
 <!-- ← ВСТАВЬ СЮДА → -->
   <div class="simple-arrow-wrapper">
     <img src="/static/assets/arrow.png" alt="Стрелка к форме" class="simple-arrow-png">
   </div>
-    </div>
+
     </section>
 
   <!-- FAQ -->
@@ -1414,7 +1415,7 @@ renderFAQ();
   <script src="/static/js/search.js"></script>
   <script src="/static/js/auth.js" defer></script>
   <script src="/static/js/cart.js" defer></script>
-  <script src="/static/js/feedback.js"></script>
+  <script src="/static/js/feedback.js" defer></script>
   <script src="/static/js/ai.js" defer></script>
 
 <script>
@@ -1483,7 +1484,73 @@ renderFAQ();
     }, 3500); // 3.5 секунды
   });
 </script>
+<script>
+// Ждём полной загрузки DOM
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('feedbackForm');
+  const submitBtn = document.getElementById('feedbackSubmit');
+  const btnText = submitBtn.querySelector('.btn-text');
+  const btnLoading = submitBtn.querySelector('.btn-loading');
+  const messageDiv = document.getElementById('formMessage');
 
-</div>
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault(); // ОТМЕНА стандартной отправки
+
+    // Сброс предыдущих сообщений
+    messageDiv.textContent = '';
+    messageDiv.className = 'form-message';
+
+    // Простая валидация
+    const name = document.getElementById('feedbackName').value.trim();
+    const email = document.getElementById('feedbackEmail').value.trim();
+    const msg = document.getElementById('feedbackMessage').value.trim();
+
+    if (!name || !email || !msg) {
+      messageDiv.textContent = 'Заполните все поля';
+      messageDiv.className += ' error';
+      return;
+    }
+
+    // Показываем "Отправка..."
+    btnText.style.display = 'none';
+    btnLoading.style.display = 'inline';
+
+    try {
+      const response = await fetch('/api/feedback', {  // ← сюда ваш реальный эндпоинт
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // 'X-CSRFToken': getCookie('csrftoken'), // если используете Django и csrf
+        },
+        body: JSON.stringify({
+          name: name,
+          email: email,
+          message: msg
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        messageDiv.textContent = data.message || 'Спасибо! Мы свяжемся с вами в ближайшее время';
+        messageDiv.className += ' success';
+        form.reset();
+      } else {
+        messageDiv.textContent = data.error || 'Ошибка отправки';
+        messageDiv.className += ' error';
+      }
+    } catch (err) {
+      console.error(err);
+      messageDiv.textContent = 'Нет соединения с сервером';
+      messageDiv.className += ' error';
+    } finally {
+      btnText.style.display = 'inline';
+      btnLoading.style.display = 'none';
+    }
+  });
+});
+</script>
 </body>
 </html>

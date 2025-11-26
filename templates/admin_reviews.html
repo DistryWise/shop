@@ -760,21 +760,26 @@ function prepareEditWithPassword() {
 
 // ЕДИНСТВЕННАЯ РАБОЧАЯ ФУНКЦИЯ — БОЛЬШЕ НИЧЕГО НЕ НУЖНО
 async function reviewAction(action, payload = {}, password) {
-    const formData = new FormData();
-    formData.append('action', action);
-    formData.append('password', password);
-
-    Object.entries(payload).forEach(([k, v]) => {
-        formData.append(k, v);
-    });
+    const data = {
+        action,
+        password,
+        ...payload
+    };
 
     const res = await fetch('/admin_reviews', {
         method: 'POST',
-        body: formData
-        // БЕЗ ЛЮБЫХ HEADERS!
+        headers: {
+            'Content-Type': 'application/json'   // ← ЭТО ГЛАВНОЕ!
+        },
+        body: JSON.stringify(data)
     });
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    if (!res.ok) {
+        const text = await res.text();
+        console.error('Server responded with:', res.status, text);
+        throw new Error(`HTTP ${res.status}`);
+    }
+
     return await res.json();
 }
 
@@ -782,6 +787,7 @@ async function confirmPasswordAction() {
     const password = document.getElementById('global_password').value.trim();
     const error = document.getElementById('password_error');
     error.style.display = 'none';
+    error.textContent = '';
 
     if (!password) {
         error.textContent = 'Введите пароль';
@@ -810,7 +816,7 @@ async function confirmPasswordAction() {
                 item_id: window.pendingReviewData.id,
                 rating: window.pendingReviewData.rating,
                 text: window.pendingReviewData.text,
-                user_phone: window.pendingReviewData.phone || ''
+                user_phone: window.pendingReviewData.phone || null
             }, password);
         }
 
@@ -822,7 +828,7 @@ async function confirmPasswordAction() {
         }
     } catch (err) {
         console.error(err);
-        error.textContent = 'Ошибка сервера (415 и т.д.)';
+        error.textContent = 'Ошибка сервера';
         error.style.display = 'block';
     } finally {
         delete window.pendingEditData;
@@ -833,51 +839,13 @@ async function confirmPasswordAction() {
     }
 }
 
-function submitEdit() {
-    const id = document.getElementById('edit_review_id').value;
-    const rating = document.getElementById('edit_rating_value').value;
-    const text = document.getElementById('edit_text').value.trim();
-    const password = document.getElementById('edit_password').value.trim();
-    const error = document.getElementById('edit_error');
-
-    if (!text || !password) { error.textContent = 'Заполните все поля'; error.style.display = 'block'; return; }
-
-    fetch('/admin_reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ action: 'edit_review', review_id: id, rating, text, password })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) location.reload();
-        else { error.textContent = data.message || 'Ошибка'; error.style.display = 'block'; }
-    });
-}
-
 function openDeleteModal(id) {
-    document.getElementById('delete_review_id').value = id;
-    document.getElementById('delete_error').style.display = 'none';
-    openModal('deleteModal');
+    window.pendingDeleteData = { id };
+    document.getElementById('password_error').style.display = 'none';
+    openModal('passwordModal');  // ← Теперь сразу открываем универсальную модалку с паролем!
 }
 
-function submitDelete() {
-    const id = document.getElementById('delete_review_id').value;
-    const password = document.getElementById('delete_password').value.trim();
-    const error = document.getElementById('delete_error');
 
-    if (!password) { error.textContent = 'Введите пароль'; error.style.display = 'block'; return; }
-
-    fetch('/admin_reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ action: 'delete_review', review_id: id, password })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) location.reload();
-        else { error.textContent = data.message || 'Ошибка'; error.style.display = 'block'; }
-    });
-}
 
 function openModal(id) {
     const modal = document.getElementById(id);
@@ -1015,71 +983,7 @@ function prepareEditWithPassword() {
     openModal('passwordModal');     // открываем универсальное окно пароля
 }
 
-// === Перехватываем подтверждение пароля и отправляем редактирование ===
-function confirmPasswordAction() {
-    const password = document.getElementById('global_password').value.trim();
-    const error = document.getElementById('password_error');
-    if (!password) {
-        error.textContent = 'Введите пароль';
-        error.style.display = 'block';
-        return;
-    }
 
-    // Если есть данные редактирования — отправляем их
-    if (window.pendingEditData) {
-        const data = window.pendingEditData;
-        fetch('/admin_reviews', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-                action: 'edit_review',
-                review_id: data.id,
-                rating: data.rating,
-                text: data.text,
-                password
-            })
-        })
-        .then(r => r.json())
-        .then(res => {
-            if (res.success) {
-                location.reload();
-            } else {
-                error.textContent = res.message || 'Неверный пароль';
-                error.style.display = 'block';
-            }
-        });
-
-        // Очищаем временные данные
-        delete window.pendingEditData;
-        document.getElementById('global_password').value = '';
-        return;
-    }
-
-    // Если это было создание отзыва — оставляем старое поведение (ничего не меняем)
-    if (window.pendingReviewData) {
-        // твой старый код создания отзыва остаётся без изменений
-        const data = window.pendingReviewData;
-        fetch('/admin_reviews', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-                action: 'create_review',
-                item_type: data.type,
-                item_id: data.id,
-                rating: data.rating,
-                text: data.text,
-                user_phone: data.phone,
-                password
-            })
-        })
-        .then(r => r.json())
-        .then(res => {
-            if (res.success) location.reload();
-            else { error.textContent = res.message || 'Ошибка'; error.style.display = 'block'; }
-        });
-        delete window.pendingReviewData;
-    }
-}
 // === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ (ZAZA TOGGLE) ===
 const themeToggle = document.getElementById('theme-toggle');
 const html = document.documentElement;

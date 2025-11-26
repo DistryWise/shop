@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Услуги — Piligrim · 2025</title>
+  <title>Товары — Piligrim · 2025</title>
 
   <!-- Шрифты и иконки -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;900&display=swap" rel="stylesheet">
@@ -168,29 +168,48 @@
 <!-- КАРТОЧКА ТОВАРА — РАБОЧАЯ, КАК В ZAZA -->
 <div class="product-modal" id="productModal">
   <div class="product-content">
-    <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
-    <div class="product-info">
-      <h3 id="productTitle" class="product-title">Загрузка...</h3>
-      <div class="product-rating">
-        <div class="stars"></div>
-        <span id="productReviewsCount" class="reviews-count">—</span>
-      </div>
-      <div id="productPrice" class="product-price">—</div>
-      <div id="productDescription" class="product-description">Загрузка описания...</div>
-      <button id="addToCartModal" class="add-to-cart-btn">
-        <i class="fas fa-shopping-cart"></i> Купить
-      </button>
-      <div class="product-reviews">
-        <h4 class="reviews-title">Отзывы покупателей</h4>
-        <div class="reviews-list">
-          <div style="text-align:center;padding:2rem;color:#888;">
-            <i class="far fa-star" style="font-size:2.5rem;margin-bottom:0.5rem;display:block;"></i>
-            <p>Загрузка отзывов...</p>
+    <!-- Крестик закрытия -->
+    <button class="close-modal" onclick="closeProductModal()">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M6 6L22 22M6 22L22 6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <!-- Основной контейнер -->
+    <div class="product-main">
+      <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
+
+      <div class="product-info">
+        <h3 id="productTitle" class="product-title">Загрузка...</h3>
+
+        <!-- Рейтинг и отзывы -->
+        <div class="product-rating">
+          <div class="stars"></div>
+          <span id="productReviewsCount" class="reviews-count">—</span>
+        </div>
+
+        <div id="productPrice" class="product-price">—</div>
+
+        <div id="productDescription" class="product-description">Загрузка описания...</div>
+
+        <!-- Кнопка "В корзину" -->
+        <button id="addToCartModal" class="add-to-cart-btn">
+          <i class="fas fa-shopping-cart"></i> В корзину
+        </button>
+
+        <!-- ОТЗЫВЫ — ТОЧНО КАК В НОВОСТЯХ -->
+        <div class="product-reviews">
+          <h4 class="reviews-title">Отзывы покупателей</h4>
+          <div class="reviews-list" id="productReviewsList">
+            <div style="text-align:center;padding:3rem;color:#888;">
+              <i class="far fa-star" style="font-size:3rem;margin-bottom:1rem;display:block;opacity:0.6;"></i>
+              <p>Отзывов пока нет</p>
+              <small style="opacity:0.7;">Будьте первым!</small>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="close-modal"><i class="fas fa-times"></i></div>
   </div>
 </div>
 
@@ -226,7 +245,7 @@
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="9" height="18"/><rect x="14" y="3" width="9" height="18"/></svg>
       </button>
     </div>
-    <div class="catalog-header"><h1>УСЛУГИ</h1></div>
+    <div class="catalog-header"><h1>Товары</h1></div>
 <div class="search-wrapper" style="max-width:1100px;margin:0 auto 180px;position:relative;">
       <div class="search-container" style="position:relative;max-width:900px;margin:0 auto;">
         
@@ -256,37 +275,40 @@
   </div>
 
   <!-- МОДАЛКА -->
-  <div class="modal" id="modal"><button class="modal-close-btn" aria-label="Закрыть">
-  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-    <line x1="18" y1="6" x2="6" y2="18"/>
-    <line x1="6" y1="6" x2="18" y2="18"/>
-  </svg>
-</button><div class="close">×</div>
-    <div class="modal-content">
-      <div class="modal-gallery">
-        <img id="modal-img" src="" alt="">
-        <div class="gallery-thumbs" id="modal-thumbs"></div>
+<!-- МОДАЛКА (ОДНА НА ВЕСЬ САЙТ — И НА УСЛУГИ, И НА ТОВАРЫ) -->
+<div class="modal" id="modal">
+  <button class="modal-close-btn" aria-label="Закрыть">
+    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  </button>
+  <div class="close">×</div>
+  <div class="modal-content">
+    <div class="modal-gallery">
+      <img id="modal-img" src="" alt="">
+      <div class="gallery-thumbs" id="modal-thumbs"></div>
+    </div>
+    <div class="modal-info">
+      <div class="info-header">
+        <h3 id="modal-title"></h3>
+        <div class="price" id="modal-price">₽ —</div>
       </div>
-      <div class="modal-info">
-        <div class="info-header">
-          <h3 id="modal-title"></h3>
-          <div class="price" id="modal-price">₽ —</div>
-        </div>
-        <p id="modal-desc"></p>
-        <div class="rating" id="modal-rating">
-          <span class="stars">★★★★★</span>
-          <span class="value">0.0</span>
-          <span class="count">(0)</span>
-        </div>
-        <button class="order-btn" id="modal-order">ЗАКАЗАТЬ</button>
-        <div class="reviews-section">
-          <h4>ОТЗЫВЫ</h4>
-          <div class="reviews" id="modal-reviews"></div>
-          <p class="no-reviews" id="no-reviews">Отзывов пока нет</p>
-        </div>
+      <p id="modal-desc"></p>
+      <div class="rating" id="modal-rating">
+        <span class="stars">★★★★★</span>
+        <span class="value">0.0</span>
+        <span class="count">(0)</span>
+      </div>
+      <button class="order-btn" id="modal-order">ЗАКАЗАТЬ</button>
+      <div class="reviews-section">
+        <h4>ОТЗЫВЫ</h4>
+        <div class="reviews" id="modal-reviews"></div>
+        <p class="no-reviews" id="no-reviews">Отзывов пока нет</p>
       </div>
     </div>
   </div>
+</div>
 
   <footer id="footer">
     <span>© 2025 Piligrim · NO ADDRESS · NO PHONE</span>
@@ -307,7 +329,7 @@
   </div>
 </div>
 
-<script src="static/js/service.js"></script>
+<script src="static/js/goods.js"></script>
 <script src="/static/js/search.js"></script>
 <script src="/static/js/auth.js"></script>
 <script src="/static/js/cart.js" defer></script>
@@ -575,6 +597,122 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 50);
 });
 </script>
+<script>
+// УНИВЕРСАЛЬНЫЙ АНТИСПАМ 2025 — РАБОТАЕТ НА ВСЕХ КНОПКАХ "В КОРЗИНУ" И ИЗМЕНЕНИЯ КОЛИЧЕСТВА
+// Защищает от спама: + / – / удалить / любые onclick="addToCart(...)" / кнопки с классами
+const GlobalAddToCartProtection = (() => {
+  const STORAGE_KEY = 'cart_flood_protection_2025';
+  const COOLDOWN_MS = 20000;    // 20 сек блок после спама
+  const MAX_CLICKS = 9;         // сколько быстрых кликов разрешено
 
+  let clickCount = 0;
+  let resetTimer = null;
+  let blockedUntil = 0;
+
+  // Загружаем состояние
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      blockedUntil = data.blockedUntil || 0;
+    }
+  } catch (e) {}
+
+  const block = () => {
+    blockedUntil = Date.now() + COOLDOWN_MS;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ blockedUntil }));
+
+    // Красивый красный алерт с таймером
+    const alert = document.createElement('div');
+    alert.id = 'global-cart-flood-alert';
+    alert.innerHTML = `
+      <i class="fas fa-hand-paper"></i>
+      <div>
+        <strong>Слишком быстро!</strong><br>
+        <small>Подождите <span class="timer">20</span> сек</small>
+      </div>
+    `;
+    Object.assign(alert.style, {
+      position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
+      background: 'linear-gradient(135deg,#ff453a,#ff2d55)', color: 'white',
+      padding: '16px 32px', borderRadius: '26px', fontSize: '1.15rem',
+      fontWeight: '600', boxShadow: '0 20px 50px rgba(255,45,85,0.5)',
+      backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', gap: '14px',
+      zIndex: '999999', animation: 'slideDown 0.5s ease'
+    });
+    document.body.appendChild(alert);
+
+    let seconds = 20;
+    const timerSpan = alert.querySelector('.timer');
+    const interval = setInterval(() => {
+      seconds--;
+      timerSpan.textContent = seconds;
+      if (seconds <= 0) {
+        clearInterval(interval);
+        alert.remove();
+      }
+    }, 1000);
+
+    setTimeout(() => alert.remove(), COOLDOWN_MS + 1000);
+  };
+
+  return {
+    check() {
+      const now = Date.now();
+      if (blockedUntil > now) return false;
+
+      clickCount++;
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => { clickCount = 0; }, 10000);
+
+      if (clickCount > MAX_CLICKS) {
+        block();
+        clickCount = 0;
+        return false;
+      }
+      return true;
+    }
+  };
+})();
+
+// УНИВЕРСАЛЬНЫЙ ПЕРЕХВАТЧИК — ЛОВИТ ВСЁ
+document.addEventListener('click', function(e) {
+  const target = e.target.closest(
+    'button, .add-to-cart-btn, .buy-btn, .apple-qty-btn, .apple-remove-btn, ' +
+    '.quantity-btn, .clear-cart-btn, [onclick*="addToCart("]'
+  );
+
+  if (!target) return;
+
+  // Проверяем, это действие с корзиной?
+  const onclick = target.getAttribute('onclick') || '';
+  const isCartAction = 
+    onclick.includes('addToCart(') ||
+    target.classList.contains('apple-qty-btn') ||
+    target.classList.contains('apple-remove-btn') ||
+    target.classList.contains('quantity-btn') ||
+    target.classList.contains('clear-cart-btn') ||
+    target.classList.contains('add-to-cart-btn') ||
+    target.classList.contains('buy-btn');
+
+  if (isCartAction && !GlobalAddToCartProtection.check()) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    e.stopPropagation();
+    return false;
+  }
+}, true); // true = capture phase → срабатывает раньше всех остальных обработчиков
+
+// Анимация алерта
+document.head.insertAdjacentHTML('beforeend', `
+<style>
+@keyframes slideDown {
+  from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+#global-cart-flood-alert i { font-size: 1.8rem; }
+</style>
+`);
+</script>
 </body>
 </html>

@@ -581,6 +581,11 @@ const logout = async () => {
       sessionStorage.clear();
       localStorage.removeItem('clientCart');
 
+      // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+      // ЭТО САМАЯ ВАЖНАЯ СТРОКА — БЕЗ НЕЁ НИЧЕГО НЕ РАБОТАЕТ!
+      document.dispatchEvent(new CustomEvent('userLoggedOut'));
+      // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
       currentUser = null;
 
       // Сразу возвращаем модалку авторизации в начальное состояние

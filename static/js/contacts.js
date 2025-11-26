@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // === ТИПОГРАФ ===
   const typewriter = document.getElementById('typewriter');
   if (typewriter) {
-    const fullText = `«Мы не продаём товар и не оказываем услуги.\nМы открываем доступ.\nТишина, в которой слышно только то,\nчто действительно имеет значение<span class="center-last">`;
+    const fullText = `«Мы не продаём товар и не оказываем услуги.\nМы открываем доступ.\nТишина, в которой слышно только то,\nчто действительно имеет значение»<span class="center-last">`;
     let i = 0;
     const type = () => {
       if (i >= fullText.length) return;

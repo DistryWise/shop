@@ -1,7 +1,16 @@
-let cartActionCount = 0;
-let cartActionTimer = null;
-let cartBlockedUntil = 0;
+
 document.addEventListener('DOMContentLoaded', () => {
+
+const getCartActionCount = () => Number(sessionStorage.getItem('cartSpamCount') || '0');
+const incrementCartActionCount = () => {
+    const count = getCartActionCount() + 1;
+    sessionStorage.setItem('cartSpamCount', count);
+    return count;
+};
+const resetCartActionCount = () => sessionStorage.removeItem('cartSpamCount');
+const getCartBlockedUntil = () => Number(sessionStorage.getItem('cartBlockedUntil') || '0');
+const setCartBlockedUntil = (time) => sessionStorage.setItem('cartBlockedUntil', time);
+
     const $ = (id) => document.getElementById(id);
     const $$ = (sel) => document.querySelector(sel);
 
@@ -23,63 +32,27 @@ document.addEventListener('DOMContentLoaded', () => {
     let cartAnimating = false;
     let overlay = null;
 
-    // === АНТИСПАМ ДЛЯ МИНИ-КОРЗИНЫ (10+ действий за 30 сек → блок на 10 сек) ===
-let cartActionCount = 0;
-let cartActionTimer = null;
-let cartBlockedUntil = 0;
-
-const blockCartActions = () => {
-  cartBlockedUntil = Date.now() + 10000; // 10 секунд блокировки
-  showToast('Слишком быстро!', 'Подожди 10 секунд', true, 5000);
-
-  // Визуально блокируем кнопки
-  document.querySelectorAll('.quantity-btn, .clear-cart-btn').forEach(btn => {
-    btn.disabled = true;
-    btn.style.opacity = '0.4';
-    btn.style.pointerEvents = 'none';
-  });
-
-  // Разблокируем через 10 секунд
-  setTimeout(() => {
-    document.querySelectorAll('.quantity-btn, .clear-cart-btn').forEach(btn => {
-      btn.disabled = false;
-      btn.style.opacity = '';
-      btn.style.pointerEvents = '';
-    });
-  }, 10000);
-};
-
-const registerCartAction = () => {
-  const now = Date.now();
-
-  // Если уже заблокировано — игнорируем
-  if (now < cartBlockedUntil) return false;
-
-  cartActionCount++;
-
-  // Сбрасываем счётчик через 30 секунд
-  clearTimeout(cartActionTimer);
-  cartActionTimer = setTimeout(() => {
-    cartActionCount = 0;
-  }, 30000);
-
-  // Если больше 10 действий — блок
-  if (cartActionCount > 10) {
-    blockCartActions();
-    cartActionCount = 0; // сбрасываем, чтобы не спамить алертами
-    return false;
-  }
-
-  return true;
-};
-
     // === УТИЛИТЫ ===
-    const formatPrice = (cents) => {
-        const rub = Math.floor(cents / 100);
-        const kop = cents % 100;
-        return `${rub.toLocaleString('ru-RU')}.${kop.toString().padStart(2, '0')} ₽`;
-    };
+const formatPrice = (cents) => {
+    // Если явно передали 0 — показываем 0.00 ₽ (это для пустой корзины!)
+    if (cents === 0) return '0.00 ₽';
 
+    // Если null, undefined, пустая строка — тоже 0
+    if (!cents) return '0.00 ₽';
+
+    // Только если строка и содержит "по запросу" — оставляем как есть
+    if (typeof cents === 'string' && cents.toLowerCase().includes('по запросу')) {
+        return 'Цена по запросу';
+    }
+
+    const num = Number(cents);
+    if (isNaN(num) || num <= 0) return '0.00 ₽';
+
+    const rub = Math.floor(num / 100);
+    const kop = (num % 100).toString().padStart(2, '0');
+
+    return `${rub.toLocaleString('ru-RU')}.${kop} ₽`;
+};
     const calculateTotal = (items) => {
         const totalCents = items.reduce((sum, i) => sum + (i.price_cents || 0) * i.quantity, 0);
         const count = items.reduce((s, i) => s + i.quantity, 0);
@@ -138,141 +111,261 @@ const registerCartAction = () => {
         }
     };
 
-    // === ДОБАВЛЕНИЕ В КОРЗИНУ ===
-window.addToCart = async (title, type = 'product', image_url = '/static/assets/no-image.png', price_str = 'Цена по запросу', quantity = 1) => {
-  const isLoggedIn = !!sessionStorage.getItem('user_id');
+window.addToCart = async function(id, type = 'product', quantity = 1) {
+    const now = Date.now();
+    const BLOCK_KEY = 'cart_blocked_until';
+    const SPAM_KEY = 'cart_spam_v2';
 
-  if (!isLoggedIn) {
-    const existing = clientCart.find(i => i.title === title && i.type === type);
-    if (existing) {
-      existing.quantity += quantity;
-    } else {
-      clientCart.push({ title, type, quantity, price_cents: 0, price_str, image_url });
+    // === 1. Проверяем, не заблокирован ли уже пользователь ===
+    const blockedUntil = Number(localStorage.getItem(BLOCK_KEY) || '0');
+    if (now < blockedUntil) {
+        const sec = Math.ceil((blockedUntil - now) / 1000);
+        showToast('Стоп!', `Подождите ${sec} сек.`, true);
+        return;
     }
-    localStorage.setItem('clientCart', JSON.stringify(clientCart));
-    showToast('Добавлено в корзину');
+
+    // === 2. Считаем клики за последние 2 секунды ===
+    let spamData = JSON.parse(localStorage.getItem(SPAM_KEY) || '[]');
+    
+    // Удаляем старые клики (старше 2 сек)
+    spamData = spamData.filter(t => now - t < 2000);
+
+    // Если уже 5 кликов за 2 секунды — блок на 30 сек
+    if (spamData.length >= 5) {
+        localStorage.setItem(BLOCK_KEY, now + 30000);
+        localStorage.removeItem(SPAM_KEY);
+        showToast('Блокировка!', 'Слишком много действий. Ждите 30 сек.', true);
+        return;
+    }
+
+    // Добавляем текущий клик
+    spamData.push(now);
+    localStorage.setItem(SPAM_KEY, JSON.stringify(spamData));
+
+    // === 3. Визуальная блокировка кнопки ===
+    const btn = event?.target?.closest('button') || document.querySelector(`[onclick*="addToCart(${id}"]`);
+    if (btn) {
+        btn.disabled = true;
+        const oldText = btn.innerHTML;
+        btn.innerHTML = 'Добавляем...';
+    }
+
+    try {
+        const isLoggedIn = !!sessionStorage.getItem('user_id');
+
+        if (isLoggedIn) {
+            const res = await fetch('/api/cart/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    [type === 'product' ? 'product_id' : 'service_id']: id,
+                    quantity
+                })
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) throw new Error(data.error || 'Ошибка');
+        } else {
+            const existing = clientCart.find(i => i.id === id && i.type === type);
+            if (existing) existing.quantity += quantity;
+            else clientCart.push({ id, type, quantity });
+            localStorage.setItem('clientCart', JSON.stringify(clientCart));
+        }
+
+        showToast('Добавлено в корзину!');
+        await loadCart();
+        notifyCartUpdated();
+
+    } catch (e) {
+        showToast('Ошибка', e.message || 'Не удалось добавить', true);
+    } finally {
+        if (btn) {
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = oldText;
+            }, 600);
+        }
+    }
+};
+
+// === УНИВЕРСАЛЬНЫЙ ПОВТОР ЗАКАЗА ИЗ АРХИВА ===
+document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.repeat-order-btn');
+    if (!btn) return;
+
+    e.preventDefault();
+    const id = btn.dataset.id;
+    const type = btn.dataset.type || 'product';
+    const title = btn.dataset.title || 'Товар';
+
+    if (!id) return;
+
+    // Визуально блокируем кнопку
+    const oldText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = 'Добавляем...';
+
+    try {
+        // Используем ТОТ ЖЕ addToCart, что и везде — с защитой!
+        if (typeof window.addToCart === 'function') {
+            await window.addToCart(id, type, 1);
+        } else {
+            // Если вдруг cart.js не загрузился — fallback
+            await fetch('/api/cart/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ [type === 'product' ? 'product_id' : 'service_id']: id, quantity: 1 })
+            });
+            showToast('Добавлено!', title);
+            await loadCart();
+        }
+    } catch (err) {
+        showToast('Ошибка добавления', '', true);
+    } finally {
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = oldText;
+        }, 600);
+    }
+});
+// Остальные функции — без изменений (но можно тоже защитить, если хочешь)
+window.removeFromCart = async (id, type) => {
+    const isLoggedIn = !!sessionStorage.getItem('user_id');
+
+    if (isLoggedIn) {
+        await api('/api/cart/update', {
+            method: 'POST',
+            body: JSON.stringify({
+                [type === 'product' ? 'product_id' : 'service_id']: id,
+                quantity: 0
+            })
+        });
+    } else {
+        clientCart = clientCart.filter(i => !(i.id === id && i.type === type));
+        localStorage.setItem('clientCart', JSON.stringify(clientCart));
+    }
     await loadCart();
     notifyCartUpdated();
-    return;
-  }
+    showToast('Удалено');
+};
 
-        const { ok, data } = await api('/api/cart/add', {
+window.updateQuantity = async (id, type, delta) => {
+    const isLoggedIn = !!sessionStorage.getItem('user_id');
+    let newQty;
+
+    if (isLoggedIn) {
+        const item = cartItems.find(i => i.id === id && i.type === type);
+        if (!item) return;
+        newQty = Math.max(0, item.quantity + delta);
+        await api('/api/cart/update', {
             method: 'POST',
-            body: JSON.stringify(type === 'product' ? { product_title: title, quantity } : { service_title: title, quantity })
+            body: JSON.stringify({
+                [type === 'product' ? 'product_id' : 'service_id']: id,
+                quantity: newQty
+            })
         });
-
-        if (ok) {
-            showToast('Добавлено в корзину');
-            await loadCart();
-            notifyCartUpdated();
+    } else {
+        const item = clientCart.find(i => i.id === id && i.type === type);
+        if (!item) return;
+        newQty = Math.max(0, item.quantity + delta);
+        if (newQty === 0) {
+            clientCart = clientCart.filter(i => !(i.id === id && i.type === type));
         } else {
-            showToast('Ошибка', data.error || 'Не удалось добавить', true);
+            item.quantity = newQty;
         }
-    };
+        localStorage.setItem('clientCart', JSON.stringify(clientCart));
+    }
+    await loadCart();
+    notifyCartUpdated();
+};
 
-    window.removeFromCart = async (title, type) => {
-        const isLoggedIn = !!sessionStorage.getItem('user_id');
-        if (isLoggedIn) {
-            await api('/api/cart/update', {
-                method: 'POST',
-                body: JSON.stringify({ title, type, quantity: 0 })
-            });
+    window.updateQuantity = async (id, type, delta) => {
+    const isLoggedIn = !!sessionStorage.getItem('user_id');
+    let newQty;
+
+    if (isLoggedIn) {
+        const item = cartItems.find(i => i.id === id && i.type === type);
+        if (!item) return;
+        newQty = Math.max(0, item.quantity + delta);
+        await api('/api/cart/update', {
+            method: 'POST',
+            body: JSON.stringify({
+                [type === 'product' ? 'product_id' : 'service_id']: id,
+                quantity: newQty
+            })
+        });
+    } else {
+        const item = clientCart.find(i => i.id === id && i.type === type);
+        if (!item) return;
+        newQty = Math.max(0, item.quantity + delta);
+        if (newQty === 0) {
+            clientCart = clientCart.filter(i => !(i.id === id && i.type === type));
         } else {
-            clientCart = clientCart.filter(i => !(i.title === title && i.type === type));
-            localStorage.setItem('clientCart', JSON.stringify(clientCart));
+            item.quantity = newQty;
         }
-        await loadCart();
-        notifyCartUpdated();
-        showToast('Удалено');
-    };
-
-    window.updateQuantity = async (title, type, delta) => {
-        const isLoggedIn = !!sessionStorage.getItem('user_id');
-        let newQty;
-
-        if (isLoggedIn) {
-            const item = cartItems.find(i => i.title === title && i.type === type);
-            if (!item) return;
-            newQty = Math.max(0, item.quantity + delta);
-            if (newQty === 0) return removeFromCart(title, type);
-            await api('/api/cart/update', {
-                method: 'POST',
-                body: JSON.stringify({ title, type, quantity: newQty })
-            });
-        } else {
-            const item = clientCart.find(i => i.title === title && i.type === type);
-            if (!item) return;
-            newQty = Math.max(0, item.quantity + delta);
-            if (newQty === 0) {
-                clientCart = clientCart.filter(i => !(i.title === title && i.type === type));
-            } else {
-                item.quantity = newQty;
-            }
-            localStorage.setItem('clientCart', JSON.stringify(clientCart));
-        }
-        await loadCart();
-        notifyCartUpdated();
-    };
+        localStorage.setItem('clientCart', JSON.stringify(clientCart));
+    }
+    await loadCart();
+    notifyCartUpdated();
+};
 
     // === ЗАГРУЗКА КОРЗИНЫ ===
-// === ЗАГРУЗКА КОРЗИНЫ — ФИНАЛЬНАЯ ВЕРСИЯ 2025 ===
-const loadCart = async () => {
+window.loadCart = async () => {
     const isLoggedIn = !!sessionStorage.getItem('user_id');
     let items = [];
 
     if (isLoggedIn) {
-        // Авторизованный пользователь — берём с сервера
         const { ok, data } = await api('/api/cart/get');
-        if (ok && Array.isArray(data)) {
-            items = data.map(i => ({
-                ...i,
-                // Сервер может присылать image или image_url — берём любой
-                image_url: i.image_url || i.image || '/static/assets/no-image.png'
-            }));
-        }
+        if (ok && Array.isArray(data)) items = data;
     } else {
-        // Неавторизованный — берём из localStorage (clientCart)
-        // ВАЖНО: НЕ ПЕРЕТИРАЕМ image_url — он уже сохранён при добавлении!
-        items = clientCart.map(i => ({
-            ...i,
-            // Просто копируем как есть. Если нет — ставим заглушку
-            image_url: i.image_url || '/static/assets/no-image.png'
-        }));
+        // Гость — отправляем список {id, type, quantity} → сервер возвращает полные данные
+        const { ok, data } = await api('/api/cart/get-guest', {
+            method: 'POST',
+            body: JSON.stringify({ cart: clientCart })
+        });
+        if (ok && Array.isArray(data)) items = data;
     }
 
-    cartItems = items;
+    cartItems = items.map(i => ({
+        id: i.id || i.product_id || i.service_id,
+        title: i.title,
+        type: i.type,
+        quantity: i.quantity,
+        price_cents: Number(i.price_cents) || 0,
+        image_url: i.image_url || '/static/assets/no-image.png',
+        old_price_cents: i.old_price_cents || null
+    }));
+
     renderMiniCart();
     notifyCartUpdated();
 };
 
     const renderMiniCart = () => {
-        const { count, sumStr } = calculateTotal(cartItems);
+    const { count, sumStr } = calculateTotal(cartItems);
 
-        elements.cartCount.textContent = count;
-        elements.cartCount.classList.toggle('show', count > 0);
+    elements.cartCount.textContent = count;
+    elements.cartCount.classList.toggle('show', count > 0);
+    elements.miniCartTotal.textContent = `Итого: ${sumStr}`;
 
-        elements.miniCartTotal.textContent = `Итого: ${sumStr}`;
-
-        elements.miniCartItems.innerHTML = cartItems.length === 0
-            ? '<div style="padding:1.5rem;text-align:center;color:#888;font-size:0.9rem;">Корзина пуста</div>'
-            : cartItems.map(item => `
-                <div class="mini-cart-item">
-                    <img src="${item.image_url}" class="mini-cart-img" onerror="this.src='/static/assets/no-image.png'">
-                    <div class="mini-cart-info">
-                        <h4>${item.title}</h4>
-                        <div class="mini-cart-price">${item.price_str}</div>
-                        <div class="mini-quantity-controls">
-                            <button class="quantity-btn" onclick="updateQuantity('${escapeJS(item.title)}', '${item.type}', -1)">−</button>
-                            <span>${item.quantity}</span>
-                            <button class="quantity-btn" onclick="updateQuantity('${escapeJS(item.title)}', '${item.type}', 1)">+</button>
-                        </div>
+    elements.miniCartItems.innerHTML = cartItems.length === 0
+        ? '<div style="padding:1.5rem;text-align:center;color:#888;font-size:0.9rem;">Корзина пуста</div>'
+        : cartItems.map(item => `
+            <div class="mini-cart-item">
+                <img src="${item.image_url}" class="mini-cart-img" onerror="this.src='/static/assets/no-image.png'">
+                <div class="mini-cart-info">
+                    <h4>${escapeJS(item.title)}</h4>
+                    <div class="mini-cart-price">${formatPrice(item.price_cents || 0)}</div>
+                    <div class="mini-quantity-controls">
+                        <button class="quantity-btn" onclick="updateQuantity(${item.id}, '${item.type}', -1)">−</button>
+                        <span>${item.quantity}</span>
+                        <button class="quantity-btn" onclick="updateQuantity(${item.id}, '${item.type}', 1)">+</button>
                     </div>
-                    <button class="clear-cart-btn" onclick="removeFromCart('${escapeJS(item.title)}', '${item.type}')">
-                        <i class="fas fa-trash"></i>
-                    </button>
                 </div>
-            `).join('');
-    };
+                <button class="clear-cart-btn" onclick="removeFromCart(${item.id}, '${item.type}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `).join('');
+};
 
     // === АНИМАЦИЯ КОРЗИНЫ ===
     const openCartModal = () => {
@@ -384,13 +477,7 @@ const loadCart = async () => {
 
         
 
-        // И вызывай её везде после изменения корзины:
-        const loadCart = async () => {
-            // ... загрузка ...
-            cartItems = items;
-            renderMiniCart();
-            notifyCartUpdated(); // ← добавь
-        };
+
 
         // === ОБЩИЕ СОБЫТИЯ ===
         elements.closeCartModal?.addEventListener('click', closeCartModal);
@@ -408,27 +495,48 @@ const loadCart = async () => {
 
     // === ИНИЦИАЛИЗАЦИЯ ===
     loadCart();
-        // === АКТИВАЦИЯ АНТИСПАМА НА КНОПКАХ КОРЗИНЫ ===
-    // Перехватываем ВСЕХ кликов по кнопкам изменения количества и удаления
-    document.addEventListener('click', (e) => {
-        const btn = e.target.closest('.quantity-btn, .clear-cart-btn');
-        if (!btn) return;
+    document.addEventListener('userLoggedOut', () => {
+        cartItems = [];
+        clientCart = [];
+        localStorage.removeItem('clientCart');
 
-        // Если сейчас кулдаун — просто игнорируем клик
-        if (Date.now() < cartBlockedUntil) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            return false;
+        // Обновляем визуально мини-корзину
+        renderMiniCart();
+
+        // Скрываем бейджик с количеством
+        if (elements.cartCount) {
+            elements.cartCount.textContent = '0';
+            elements.cartCount.classList.remove('show');
         }
 
-        // Регистрируем действие (считаем +1 к счётчику)
-        if (!registerCartAction()) {
-            // registerCartAction вернёт false, если превышен лимит → уже вызван блок
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            return false;
+        // Обновляем итого
+        if (elements.miniCartTotal) {
+            elements.miniCartTotal.textContent = 'Итого: 0 ₽';
         }
 
-        // Если всё ок — ничего не делаем, клик пройдёт в оригинальный onclick
-    }, true); // ← capturing phase, чтобы сработает ДО onclick в разметке
+        // Уведомляем большую корзину на /bin (чтобы и там почистилось)
+        document.dispatchEvent(new CustomEvent('cartUpdated', {
+            detail: { items: [], count: 0, total: '0 ₽' }
+        }));
+
+        // Закрываем модалку мини-корзины, если она открыта
+        if (elements.cartModal?.classList.contains('active')) {
+            closeCartModal();
+        }
+
+        console.log('Мини-корзина очищена при выходе из аккаунта');
+    });
+
+    // Дополнительная страховка: если sessionStorage почистился вручную
+    const originalRemoveItem = sessionStorage.removeItem;
+    sessionStorage.removeItem = function(key) {
+        if (key === 'user_id' || key === 'token' || key === 'phone') {
+            setTimeout(() => {
+                if (!sessionStorage.getItem('user_id')) {
+                    document.dispatchEvent(new CustomEvent('userLoggedOut'));
+                }
+            }, 50);
+        }
+        return originalRemoveItem.apply(this, arguments);
+    };
 });

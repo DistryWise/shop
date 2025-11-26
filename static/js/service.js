@@ -866,6 +866,9 @@ async function openModal(id, pushHistory = true) {
 
     await loadReviews(productId);
 
+    // ВОТ ЭТА СТРОЧКА — ВСЁ, ЧТО НУЖНО ДОБАВИТЬ
+    document.getElementById('modal-order').dataset.serviceId = p.id;
+
     // === ОТКРЫВАЕМ МОДАЛКУ ===
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';

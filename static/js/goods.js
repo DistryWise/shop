@@ -127,7 +127,7 @@ window.addEventListener('scroll', () => {
 
 async function loadMainCarousel() {
   try {
-    const res = await fetch('/api/landing/carousel/main');
+    const res = await fetch('/api/landing/carousel/products1');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const slides = await res.json();
 
@@ -290,7 +290,7 @@ hotspot.addEventListener('click', () => {
   });
 
   // Если ссылка на нашу услугу — открываем модалку, а не новую вкладку
-  if (h.url.includes('/services#') || h.url.startsWith('#')) {
+  if (h.url.includes('/goods#') || h.url.startsWith('#')) {
     const slug = h.url.split('#')[1];
     if (slug) {
       // Если уже на /services — просто открываем
@@ -333,7 +333,7 @@ hotspot.addEventListener('click', () => {
 // === ВТОРАЯ КАРУСЕЛЬ — ПОЛНОСТЬЮ ИСПРАВЛЕНА ===
 async function loadSecondaryCarousel() {
   try {
-    const res = await fetch('/api/landing/carousel/services');
+    const res = await fetch('/api/landing/carousel/products2');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const slides = await res.json();
 
@@ -624,11 +624,12 @@ function createCard(p) {
   return card;
 }
       // === ПАРСИНГ ЦЕНЫ ===
-      function parsePrice(str) {
-        if (!str) return 0;
-        return parseInt(str.replace(/[^0-9]/g, '')) || 0;
-      }
-
+      function parsePrice(price) {
+  if (!price && price !== 0) return 0;
+  const str = String(price).trim();
+  if (!str || str === 'null' || str === 'undefined') return 0;
+  return parseInt(str.replace(/[^0-9]/g, '')) || 0;
+}
 
 
       function renderAdBanner() {
@@ -767,15 +768,17 @@ function createCard(p) {
           updateLoadMore();
       }
 
-      async function loadProducts() {
-        try {
-          const res = await fetch('/api/services');
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    async function loadProducts() {
+    try {
+        // БЫЛО: const res = await fetch('/api/services');
+        const res = await fetch('/api/products');  // ← ИЗМЕНИЛ
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-          const data = await res.json();
-          if (!Array.isArray(data)) throw new Error('API вернул не массив');
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error('API вернул не массив');
 
-          allProducts = data;
+        allProducts = data;
+
 
           const catalogList = document.querySelector('.catalog-list');
           catalogList.innerHTML = '';
@@ -783,7 +786,7 @@ function createCard(p) {
           const allLi = document.createElement('li');
           allLi.className = 'active';
           allLi.dataset.filter = 'all';
-          allLi.innerHTML = '<a>ALL SERVICES</a>';
+          allLi.innerHTML = '<a>ALL</a>';
           catalogList.appendChild(allLi);
 
           const categories = [...new Set(allProducts.map(p => p.category).filter(Boolean))];
@@ -822,32 +825,31 @@ function createCard(p) {
 
 async function openModal(id, pushHistory = true) {
   try {
-    // Если передан slug вместо id — найдём по нему
     let productId = id;
     if (typeof id === 'string' && isNaN(id)) {
-      const product = allProducts.find(p => 
-        p.slug === id || 
-        p.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') === id
-      );
-      if (!product) throw new Error('Услуга не найдена');
-      productId = product.id;
+      const found = allProducts.find(p => p.slug === id || p.id == id);
+      if (!found) throw new Error('Не найден');
+      productId = found.id;
     }
 
-    const res = await fetch(`/api/service/${productId}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    // ВНИМАНИЕ: ДЛЯ ТОВАРОВ — /api/product/, ДЛЯ УСЛУГ — /api/service/
+    const isGoodsPage = location.pathname.includes('/goods');
+    const endpoint = isGoodsPage ? `/api/product/${productId}` : `/api/service/${productId}`;
+
+    const res = await fetch(endpoint);
+    if (!res.ok) throw new Error('404');
     const p = await res.json();
 
-    // === Заполняем модалку ===
+    // === УНИВЕРСАЛЬНО ДЛЯ ТОВАРОВ И УСЛУГ ===
+    const images = (p.image_urls || []).length > 0 
+      ? p.image_urls 
+      : ['/static/assets/no-image.png'];
+
     const mainImg = document.getElementById('modal-img');
     const thumbs = document.getElementById('modal-thumbs');
     thumbs.innerHTML = '';
 
-    const images = (p.image_urls || []).map(url => 
-      url.startsWith('/') ? url : `/static/uploads/services/${url}`
-    );
-    if (images.length === 0) images.push('/static/assets/no-image.png');
     mainImg.src = images[0];
-
     images.forEach((src, i) => {
       const thumb = document.createElement('img');
       thumb.src = src;
@@ -860,37 +862,38 @@ async function openModal(id, pushHistory = true) {
       thumbs.appendChild(thumb);
     });
 
-    document.getElementById('modal-title').textContent = p.title || '';
-    document.getElementById('modal-price').textContent = p.price ? `₽ ${p.price}` : 'ПО ЗАПРОСУ';
-    document.getElementById('modal-desc').textContent = p.full_desc || 'Описание отсутствует';
+    document.getElementById('modal-title').textContent = p.title || p.name || 'Без названия';
+    document.getElementById('modal-price').textContent = p.price ? `₽ ${Number(p.price).toLocaleString()}` : 'По запросу';
+    document.getElementById('modal-desc').textContent = p.full_desc || p.description || p.short_desc || 'Описание отсутствует';
 
-    await loadReviews(productId);
+    // Отзывы (если есть эндпоинт — подключишь потом)
+    document.getElementById('modal-reviews').innerHTML = '<p style="color:#888">Отзывы скоро появятся</p>';
+    document.getElementById('no-reviews').style.display = 'block';
 
-    // === ОТКРЫВАЕМ МОДАЛКУ ===
-    modal.classList.add('active');
+    // === ОТКРЫВАЕМ ЕДИНУЮ КРАСИВУЮ МОДАЛКУ ===
+    document.getElementById('modal').classList.add('active');
     document.body.style.overflow = 'hidden';
 
-    // === ОБНОВЛЯЕМ URL (только если нужно) ===
+    // URL с хешем
     if (pushHistory) {
-      const slug = p.slug || p.title?.toLowerCase().replace(/[^a-zа-я0-9]+/gi, '-').replace(/^-|-$/g, '') || productId;
-      const newUrl = `${window.location.pathname}#${slug}`;
-      history.pushState({ modal: true, id: productId }, '', newUrl);
+      const slug = (p.slug || p.title || '').toLowerCase().replace(/[^a-zа-я0-9]+/g, '-').replace(/^-|-$/g, '');
+      history.pushState({ modal: true, id: productId }, '', `#${slug}`);
     }
 
   } catch (err) {
-    console.error('[MODAL] Ошибка:', err);
-    showToast('Услуга не найдена', 'error');
+    console.error('openModal error:', err);
+    toast('Товар не найден', 'error');
   }
 }
 
-      async function loadReviews(serviceId) {
-        console.log('[REVIEWS] Загрузка для услуги ID:', serviceId);
+      async function loadReviews(productId) {
+
         try {
-          const res = await fetch(`/api/service_reviews/${serviceId}`);
-          if (!res.ok) {
-            console.warn(`[REVIEWS] HTTP ${res.status} → /api/service_reviews/${serviceId}`);
-            throw new Error(`HTTP ${res.status}`);
-          }
+          // БЫЛО: const res = await fetch(`/api/service_reviews/${serviceId}`);
+    const res = await fetch(`/api/product_reviews/${productId}`);  // ← ИЗМЕНИЛ
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    
 
           const data = await res.json();
           if (!data.success) throw new Error('API error');
@@ -958,7 +961,7 @@ async function openModal(id, pushHistory = true) {
         return div.innerHTML;
       }
 
-      function setupReviewForm(serviceId) {
+      function setupReviewForm(productId) {
         const form = document.getElementById('reviewForm');
         const stars = document.querySelectorAll('#starRating span');
         const submitBtn = document.getElementById('submitReview');
@@ -987,7 +990,7 @@ async function openModal(id, pushHistory = true) {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                serviceId,
+                productId,
                 author: name,
                 stars: parseInt(selectedRating),
                 text
@@ -999,7 +1002,7 @@ async function openModal(id, pushHistory = true) {
               form.reset();
               stars.forEach(s => s.classList.remove('active'));
               stars[4].classList.add('active');
-              await loadReviews(serviceId);
+              await loadReviews(productId);
             } else {
               alert('Ошибка отправки');
             }
@@ -1315,7 +1318,7 @@ document.addEventListener('click', e => {
 
   // Если ссылка ведёт на наш же /services#что-то
   const url = hotspot.dataset.url || hotspot.href || '';
-  const isOurServiceLink = url.includes('/services#') || url.startsWith('#');
+  const isOurServiceLink = url.includes('/goods#') || url.startsWith('#');
 
   if (isOurServiceLink && window.location.pathname.includes('/services')) {
     e.preventDefault(); // ← КРИТИЧНО! Блокируем переход

@@ -76,60 +76,99 @@
   </div>
 
 
-<!-- ПЛАВАЮЩАЯ ПАНЕЛЬ С ПОДДЕРЖКОЙ НЕСКОЛЬКИХ ЗАКАЗОВ -->
+<!-- ПЛАВАЮЩАЯ ПАНЕЛЬ С ПОДДЕРЖКОЙ НЕСКОЛЬКИХ ЗАКАЗОВ — ПОЛНОСТЬЮ ЧЁРНО-БЕЛАЯ -->
 <div id="floatingOrderBar" style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:9998; display:none;">
-  <div id="multiOrderPill" onclick="openMultiOrderModal()" style="cursor:pointer; background:rgba(20,20,30,0.95); backdrop-filter:blur(30px); border:1px solid rgba(255,255,255,0.1); border-radius:28px; padding:1rem 1.8rem; display:flex; align-items:center; gap:1.2rem; box-shadow:0 20px 50px rgba(0,0,0,0.5); transition:all 0.4s;">
+  <div id="multiOrderPill" onclick="openMultiOrderModal()" style="
+    cursor:pointer;
+    background:var(--pill-bg);
+    backdrop-filter:blur(30px);
+    border:1px solid var(--pill-border);
+    border-radius:28px;
+    padding:1rem 1.8rem;
+    display:flex;
+    align-items:center;
+    gap:1.2rem;
+    box-shadow:var(--pill-shadow);
+    transition:all 0.4s;
+  ">
     <div style="position:relative;">
-      <i class="fas fa-truck" style="font-size:1.9rem; color:#00ff95;"></i>
-      <span id="activeOrdersBadge" style="position:absolute; top:-6px; right:-10px; background:#00ff95; color:#000; font-size:0.75rem; font-weight:700; min-width:18px; height:18px; border-radius:9px; display:flex; align-items:center; justify-content:center; padding:0 5px;">1</span>
+      <i class="fas fa-truck" style="font-size:1.9rem; color:var(--icon-color);"></i>
+      <span id="activeOrdersBadge" style="
+        position:absolute; top:-6px; right:-10px;
+        background:var(--badge-bg); color:var(--badge-fg);
+        font-size:0.75rem; font-weight:700;
+        min-width:18px; height:18px; border-radius:9px;
+        display:flex; align-items:center; justify-content:center;
+        padding:0 5px;
+      ">1</span>
     </div>
     <div>
-      <div style="font-weight:600; color:#fff; font-size:1.12rem;">
+      <div style="font-weight:600; color:var(--text-primary); font-size:1.12rem;">
         <span id="pillMainText">Заказ №1423 в работе</span>
       </div>
-      <div style="font-size:0.88rem; color:#aaa; margin-top:0.3rem;">
+      <div style="font-size:0.88rem; color:var(--text-secondary); margin-top:0.3rem;">
         <span id="pillSubText">Нажмите для подробностей</span>
       </div>
     </div>
-    <i class="fas fa-chevron-up" style="font-size:1.4rem; color:#aaa; margin-left:auto;"></i>
+    <i class="fas fa-chevron-up" style="font-size:1.4rem; color:var(--text-secondary); margin-left:auto;"></i>
   </div>
 </div>
 
-<!-- РАСШИРЕННАЯ APPLE-МОДАЛКА ДЛЯ АКТИВНЫХ ЗАКАЗОВ (2025) -->
-<div id="multiOrderModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); backdrop-filter:blur(32px); -webkit-backdrop-filter:blur(32px); z-index:9999; justify-content:center; align-items:center; padding:16px; box-sizing:border-box;">
-  
-  <div style="background:rgba(15,15,30,0.98); backdrop-filter:blur(50px); border-radius:32px; width:100%; max-width:720px; max-height:94vh; overflow:hidden; box-shadow:0 50px 120px rgba(0,0,0,0.9); border:1px solid rgba(255,255,255,0.08); position:relative;">
-    
-    <!-- iOS-граббер -->
+<!-- МОДАЛКА АКТИВНЫХ ЗАКАЗОВ — 100% ЧЁРНО-БЕЛАЯ В ЛЮБОЙ ТЕМЕ -->
+<div id="multiOrderModal" style="display:none; position:fixed; inset:0; background:var(--modal-overlay); backdrop-filter:blur(32px); -webkit-backdrop-filter:blur(32px); z-index:9999; justify-content:center; align-items:center; padding:16px; box-sizing:border-box;">
+  <div style="
+    background:var(--modal-bg);
+    backdrop-filter:blur(50px);
+    border-radius:32px;
+    width:100%; max-width:720px; max-height:94vh;
+    overflow:hidden;
+    box-shadow:var(--modal-shadow);
+    border:1px solid var(--modal-border);
+    position:relative;
+  ">
+    <!-- Граббер -->
     <div style="height:56px; display:flex; align-items:center; justify-content:center; padding-top:env(safe-area-inset-top);">
-      <div style="width:52px; height:6px; background:rgba(255,255,255,0.35); border-radius:4px;"></div>
+      <div style="width:52px; height:6px; background:var(--grabber); border-radius:4px;"></div>
     </div>
 
     <!-- Заголовок -->
     <div style="padding:0 2.5rem 1.8rem; text-align:center;">
-      <h2 style="margin:0; font-size:2.4rem; font-weight:800; color:#fff; letter-spacing:-0.5px;">
+      <h2 style="margin:0; font-size:2.4rem; font-weight:800; color:var(--text-primary); letter-spacing:-0.5px;">
         Ваши заказы
       </h2>
-      <p style="margin:0.8rem 0 0; color:#aaa; font-size:1.15rem;">
-        <span id="activeOrdersCountText">3 заказа</span> в обработке · Обновляется автоматически
+      <p style="margin:0.8rem 0 0; color:var(--text-secondary); font-size:1.15rem;">
+        <span id="activeOrdersCountText"> Заказы</span> в обработке · Обновляется автоматически
       </p>
     </div>
 
-    <!-- Список заказов — теперь шире и удобнее -->
+    <!-- Список заказов -->
     <div id="ordersVerticalList" style="padding:0 2.5rem 2.5rem; display:flex; flex-direction:column; gap:2.2rem; max-height:60vh; overflow-y:auto; scrollbar-width:none;">
-      <!-- Заказы подгружаются через JS -->
+      <!-- JS подгрузит сюда карточки -->
     </div>
 
-    <!-- Футер с кнопкой закрытия -->
-    <div style="padding:0 2.5rem 3rem calc(3rem + env(safe-area-inset-bottom));">
-      <button onclick="closeMultiOrderModal()" 
-              style="width:100%; background:rgba(255,255,255,0.14); color:#fff; border:none; padding:1.3rem; border-radius:24px; font-size:1.2rem; font-weight:600; cursor:pointer; transition:all 0.4s; backdrop-filter:blur(10px);"
-              onmouseover="this.style.background='rgba(255,255,255,0.24)'"
-              onmouseout="this.style.background='rgba(255,255,255,0.14)'">
-        Закрыть
-      </button>
-    </div>
-  </div>
+    <!-- Кнопка закрытия -->
+<!-- Кнопка закрытия модалки активных заказов -->
+<div style="padding:0 2.5rem 3rem calc(3rem + env(safe-area-inset-bottom));">
+  <button type="button"
+          onclick="closeMultiOrderModal()"
+          style="
+            width:100%; 
+            background:var(--btn-bg); 
+            color:var(--btn-fg);
+            border:none; 
+            padding:1.3rem; 
+            border-radius:24px;
+            font-size:1.2rem; 
+            font-weight:600; 
+            cursor:pointer;
+            transition:all 0.4s;
+          "
+          onmouseover="this.style.background='var(--btn-hover)'"
+          onmouseout="this.style.background='var(--btn-bg)'">
+    Закрыть
+  </button>
+</div>
+</div>
 </div>
   
   <!-- КОНТЕНТ КОРЗИНЫ -->
@@ -137,7 +176,7 @@
     <div>
       <h1 class="page-title">Корзина</h1>
       <div id="cartItemsList">
-        <div class="cart-empty">Корзина пуста</div>
+
       </div>
       <div class="pagination" id="pagination" style="display:none; justify-content:center; margin-top:3rem; gap:1rem;"></div>
     </div>
@@ -247,247 +286,14 @@
   </div>
 </div>
   <!-- СКРИПТЫ -->
+   <script src="/static/js/cart.js" defer></script>
   <script src="/static/js/search.js"></script>
-  <script src="/static/js/auth.js"></script>      
-  <script src="/static/js/cart.js" defer></script>
+  <script src="/static/js/auth.js"></script>     
   <script src="/static/js/feedback.js"></script>
   <script src="/static/js/contacts.js" defer></script>
   <script src="/static/js/ai.js"></script>
   <script src="/static/js/bin.js"></script>
   <script src="/static/js/statuschain.js" defer></script>
-
-<script>
-// === ОБНОВЛЕНИЕ КОРЗИНЫ С ПОДДЕРЖКОЙ ПАГИНАЦИИ (по 4 товара на странице) ===
-let allCartItems = [];
-let currentPage = 1;
-const ITEMS_PER_PAGE = 4;
-
-// 1. ГЛАВНОЕ: Ловим финальный статус из statuschain.js
-document.addEventListener('orderStatusChanged', (e) => {
-    const { orderId, status, isFinal } = e.detail;
-
-    if (!isFinal) return; // нам только завершённые и отменённые
-
-    if (status === 'completed' || status === 'cancelled') {
-        console.log(`Заказ #${orderId} завершён/отменён → принудительно чистим корзину`);
-
-        // ЖЁСТКО обнуляем всё
-        allCartItems = [];
-        localStorage.removeItem('clientCart');
-
-        // Обновляем интерфейс
-        document.getElementById('cartCount').textContent = '0';
-        document.getElementById('miniCartItems').innerHTML = '<div class="mini-cart-empty">Корзина пуста</div>';
-        document.getElementById('miniCartTotal').textContent = 'Итого: 0 ₽';
-
-        // Кидаем событие — чтобы перерисовалась основная корзина
-        document.dispatchEvent(new CustomEvent('cartUpdated', {
-            detail: { items: [], count: 0, total: '0 ₽' }
-        }));
-    }
-});
-
-// 2. Загрузка корзины при открытии страницы
-function loadCartFromStorage() {
-    try {
-        const saved = localStorage.getItem('clientCart');
-        if (saved) {
-            allCartItems = JSON.parse(saved) || [];
-            if (allCartItems.length > 0) {
-                const count = allCartItems.reduce((s, i) => s + i.quantity, 0);
-                const total = allCartItems.reduce((s, i) => s + i.price * i.quantity, 0);
-                document.dispatchEvent(new CustomEvent('cartUpdated', {
-                    detail: { items: allCartItems, count, total: total + ' ₽' }
-                }));
-            }
-        }
-    } catch (e) {
-        allCartItems = [];
-    }
-}
-document.addEventListener('DOMContentLoaded', loadCartFromStorage);
-
-// 3. Обычное обновление корзины (добавление/удаление товаров)
-document.addEventListener('cartUpdated', (e) => {
-    const { items, count, total } = e.detail;
-
-    allCartItems = items || [];
-    currentPage = 1;
-
-    // Обновляем шапку
-    document.getElementById('cartCount').textContent = count || 0;
-
-    // Обновляем боковую панель
-    document.getElementById('summaryCount').textContent = count || 0;
-    document.getElementById('summaryTotal').textContent = total || '0 ₽';
-
-    // Кнопка оформления
-    const btn = document.getElementById('checkoutBtn');
-    btn.disabled = (count || 0) === 0;
-    btn.textContent = count === 0 ? 'Оформить заказ' : 'Оформить заказ';
-
-    renderCartPage();
-});
-
-// 4. Твой старый рендер (ничего не трогаем — он и так идеальный)
-function renderCartPage() {
-    const list = document.getElementById('cartItemsList');
-    const pagination = document.getElementById('pagination');
-
-    if (allCartItems.length === 0) {
-        list.innerHTML = '<div class="cart-empty">Корзина пуста</div>';
-        pagination.style.display = 'none';
-        return;
-    }
-
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    const pageItems = allCartItems.slice(start, end);
-
-    list.innerHTML = pageItems.map(item => `
-        <div class="cart-item">
-            <img src="${item.image_url || '/static/assets/no-image.png'}" alt="${item.title}">
-            <div style="flex:1;">
-                <div class="cart-item-title">${item.title}</div>
-                <div class="cart-item-price">${item.price_str}</div>
-                <div style="margin-top:1rem;display:flex;align-items:center;gap:1rem;">
-                    <div class="quantity-controls" style="display:flex;align-items:center;gap:0.8rem;background:rgba(255,255,255,0.08);padding:0.5rem 1rem;border-radius:16px;">
-                        <button onclick="updateQuantity('${item.title.replace(/'/g, "\\'")}', '${item.type}', -1)" style="background:none;border:none;color:white;font-size:1.4rem;">−</button>
-                        <span style="min-width:30px;text-align:center;font-weight:600;">${item.quantity}</span>
-                        <button onclick="updateQuantity('${item.title.replace(/'/g, "\\'")}', '${item.type}', 1)" style="background:none;border:none;color:white;font-size:1.4rem;">+</button>
-                    </div>
-                    <button onclick="removeFromCart('${item.title.replace(/'/g, "\\'")}', '${item.type}')" style="background:none;border:none;color:#ff6b6b;font-size:1.3rem;">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    `).join('');
-
-    // === Пагинация ===
-    const totalPages = Math.ceil(allCartItems.length / ITEMS_PER_PAGE);
-    if (totalPages <= 1) {
-        pagination.style.display = 'none';
-        return;
-    }
-
-    pagination.style.display = 'flex';
-    pagination.innerHTML = '';
-
-    // Кнопка «Назад»
-    if (currentPage > 1) {
-        const prev = document.createElement('button');
-        prev.textContent = '‹';
-        prev.className = 'pagination-btn';
-        prev.onclick = () => {
-            currentPage--;
-            renderCartPage();
-            document.querySelector('main > div').scrollIntoView({ behavior: 'smooth' });
-        };
-        pagination.appendChild(prev);
-    }
-
-    // Номера страниц (умная логика: показываем до 5 кнопок)
-    const maxButtons = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
-    let endPage = Math.min(totalPages, startPage + maxButtons - 1);
-    if (endPage - startPage + 1 < maxButtons) {
-        startPage = Math.max(1, endPage - maxButtons + 1);
-    }
-
-    if (startPage > 1) {
-        const first = document.createElement('button');
-        first.textContent = '1';
-        first.className = 'pagination-btn';
-        first.onclick = () => { currentPage = 1; renderCartPage(); scrollToCart(); };
-        pagination.appendChild(first);
-
-        if (startPage > 2) {
-            const dots = document.createElement('span');
-            dots.textContent = '...';
-            dots.style.padding = '0 0.8rem';
-            dots.style.color = '#888';
-            pagination.appendChild(dots);
-        }
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-        const btn = document.createElement('button');
-        btn.textContent = i;
-        btn.className = 'pagination-btn';
-        if (i === currentPage) {
-            btn.style.background = '#00ff95';
-            btn.style.color = '#000';
-            btn.style.fontWeight = '600';
-        }
-        btn.onclick = () => {
-            currentPage = i;
-            renderCartPage();
-            scrollToCart();
-        };
-        pagination.appendChild(btn);
-    }
-
-    if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-            const dots = document.createElement('span');
-            dots.textContent = '...';
-            dots.style.padding = '0 0.8rem';
-            dots.style.color = '#888';
-            pagination.appendChild(dots);
-        }
-
-        const last = document.createElement('button');
-        last.textContent = totalPages;
-        last.className = 'pagination-btn';
-        last.onclick = () => { currentPage = totalPages; renderCartPage(); scrollToCart(); };
-        pagination.appendChild(last);
-    }
-
-    // Кнопка «Вперёд»
-    if (currentPage < totalPages) {
-        const next = document.createElement('button');
-        next.textContent = '›';
-        next.className = 'pagination-btn';
-        next.onclick = () => {
-            currentPage++;
-            renderCartPage();
-            scrollToCart();
-        };
-        pagination.appendChild(next);
-    }
-}
-
-function scrollToCart() {
-    document.querySelector('main > div').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-// === Глобальное обновление корзины ===
-document.addEventListener('cartUpdated', (e) => {
-    const { items, count, total } = e.detail;
-
-    allCartItems = items;
-    currentPage = 1; // сбрасываем на первую страницу при обновлении
-
-    // Обновляем счётчики
-    document.getElementById('summaryCount').textContent = count;
-    document.getElementById('summaryTotal').textContent = total;
-
-    // Кнопка оформления
-    const checkoutBtn = document.getElementById('checkoutBtn');
-    checkoutBtn.disabled = count === 0;
-    checkoutBtn.textContent = count === 0 ? 'Оформить заказ' : 'Оформить заказ';
-
-    renderCartPage();
-});
-
-// При загрузке страницы — тоже рендерим (если корзина уже есть в localStorage)
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-        if (allCartItems.length > 0) renderCartPage();
-    }, 100);
-});
-</script>
 
 <script>
 // /static/js/bin.js — ВСЁ, КРОМЕ КОРЗИНЫ (корзина теперь живёт в cart.js)
@@ -549,43 +355,68 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   };
 
-  const reliableToast = (title, message = '', isError = false, duration = 3500) => {
-    document.querySelectorAll('.reliable-toast').forEach(t => t.remove());
-    const toast = document.createElement('div');
-    toast.className = `reliable-toast ${isError ? 'error' : 'success'}`;
-    toast.innerHTML = `
-      <div class="toast-content">
-        <i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>
-        <div>
-          <strong>${title}</strong>
-          ${message ? `<div style="font-size:0.9rem;opacity:0.9;margin-top:0.3rem;">${message}</div>` : ''}
-        </div>
-        <button class="toast-close">×</button>
-      </div>
-    `;
-    toast.style.cssText = `
-      position:fixed;bottom:30px;left:50%;transform:translateX(-50%);
-      background:${isError?'#ff4444':'#4ade80'};color:white;padding:1rem 1.5rem;
-      border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.3);z-index:10000;
-      display:flex;align-items:center;gap:1rem;font-size:1.1rem;font-weight:600;
-      min-width:300px;max-width:90%;animation:toastSlide 0.4s ease;
-    `;
-    document.body.appendChild(toast);
-    toast.querySelector('.toast-close').onclick = () => toast.remove();
-    setTimeout(() => {
-      toast.style.animation = 'toastFade 0.4s ease forwards';
-      setTimeout(() => toast.remove(), 400);
-    }, duration);
-  };
+const reliableToast = (title, message = '', isError = false, duration = 4000) => {
+  // Удаляем все предыдущие тосты
+  document.querySelectorAll('.reliable-toast').forEach(t => t.remove());
 
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes toastSlide { from { transform: translateX(-50%) translateY(100px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
-    @keyframes toastFade { to { transform: translateX(-50%) translateY(100px); opacity: 0; } }
-    .reliable-toast .toast-close { background:none;border:none;color:white;font-size:1.6rem;cursor:pointer;opacity:0.8; }
-    .reliable-toast .toast-close:hover { opacity:1; }
+  const toast = document.createElement('div');
+  toast.className = 'reliable-toast';
+  toast.innerHTML = `
+    <div class="toast-content">
+      <i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>
+      <div>
+        <strong>${title}</strong>
+        ${message ? `<div style="font-size:0.92rem; opacity:0.92; margin-top:4px;">${message}</div>` : ''}
+      </div>
+    </div>
   `;
-  document.head.appendChild(style);
+
+  // Стили — всё в одном месте, красиво и без багов
+  Object.assign(toast.style, {
+    position: 'fixed',
+    bottom: '30px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: isError ? '#ff4444' : '#00ff95',
+    color: isError ? 'white' : 'black',
+    padding: '16px 28px',
+    borderRadius: '22px',
+    boxShadow: '0 12px 40px rgba(0,0,0,0.35)',
+    zIndex: '99999',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+    fontSize: '1.15rem',
+    fontWeight: '600',
+    maxWidth: '90%',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    animation: 'toastUp 0.5s cubic-bezier(0.22, 0.61, 0.36, 1)',
+    fontFamily: 'Inter, sans-serif'
+  });
+
+  document.body.appendChild(toast);
+
+  // Авто-исчезновение
+  setTimeout(() => {
+    toast.style.animation = 'toastDown 0.4s ease forwards';
+    setTimeout(() => toast.remove(), 400);
+  }, duration);
+};
+
+// Анимации — вставь один раз в <head или в этот же скрипт
+const toastStyles = document.createElement('style');
+toastStyles.textContent = `
+  @keyframes toastUp {
+    from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+    to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+  }
+  @keyframes toastDown {
+    to { transform: translateX(-50%) translateY(80px); opacity: 0; }
+  }
+  .reliable-toast i { font-size: 1.6rem; }
+`;
+document.head.appendChild(toastStyles);
 
 // Красивая модалка "Лимит достигнут"
 document.body.insertAdjacentHTML('beforeend', `
@@ -596,7 +427,7 @@ document.body.insertAdjacentHTML('beforeend', `
     </div>
     <h2 style="margin:0 0 1rem; font-size:1.9rem; color:#fff;">Лимит активных заказов</h2>
     <p style="margin:0 0 2rem; color:#ccc; font-size:1.1rem; line-height:1.5;">
-      У вас уже есть <strong>3 активных заказа</strong>.<br>
+      У вас уже есть <strong>активные заказа</strong>.<br>
       Дождитесь завершения хотя бы одного, чтобы оформить новый.
     </p>
     <button onclick="document.getElementById('activeOrdersLimitModal').style.display='none'" 
@@ -627,53 +458,132 @@ async function checkActiveOrdersLimit() {
 }
 
 // === ОБНОВЛЁННЫЙ ОБРАБОТЧИК КНОПКИ "ОФОРМИТЬ ЗАКАЗ" ===
+// === КНОПКА "ОФОРМИТЬ ЗАКАЗ" ВНИЗУ СТРАНИЦЫ (ГЛАВНАЯ) ===
 elements.checkoutBtn?.addEventListener('click', async () => {
+  const itemsCount = parseInt(document.getElementById('summaryCount')?.textContent || '0', 10);
+
+  // Если корзина пуста — показываем красивый алерт с кнопками "К товарам" и "К услугам"
+  if (itemsCount === 0) {
+    // Удаляем старый алерт, если был
+    document.querySelectorAll('#emptyCartMainAlert').forEach(el => el.remove());
+
+    const alert = document.createElement('div');
+    alert.id = 'emptyCartMainAlert';
+    alert.innerHTML = `
+      <div style="text-align:center; padding:2.8rem 1.8rem 2.2rem;">
+        <i class="fas fa-shopping-bag" style="font-size:5.5rem; color:#00ff95; opacity:0.88; margin-bottom:1.6rem; display:block;"></i>
+        <h3 style="margin:0 0 1rem; font-size:2.1rem; font-weight:800; color:#fff;">
+          Корзина пуста
+        </h3>
+        <p style="margin:0 0 2.4rem; color:#ccc; font-size:1.22rem; line-height:1.6; max-width:420px; margin-left:auto; margin-right:auto;">
+          Добавьте товары или услуги, чтобы оформить заказ
+        </p>
+        <div style="display:flex; gap:1.4rem; justify-content:center; flex-wrap:wrap;">
+          <a href="/goods" style="
+            background:#00ff95; color:#000; padding:1.1rem 2.4rem; 
+            border-radius:26px; font-weight:700; text-decoration:none; font-size:1.15rem;
+            box-shadow:0 8px 25px rgba(0,255,149,0.3);
+            transition:all 0.3s;
+          " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 12px 35px rgba(0,255,149,0.4)'"
+             onmouseout="this.style.transform=''; this.style.boxShadow='0 8px 25px rgba(0,255,149,0.3)'">
+            К товарам
+          </a>
+          <a href="/services" style="
+            background:rgba(255,255,255,0.1); color:#fff; padding:1.1rem 2.4rem; 
+            border-radius:26px; font-weight:600; text-decoration:none; font-size:1.15rem;
+            border:1px solid rgba(255,255,255,0.18); backdrop-filter:blur(10px);
+            transition:all 0.3s;
+          " onmouseover="this.style.background='rgba(255,255,255,0.18)'"
+             onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+            К услугам
+          </a>
+        </div>
+        <button style="
+          position:absolute; top:18px; right:24px; background:none; border:none; 
+          color:#fff; font-size:2.4rem; cursor:pointer; opacity:0.6; 
+          transition:opacity 0.3s;
+        " onclick="this.closest('#emptyCartMainAlert')?.remove()">
+          ×
+        </button>
+      </div>
+    `;
+
+    Object.assign(alert.style, {
+      position: 'fixed',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      background: 'rgba(15,15,30,0.98)',
+      backdropFilter: 'blur(40px)',
+      WebkitBackdropFilter: 'blur(40px)',
+      border: '1px solid rgba(255,255,255,0.12)',
+      borderRadius: '36px',
+      maxWidth: '520px',
+      width: '92%',
+      boxShadow: '0 50px 120px rgba(0,0,0,0.7)',
+      zIndex: '999999',
+      animation: 'modalPop 0.5s cubic-bezier(0.22,0.61,0.36,1)',
+      fontFamily: 'Inter, sans-serif'
+    });
+
+    document.body.appendChild(alert);
+
+    // Закрытие по клику вне контента
+    alert.addEventListener('click', (e) => {
+      if (e.target === alert) alert.remove();
+    });
+
+    return; // прерываем выполнение
+  }
+
+  // Если корзина НЕ пустая — открываем модалку оформления (как раньше)
   try {
-    // Проверка авторизации
     const sessionRes = await fetch('/api/session');
     const sessionData = await sessionRes.json();
     if (!sessionData.logged_in) {
       elements.authBtn.click();
-
       return;
     }
 
-    // === ГЛАВНАЯ ПРОВЕРКА: НЕТ ЛИ УЖЕ 3 АКТИВНЫХ? ===
     const canPlaceOrder = await checkActiveOrdersLimit();
     if (!canPlaceOrder) {
       document.getElementById('activeOrdersLimitModal').style.display = 'flex';
       return;
     }
 
-    // Если всё ок — открываем обычную модалку оформления
-    const rawPhone = sessionData.phone || sessionStorage.getItem('phone') || '—';
+    const rawPhone = sessionData.phone || '—';
     const formatted = rawPhone === '—' ? '—' : `+7 (${rawPhone.slice(1,4)}) ${rawPhone.slice(4,7)}-${rawPhone.slice(7,9)}-${rawPhone.slice(9,11)}`;
-
     const premiumBlock = document.getElementById('checkoutPhonePremium');
     const formattedEl = document.getElementById('checkoutPhoneFormatted');
     if (premiumBlock && formattedEl) {
       formattedEl.textContent = formatted;
       premiumBlock.style.display = 'flex';
-      elements.checkoutPhone.style.display = 'none';
+      document.getElementById('checkoutPhoneManual')?.style.setProperty('display', 'none');
     }
 
-    document.getElementById('checkoutCount').textContent = document.getElementById('summaryCount')?.textContent || '0';
-    document.getElementById('checkoutTotal').textContent = document.getElementById('summaryTotal')?.textContent || '0 ₽';
+    document.getElementById('checkoutCount').textContent = itemsCount;
+    document.getElementById('checkoutTotal').textContent = document.getElementById('summaryTotal').textContent;
     elements.checkoutModal.style.display = 'flex';
     elements.fullName.focus();
-
   } catch (e) {
-    showToast('Ошибка связи', 'Попробуйте позже', true);
+    reliableToast('Ошибка связи', 'Попробуйте позже', true, 4000);
   }
 });
 
 // === НОВЫЙ ФИНАЛЬНЫЙ ОБРАБОТЧИК ОФОРМЛЕНИЯ ЗАКАЗА (2025) ===
+// === НОВЫЙ ФИНАЛЬНЫЙ ОБРАБОТЧИК ОФОРМЛЕНИЯ ЗАКАЗА (2025) — ИСПРАВЛЕНО ===
 elements.confirmOrderBtn?.addEventListener('click', async () => {
   const fullName = elements.fullName.value.trim();
-  if (!fullName) return showToast('Введите ФИО', '', true);
+  if (!fullName) {
+    reliableToast('Введите ФИО полностью', '', true, 3500);
+    return;
+  }
 
   const phone = sessionStorage.getItem('phone') || elements.checkoutPhone.value.trim();
-  if (!phone || phone === '—') return showToast('Укажите номер телефона', '', true);
+  if (!phone || phone === '—') {
+    reliableToast('Укажите номер телефона', '', true, 3500);
+    return;
+  }
 
   elements.confirmOrderBtn.disabled = true;
   document.querySelector('.btn-text').style.display = 'none';
@@ -688,52 +598,45 @@ elements.confirmOrderBtn?.addEventListener('click', async () => {
     const data = await res.json();
 
     if (data.success && data.order_id) {
-      // 1. Закрываем модалку оформления
       elements.checkoutModal.style.display = 'none';
 
-      // 2. Очищаем корзину
+      // Очистка корзины
       localStorage.removeItem('clientCart');
       allCartItems = [];
       document.dispatchEvent(new CustomEvent('cartUpdated', {
         detail: { items: [], count: 0, total: '0 ₽' }
       }));
 
-      // 3. ГЛАВНОЕ: МГНОВЕННО ДОБАВЛЯЕМ НОВЫЙ ЗАКАЗ В ПЛАШКУ И МОДАЛКУ
+      // Добавляем заказ в активные
       const newOrder = {
         id: data.order_id,
+        display_id: data.display_id || '№' + data.order_id,
         status: 'pending',
         total_str: document.getElementById('summaryTotal').textContent,
         created_at: new Date().toISOString(),
-        items: allCartItems.map(i => ({ title: i.title })) // хотя бы заглушка
+        items: allCartItems.map(i => ({ title: i.title }))
       };
 
-      // Добавляем в начало списка активных
       activeOrders.unshift(newOrder);
       if (activeOrders.length > 3) activeOrders.pop();
-
-      // Обновляем плашку снизу
       updateFloatingPill();
-
-      // Автоматически открываем модалку с заказами
       openMultiOrderModal();
 
-      // Показываем красивый тост
-      reliableToast('Заказ №' + data.order_id + ' создан!', 'Он уже в работе', false, 4000);
+      // КРАСИВЫЙ ТОСТ — ВСЁ ЧЕРЕЗ reliableToast
+      reliableToast(`Заказ ${data.display_id} создан!`, 'Он уже в работе', false, 4000);
 
-      // Запускаем цепочку статусов (чтобы сразу показало "Ожидает оплаты")
       setTimeout(() => window.startOrderChain(data.order_id), 800);
 
-      // Отзывы (если нужны)
       if (data.items?.length) {
         reviewQueue = data.items.map(i => ({ id: i.id, type: i.type, title: i.title }));
         showNextReview();
       }
     } else {
-      showToast('Ошибка оформления', data.error || 'Попробуйте позже', true);
+      reliableToast('Ошибка оформления', data.error || 'Попробуйте позже', true, 4500);
     }
   } catch (e) {
     console.error(e);
-    showToast('Нет связи с сервером', 'Проверьте интернет', true);
+    reliableToast('Нет связи с сервером', 'Проверьте интернет', true, 4500);
   } finally {
     elements.confirmOrderBtn.disabled = false;
     document.querySelector('.btn-text').style.display = 'inline';
@@ -806,20 +709,25 @@ elements.confirmOrderBtn?.addEventListener('click', async () => {
   });
 
 // ОТКРЫТИЕ АРХИВА — ОДИН РАЗ + ЗАЩИТА ОТ ДУБЛИРОВАНИЯ
-document.getElementById('openArchiveBtn')?.addEventListener('click', function () {
-    const modal = document.getElementById('archiveModal');
-    if (!modal) return;
-
-    modal.style.display = 'flex';
-
-    // Если данные уже загружены — просто рендерим, НЕ грузим заново
-    if (allOrders.length > 0) {
-        renderOrders();
+document.getElementById('openArchiveBtn')?.addEventListener('click', async () => {
+    // Проверяем сессию быстро и без лишних запросов
+    const userId = sessionStorage.getItem('user_id');
+    if (!userId) {
+        // НЕ АВТОРИЗОВАН → открываем модалку входа
+        document.getElementById('authBtn')?.click();
         return;
     }
 
-    // Если ещё нет — загружаем один раз
-    loadOrders(true); // true = полная перезагрузка
+    // АВТОРИЗОВАН → открываем архив как обычно
+    const modal = document.getElementById('archiveModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        if (allOrders.length === 0) {
+            loadOrders(true);
+        } else {
+            renderOrders();
+        }
+    }
 });
 
 // Глобальные переменные (должны быть объявлены снаружи!)
@@ -872,17 +780,17 @@ async function loadOrders(forceReload = false) {
         list.innerHTML = '<div style="text-align:center;padding:3rem;color:#ff6b6b;">Ошибка загрузки</div>';
     }
 }
-// === НОВАЯ ВЕРСИЯ renderOrders() — РЕАЛ-ТАЙМ ЦЕПОЧКИ В АРХИВЕ ===
+// === НОВАЯ ВЕРСИЯ renderOrders() — РЕАЛ-ТАЙМ ЦЕПОЧКИ + ПРИЧИНА ОТМЕНЫ ===
 function renderOrders() {
     const list = document.getElementById('ordersList');
     const search = document.getElementById('orderSearch').value.toLowerCase();
-    
+
     let filtered = allOrders.filter(order => {
-        if (currentTab === 'active') return !['completed','cancelled'].includes(order.status);
-        if (currentTab === 'completed') return ['completed','cancelled'].includes(order.status);
+        if (currentTab === 'active') return !['completed', 'cancelled'].includes(order.status);
+        if (currentTab === 'completed') return ['completed', 'cancelled'].includes(order.status);
         return true;
     });
-    
+
     if (search) {
         filtered = filtered.filter(order =>
             order.id.toString().includes(search) ||
@@ -893,25 +801,54 @@ function renderOrders() {
     if (filtered.length === 0) {
         list.innerHTML = '';
         const emptyId = currentTab === 'all' ? 'emptyAll' : 'emptyActive';
-        document.getElementById(emptyId).style.display = 'block';
+        const el = document.getElementById(emptyId);
+        if (el) el.style.display = 'block';
         return;
     }
 
     document.querySelectorAll('.archive-empty').forEach(el => el.style.display = 'none');
-    const activeCount = allOrders.filter(o => !['completed','cancelled'].includes(o.status)).length;
-    document.getElementById('activeCount').textContent = activeCount ? activeCount : '';
+    const activeCount = allOrders.filter(o => !['completed', 'cancelled'].includes(o.status)).length;
+    const badge = document.getElementById('activeCount');
+    if (badge) badge.textContent = activeCount || '';
 
-    // === ГЕНЕРИРУЕМ КАРТОЧКИ ===
+    // === КЭШИРОВАНИЕ КАРТИНОК (чтобы не искать каждый раз) ===
+    const productImages = {};
+    const serviceImages = {};
+
+    // Заполняем кэш из уже загруженных данных (они у тебя где-то есть в глобале)
+    if (window.allProducts) {
+        window.allProducts.forEach(p => {
+            if (p.image_urls && p.image_urls.length > 0) {
+                productImages[p.id] = p.image_urls[0];
+            }
+        });
+    }
+    if (window.allServices) {
+        window.allServices.forEach(s => {
+            if (s.image_urls && s.image_urls.length > 0) {
+                serviceImages[s.id] = s.image_urls[0];
+            }
+        });
+    }
+
     list.innerHTML = filtered.map(order => {
         const statusInfo = {
-            pending: { text: 'Ожидает оплаты', color: '#ffa726' },
-            processing: { text: 'В обработке', color: '#00ff95' },
-            shipping: { text: 'В доставке', color: '#00bfff' },
-            completed: { text: 'Завершён', color: '#4ade80' },
-            cancelled: { text: 'Отменён', color: '#ff6b6b' },
+            pending:    { text: 'Ожидает оплаты',   color: '#ffa726' },
+            processing: { text: 'В обработке',      color: '#00ff95' },
+            shipping:   { text: 'В доставке',       color: '#00bfff' },
+            completed:  { text: 'Завершён',         color: '#4ade80' },
+            cancelled:  { text: 'Отменён',          color: '#ff6b6b' },
         };
         const current = statusInfo[order.status] || { text: order.status, color: '#aaa' };
-        const isActive = !['completed','cancelled'].includes(order.status);
+        const isActive = !['completed', 'cancelled'].includes(order.status);
+
+        const safeReason = order.cancel_reason
+            ? String(order.cancel_reason)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\n/g, '<br>')
+            : '';
 
         return `
             <div class="cart-item archive-item clickable-order" data-order-id="${order.id}">
@@ -919,7 +856,7 @@ function renderOrders() {
                     <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1rem;">
                         <div>
                             <h3 style="margin:0;font-size:1.4rem;font-weight:600;">
-                                Заказ №${order.id}
+                                Заказ ${order.display_id || '№' + order.id}
                                 <span style="color:${current.color};font-size:0.9rem;margin-left:0.8rem;font-weight:500;">
                                     ${current.text}
                                 </span>
@@ -933,7 +870,6 @@ function renderOrders() {
                         </div>
                     </div>
 
-                    <!-- МИНИ-ЦЕПОЧКА, КОТОРАЯ БУДЕТ ОБНОВЛЯТЬСЯ В РЕАЛ-ТАЙМ -->
                     ${isActive ? `
                     <div class="mini-status-chain" id="archive-chain-${order.id}">
                         <div class="mini-step ${order.status !== 'pending' ? 'active' : ''}">
@@ -949,36 +885,72 @@ function renderOrders() {
                         </div>
                     </div>` : ''}
 
-                    <!-- Завершённые заказы — иконка -->
                     ${!isActive ? `
-                    <div style="margin:1.5rem 0;text-align:center;">
+                    <div style="margin:2rem 0;text-align:center;">
                         <i class="fas ${order.status === 'completed' ? 'fa-check-circle' : 'fa-times-circle'}"
-                           style="font-size:2.8rem;color:${current.color};opacity:0.8;"></i>
+                           style="font-size:3.2rem;color:${current.color};opacity:0.9;"></i>
                     </div>` : ''}
 
-                    <!-- Товары -->
                     <div style="margin-top:1.5rem;display:grid;gap:0.8rem;">
-                        ${order.items.slice(0, 3).map(item => `
-                            <div style="display:flex;align-items:center;gap:1rem;padding:0.8rem;background:rgba(255,255,255,0.05);border-radius:14px;">
-                                <img src="${item.image_url || '/static/assets/no-image.png'}" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">
-                                <div style="flex:1;">
-                                    <div style="font-weight:600;">${item.title}</div>
-                                    <div style="color:#aaa;font-size:0.9rem;">${item.quantity} × ${item.price_str}</div>
+                        ${order.items.slice(0, 3).map(item => {
+                            let imgSrc = '/static/assets/no-image.png';
+
+                            if (item.item_type === 'product' && productImages[item.item_id]) {
+                                imgSrc = productImages[item.item_id];
+                            } else if (item.item_type === 'service' && serviceImages[item.item_id]) {
+                                imgSrc = serviceImages[item.item_id];
+                            } else if (item.item_type === 'service') {
+                                imgSrc = '/static/assets/service-placeholder.png'; // можно сделать свою заглушку
+                            }
+
+                            return `
+                                <div style="display:flex;align-items:center;gap:1rem;padding:0.8rem;background:rgba(255,255,255,0.05);border-radius:14px;">
+                                    <img src="${imgSrc}" 
+                                         style="width:48px;height:48px;border-radius:10px;object-fit:cover;background:#222;"
+                                         onerror="this.src='/static/assets/no-image.png'">
+                                    <div style="flex:1;">
+                                        <div style="font-weight:600;">${item.title}</div>
+                                        <div style="color:#aaa;font-size:0.9rem;">
+                                            ${item.quantity} × ${item.price_str || (item.price_cents/100).toFixed(2) + ' ₽'}
+                                        </div>
+                                    </div>
+                                    <button onclick="event.stopPropagation();addToCart('${(item.title||'').replace(/'/g, "\\'")}', '${item.item_type || 'product'}')"
+                                            style="padding:0.5rem 1rem;background:#fff;color:#000;border-radius:12px;font-weight:600;font-size:0.85rem;">
+                                        Повторить
+                                    </button>
                                 </div>
-                                <button onclick="event.stopPropagation();addToCart('${item.title.replace(/'/g, "\\'")}', '${item.type}')"
-                                        style="padding:0.5rem 1rem;background:#fff;color:#000;border-radius:12px;font-weight:600;font-size:0.85rem;">
-                                    Повторить
-                                </button>
-                            </div>
-                        `).join('')}
-                        ${order.items.length > 3 ? `<div style="text-align:center;color:#888;padding:0.5rem;">…и ещё ${order.items.length - 3}</div>` : ''}
+                            `;
+                        }).join('')}
+                        ${order.items.length > 3 ? 
+                            `<div style="text-align:center;color:#888;padding:0.6rem;">…и ещё ${order.items.length - 3}</div>` : ''}
                     </div>
+
+                    <!-- КОМПАКТНЫЙ БЛОК ОТМЕНЫ -->
+                    ${order.status === 'cancelled' && safeReason ? `
+                    <div style="
+                        margin: 1.3rem 0 0;
+                        padding: 0.9rem 1.1rem;
+                        background: rgba(255,68,68,0.08);
+                        border: 1px solid rgba(255,68,68,0.2);
+                        border-radius: 14px;
+                        color: #ff6b6b;
+                        font-size: 0.9rem;
+                        line-height: 1.5;
+                    ">
+                        <div style="font-weight:700;font-size:0.94rem;color:#ff4444;margin-bottom:0.3rem;display:flex;align-items:center;gap:0.4rem;">
+                            <i class="fas fa-info-circle"></i> Причина отмены
+                        </div>
+                        <div style="white-space:pre-wrap;opacity:0.92;">
+                            ${safeReason}
+                        </div>
+                    </div>
+                    ` : ''}
                 </div>
             </div>
         `;
     }).join('');
 
-    // === ДЕЛЕГИРОВАНИЕ КЛИКА — ОДИН РАЗ НАВСЕГДА ===
+    // Клик по карточке — как было
     list.onclick = function(e) {
         let card = e.target.closest('.clickable-order');
         if (!card) return;
@@ -986,13 +958,11 @@ function renderOrders() {
 
         const orderId = card.dataset.orderId;
         const container = document.getElementById('orderChainContainer');
-        container.style.display = 'block';
-        container.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-        if (window.pollInterval) {
-            clearInterval(window.pollInterval);
-            window.pollInterval = null;
+        if (container) {
+            container.style.display = 'block';
+            container.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
+        if (window.pollInterval) clearInterval(window.pollInterval);
         window.startOrderChain(orderId);
     };
 }
@@ -1122,6 +1092,303 @@ document.getElementById('orderChainToggle')?.addEventListener('click', () => {
 });
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const cartItemsList = document.getElementById('cartItemsList');
+  const summaryCount  = document.getElementById('summaryCount');
+  const summaryTotal  = document.getElementById('summaryTotal');
+  const checkoutBtn   = document.getElementById('checkoutBtn');
+
+  if (!cartItemsList) return;
+
+  let hasRendered = false;
+  let currentCartItems = [];
+
+  const formatPrice = (cents) => {
+    if (cents == null || cents === 0) return 'Цена по запросу';
+    const rub = Math.floor(cents / 100);
+    const kop = (cents % 100).toString().padStart(2, '0');
+    return `${rub.toLocaleString('ru-RU')}.${kop} ₽`;
+  };
+
+  // ЭТО БЫЛО ПРОПУЩЕНО — СЕЙЧАС ВСЁ РАБОТАЕТ!
+  const updateQuantity = async (id, type, change) => {
+    const item = currentCartItems.find(i => i.id == id && (i.type || 'product') === type);
+    if (!item) return;
+
+    const newQty = item.quantity + change;
+    if (newQty < 0) return;
+
+    try {
+      const res = await fetch('/api/cart/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          [type === 'service' ? 'service_id' : 'product_id']: id,
+          quantity: newQty > 0 ? newQty : 0
+        })
+      });
+
+      if (res.ok) {
+        await loadCart(); // универсальная функция из cart.js — обновит всё
+      }
+    } catch (err) {
+      console.error('Ошибка обновления количества:', err);
+    }
+  };
+
+  const removeFromCart = async (id, type) => {
+    try {
+      const res = await fetch('/api/cart/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          [type === 'service' ? 'service_id' : 'product_id']: id,
+          quantity: 0
+        })
+      });
+
+      if (res.ok) {
+        await loadCart();
+      }
+    } catch (err) {
+      console.error('Ошибка удаления:', err);
+    }
+  };
+
+  // КНОПКИ ТЕПЕРЬ РАБОТАЮТ!
+  const handleCartClick = (e) => {
+    const btn = e.target.closest('.apple-qty-btn, .apple-remove-btn');
+    if (!btn) return;
+
+    const itemEl = btn.closest('.apple-cart-item');
+    if (!itemEl) return;
+
+    const id = itemEl.dataset.id;
+    const type = itemEl.dataset.type || 'product';
+
+    if (!id) return;
+
+    if (btn.classList.contains('apple-remove-btn')) {
+      removeFromCart(id, type);
+    } else if (btn.classList.contains('apple-qty-btn')) {
+      const change = btn.classList.contains('plus') ? 1 : -1;
+      updateQuantity(id, type, change);
+    }
+  };
+
+  document.addEventListener('click', handleCartClick);
+
+  const renderFullCart = (items = []) => {
+    if (hasRendered && items.length === 0 && currentCartItems.length === 0) return;
+    currentCartItems = items.slice();
+    hasRendered = true;
+
+    if (items.length === 0) {
+      cartItemsList.innerHTML = `
+        <div class="cart-empty-apple">
+          <i class="fas fa-shopping-bag"></i>
+          <div class="empty-title">Корзина пуста</div>
+          <div class="empty-subtitle">Добавьте товары и они появятся здесь</div>
+        </div>`;
+      summaryCount.textContent = '0';
+      summaryTotal.textContent = '0 ₽';
+      checkoutBtn?.setAttribute('disabled', '');
+      return;
+    }
+
+    const totalCents = items.reduce((s, i) => s + (i.price_cents || 0) * i.quantity, 0);
+    const totalCount = items.reduce((s, i) => s + i.quantity, 0);
+
+    cartItemsList.innerHTML = items.map(item => `
+      <div class="apple-cart-item" data-id="${item.id}" data-type="${item.type || 'product'}">
+        <div class="apple-cart-image">
+          <img src="${item.image_url || '/static/assets/no-image.png'}"
+             onerror="this.src='/static/assets/no-image.png'" alt="${item.title}">
+        </div>
+        <div class="apple-cart-info">
+          <h3 class="apple-cart-title">${item.title}</h3>
+          <div class="apple-cart-price">${formatPrice(item.price_cents)}</div>
+        </div>
+        <div class="apple-quantity-control">
+          <button class="apple-qty-btn minus" ${item.quantity <= 1 ? 'disabled' : ''}>
+            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M5 12h14" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>
+          </button>
+          <span class="apple-qty-value">${item.quantity}</span>
+          <button class="apple-qty-btn plus">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <button class="apple-remove-btn">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1-1v2M8 6h8m-9 0v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6H7Z"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="apple-cart-total">
+          ${formatPrice((item.price_cents || 0) * item.quantity)}
+        </div>
+      </div>
+    `).join('');
+
+    summaryCount.textContent = totalCount;
+    summaryTotal.textContent = formatPrice(totalCents);
+    checkoutBtn?.removeAttribute('disabled');
+  };
+
+  // Слушаем обновления от мини-корзины и от себя
+  document.addEventListener('cartUpdated', e => renderFullCart(e.detail.items || []));
+
+  // Инициализация
+  if (window.cartItems && Array.isArray(window.cartItems)) {
+    renderFullCart(window.cartItems);
+  }
+
+  // Резервная загрузка
+  const fallback = setTimeout(() => {
+    if (!hasRendered && localStorage.getItem('clientCart')) {
+      loadCart?.();
+    }
+  }, 1200);
+  document.addEventListener('cartUpdated', () => clearTimeout(fallback), { once: true });
+});
+</script>
+
+<script>
+// ГЛОБАЛЬНЫЙ АНТИСПАМ — Сохраняется при обновлении страницы! (2025 версия)
+const GlobalCartProtection = (() => {
+  const STORAGE_KEY = 'cart_protection_blocked_until';
+  const COOLDOWN_MS = 20000; // 20 секунд
+  const MAX_CLICKS = 10;
+
+  // Загружаем состояние из localStorage
+  let blockedUntil = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+  let clickCount = 0;
+  let resetTimer = null;
+
+  // Функция блокировки — сохраняет время в localStorage
+  const block = () => {
+    blockedUntil = Date.now() + COOLDOWN_MS;
+    localStorage.setItem(STORAGE_KEY, blockedUntil.toString());
+
+    // Блокируем кнопки
+    document.querySelectorAll('.apple-qty-btn, .apple-remove-btn, .quantity-btn, .clear-cart-btn').forEach(b => {
+      b.disabled = true;
+      b.style.opacity = '0.4';
+      b.style.pointerEvents = 'none';
+      b.style.cursor = 'not-allowed';
+    });
+
+    // Показываем алерт
+    const alert = document.createElement('div');
+    alert.id = 'global-cart-block-alert';
+    alert.innerHTML = `<i class="fas fa-hand-paper"></i> <strong>Слишком быстро!</strong><br><small>Подождите <span>20</span> сек</small>`;
+    Object.assign(alert.style, {
+      position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: '999999',
+      background: 'linear-gradient(135deg,#ff453a,#ff3b30)', color: 'white', padding: '16px 32px',
+      borderRadius: '26px', fontSize: '1.1rem', boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+      backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', gap: '12px', fontWeight: '600',
+      transition: 'all 0.4s ease'
+    });
+    document.body.appendChild(alert);
+
+    // Обновляем таймер каждую секунду
+    const updateTimer = () => {
+      const remaining = Math.max(0, Math.ceil((blockedUntil - Date.now()) / 1000));
+      const span = alert.querySelector('span');
+      if (span) span.textContent = remaining;
+
+      if (remaining <= 0) {
+        localStorage.removeItem(STORAGE_KEY);
+        alert.remove();
+        unblockButtons();
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(() => {
+      updateTimer();
+      if (blockedUntil <= Date.now()) {
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    // Автоочистка при истечении
+    setTimeout(() => {
+      if (document.getElementById('global-cart-block-alert')) {
+        localStorage.removeItem(STORAGE_KEY);
+        alert.remove();
+        unblockButtons();
+      }
+    }, COOLDOWN_MS + 1000);
+  };
+
+  // Разблокировка кнопок (с проверкой минимального количества)
+  const unblockButtons = () => {
+    document.querySelectorAll('.apple-qty-btn, .apple-remove-btn, .quantity-btn, .clear-cart-btn').forEach(b => {
+      const isMinus = b.classList.contains('minus') || b.textContent.trim() === '−' || b.textContent.trim() === '-';
+      if (isMinus) {
+        const qtySpan = b.closest('.quantity-controls')?.querySelector('span') || b.parentNode.querySelector('span');
+        if (qtySpan && parseInt(qtySpan.textContent) <= 1) {
+          return; // оставляем disabled для минуса при 1
+        }
+      }
+      b.disabled = false;
+      b.style.opacity = '';
+      b.style.pointerEvents = '';
+      b.style.cursor = '';
+    });
+  };
+
+  // Проверяем, не заблокированы ли мы уже при загрузке страницы
+  if (blockedUntil > Date.now()) {
+    block(); // восстанавливаем блокировку + таймер
+  }
+
+  return {
+    check() {
+      // Если уже заблокированы — сразу отказ
+      if (blockedUntil > Date.now()) {
+        return false;
+      }
+
+      clickCount++;
+
+      // Сбрасываем счётчик через 20 сек
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => {
+        clickCount = 0;
+      }, COOLDOWN_MS);
+
+      if (clickCount > MAX_CLICKS) {
+        block();
+        clickCount = 0;
+        return false;
+      }
+
+      return true;
+    },
+
+    // Для дебага (можно удалить потом)
+    debug: () => console.log({ blockedUntil, timeLeft: blockedUntil - Date.now(), clickCount })
+  };
+})();
+
+// Универсальный обработчик кликов
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.apple-qty-btn, .apple-remove-btn, .quantity-btn, .clear-cart-btn');
+  if (btn && !GlobalCartProtection.check()) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    e.stopPropagation();
+  }
+}, true);
+
+// Опционально: можно добавить визуальный таймер в шапку или корзину
+</script>
+
 <!-- САМАЯ КРАСИВАЯ ЧЁРНО-БЕЛАЯ МОДАЛКА 2025 ГОДА -->
 <div id="checkoutModal" class="modal" style="display:none;">
   <div class="checkout-modal-beauty">
@@ -1184,53 +1451,6 @@ document.getElementById('orderChainToggle')?.addEventListener('click', () => {
 </div>
 
 
-<!-- НОВАЯ УМНАЯ МОДАЛКА ЗАКАЗОВ (заменяешь старую #archiveModal полностью) -->
-<div id="archiveModal" class="modal" style="display:none;">
-  <div class="archive-modal-beauty" style="max-width:920px;">
-    <button class="close-modal" id="closeArchive">×</button>
-
-    <div class="archive-header">
-      <div class="archive-icon"><i class="fas fa-receipt"></i></div>
-      <h2>Мои заказы</h2>
-      <p id="archiveSubtitle">Все ваши заказы в одном месте</p>
-    </div>
-
-    <!-- ТАБЫ — САМОЕ ГЛАВНОЕ -->
-    <div class="orders-tabs">
-      <button class="tab-btn active" data-tab="active">Активные <span id="activeCount">0</span></button>
-      <button class="tab-btn" data-tab="completed">Завершённые</button>
-      <button class="tab-btn" data-tab="all">Все заказы</button>
-    </div>
-
-    <!-- Поиск -->
-    <div class="orders-search">
-      <i class="fas fa-search"></i>
-      <input type="text" id="orderSearch" placeholder="Поиск по номеру или товару...">
-    </div>
-
-    <!-- Список заказов -->
-    <div id="ordersList" class="orders-list">
-      <!-- Здесь будет подгрузка -->
-    </div>
-
-    <!-- Кнопка "Загрузить ещё" -->
-    <div id="loadMoreContainer" style="text-align:center;padding:2rem 0;display:none;">
-      <button id="loadMoreBtn" class="archive-btn" style="padding:0.9rem 2rem;font-size:1rem;">
-        Показать ещё <i class="fas fa-chevron-down" style="margin-left:0.5rem;"></i>
-      </button>
-    </div>
-
-    <!-- Пустые состояния -->
-    <div class="archive-empty" id="emptyActive" style="display:none;">
-      <i class="fas fa-truck" style="font-size:3.5rem;margin-bottom:1rem;opacity:0.3;"></i>
-      <div style="font-size:1.4rem;">Активных заказов нет</div>
-      <div style="font-size:1rem;color:#888;margin-top:0.5rem;">Ваши новые заказы появятся здесь</div>
-    </div>
-
-  </div>
-</div>
-
-
 <script>
 // Кнопка закрытия цепочки (с очисткой поллинга)
 document.getElementById('orderChainToggle')?.addEventListener('click', () => {
@@ -1264,8 +1484,6 @@ document.getElementById('orderChainToggle')?.addEventListener('click', () => {
     if (ordersList) observer.observe(ordersList, { childList: true, subtree: true });
   });
 </script>
-
-
 
 
 <!-- APPLE-LEVEL МОДАЛКА ОТЗЫВОВ — МИНИМАЛИЗМ 2025 -->
@@ -1375,7 +1593,7 @@ function updateFloatingPill() {
   badge.style.display = activeOrders.length > 1 ? 'flex' : 'none';
 
   main.textContent = activeOrders.length === 1
-  ? `Заказ ${activeOrders[0].display_id || '№' + activeOrders[0].id} в работе`
+  ? `Заказ ${activeOrders[0].display_id} в работе`
   : `${activeOrders.length} заказа в работе`;
 
   sub.textContent = activeOrders.length === 1 
@@ -1395,7 +1613,7 @@ function renderVerticalOrders() {
 block.innerHTML = `
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
     <div style="font-size:1.5rem; font-weight:700; color:#fff;">
-      Заказ ${order.display_id || '№' + order.id}
+      Заказ ${order.display_id}
     </div>
     <div style="padding:0.4rem 1rem; background:rgba(0,255,149,0.2); color:#00ff95; border-radius:12px; font-size:0.9rem; font-weight:600;">
       В работе
@@ -1490,8 +1708,9 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(r => r.ok ? r.json() : [])
     .then(orders => {
       activeOrders = orders
-        .filter(o => !['completed', 'cancelled'].includes(o.status))
-        .slice(0, 3); // максимум 3
+    .filter(o => !['completed', 'cancelled'].includes(o.status))
+    .map(o => ({ ...o, display_id: o.display_id || '№' + o.user_order_number }))  // ← добавь display_id
+    .slice(0, 3);
 
       if (activeOrders.length > 0) {
         updateFloatingPill();
@@ -1524,55 +1743,9 @@ document.addEventListener('orderStatusChanged', () => {
     }
 });
 </script>
-<!-- МОДАЛКА АРХИВА ЗАКАЗОВ — ОБЯЗАТЕЛЬНО ВСТАВЬТЕ ЭТОТ БЛОК! -->
-<div id="archiveModal" class="modal" style="display:none;">
-  <div class="archive-modal-beauty" style="max-width:920px;">
-    <button class="close-modal" id="closeArchive">×</button>
-    <div class="archive-header">
-      <div class="archive-icon"><i class="fas fa-receipt"></i></div>
-      <h2>Мои заказы</h2>
-      <p id="archiveSubtitle">Все ваши заказы в одном месте</p>
-    </div>
 
-    <!-- ТАБЫ -->
-    <div class="orders-tabs">
-      <button class="tab-btn active" data-tab="active">Активные <span id="activeCount"></span></button>
-      <button class="tab-btn" data-tab="completed">Завершённые</button>
-      <button class="tab-btn" data-tab="all">Все заказы</button>
-    </div>
 
-    <!-- Поиск -->
-    <div class="orders-search">
-      <i class="fas fa-search"></i>
-      <input type="text" id="orderSearch" placeholder="Поиск по номеру или товару...">
-    </div>
 
-    <!-- Список заказов -->
-    <div id="ordersList" class="orders-list">
-      <!-- Здесь будут заказы -->
-    </div>
-
-    <!-- Кнопка "Загрузить ещё" -->
-    <div id="loadMoreContainer" style="text-align:center;padding:2rem 0;display:none;">
-      <button id="loadMoreBtn" class="archive-btn" style="padding:0.9rem 2rem;font-size:1rem;">
-        Показать ещё
-      </button>
-    </div>
-
-    <!-- Пустые состояния -->
-    <div class="archive-empty" id="emptyActive" style="display:none;text-align:center;padding:3rem 1rem;color:#aaa;">
-      <i class="fas fa-truck" style="font-size:3.5rem;margin-bottom:1rem;opacity:0.4;"></i>
-      <div style="font-size:1.4rem;">Активных заказов нет</div>
-      <div style="font-size:1rem;margin-top:0.5rem;">Новые заказы появятся здесь автоматически</div>
-    </div>
-
-    <div class="archive-empty" id="emptyAll" style="display:none;text-align:center;padding:3rem 1rem;color:#aaa;">
-      <i class="fas fa-history" style="font-size:3.5rem;margin-bottom:1rem;opacity:0.4;"></i>
-      <div style="font-size:1.4rem;">У вас пока нет заказов</div>
-      <div style="font-size:1rem;margin-top:0.5rem;">Они появятся после первого оформления</div>
-    </div>
-  </div>
-</div>
 <!-- ЕДИНСТВЕННАЯ РАБОЧАЯ МОДАЛКА АРХИВА — ОСТАВЬТЕ ТОЛЬКО ЭТУ! -->
 <div id="archiveModal" class="modal" style="display:none;">
   <div class="archive-modal-beauty" style="max-width:920px;">
@@ -1608,11 +1781,6 @@ document.addEventListener('orderStatusChanged', () => {
       <div style="font-size:1rem;margin-top:0.5rem;">Новые заказы появятся здесь автоматически</div>
     </div>
 
-    <div class="archive-empty" id="emptyAll" style="display:none;text-align:center;padding:3rem 1rem;color:#aaa;">
-      <i class="fas fa-history" style="font-size:3.5rem;margin-bottom:1rem;opacity:0.4;"></i>
-      <div style="font-size:1.4rem;">У вас пока нет заказов</div>
-      <div style="font-size:1rem;margin-top:0.5rem;">Они появятся после первого оформления</div>
-    </div>
   </div>
 </div>
 <!-- КРАСИВАЯ APPLE-МОДАЛКА ОТМЕНЫ ЗАКАЗА -->
@@ -1803,6 +1971,77 @@ document.head.insertAdjacentHTML('beforeend', `
 </script>
 
 
+<div class="product-modal" id="productModal">
+  <div class="product-content">
+    <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
 
+    <div class="product-info">
+      <h3 id="productTitle" class="product-title">Загрузка...</h3>
+      
+      <div class="product-rating">
+        <div class="stars"></div>
+        <span id="productReviewsCount" class="reviews-count">—</span>
+      </div>
+
+      <div id="productPrice" class="product-price">—</div>
+      <div id="productDescription" class="product-description">Загрузка описания...</div>
+
+      <button id="addToCartModal" class="add-to-cart-btn">
+        <i class="fas fa-shopping-cart"></i> Купить
+      </button>
+
+      <div class="product-reviews">
+        <h4 class="reviews-title">Отзывы покупателей</h4>
+        <div class="reviews-list">
+          <div style="text-align:center;padding:2rem;color:#888;">
+            <i class="far fa-star" style="font-size:2.5rem;margin-bottom:0.5rem;display:block;"></i>
+            <p>Загрузка отзывов...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Крестик — теперь через надёжную функцию -->
+    <div class="close-modal" onclick="closeProductModal()">
+      <i class="fas fa-times"></i>
+    </div>
+  </div>
+</div>
+
+<!-- ГЛОБАЛЬНЫЕ ФУНКЦИИ ОТКРЫТИЯ/ЗАКРЫТИЯ КАРТОЧКИ ТОВАРА (работают везде) -->
+<script>
+// УНИВЕРСАЛЬНЫЕ ФУНКЦИИ — РАБСОЛЮТНО ВСЕ СТРАНИЦЫ РАБОТАЮТ С НИМИ
+window.openProductModal = function(id) {
+  // Если у тебя другой путь — просто замени строку ниже
+  fetch(`/api/product?id=${id}`)
+    .then(r => {
+      if (!r.ok) throw new Error('404');
+      return r.json();
+    })
+    .then(data => {
+      document.getElementById('productTitle').textContent = data.name || data.title || 'Без названия';
+      document.getElementById('productImg').src = data.image || data.image_url || '/static/assets/no-image.png';
+      document.getElementById('productPrice').textContent = 
+        data.price ? (data.price).toLocaleString() + ' ₽' : 'Цена по запросу';
+      document.getElementById('productDescription').innerHTML = data.description || 'Описания нет';
+
+      const modal = document.getElementById('productModal');
+      modal.style.display = 'flex';
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    })
+    .catch(err => {
+      alert('Товар не найден или ошибка сервера');
+      console.error(err);
+    });
+};
+
+window.closeProductModal = function() {
+  const modal = document.getElementById('productModal');
+  modal.style.display = 'none';
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+};
+</script>
 </body>
 </html>

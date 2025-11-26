@@ -19,390 +19,13 @@ fonts.googleapis.com https://cdnjs.cloudflare.com;
   <title>Piligrim — Редактор каруселей</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Montserrat:wght@600&family=Roboto:wght@700&family=Oswald:wght@600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-  <style>
-    :root {
-      --bg: #000;
-      --panel: #111;
-      --border: #222;
-      --text: #fff;
-      --accent: #00ff88;
-      --hover: #333;
-      --danger: #ff3b30;
-      --grid: rgba(255,255,255,0.05);
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-    header { padding: 20px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    .logo { font-weight: 700; font-size: 1.6rem; }
-    .nav-btn { background: var(--panel); border: none; color: var(--text); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
-    .nav-btn:hover { background: var(--hover); }
-    main { flex: 1; padding: 40px; display: flex; gap: 30px; overflow: hidden; position: relative; }
-    .sidebar { width: 360px; display: flex; flex-direction: column; gap: 20px; z-index: 10;width: 360px;
-  max-height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 8px; }
-    .carousel-tabs { display: flex; gap: 8px;grid-template-columns: 1fr 1fr 1fr; }
-    .tab { padding: 12px 18px; background: var(--panel); border-radius: 10px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: 0.2s; }
-    .tab.active { background: #fff; color: #000; }
-    .panel { background: var(--panel); padding: 24px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-    .panel h3 { font-size: 1rem; margin-bottom: 16px; color: #aaa; font-weight: 500; }
-    .upload-area { border: 2px dashed #444; border-radius: 14px; padding: 36px; text-align: center; cursor: pointer; transition: all 0.3s; position: relative; }
-    .upload-area:hover { border-color: var(--accent); background: rgba(0,255,136,0.05); }
-    .upload-area.dragover { border-color: var(--accent); background: rgba(0,255,136,0.1); transform: scale(1.02); }
-    .upload-area p { font-size: 0.9rem; color: #aaa; margin-bottom: 12px; }
-    .upload-area .preview { width: 100%; height: 160px; object-fit: cover; border-radius: 10px; margin-top: 12px; display: none; }
-    .form-group { margin-bottom: 16px; }
-    label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 6px; font-weight: 500; }
-    input, select, textarea { width: 100%; padding: 10px 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 10px; font-size: 0.95rem; transition: 0.2s; }
-    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
-    .btn { width: 100%; padding: 14px; background: #fff; color: #000; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; margin-top: 16px; transition: 0.2s; }
-    .btn:hover { background: #f0f0f0; transform: translateY(-1px); }
-    .btn-secondary { background: var(--panel); color: #fff; }
-    .btn-secondary:hover { background: var(--hover); }
-    .btn-danger { background: var(--danger); }
-    .btn-danger:hover { background: #ff5f57; }
-    .nav-controls { display: flex; gap: 8px; margin-top: 12px; }
-    .nav-controls button { flex: 1; }
-    .canvas {
-    width: 100%;
-    height: 0;
-    padding-bottom: 56.25%; /* 16:9 = 100 / 16 * 9 */
-    position: relative;
-    background: #111;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    background-image: 
-        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-    background-size: 30px 30px;
-    cursor: default;
-    }
-    #background { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; z-index: 1; display: none; }
-    .layer { 
-      position: absolute; z-index: 10; cursor: move; user-select: none; 
-      box-shadow: 0 0 0 2px var(--accent) inset; border-radius: 8px; overflow: hidden;
-      min-width: 50px; min-height: 50px;
-    }
-    .layer.selected { box-shadow: 0 0 0 3px #00ff88; }
-    .layer img { width: 100%; height: 100%; object-fit: contain; display: block; }
-    .text-layer { 
-      padding: 12px; font-size: 32px; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.7); 
-      background: rgba(0,0,0,0.3); border-radius: 8px; display: flex; align-items: center; 
-      justify-content: center; white-space: pre-wrap; word-break: break-word;
-    }
-    .hotspot { 
-      position: absolute; border: 2px dashed var(--accent); 
-      background: rgba(0,255,136,0.1); border-radius: 8px; z-index: 5; 
-    }
-    .hotspot:hover { background: rgba(0,255,136,0.2); }
-    .action-btns { display: flex; gap: 8px; margin-top: 16px; }
-    .action-btns button { flex: 1; }
-    .hint { font-size: 0.8rem; color: #aaa; margin-top: 8px; text-align: center; }
-    .text-tools { background: var(--panel); padding: 16px; border-radius: 12px; margin-top: 16px; }
-    .resize-handle { position: absolute; width: 12px; height: 12px; background: var(--accent); border-radius: 50%; bottom: -6px; right: -6px; cursor: se-resize; z-index: 11; }
-    .undo-redo { display: flex; gap: 8px; margin-top: 12px; }
-    .undo-redo button { flex: 1; font-size: 1.2rem; }
-
-    /* УВЕДОМЛЕНИЯ */
-    .toast {
-      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-      background: var(--panel); color: #fff; padding: 16px 24px; border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4); z-index: 9999; font-size: 0.95rem;
-      display: flex; align-items: center; gap: 12px; opacity: 0; transition: all 0.4s ease;
-      min-width: 280px; max-width: 400px;
-    }
-    .toast.show { opacity: 1; bottom: 40px; }
-    .toast.success { border-left: 4px solid var(--accent); }
-    .toast.error { border-left: 4px solid var(--danger); }
-    .toast .icon { font-size: 1.4rem; }
-
-    /* ПОДСКАЗКА */
-    .footer-hint {
-      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-      background: rgba(17,17,17,0.9); color: #aaa; padding: 10px 16px; border-radius: 10px;
-      font-size: 0.8rem; white-space: nowrap; backdrop-filter: blur(8px); border: 1px solid #333;z-index: 1000;
-    }
-
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
-    .modal.active { display: flex; }
-    .preview-container { width: 90%; max-width: 1200px; height: 80vh; position: relative; background: #000; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
-    .preview-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; }
-    .preview-slide.active { opacity: 1; }
-    .preview-bg { width: 100%; height: 100%; object-fit: cover; }
-    .preview-layer { position: absolute; }
-    .preview-layer img { width: 100%; height: 100%; object-fit: contain; }
-    .close-modal { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.2); color: #fff; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; z-index: 10; }
-    .close-modal:hover { background: rgba(255,255,255,0.4); }
-    .preview-nav { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 10; }
-    .preview-dot { width: 12px; height: 12px; background: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; }
-    .preview-dot.active { background: #fff; }
-    .preview-text {
-  background: none !important;
-  text-shadow: 0 4px 12px rgba(0,0,0,0.7);
-  padding: 0 !important;
-  border-radius: 0 !important;
-}
-    /* Рамка выделения */
-.selection-box {
-  position: absolute;
-  border: 2px dashed #00ff88;
-  background: rgba(0, 255, 136, 0.1);
-  pointer-events: none;
-  z-index: 999;
-}
-/* Иконка помощи */
-.help-btn {
-  position: absolute;
-  top: 1160px;
-  right: 20px;
-  width: 44px;
-  height: 44px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
-  cursor: pointer;
-  z-index: 100;
-  transition: 0.2s;
-}
-.help-btn:hover { background: var(--hover); }
-
-/* Модалка помощи */
-.help-modal {
-  display: none;
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.9);
-  z-index: 1000;
-  justify-content: center;
-  align-items: center;
-}
-.help-modal.active { display: flex; }
-.help-content {
-  background: var(--panel);
-  padding: 32px;
-  border-radius: 16px;
-  max-width: 500px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-}
-.help-content h2 { margin-bottom: 16px; font-size: 1.4rem; }
-.help-content ul { list-style: none; }
-.help-content li {
-  padding: 10px 0;
-  border-bottom: 1px solid #333;
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.95rem;
-}
-.help-content li:last-child { border: none; }
-.help-content .key { background: #000; padding: 4px 8px; border-radius: 6px; font-family: monospace; font-size: 0.8rem; }
-.close-help { position: absolute; top: 16px; right: 16px; font-size: 1.5rem; cursor: pointer; }
-
-/* Подсказка при наведении */
-.hotspot-tooltip {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #000;
-  color: #0f0;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s;
-  z-index: 100;
-}
-.hotspot:hover .hotspot-tooltip {
-  opacity: 1;
-}
-
-/* СЛОИ — ПОРЯДОК КАК В ФОТОШОПЕ */
-.layers-panel {
-  background: var(--panel);
-  padding: 16px;
-  border-radius: 12px;
-  margin-top: 16px;
-  max-height: 300px;
-  overflow-y: auto;
-  overflow-x: hidden;        /* ← убирает горизонтальную прокрутку */
-  -ms-overflow-style: none;  /* ← убирает ползунок в IE и Edge */
-  scrollbar-width: none;     /* ← убирает ползунок в Firefox */
-}
-
-.layers-panel::-webkit-scrollbar {
-  display: none;             /* ← убирает ползунок в Chrome, Safari, новый Edge */
-}
-.layer-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background: #000;
-  border-radius: 8px;
-  margin-bottom: 6px;
-  font-size: 0.9rem;
-  cursor: move;
-  transition: 0.2s;
 
 
-  
-}
-.layer-item:hover { background: #222; }
-.layer-item.selected { background: var(--accent); color: #000; }
-.layer-item .eye {
-  width: 20px; height: 20px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center/16px no-repeat;
-}
-.layer-item.hidden .eye { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a21.8 21.8 0 0 1 5.06-6.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a21.8 21.8 0 0 1-2.16 3.19m-6.84-8.1L15.74 9m-3.3-3.3L9.7 9m6.24 6.24L18.7 18m-3.3-3.3L12 12m-3.3 3.3L5.3 18'/%3E%3C/svg%3E"); }
-  
-.layer, .text-layer {
-  transform-origin: center center;
-  transition: transform 0.1s ease;
-}
-
-.animate__fadeIn {
-    animation-duration: 5.5s !important;
-  }
-
-
-  .layer {
-  z-index: 10;
-}
-.hotspot {
-  z-index: 5;
-}
-
-.back-btn {
-  background: var(--danger) !important;
-  color: white !important;
-}
-.back-btn:hover {
-  background: #ff5f57 !important;
-}
-
-.sidebar::-webkit-scrollbar { width: 0; }
-.sidebar { scrollbar-width: none; }
-
-/* ПРЕВЬЮ HOTSPOT */
-.hotspot-preview {
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%) translateY(-8px);
-  background: rgba(0,0,0,0.95);
-  border: 1px solid #333;
-  border-radius: 12px;
-  padding: 8px 12px;
-  font-size: 0.8rem;
-  color: #0f0;
-  white-space: nowrap;
-  z-index: 10000; /* ВАЖНО: выше всех */
-  opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-  min-width: 180px;
-  max-width: 300px;
-  pointer-events: auto;
-}
-
-.hotspot-preview.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(-12px);
-}
-
-.hotspot-preview .url {
-  color: #0f0;
-  font-family: monospace;
-  word-break: break-all;
-  margin-bottom: 6px;
-}
-
-.hotspot-preview .thumb {
-  width: 100%;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 8px;
-  background: #222;
-  margin-top: 6px;
-  display: none;
-}
-
-.hotspot-preview .thumb.loading {
-  background: #222 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1zm0 15a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0v-2a1 1 0 0 1 1-1zm8.66-10.66a1 1 0 0 1 0 1.42l-1.42 1.42a1 1 0 1 1-1.42-1.42l1.42-1.42a1 1 0 0 1 1.42 0zM7.76 14.24a1 1 0 0 1 0 1.42l-1.42 1.42a1 1 0 1 1-1.42-1.42l1.42-1.42a1 1 0 0 1 1.42 0zm13.9 3.9a1 1 0 0 1-1.42 0l-1.42-1.42a1 1 0 1 1 1.42-1.42l1.42 1.42a1 1 0 0 1 0 1.42zM5.18 4.58a1 1 0 0 1 0 1.42L3.76 7.42a1 1 0 1 1-1.42-1.42L3.76 4.58a1 1 0 0 1 1.42 0z' fill='%23666'/%3E%3C/svg%3E") center/24px no-repeat;
-}
-
-.carousel-tabs {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.carousel-tabs > .tab {
-  flex: 1;
-  min-width: 0;
-}
-
-.tab-row-2 {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-}
-
-.tab-row-2 .tab {
-  flex: 1;
-}
-
-@media (max-width: 768px) {
-  .carousel-tabs,
-  .tab-row-2 {
-    grid-template-columns: 1fr;
-  }
-}
-
-.carousel-tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-}
-
-.tab-row-2 {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-@media (max-width: 768px) {
-  .carousel-tabs,
-  .tab-row-2 {
-    grid-template-columns: 1fr;
-  }
-}
-
-.back-btn {
-  background: var(--danger) !important;
-  color: white !important;
-}
-.back-btn:hover {
-  background: #ff5f57 !important;
-}
-
-
-  </style>
+  <link rel="stylesheet" href="/static/css/carosel_editor.css">
 
 </head>
+
+
 <body>
 
 <header>
@@ -419,16 +42,44 @@ fonts.googleapis.com https://cdnjs.cloudflare.com;
 
   <main>
     <div class="sidebar">
-      <div class="carousel-tabs">
-        <div class="tab active" data-kind="main">Главная</div>
-        <div class="tab" data-kind="services">Услуги</div>
+<div class="carousel-tabs">
+  <div class="tab active" data-kind="landing">Главная</div>
 
+  <!-- Одна кнопка вместо двух -->
+  <div class="tab modal-trigger" data-modal="services">Услуги</div>
 
-        <div class="tab-row-2">
-            <div class="tab" data-action="preview">Предпросмотр</div>
-            <div class="tab" data-action="analytics">Аналитика</div>           
-        </div>
-        </div>
+  <!-- Новая кнопка Товары -->
+  <div class="tab modal-trigger" data-modal="products">Товары</div>
+
+  <div class="tab-row-2">
+      <div class="tab" data-action="preview">Предпросмотр</div>
+      <div class="tab" data-action="analytics">Аналитика</div>           
+  </div>
+</div>
+
+<!-- Модалка Услуги -->
+<div class="mini-modal" id="services">
+  <div class="mini-content">
+    <span class="close">×</span>
+    <h3>Выберите раздел услуг</h3>
+    <div class="option" data-kind="main">Услуги(1)</div>
+    <div class="option" data-kind="services">Услуги(2)</div>
+  </div>
+</div>
+
+<!-- Модалка Товары -->
+<div class="mini-modal" id="products">
+  <div class="mini-content">
+    <span class="close">×</span>
+    <h3>Выберите раздел товаров</h3>
+    <div class="option" data-kind="products1">Товары 1</div>
+    <div class="option" data-kind="products2">Товары 2</div>
+  </div>
+</div>
+
+<!-- Затемнение -->
+<div class="overlay" id="overlay"></div>
+
 
     <div class="panel" id="analytics-panel" style="display:none;">
     <h3>Статистика кликов</h3>
@@ -446,7 +97,7 @@ fonts.googleapis.com https://cdnjs.cloudflare.com;
 
 
       <div class="panel">
-        <h3>Слайд <span id="slide-num">1</span>/3</h3>
+        <h3>Слайд <span id="slide-num">1/5</span></h3>
         <div class="upload-area" id="upload-area">
           <p>Фон: GIF, MP4, WebM, Фото</p>
           <input type="file" id="bg-input" accept="image/*,video/mp4,video/webm" style="display:none;">
@@ -578,13 +229,9 @@ fonts.googleapis.com https://cdnjs.cloudflare.com;
 <script>
   // === ПЕРЕМЕННЫЕ ===
   let lastActivePanel = 'main'; // main, services, analytics
-  let currentKind = 'main';
+  let currentKind = 'landing';
   let currentIndex = 0;
-  let slides = Array(3).fill().map(() => ({
-    background: { url: null, type: 'image', animation: 'fadeIn' },
-    layers: [],
-    hotspots: []
-  }));
+let slides = []; // будет заполняться в loadCarousel()
   let selectedLayers = new Set();
   let isDrawingSelection = false;
   let selectionBox = null;
@@ -601,6 +248,12 @@ fonts.googleapis.com https://cdnjs.cloudflare.com;
   // UNDO / REDO
   let history = [];
   let historyIndex = -1;
+
+  let SLIDE_COUNT = 3; // будет меняться динамически
+
+function getSlideCount(kind) {
+  return kind === 'landing' ? 5 : 3;
+}
 
     function saveState() {
     const state = JSON.parse(JSON.stringify(slides));
@@ -629,7 +282,12 @@ fonts.googleapis.com https://cdnjs.cloudflare.com;
     showToast('Повторено', 'success');
     updateLayersPanel();
   }
-
+  function getCarouselEndpoint(kind) {
+  if (kind === 'landing') return 'home';   // ← ГЛАВНОЕ ИСПРАВЛЕНИЕ
+  if (kind === 'main') return 'main';
+  if (kind === 'services') return 'services';
+  return 'main'; // fallback
+}
   // === УВЕДОМЛЕНИЯ ===
   function showToast(message, type = 'success') {
     const toast = document.createElement('div');
@@ -967,56 +625,66 @@ fonts.googleapis.com https://cdnjs.cloudflare.com;
     }
     };
 
-    function loadCarousel() {
-    const localKey = `carousel_${currentKind}`;
-    const saved = localStorage.getItem(localKey);
+function loadCarousel() {
+  const key = `carousel_${currentKind}`;
+  const saved = localStorage.getItem(key);
 
-    if (saved) {
-        try {
-        slides = JSON.parse(saved);
-        history = [JSON.parse(saved)];
-        historyIndex = 0;
-        loadSlide(currentIndex);
-        showToast('Локальные изменения восстановлены', 'success');
-        saveState();  // ← СЕЙЧАС сохраняем, чтобы undo/redo работало
-        return;
-        } catch (e) {
-        console.error('Ошибка localStorage', e);
-        }
-    }
+  SLIDE_COUNT = getSlideCount(currentKind);
 
-    // Если нет локальных данных — грузим с сервера
-        fetch(`/api/landing/carousel/${currentKind}`)
-            .then(r => r.json())
-            .then(data => {
-            slides = data.length === 3 ? data : Array(3).fill().map(() => ({
-                background: { url: null, type: 'image', animation: 'fadeIn' },
-                layers: [], hotspots: []
-            }));
+  if (saved) {
+    try {
+      let parsed = JSON.parse(saved);
+      // Дополняем недостающие слайды до нужного количества
+      while (parsed.length < SLIDE_COUNT) {
+        parsed.push({
+          background: { url: null, type: 'image', animation: 'fadeIn' },
+          layers: [], hotspots: []
+        });
+      }
+      slides = parsed.slice(0, SLIDE_COUNT);
+      history = [JSON.parse(JSON.stringify(slides))];
+      historyIndex = 0;
+      currentIndex = Math.min(currentIndex, SLIDE_COUNT - 1);
+      loadSlide(currentIndex);
+      showToast('Локальные изменения восстановлены', 'success');
+      saveState();
+      return;
+    } catch (e) { console.error(e); }
+  }
 
-            // Перезаписываем localStorage
-            localStorage.setItem(`carousel_${currentKind}`, JSON.stringify(slides));
-            history = [JSON.parse(JSON.stringify(slides))];
-            historyIndex = 0;
-            loadSlide(currentIndex);
-            showToast('Загружено с сервера', 'success');
-            })
-            .catch(() => {
-            showToast('Оффлайн: локальные данные', 'error');
-            // fallback на localStorage
-            const saved = localStorage.getItem(`carousel_${currentKind}`);
-            if (saved) {
-                slides = JSON.parse(saved);
-                loadSlide(currentIndex);
-            }
-            });
-        }
-
+  fetch(`/api/landing/carousel/${getCarouselEndpoint(currentKind)}`)
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(data => {
+      let serverSlides = Array.isArray(data) ? data : [];
+      while (serverSlides.length < SLIDE_COUNT) {
+        serverSlides.push({
+          background: { url: null, type: 'image', animation: 'fadeIn' },
+          layers: [], hotspots: []
+        });
+      }
+      slides = serverSlides.slice(0, SLIDE_COUNT);
+      localStorage.setItem(key, JSON.stringify(slides));
+      history = [JSON.parse(JSON.stringify(slides))];
+      historyIndex = 0;
+      currentIndex = 0;
+      loadSlide(0);
+      showToast('Загружено с сервера', 'success');
+    })
+    .catch(() => {
+      showToast('Оффлайн-режим', 'error');
+      slides = Array(SLIDE_COUNT).fill().map(() => ({
+        background: { url: null, type: 'image', animation: 'fadeIn' },
+        layers: [], hotspots: []
+      }));
+      currentIndex = 0;
+      loadSlide(0);
+    });
+}
 
 
     function loadSlide(i) {
     currentIndex = i;
-    document.getElementById('slide-num').textContent = i + 1;
+    document.getElementById('slide-num').textContent = `${i + 1}/${SLIDE_COUNT}`;
     const s = slides[i];
 
     // Очистка
@@ -1132,9 +800,13 @@ fonts.googleapis.com https://cdnjs.cloudflare.com;
         data.content = el.textContent;
         saveState();
       });
-    } else {
+} else {
       const img = document.createElement('img');
       img.src = data.url;
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'contain';
+      img.style.pointerEvents = 'none';  // важно! чтобы клик шёл на родителя
       el.appendChild(img);
     }
 
@@ -1142,7 +814,7 @@ fonts.googleapis.com https://cdnjs.cloudflare.com;
     handle.className = 'resize-handle';
     el.appendChild(handle);
 
-    makeInteractive(el);
+    makeInteractive(el);   // ← ТЕПЕРЬ ЕСТЬ И ДЛЯ КАРТИНОК!
     canvas.appendChild(el);
     if (data.hidden) el.style.display = 'none';
   }
@@ -1727,8 +1399,13 @@ function updateRotationTool() {
   rotationSlider.value = angle;
   rotationValue.textContent = angle + '°';
 }
-  function prevSlide() { if (currentIndex > 0) loadSlide(currentIndex - 1); }
-  function nextSlide() { if (currentIndex < 2) loadSlide(currentIndex + 1); }
+  function prevSlide() {
+  if (currentIndex > 0) loadSlide(currentIndex - 1);
+}
+
+function nextSlide() {
+  if (currentIndex < SLIDE_COUNT - 1) loadSlide(currentIndex + 1);
+}
 
     function saveSlide() {
     const dataToSend = slides.map(slide => ({
@@ -1740,7 +1417,7 @@ function updateRotationTool() {
         hotspots: slide.hotspots
     }));
 
-    fetch(`/api/landing/carousel/${currentKind}`, {
+    fetch(`/api/landing/carousel/${getCarouselEndpoint(currentKind)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dataToSend)
@@ -1760,15 +1437,78 @@ function updateRotationTool() {
 
 // === СТАРТ ===
 window.addEventListener('load', () => {
-  loadCarousel(); // ← Просто вызываем новую функцию
+  currentKind = 'landing';
+  loadCarousel(); // теперь автоматически будет 5 слайдов
 });
 document.getElementById('back-button').addEventListener('click', () => {
   window.history.back();
 });
 
 </script>
+<script>
+// === ПОДДЕРЖКА НОВЫХ КАРУСЕЛЕЙ (ТОВАРЫ) — РАСШИРЯЕМ СТАРЫЕ ФУНКЦИИ ===
+function getSlideCount(kind) {
+  if (kind === 'landing') return 5;
+  if (kind === 'products1' || kind === 'products2') return 3;
+  return 3;
+}
 
+function getCarouselEndpoint(kind) {
+  if (kind === 'landing') return 'home';
+  if (kind === 'main') return 'main';
+  if (kind === 'services') return 'services';
+  if (kind === 'products1') return 'products1';
+  if (kind === 'products2') return 'products2';
+  return 'main';
+}
 
+// === МОДАЛЬНЫЕ ОКНА (УСЛУГИ + ТОВАРЫ) ===
+document.addEventListener('DOMContentLoaded', () => {
+  // Открытие модалок
+  document.querySelectorAll('.modal-trigger').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation(); // блокируем старый обработчик
+      const modalId = btn.dataset.modal;
+      document.getElementById(modalId).classList.add('active');
+      document.getElementById('overlay').classList.add('active');
+    });
+  });
 
+  // Закрытие
+  document.querySelectorAll('.close, #overlay').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.mini-modal').forEach(m => m.classList.remove('active'));
+      document.getElementById('overlay').classList.remove('active');
+    });
+  });
+
+  // Выбор в модалке → переключаем карусель
+  document.querySelectorAll('.option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const kind = opt.dataset.kind;
+
+      // Закрываем модалку
+      document.querySelectorAll('.mini-modal').forEach(m => m.classList.remove('active'));
+      document.getElementById('overlay').classList.remove('active');
+
+      // Подсвечиваем родительскую кнопку
+      document.querySelectorAll('.carousel-tabs .tab').forEach(t => t.classList.remove('active'));
+      if (['main', 'services'].includes(kind)) {
+        document.querySelector('[data-modal="services"]').classList.add('active');
+      } else {
+        document.querySelector('[data-modal="products"]').classList.add('active');
+      }
+
+      // ПОЛНОСТЬЮ имитируем клик по обычной вкладке
+      document.querySelectorAll('.panel, #analytics-panel').forEach(p => p.style.display = 'none');
+      document.querySelector('.sidebar > .panel:not(#analytics-panel)').style.display = 'block';
+
+      lastActivePanel = kind;
+      currentKind = kind;
+      loadCarousel(); // ← ЭТО ГЛАВНОЕ! Вместо switchTab(kind)
+    });
+  });
+});
+</script>
 </body>
 </html>

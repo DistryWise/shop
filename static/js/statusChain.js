@@ -1,4 +1,4 @@
-// statuschain.js — ФИНАЛЬНАЯ ВЕРСИЯ 2025 + КНОПКА ОТМЕНЫ ВЕРНУЛАСЬ!
+// statuschain.js — ФИНАЛЬНАЯ ВЕРСИЯ 2025 + КРАСИВЫЙ НОМЕР ЗАКАЗА
 
 let pollInterval = null;
 let currentOrderId = null;
@@ -92,11 +92,11 @@ window.startOrderChain = async function(orderId) {
     chain.innerHTML = `<div class="chain-loading">Загружаем статус...</div>`;
 
     const steps = [
-        { status: 'pending',     label: 'В процессе',   type: 'pending' },
+        { status: 'pending',     label: 'Ожидает',   type: 'pending' },
         { status: 'processing',  label: 'Обработка',    type: 'processing' },
         { status: 'shipping',    label: 'В доставке',   type: 'shipping' },
         { status: 'completed',   label: 'Выполнено',    type: 'completed' },
-        { status: 'cancelled',   label: 'Отменён',      type: 'cancelled' }
+        { status: 'cancelled', label: 'Отменён',      type: 'cancelled' }
     ];
 
     const poll = async () => {
@@ -109,13 +109,47 @@ window.startOrderChain = async function(orderId) {
             const currentIdx = steps.findIndex(s => s.status === data.status);
             const isFinal = ['completed', 'cancelled'].includes(data.status);
 
-            // КЛЮЧЕВОЕ СОБЫТИЕ — МОДАЛКА СРАЗУ УЗНАЁТ О СМЕНЕ СТАТУСА
             dispatchOrderStatusChange(orderId, data.status, isFinal);
 
             const icons = steps.map(s => createStatusIcon(s.type));
 
+            // КРАСИВЫЙ НОМЕР ЗАКАЗА ДЛЯ ПОЛЬЗОВАТЕЛЯ
+let displayId = '№0000'; // fallback
+
+if (window.activeOrders && Array.isArray(window.activeOrders)) {
+    const found = window.activeOrders.find(o => o.id === orderId);
+    if (found?.display_id) {
+        // Если display_id = "№2025-0042" → берём только последние 4 цифры
+        const match = found.display_id.match(/(\d{4})$/);
+        displayId = match ? `№${match[1]}` : found.display_id;
+    }
+}
+
+// Если сервер отдал display_id — тоже обрезаем до 4 цифр
+if (data.display_id) {
+    const match = String(data.display_id).match(/(\d{4})$/);
+    if (match) {
+        displayId = `№${match[1]}`;
+    }
+}
+            // 2. Если сервер отдал display_id — тоже используем
+            if (data.display_id) {
+                displayId = data.display_id.startsWith('№') ? data.display_id : `№${data.display_id}`;
+            }
+
+            // Собираем цепочку
+            // === ОТОБРАЖЕНИЕ ДЕТАЛЬНОЙ ЦЕПОЧКИ + ТОВАРЫ С ФОТО ===
             chain.innerHTML = `
-                <div style="display:flex;justify-content:center;align-items:center;gap:1rem;padding:1rem;flex-wrap:wrap;">
+                <!-- Заголовок с номером заказа -->
+                <div style="text-align:center;margin-bottom:1.5rem;">
+                    <div style="font-size:1.4rem;font-weight:700;color:#fff;">
+                        Заказ <span style="color:#00ff95;font-size:1.6rem;">${displayId}</span>
+                    </div>
+                    ${data.label ? `<div style="color:#aaa;margin-top:0.4rem;">${data.label}</div>` : ''}
+                </div>
+
+                <!-- Цепочка статусов -->
+                <div style="display:flex;justify-content:center;align-items:center;gap:1rem;padding:1rem;flex-wrap:wrap;margin-bottom:2rem;">
                     ${steps.map((step, i) => `
                         <div style="text-align:center;position:relative;flex:1;min-width:70px;">
                             <div class="chain-img-circle ${i === currentIdx ? 'active' : ''} ${i < currentIdx ? 'done' : ''}"
@@ -130,25 +164,77 @@ window.startOrderChain = async function(orderId) {
                     `).join('')}
                 </div>
 
-                <div style="text-align:center;margin-top:1rem;color:#aaa;">
-                    Заказ #${orderId} — <strong style="color:#00ff95;">${data.label || data.status}</strong>
-                </div>
+                <!-- ТОВАРЫ В ЗАКАЗЕ — ТОЧНО КАК В АРХИВЕ -->
+                ${data.items && data.items.length > 0 ? `
+                <div style="background:rgba(255,255,255,0.05);border-radius:20px;padding:1.4rem;margin:1rem 0.5rem;">
+                    <div style="font-weight:700;color:#fff;margin-bottom:1rem;font-size:1.1rem;">
+                        Состав заказа
+                    </div>
+                    <div style="display:grid;gap:1rem;">
+                        ${data.items.slice(0, 5).map(item => {
+    // СЕРВЕР УЖЕ ОТДАЛ ПРАВИЛЬНЫЙ image_url — БЕРЁМ ЕГО НАПРЯМУЮ!
+    const imgSrc = item.image_url;
+    const fallback = item.item_type === 'service' 
+        ? '/static/assets/service-placeholder.png' 
+        : '/static/assets/no-image.png';
 
-                <!-- ВЕРНУЛИ КНОПКУ ОТМЕНЫ -->
+    const totalPrice = ((item.price_cents || 0) * item.quantity / 100)
+        .toFixed(2).replace('.', ',');
+
+    return `
+        <div style="display:flex;gap:1rem;align-items:center;background:rgba(255,255,255,0.05);padding:1rem;border-radius:16px;">
+            <img src="${imgSrc || fallback}"
+                 onerror="this.onerror=null; this.src='${fallback}'"
+                 style="width:56px;height:56px;border-radius:12px;object-fit:cover;background:#222;flex-shrink:0;">
+            <div style="flex:1;min-width:0;">
+                <div style="font-weight:600;color:#fff;word-break:break-word;">${item.title}</div>
+                <div style="color:#aaa;font-size:0.9rem;">
+                    ${item.quantity} × ${item.price_str || (item.price_cents/100).toLocaleString('ru-RU', {minimumFractionDigits: 2}) + ' ₽'}
+                </div>
+            </div>
+            <div style="font-weight:700;color:#00ff95;font-size:1.2rem;white-space:nowrap;">
+                ${totalPrice} ₽
+            </div>
+        </div>
+    `;
+}).join('')}
+                        ${data.items.length > 5 ? `
+                            <div style="text-align:center;color:#888;padding:0.8rem;font-size:0.95rem;">
+                                …и ещё ${data.items.length - 5} товаров
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div style="margin-top:1.2rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.1);text-align:right;">
+                        <strong style="color:#00ff95;font-size:1.4rem;">
+                            Итого: ${data.total_str || order.total_str}
+                        </strong>
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Кнопка отмены -->
                 ${data.can_cancel && !isFinal ? `
-                    <div style="text-align:center;margin-top:1.2rem;">
-                        <button onclick="cancelOrder(${orderId})" 
-                                style="background:#ff4444;color:#fff;border:none;padding:0.7rem 1.8rem;
-                                       border-radius:16px;font-weight:600;cursor:pointer;font-size:1rem;
-                                       box-shadow:0 4px 15px rgba(255,68,68,0.4);">
+                    <div style="text-align:center;margin-top:1.5rem;">
+                        <button onclick="cancelOrder(${orderId})"
+                                style="background:#ff4444;color:#fff;border:none;padding:0.9rem 2.2rem;
+                                       border-radius:20px;font-weight:600;cursor:pointer;font-size:1.1rem;
+                                       box-shadow:0 6px 20px rgba(255,68,68,0.5);">
                             Отменить заказ
                         </button>
                     </div>
                 ` : ''}
 
+                <!-- Причина отмены -->
                 ${data.cancel_reason ? `
-                    <div style="color:#ff6b6b;font-size:0.9rem;margin-top:0.8rem;text-align:center;font-style:italic;">
-                        Причина отмены: ${data.cancel_reason}
+                    <div style="margin-top:1.5rem;padding:1.2rem;background:rgba(255,68,68,0.12);
+                                 border-radius:16px;border-left:4px solid #ff4444;color:#ff7f7f;
+                                 font-size:0.95rem;line-height:1.6;">
+                        <div style="font-weight:700;color:#ff4444;margin-bottom:0.5rem;">
+                            Причина отмены
+                        </div>
+                        <div style="white-space:pre-wrap;">
+                            ${String(data.cancel_reason).replace(/</g, '&lt;').replace(/\n/g, '<br>')}
+                        </div>
                     </div>
                 ` : ''}
             `;
@@ -156,45 +242,41 @@ window.startOrderChain = async function(orderId) {
             if (isFinal) {
                 clearInterval(pollInterval);
                 pollInterval = null;
-                setTimeout(() => chain.style.display = 'none', 5000);
+                setTimeout(() => chain.style.display = 'none', 6000);
             }
         } catch (e) {
-            console.error(e);
+            console.error('Ошибка в цепочке статусов:', e);
         }
     };
 
     poll();
-    pollInterval = setInterval(poll, 3000);
+    pollInterval = setInterval(poll, 3200);
 };
 
-// НОВАЯ КРАСИВАЯ ОТМЕНА С APPLE-МОДАЛКОЙ
+// Остальной код отмены заказа (не меняется)
 window.cancelOrder = function(orderId) {
-  // Открываем модалку
-  document.getElementById('cancelModalOrderId').textContent = orderId;
-  document.getElementById('cancelReasonInput').value = '';
-  document.getElementById('cancelOrderModal').style.display = 'flex';
-  setTimeout(() => document.getElementById('cancelReasonInput').focus(), 300);
+    document.getElementById('cancelModalOrderId').textContent = orderId;
+    document.getElementById('cancelReasonInput').value = '';
+    document.getElementById('cancelOrderModal').style.display = 'flex';
+    setTimeout(() => document.getElementById('cancelReasonInput').focus(), 300);
 };
 
-// Закрытие по клику вне
 document.getElementById('cancelOrderModal')?.addEventListener('click', function(e) {
-  if (e.target === this) this.style.display = 'none';
+    if (e.target === this) this.style.display = 'none';
 });
 
-// === ФИНАЛЬНЫЙ ФИКС 2025: КНОПКА ОТМЕНЫ — РАБОТАЕТ 100%, НЕ ОТКРЫВАЕТ МОДАЛКУ САМА ===
 document.getElementById('confirmCancelFinalBtn')?.addEventListener('click', async function(e) {
-    e.stopPropagation(); // ← КРИТИЧЕСКИ ВАЖНО! Предотвращает всплытие и случайное открытие
+    e.stopPropagation();
 
     const modal = document.getElementById('cancelOrderModal');
     const reasonInput = document.getElementById('cancelReasonInput');
     const reason = reasonInput.value.trim();
     const orderId = parseInt(document.getElementById('cancelModalOrderId').textContent, 10);
 
-    // Валидация
     if (!reason || reason.length < 5) {
         reasonInput.style.borderColor = '#ff4444';
         setTimeout(() => reasonInput.style.borderColor = '', 3000);
-        reliableToast('Укажите причину', 'Минимум 5 символов', true);
+        if (window.reliableToast) reliableToast('Укажите причину', 'Минимум 5 символов', true);
         return;
     }
 
@@ -206,25 +288,22 @@ document.getElementById('confirmCancelFinalBtn')?.addEventListener('click', asyn
         const res = await fetch('/api/cancel_order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ order_id: orderId, reason: reason })
+            body: JSON.stringify({ order_id: orderId, reason })
         });
 
         const data = await res.json();
 
         if (res.ok && data.success) {
-            // УСПЕХ → ЗАКРЫВАЕМ МОДАЛКУ И ОБНОВЛЯЕМ
             modal.style.display = 'none';
-            reliableToast('Заказ отменён', '', false);
-
+            if (window.reliableToast) reliableToast('Заказ отменён', '', false);
             dispatchOrderStatusChange(orderId, 'cancelled', true);
-            window.startOrderChain(orderId); // обновит статус в цепочке
-
+            window.startOrderChain(orderId);
         } else {
-            reliableToast('Ошибка', data.error || 'Не удалось отменить', true);
+            if (window.reliableToast) reliableToast('Ошибка', data.error || 'Не удалось отменить', true);
         }
     } catch (err) {
         console.error(err);
-        reliableToast('Нет связи', 'Проверьте интернет', true);
+        if (window.reliableToast) reliableToast('Нет связи', 'Проверьте интернет', true);
     } finally {
         btn.disabled = false;
         btn.textContent = 'Отменить заказ';

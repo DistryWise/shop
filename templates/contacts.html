@@ -15,134 +15,6 @@
   <link rel="stylesheet" href="/static/css/ai.css">
   <link rel="stylesheet" href="/static/css/contacts.css">
 
-  <style>
-    /* === ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ — ВИСЯЩАЯ ЛАМПОЧКА === */
-.theme-toggle-hanging {
-  position: fixed;
-  top: 90px;           /* под хедером */
-  right: 6%;
-  z-index: 999;
-  pointer-events: auto;
-  transform: translateY(-50%);
-}
-
-/* При скролле хедера — лампочка опускается ниже */
-header.scrolled ~ .theme-toggle-hanging,
-header.scrolled + .theme-toggle-hanging {
-  top: 76px;
-}
-
-.theme-toggle-input { display: none; }
-
-.theme-toggle-label {
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  user-select: none;
-  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-}
-.theme-toggle-label:hover { transform: translateY(-4px); }
-.theme-toggle-label:active { transform: translateY(6px); }
-
-/* Верёвка сверху */
-.rope.top {
-  width: 2px;
-  height: 110px;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.15), rgba(255,255,255,0.4), rgba(255,255,255,0.15));
-  box-shadow: 0 0 8px rgba(255,255,255,0.25);
-  position: relative;
-  transition: all 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-[data-theme="light"] .rope.top {
-  background: linear-gradient(to bottom, rgba(0,0,0,0.08), rgba(0,0,0,0.22), rgba(0,0,0,0.08));
-  box-shadow: 0 0 6px rgba(0,0,0,0.12);
-}
-
-/* Блеск на верёвке */
-.rope.top::before {
-  content: '';
-  position: absolute;
-  top: 0; left: -4px; right: -4px; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  border-radius: 2px;
-  animation: rope-shine 3s infinite ease-in-out;
-}
-[data-theme="light"] .rope.top::before {
-  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.15), transparent);
-}
-@keyframes rope-shine {
-  0%,100% { opacity: 0.2; }
-  50% { opacity: 0.7; }
-}
-
-/* Лампочка */
-.bulb {
-  width: 38px; height: 38px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 28% 28%, #fffbe6, #ffd700);
-  border: 1.5px solid rgba(255,215,0,0.7);
-  position: relative;
-  box-shadow: 0 0 24px rgba(255,215,0,0.5), inset 0 0 12px rgba(255,255,255,0.7), 0 6px 12px rgba(0,0,0,0.3);
-  transition: all 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-.bulb::before {
-  content: ''; position: absolute; inset: 6px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 40%, #fffbe6, #ffed9e);
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
-}
-
-/* Свет внутри лампочки */
-.bulb-light {
-  position: absolute; inset: 9px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,150,0.95), rgba(255,235,100,0.7), transparent 70%);
-  opacity: 0;
-  transition: opacity 1s ease;
-}
-.theme-toggle-input:checked + .theme-toggle-label .bulb-light { opacity: 1; }
-
-/* Внешнее свечение */
-.bulb-glow {
-  position: absolute; top: 50%; left: 50%;
-  width: 70px; height: 70px;
-  background: radial-gradient(circle, rgba(255,220,100,0.35), transparent 70%);
-  border-radius: 50%;
-  transform: translate(-50%,-50%);
-  opacity: 0;
-  transition: opacity 1s ease;
-  pointer-events: none;
-}
-.theme-toggle-input:checked + .theme-toggle-label .bulb-glow { opacity: 1; }
-
-/* Нижняя часть верёвки */
-.rope.bottom {
-  width: 2px; height: 22px;
-  background: inherit;
-  margin-top: -3px;
-}
-
-/* Светлая тема — лампочка выключена */
-[data-theme="light"] .bulb {
-  background: radial-gradient(circle at 30% 30%, #f0f0f0, #bbbbbb);
-  border-color: rgba(0,0,0,0.25);
-  box-shadow: 0 0 10px rgba(0,0,0,0.15), inset 0 0 8px rgba(0,0,0,0.1), 0 6px 12px rgba(0,0,0,0.2);
-}
-[data-theme="light"] .bulb::before {
-  background: radial-gradient(circle at 40% 40%, #ffffff, #dddddd);
-}
-[data-theme="light"] .bulb-light,
-[data-theme="light"] .bulb-glow { opacity: 0 !important; }
-
-/* Адаптив */
-@media (max-width: 992px) {
-  .theme-toggle-hanging { right: 5%; }
-}
-@media (max-width: 768px) {
-  .theme-toggle-hanging { right: 20px; top: 80px; }
-  header.scrolled ~ .theme-toggle-hanging { top: 70px; }
-}
-  </style>
 
 </head>
 <body>
@@ -478,6 +350,122 @@ themeToggle?.addEventListener('change', () => {
   }
 });
   </script>
-  
+  <script>
+// УНИВЕРСАЛЬНЫЙ АНТИСПАМ 2025 — РАБОТАЕТ НА ВСЕХ КНОПКАХ "В КОРЗИНУ" И ИЗМЕНЕНИЯ КОЛИЧЕСТВА
+// Защищает от спама: + / – / удалить / любые onclick="addToCart(...)" / кнопки с классами
+const GlobalAddToCartProtection = (() => {
+  const STORAGE_KEY = 'cart_flood_protection_2025';
+  const COOLDOWN_MS = 20000;    // 20 сек блок после спама
+  const MAX_CLICKS = 9;         // сколько быстрых кликов разрешено
+
+  let clickCount = 0;
+  let resetTimer = null;
+  let blockedUntil = 0;
+
+  // Загружаем состояние
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      blockedUntil = data.blockedUntil || 0;
+    }
+  } catch (e) {}
+
+  const block = () => {
+    blockedUntil = Date.now() + COOLDOWN_MS;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ blockedUntil }));
+
+    // Красивый красный алерт с таймером
+    const alert = document.createElement('div');
+    alert.id = 'global-cart-flood-alert';
+    alert.innerHTML = `
+      <i class="fas fa-hand-paper"></i>
+      <div>
+        <strong>Слишком быстро!</strong><br>
+        <small>Подождите <span class="timer">20</span> сек</small>
+      </div>
+    `;
+    Object.assign(alert.style, {
+      position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
+      background: 'linear-gradient(135deg,#ff453a,#ff2d55)', color: 'white',
+      padding: '16px 32px', borderRadius: '26px', fontSize: '1.15rem',
+      fontWeight: '600', boxShadow: '0 20px 50px rgba(255,45,85,0.5)',
+      backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', gap: '14px',
+      zIndex: '999999', animation: 'slideDown 0.5s ease'
+    });
+    document.body.appendChild(alert);
+
+    let seconds = 20;
+    const timerSpan = alert.querySelector('.timer');
+    const interval = setInterval(() => {
+      seconds--;
+      timerSpan.textContent = seconds;
+      if (seconds <= 0) {
+        clearInterval(interval);
+        alert.remove();
+      }
+    }, 1000);
+
+    setTimeout(() => alert.remove(), COOLDOWN_MS + 1000);
+  };
+
+  return {
+    check() {
+      const now = Date.now();
+      if (blockedUntil > now) return false;
+
+      clickCount++;
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => { clickCount = 0; }, 10000);
+
+      if (clickCount > MAX_CLICKS) {
+        block();
+        clickCount = 0;
+        return false;
+      }
+      return true;
+    }
+  };
+})();
+
+// УНИВЕРСАЛЬНЫЙ ПЕРЕХВАТЧИК — ЛОВИТ ВСЁ
+document.addEventListener('click', function(e) {
+  const target = e.target.closest(
+    'button, .add-to-cart-btn, .buy-btn, .apple-qty-btn, .apple-remove-btn, ' +
+    '.quantity-btn, .clear-cart-btn, [onclick*="addToCart("]'
+  );
+
+  if (!target) return;
+
+  // Проверяем, это действие с корзиной?
+  const onclick = target.getAttribute('onclick') || '';
+  const isCartAction = 
+    onclick.includes('addToCart(') ||
+    target.classList.contains('apple-qty-btn') ||
+    target.classList.contains('apple-remove-btn') ||
+    target.classList.contains('quantity-btn') ||
+    target.classList.contains('clear-cart-btn') ||
+    target.classList.contains('add-to-cart-btn') ||
+    target.classList.contains('buy-btn');
+
+  if (isCartAction && !GlobalAddToCartProtection.check()) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    e.stopPropagation();
+    return false;
+  }
+}, true); // true = capture phase → срабатывает раньше всех остальных обработчиков
+
+// Анимация алерта
+document.head.insertAdjacentHTML('beforeend', `
+<style>
+@keyframes slideDown {
+  from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+#global-cart-flood-alert i { font-size: 1.8rem; }
+</style>
+`);
+</script>
 </body>
 </html>

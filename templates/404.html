@@ -230,6 +230,67 @@
             p { font-size: 1rem; }
             a { font-size: 1.2rem; padding: 0.6rem 1.5rem; }
         }
+
+        /* ================================================= */
+/*  СВЕТЛАЯ ТЕМА ДЛЯ 404 — работает через data-theme  */
+/* ================================================= */
+
+html[data-theme="light"] {
+    --bg: #fafafa;
+    --text: #111111;
+    --text-muted: #666666;
+    --accent: #ff3c3c;
+    --glass: rgba(255, 255, 255, 0.87);
+    --glow: rgba(255, 60, 60, 0.35);
+    --shadow: rgba(0, 0, 0, 0.12);
+}
+
+/* Основные цвета */
+html[data-theme="light"] body {
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* Шум потише */
+html[data-theme="light"] body::before {
+    opacity: 0.04;
+}
+
+/* Текст */
+html[data-theme="light"] p {
+    color: var(--text-muted);
+}
+
+html[data-theme="light"] h1 {
+    color: var(--text);
+    text-shadow: 2px 2px 10px var(--shadow);
+}
+
+/* Грани тессеракта */
+html[data-theme="light"] .cube-face {
+    background: var(--glass);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 0 30px var(--shadow);
+}
+
+/* Глоу внутри тессеракта */
+html[data-theme="light"] .tesseract::before,
+html[data-theme="light"] .tesseract::after {
+    background: linear-gradient(transparent, var(--glow));
+}
+
+/* Кнопка "На главную" */
+html[data-theme="light"] a {
+    color: var(--text);
+    border-color: var(--text);
+}
+
+html[data-theme="light"] a:hover {
+    color: #ffffff;
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 15px 40px rgba(255, 60, 60, 0.35);
+}
     </style>
 </head>
 <body>

@@ -901,3 +901,285 @@ html[data-theme="light"] #authBtn.logged-in .auth-avatar {
   color: #000 !important;
 }
 
+/* ==================================================================
+   АВТОРИЗАЦИЯ — СВЕТЛАЯ ТЕМА (2025) — ТОЧНО ПОД ТВОЮ РАЗМЕТКУ
+================================================================== */
+html[data-theme="light"] #authModal {
+  background: rgba(250, 250, 250, 0.97) !important;
+  backdrop-filter: blur(32px) !important;
+}
+
+html[data-theme="light"] .auth-modal-content {
+  background: #ffffff !important;
+  border: 1.8px solid rgba(15, 15, 15, 0.18) !important;
+  box-shadow: 
+    0 50px 140px rgba(0, 0, 0, 0.22),
+    0 20px 60px rgba(0, 0, 0, 0.14),
+    0 0 0 1px rgba(15, 15, 15, 0.08) inset !important;
+  backdrop-filter: blur(24px) !important;
+}
+
+html[data-theme="light"] .auth-title {
+  background: linear-gradient(135deg, #000000, #333333) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* Все инпуты: телефон, код, выбор страны */
+html[data-theme="light"] #phoneInput,
+html[data-theme="light"] #codeInput,
+html[data-theme="light"] .auth-input,
+html[data-theme="light"] .selected-country {
+  background: rgba(15, 15, 15, 0.07) !important;
+  border: 1.8px solid rgba(15, 15, 15, 0.28) !important;
+  color: #000 !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+html[data-theme="light"] #phoneInput::placeholder,
+html[data-theme="light"] #codeInput::placeholder,
+html[data-theme="light"] .auth-input::placeholder {
+  color: rgba(0, 0, 0, 0.52) !important;
+}
+
+html[data-theme="light"] #phoneInput:focus,
+html[data-theme="light"] #codeInput:focus,
+html[data-theme="light"] .auth-input:focus,
+html[data-theme="light"] .selected-country:hover {
+  border-color: #ff9500 !important;
+  background: rgba(15, 15, 15, 0.11) !important;
+  box-shadow: 0 0 0 5px rgba(255, 149, 0, 0.14) !important;
+}
+
+/* Выпадашка стран */
+html[data-theme="light"] .country-dropdown,
+html[data-theme="light"] .country-dropdown.show {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(15, 15, 15, 0.18) !important;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.18) !important;
+}
+
+html[data-theme="light"] .country-item:hover {
+  background: rgba(15, 15, 15, 0.11) !important;
+}
+
+/* Главная кнопка */
+html[data-theme="light"] .auth-btn {
+  background: #000000 !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.28) !important;
+}
+
+html[data-theme="light"] .auth-btn:hover:not(:disabled) {
+  background: #222222 !important;
+  transform: translateY(-4px) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Успешный шаг */
+html[data-theme="light"] .success-icon {
+  color: #4ade80 !important;
+}
+html[data-theme="light"] .success-title {
+  background: linear-gradient(135deg, #000000, #333333) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+html[data-theme="light"] #welcomePhone {
+  color: #2b9c4d !important;
+}
+
+/* Крестик закрытия */
+html[data-theme="light"] .close-modal {
+  background: rgba(15, 15, 15, 0.09) !important;
+  border: 1.6px solid rgba(15, 15, 15, 0.26) !important;
+  color: #000 !important;
+}
+html[data-theme="light"] .close-modal:hover {
+  background: rgba(255, 107, 107, 0.22) !important;
+  border-color: rgba(255, 107, 107, 0.45) !important;
+}
+
+/* Текст снизу и ссылки */
+html[data-theme="light"] .auth-info,
+html[data-theme="light"] .auth-link {
+  color: #444 !important;
+}
+html[data-theme="light"] .auth-link:hover {
+  color: #000 !important;
+}
+
+/* Чекбоксы */
+html[data-theme="light"] .checkbox-label {
+  color: #333 !important;
+}
+html[data-theme="light"] .custom-checkbox {
+  border-color: rgba(15, 15, 15, 0.45) !important;
+}
+html[data-theme="light"] .checkbox-label input:checked + .custom-checkbox {
+  background: #000 !important;
+  border-color: #000 !important;
+}
+html[data-theme="light"] .checkbox-label input:checked + .custom-checkbox::after {
+  color: #fff !important;
+}
+html[data-theme="light"] .privacy-link {
+  color: #000 !important;
+}
+html[data-theme="light"] .privacy-link:hover {
+  color: #ff9500 !important;
+}
+
+/* === ВЫЙТИ — ЧЁРНЫЙ ТЕКСТ В СВЕТЛОЙ ТЕМЕ === */
+html[data-theme="light"] #authBtn .logout-text {
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+/* При ховере тоже чёрный (чтобы не сливался) */
+html[data-theme="light"] #authBtn.logged-in:hover .logout-text {
+  color: #000000 !important;
+  opacity: 1;
+  transform: translate(-50%, -50%) translateX(-17px);
+}
+
+/* Эмодзи/аватарка после входа — тоже чёрная в светлой теме */
+html[data-theme="light"] #authBtn.logged-in .auth-avatar,
+html[data-theme="light"] #authBtn.logged-in .live-emoji,
+html[data-theme="light"] #authBtn.logged-in .live-emoji-final {
+  color: #000000 !important;
+}
+
+/* Фон кнопки после входа в светлой теме — белый с лёгкой прозрачностью */
+html[data-theme="light"] #authBtn.logged-in {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1.5px solid rgba(15, 15, 15, 0.22) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+html[data-theme="light"] #authBtn.logged-in:hover {
+  background: rgba(15, 15, 15, 0.14) !important;
+  border-color: rgba(15, 15, 15, 0.35) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14) !important;
+}
+
+/* Обводка аватарки — чёрная в светлой теме */
+html[data-theme="light"] .avatar-circle {
+  border: 1.5px solid rgba(15, 15, 15, 0.25) !important;
+  background: transparent !important;
+}
+
+html[data-theme="light"] #authBtn.logged-in:hover .avatar-circle {
+  background: rgba(15, 15, 15, 0.08) !important;
+  border-color: rgba(15, 15, 15, 0.4) !important;
+}
+
+/* ВЫДВИГАЮЩАЯСЯ КНОПКА ВХОДА — БЕЛАЯ ДО СКРОЛЛА В СВЕТЛОЙ ТЕМЕ */
+[data-theme="light"] header:not(.scrolled) #authBtn,
+[data-theme="light"] header:not(.scrolled) #authBtn * {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  box-shadow: 
+    0 8px 25px rgba(255, 255, 255, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.3) inset !important;
+}
+
+/* Текст "Вход" — белый и жирный */
+[data-theme="light"] header:not(.scrolledhores) #authBtn .login-text {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3) !important;
+}
+
+/* Иконка человека — белая */
+[data-theme="light"] header:not(.scrolled) #authBtn i,
+[data-theme="light"] header:not(.scrolled) #authBtn svg,
+[data-theme="light"] header:not(.scrolled) #authBtn svg * {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* При ховере — чуть ярче, но всё равно белая */
+[data-theme="light"] header:not(.scrolled) #authBtn:hover {
+  background: rgba(255, 255, 255, 1) !important;
+  border-color: #ffffff !important;
+  box-shadow: 
+    0 12px 35px rgba(255, 255, 255, 0.4),
+    0 0 0 1.5px #ffffff inset !important;
+  transform: translateY(-3px) !important;
+}
+
+/* Аватар после входа — тоже белый эмодзи на белой подложке */
+[data-theme="light"] header:not(.scrolled) #authBtn.logged-in .live-emoji,
+[data-theme="light"] header:not(.scrolled) #authBtn.logged-in .auth-avatar,
+[data-theme="light"] header:not(.scrolled) #authBtn.logged-in .live-emoji-final {
+  color: #ffffff !important;
+}
+
+/* Текст "Выйти" при ховере после входа — белый */
+[data-theme="light"] header:not(.scrolled) #authBtn.logged-in .logout-text {
+  color: #ffffff !important;
+}
+/* ВЫДВИГАЮЩАЯСЯ КНОПКА ВХОДА — БЕЛАЯ ДО СКРОЛЛА В СВЕТЛОЙ ТЕМЕ (ФИНАЛЬНАЯ ВЕРСИЯ) */
+/* ВЫДВИГАЮЩАЯСЯ КНОПКА ВХОДА — БЕЛАЯ С ЧЁРНОЙ РАМКОЙ ДО СКРОЛЛА (СВЕТЛАЯ ТЕМА) */
+[data-theme="light"] header:not(.scrolled) #authBtn {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1.8px solid rgba(0, 0, 0, 0.25) !important;  /* ← ВЕРНУЛИ ЧЁРНУЮ РАМКУ */
+  backdrop-filter: blur(16px) !important;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.22) !important;
+}
+
+/* Иконка и эмодзи — белые */
+[data-theme="light"] header:not(.scrolled) #authBtn i,
+[data-theme="light"] header:not(.scrolled) #authBtn .live-emoji,
+[data-theme="light"] header:not(.scrolled) #authBtn .live-emoji-final,
+[data-theme="light"] header:not(.scrolled) #authBtn .auth-avatar {
+  color: #ffffff !important;
+}
+
+/* Текст "Вход" и "Выйти" — чёрный и отлично видно */
+[data-theme="light"] header:not(.scrolled) #authBtn .login-text,
+[data-theme="light"] header:not(.scrolled) #authBtn .logout-text {
+  color: #000000 !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8) !important;
+}
+
+/* При ховере — рамка становится чуть толще и ярче */
+[data-theme="light"] header:not(.scrolled) #authBtn:hover {
+  background: #ffffff !important;
+  border: 2px solid rgba(0, 0, 0, 0.35) !important;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.28) !important;
+  transform: translateY(-4px) !important;
+}
+
+[data-theme="light"] header:not(.scrolled) #authBtn:hover .login-text,
+[data-theme="light"] header:not(.scrolled) #authBtn:hover .logout-text {
+  color: #000000 !important;
+}
+/* ==================================================================
+   ФИНАЛЬНЫЙ ФИКС: ИКОНКА "ЧЕЛОВЕЧЕК" ВСЕГДА ЧЁРНАЯ В СВЕТЛОЙ ТЕМЕ
+   (когда пользователь НЕ авторизован + шапка не проскроллена)
+================================================================== */
+[data-theme="light"] header:not(.scrolled) #authBtn:not(.logged-in) i,
+[data-theme="light"] header:not(.scrolled) #authBtn:not(.logged-in) svg,
+[data-theme="light"] header:not(.scrolled) #authBtn:not(.logged-in) svg * {
+    color: #000000 !important;
+    fill: #000000 !important;
+    stroke: #000000 !important;
+}
+
+/* На всякий случай — если кто-то использует <svg> вместо <i> */
+[data-theme="light"] header:not(.scrolled) #authBtn:not(.logged-in) .login-icon {
+    color: #000000 !important;
+}
+
+/* При ховере — тоже чёрная (чтобы не мигала) */
+[data-theme="light"] header:not(.scrolled) #authBtn:not(.logged-in):hover i {
+    color: #000000 !important;
+}

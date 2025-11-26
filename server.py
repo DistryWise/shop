@@ -1,6 +1,6 @@
 # server.py — ФИНАЛЬНАЯ ВЕРСИЯ С ЗАЩИТОЙ ПО IP
 
-from flask import Flask, render_template, session, redirect, url_for, flash, request, jsonify
+from flask import Flask, render_template, session, redirect, url_for, flash, request, jsonify,send_from_directory
 import logging
 import os
 from functools import wraps
@@ -10,7 +10,19 @@ import httpx
 import asyncio
 import json
 from flask import stream_with_context, Response
+from admin_goods import admin_goods_bp
+from dotenv import load_dotenv
 
+
+load_dotenv()  
+
+# === ЧИТАЕМ ИЗ .env ===
+ALLOWED_ADMIN_IPS = [ip.strip() for ip in os.getenv("ADMIN_IPS", "127.0.0.1,::1").split(",") if ip.strip()]
+ADMIN_PHONES = [phone.strip() for phone in os.getenv("ADMIN_PHONES", "").split(",") if phone.strip()]
+ADMIN_PASSWORD_HASH = os.getenv("ADMIN_PASSWORD_HASH", "")
+
+# хэш пароля админа
+ADMIN_PASSWORD_HASH = os.getenv("ADMIN_PASSWORD_HASH", "")
 
 from database_goods import (
     init_all_dbs,
@@ -26,13 +38,6 @@ from dispatch import init_dispatch_db, register_dispatch_routes, get_stats
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ТВОИ РАЗРЕШЁННЫЕ IP (меняй при смене интернета)
-ALLOWED_ADMIN_IPS = [
-    "188.123.58.214",   # ← ТВОЙ ОСНОВНОЙ IP
-    "127.0.0.1",
-    "::1",
-    # Добавляй сюда новые IP при необходимости
-]
 
 def get_client_ip():
     """Точно определяет IP даже за Cloudflare/Nginx"""
@@ -80,21 +85,29 @@ def create_app():
     # === ЖЁСТКАЯ ЗАЩИТА АДМИНКИ ПО IP ===
     @app.before_request
     def protect_admin_routes():
-        admin_paths = [
-            '/admin', '/admin_', '/zaza_admin', '/admin_reviews',
-            '/api/all_products', '/api/services',
-            '/api/product/', '/api/service/'
-        ]
-        if any(request.path.startswith(p) for p in admin_paths):
+        # Список всех админских путей (добавляй сюда новые, если будут)
+        admin_paths = (
+            '/admin', '/admin_', '/zaza_admin', '/carousel-editor',
+            '/api/admin', '/admin_users', '/admin_reviews', '/admin_orders',
+            '/admin_feedback'
+        )
+
+        if any(request.path.startswith(path) for path in admin_paths):
             client_ip = get_client_ip()
+
+            # 1. Если IP НЕ в белом списке — сразу 404, как будто страницы нет
             if client_ip not in ALLOWED_ADMIN_IPS:
-                session.pop('is_admin', None)
-                if request.path.startswith('/api/'):
-                    return jsonify({"error": "Forbidden", "is_admin": False}), 403
-                else:
-                    return render_template("404.html"), 404
-            # Если IP разрешён — даём админские права
+                logger.info(f"Попытка доступа к админке с чужого IP: {client_ip} → {request.path}")
+                return render_template("404.html"), 404
+
+            # 2. IP в списке, но нет метки real_admin → тоже 404 (не выдаём, что нужна авторизация)
+            if not session.get('real_admin'):
+                logger.info(f"Доступ к админке без real_admin | IP: {client_ip} | Путь: {request.path}")
+                return render_template("404.html"), 404
+
+            # 3. Всё ок — пускаем
             session['is_admin'] = True
+            return  # продолжаем
 
     # === СТРАНИЦЫ ===
     @app.route('/')
@@ -177,6 +190,8 @@ def create_app():
     # === ПОДКЛЮЧЕНИЕ БЛЮПРИНТОВ ===
     app.register_blueprint(zaza_editor)
     app.register_blueprint(users_bp)
+
+    app.register_blueprint(admin_goods_bp)
 
     # === АДМИН РОУТЫ (внутри register_admin_routes — они тоже защищены по IP) ===
     register_admin_routes(app)
@@ -322,20 +337,19 @@ def create_app():
         if not phone or not code:
             return jsonify({"success": False, "error": "Нет номера или кода"}), 400
 
-        # Приводим номер к единому виду
+        # Приводим номер к единому виду (без + в начале)
         clean_phone = ''.join(filter(str.isdigit, phone))
         if len(clean_phone) == 10:
             clean_phone = '7' + clean_phone
         elif clean_phone.startswith('8'):
             clean_phone = '7' + clean_phone[1:]
 
-        # ПРОВЕРЯЕМ НАСТОЯЩИЙ КОД ИЗ БД
+        # Проверяем код из SMS
         is_valid, message = verify_user_code('+' + clean_phone, code)
-
         if not is_valid:
             return jsonify({"success": False, "error": message}), 401
 
-        # Код верный → ищем или создаём пользователя
+        # Ищем или создаём пользователя
         conn = sqlite3.connect('database.db')
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
@@ -344,7 +358,6 @@ def create_app():
         user = cur.fetchone()
 
         if not user:
-            # Создаём нового пользователя
             cur.execute("""
                 INSERT INTO users (phone, is_admin, is_blocked, created_at)
                 VALUES (?, 0, 0, ?)
@@ -360,17 +373,29 @@ def create_app():
         conn.commit()
         conn.close()
 
-        # Успешная авторизация
+        # === ГЛАВНАЯ ЛОГИКА АДМИН-ДОСТУПА ===
+        client_ip = get_client_ip()
+
+        # Проверяем: это ТЫ? (IP + номер из .env)
+        if client_ip in ALLOWED_ADMIN_IPS and clean_phone in ADMIN_PHONES:
+            session['real_admin'] = True
+            session['is_admin'] = True
+            logger.warning(f"АДМИН ВОШЁЛ В СИСТЕМУ | {clean_phone} | IP: {client_ip}")
+        else:
+            session['real_admin'] = False
+            # Обычные пользователи могут быть админами только если ты вручную выдал права в БД
+            session['is_admin'] = bool(user['is_admin']) if user else False
+
+        # Записываем базовые данные в сессию
         session['user_id'] = user_id
         session['phone'] = clean_phone
-        session['is_admin'] = bool(user['is_admin']) if user else False
 
-        # Сливаем корзину гостя в аккаунт
+        # Сливаем корзину
         if client_cart:
             from database_goods import merge_cart_from_client
             merge_cart_from_client(user_id, client_cart)
 
-        logger.info(f"Успешный вход: {clean_phone} (ID: {user_id})")
+        logger.info(f"Вход: {clean_phone} (ID: {user_id}) | is_admin: {session['is_admin']} | real_admin: {session.get('real_admin')}")
 
         return jsonify({
             "success": True,
@@ -380,6 +405,15 @@ def create_app():
                 "is_admin": session['is_admin']
             }
         })
+    # Это заставит Flask отдавать файлы из static/uploads
+    @app.route('/static/uploads/<path:filename>')
+    def uploaded_files(filename):
+        return send_from_directory('static/uploads', filename)
+
+    # Опционально: защита от обхода директорий
+    @app.route('/static/uploads/')
+    def uploaded_index():
+        return "Доступ запрещён", 403
 
     @app.route('/api/logout', methods=['POST'])
     def api_logout():

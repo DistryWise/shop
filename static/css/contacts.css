@@ -775,7 +775,7 @@ html[data-theme="light"] #miniCartDropdown {
   box-shadow: 0 30px 80px rgba(0,0,0,0.12) !important;
 }
 
-html[data-theme="light"] .go-to-cart-btn:hover { background: #333 !important; }
+
 
 /* Делитель, бэк-то-топ, футер */
 html[data-theme="light"] .divider { background: var(--border); }
@@ -1055,4 +1055,356 @@ html[data-theme="light"] .custom-cursor.hover {
   transform: translate(-50%, -50%) scale(2.6);
   opacity: 1;
   box-shadow: 0 0 16px rgba(0,0,0,0.4);
+}
+
+/* ==================================================================
+   МОДАЛКА ОБРАТНОЙ СВЯЗИ — СВЕТЛАЯ ТЕМА (2025)
+   Добавь в самый конец CSS
+================================================================== */
+html[data-theme="light"] .custom-alert {
+  background: rgba(250, 250, 250, 0.96) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+html[data-theme="light"] .custom-alert .alert-content {
+  background: #ffffff !important;
+  border: 1.5px solid rgba(15, 15, 15, 0.15) !important;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.14) !important;
+  color: #000 !important;
+}
+
+html[data-theme="light"] .alert-close {
+  background: rgba(15, 15, 15, 0.08) !important;
+  border: 1.2px solid rgba(15, 15, 15, 0.22) !important;
+  color: #000 !important;
+}
+html[data-theme="light"] .alert-close:hover {
+  background: rgba(15, 15, 15, 0.18) !important;
+  transform: scale(1.1);
+}
+
+html[data-theme="light"] .alert-icon {
+  color: #ff9500 !important;
+  text-shadow: 0 0469 24px rgba(255, 149, 0, 0.4) !important;
+}
+
+html[data-theme="light"] .alert-text strong,
+html[data-theme="light"] .alert-text span {
+  color: #000 !important;
+}
+html[data-theme="light"] .alert-text strong {
+  font-weight: 700;
+}
+html[data-theme="light"] .alert-text span {
+  opacity: 0.88;
+}
+
+/* Поля ввода */
+html[data-theme="light"] .contact-form input,
+html[data-theme="light"] .contact-form textarea {
+  background: rgba(15, 15, 15, 0.06) !important;
+  border: 1.5px solid rgba(15, 15, 15, 0.28) !important;
+  color: #000 !important;
+}
+html[data-theme="light"] .contact-form input::placeholder,
+html[data-theme="light"] .contact-form textarea::placeholder {
+  color: rgba(0, 0, 0, 0.55) !important;
+}
+html[data-theme="light"] .contact-form input:focus,
+html[data-theme="light"] .contact-form textarea:focus {
+  border-color: #ff9500 !important;
+  background: rgba(15, 15, 15, 0.11) !important;
+  box-shadow: 0 0 0 4px rgba(255, 149, 0, 0.14) !important;
+}
+
+/* Кнопка "Изменить" номер */
+html[data-theme="light"] .edit-phone-btn {
+  background: rgba(15, 15, 15, 0.12) !important;
+  border: 1.2px solid rgba(15, 15, 15, 0.28) !important;
+  color: #000 !important;
+}
+html[data-theme="light"] .edit-phone-btn:hover {
+  background: rgba(15, 15, 15, 0.22) !important;
+}
+
+/* Главная кнопка отправки */
+html[data-theme="light"] .alert-login-btn {
+  background: #000 !important;
+  color: #fff !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.22) !important;
+}
+html[data-theme="light"] .alert-login-btn:hover:not(:disabled) {
+  background: #333 !important;
+  transform: translateY(-4px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Кулдаун оверлей (когда отправка на таймере) */
+html[data-theme="light"] .btn-cooldown {
+  background: rgba(0, 0, 0, 0.92) !important;
+  color: #fff !important;
+}
+html[data-theme="light"] .btn-cooldown .timer {
+  color: #fff !important;
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.9);
+}
+
+/* Ошибки полей */
+html[data-theme="light"] .contact-form input.error,
+html[data-theme="light"] .contact-form textarea.error {
+  border-color: #ff6b6b !important;
+  background: rgba(255, 107, 107, 0.11) !important;
+  box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.18) !important;
+}
+
+/* ЛОГОТИП — ЧЁРНЫЙ В СВЕТЛОЙ ТЕМЕ (хедер + футер) */
+html[data-theme="light"] .logo-img,
+html[data-theme="light"] .footer-logo {
+  filter: none !important;           /* убираем инверсию */
+  opacity: 1 !important;
+}
+
+html[data-theme="light"] header .logo-img,
+html[data-theme="light"] header.scrolled .logo-img,
+html[data-theme="light"] .footer-logo {
+  filter: brightness(0) !important;  /* чисто чёрный цвет */
+}
+
+/* На всякий случай — если где-то ещё используется логотип */
+html[data-theme="light"] img[src*="logo.png"],
+html[data-theme="light"] img[src*="logo"] {
+  filter: brightness(0) !important;
+}
+/* ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ КНОПКИ "ОФОРМИТЬ ЗАКАЗ" В МИНИ-КОРЗИНЕ — СВЕТЛАЯ ТЕМА */
+html[data-theme="light"] .go-to-cart-btn,
+html[data-theme="light"] .go-to-cart-btn.custom-cursor-on-hover,
+html[data-theme="light"] #miniCartDropdown .go-to-cart-btn {
+  background: #000000 !important;
+  color: #ffffff !important;
+  transition: all 0.35s ease !important;
+}
+
+html[data-theme="light"] .go-to-cart-btn:hover,
+html[data-theme="light"] .go-to-cart-btn.custom-cursor-on-hover:hover,
+html[data-theme="light"] #miniCartDropdown .go-to-cart-btn:hover {
+  background: #1a1a1a !important;   /* тёмно-серый вместо чёрного при ховере */
+  color: #ffffff !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* ==================================================================
+   АЛЕРТЫ И ТОСТЫ — СВЕТЛАЯ ТЕМА (2025) — contacts.css стиль
+================================================================== */
+html[data-theme="light"] .custom-alert-temp,
+html[data-theme="light"] .toast-alert,
+html[data-theme="light"] .alert-content,
+html[data-theme="light"] .custom-alert .alert-content {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border: 1.6px solid rgba(15, 15, 15, 0.16) !important;
+  color: #000 !important;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.18),
+    0 8px 25px rgba(0, 0, 0, 0.12) !important;
+  backdrop-filter: blur(24px) !important;
+}
+
+/* Успешный алерт — зелёная полоска слева */
+html[data-theme="light"] .custom-alert-temp.success,
+html[data-theme="light"] .toast-alert.success {
+  border-left: 6px solid #4ade80 !important;
+}
+
+/* Ошибка — красная полоска */
+html[data-theme="light"] .custom-alert-temp.error,
+html[data-theme="light"] .toast-alert.error {
+  border-left: 6px solid #ff6b6b !important;
+}
+
+/* Текст внутри */
+html[data-theme="light"] .alert-text,
+html[data-theme="light"] .alert-text strong,
+html[data-theme="light"] .alert-text span,
+html[data-theme="light"] .toast-alert .alert-text strong,
+html[data-theme="light"] .toast-alert .alert-text span {
+  color: #000 !important;
+}
+
+html[data-theme="light"] .alert-text strong,
+html[data-theme="light"] .toast-alert .alert-text strong {
+  font-weight: 700 !important;
+  font-size: 1.25rem !important;
+  color: #000 !important;
+}
+
+html[data-theme="lightiot"] .alert-text span,
+html[data-theme="light"] .toast-alert .alert-text span {
+  opacity: 0.88 !important;
+  font-size: 1.05rem !important;
+}
+
+/* Иконки */
+html[data-theme="light"] .custom-alert-temp i,
+html[data-theme="light"] .toast-alert i {
+  color: #000 !important;
+  opacity: 0.9;
+}
+
+/* Крестик закрытия */
+html[data-theme="light"] .alert-close {
+  background: rgba(15, 15, 15, 0.1) !important;
+  border: 1.4px solid rgba(15, 15, 15, 0.25) !important;
+  color: #000 !important;
+}
+html[data-theme="light"] .alert-close:hover {
+  background: rgba(15, 15, 15, 0.22) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Таймер на кнопке (кулдаун) */
+html[data-theme="light"] .btn-cooldown,
+html[data-theme="light"] .btn-cooldown.active {
+  background: rgba(0, 0, 0, 0.92) !important;
+  color: #fff !important;
+}
+html[data-theme="light"] .btn-cooldown .timer {
+  color: #fff !important;
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Специально для тостов внизу экрана */
+html[data-theme="light"] .toast-alert {
+  border: 1.6px solid rgba(15, 15, 15, 0.18) !important;
+  background: #ffffff !important;
+  backdrop-filter: blur(28px) !important;
+}
+html[data-theme="light"] .toast-alert.show {
+  transform: translateX(-50%) translateY(0) !important;
+}
+
+    /* === ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ — ВИСЯЩАЯ ЛАМПОЧКА === */
+.theme-toggle-hanging {
+  position: fixed;
+  top: 90px;           /* под хедером */
+  right: 6%;
+  z-index: 999;
+  pointer-events: auto;
+  transform: translateY(-50%);
+}
+
+/* При скролле хедера — лампочка опускается ниже */
+header.scrolled ~ .theme-toggle-hanging,
+header.scrolled + .theme-toggle-hanging {
+  top: 76px;
+}
+
+.theme-toggle-input { display: none; }
+
+.theme-toggle-label {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.theme-toggle-label:hover { transform: translateY(-4px); }
+.theme-toggle-label:active { transform: translateY(6px); }
+
+/* Верёвка сверху */
+.rope.top {
+  width: 2px;
+  height: 110px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.15), rgba(255,255,255,0.4), rgba(255,255,255,0.15));
+  box-shadow: 0 0 8px rgba(255,255,255,0.25);
+  position: relative;
+  transition: all 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+[data-theme="light"] .rope.top {
+  background: linear-gradient(to bottom, rgba(0,0,0,0.08), rgba(0,0,0,0.22), rgba(0,0,0,0.08));
+  box-shadow: 0 0 6px rgba(0,0,0,0.12);
+}
+
+/* Блеск на верёвке */
+.rope.top::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -4px; right: -4px; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  border-radius: 2px;
+  animation: rope-shine 3s infinite ease-in-out;
+}
+[data-theme="light"] .rope.top::before {
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.15), transparent);
+}
+@keyframes rope-shine {
+  0%,100% { opacity: 0.2; }
+  50% { opacity: 0.7; }
+}
+
+/* Лампочка */
+.bulb {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 28% 28%, #fffbe6, #ffd700);
+  border: 1.5px solid rgba(255,215,0,0.7);
+  position: relative;
+  box-shadow: 0 0 24px rgba(255,215,0,0.5), inset 0 0 12px rgba(255,255,255,0.7), 0 6px 12px rgba(0,0,0,0.3);
+  transition: all 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.bulb::before {
+  content: ''; position: absolute; inset: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #fffbe6, #ffed9e);
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+}
+
+/* Свет внутри лампочки */
+.bulb-light {
+  position: absolute; inset: 9px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,150,0.95), rgba(255,235,100,0.7), transparent 70%);
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.theme-toggle-input:checked + .theme-toggle-label .bulb-light { opacity: 1; }
+
+/* Внешнее свечение */
+.bulb-glow {
+  position: absolute; top: 50%; left: 50%;
+  width: 70px; height: 70px;
+  background: radial-gradient(circle, rgba(255,220,100,0.35), transparent 70%);
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+  opacity: 0;
+  transition: opacity 1s ease;
+  pointer-events: none;
+}
+.theme-toggle-input:checked + .theme-toggle-label .bulb-glow { opacity: 1; }
+
+/* Нижняя часть верёвки */
+.rope.bottom {
+  width: 2px; height: 22px;
+  background: inherit;
+  margin-top: -3px;
+}
+
+/* Светлая тема — лампочка выключена */
+[data-theme="light"] .bulb {
+  background: radial-gradient(circle at 30% 30%, #f0f0f0, #bbbbbb);
+  border-color: rgba(0,0,0,0.25);
+  box-shadow: 0 0 10px rgba(0,0,0,0.15), inset 0 0 8px rgba(0,0,0,0.1), 0 6px 12px rgba(0,0,0,0.2);
+}
+[data-theme="light"] .bulb::before {
+  background: radial-gradient(circle at 40% 40%, #ffffff, #dddddd);
+}
+[data-theme="light"] .bulb-light,
+[data-theme="light"] .bulb-glow { opacity: 0 !important; }
+
+/* Адаптив */
+@media (max-width: 992px) {
+  .theme-toggle-hanging { right: 5%; }
+}
+@media (max-width: 768px) {
+  .theme-toggle-hanging { right: 20px; top: 80px; }
+  header.scrolled ~ .theme-toggle-hanging { top: 70px; }
 }

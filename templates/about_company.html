@@ -20,67 +20,6 @@
   <link rel="stylesheet" href="/static/css/ai.css">
   <link rel="stylesheet" href="/static/css/contacts.css"> <!-- Оставлен, но не ломает хедер -->
 
-<!-- 1. В <head> — только стили лоадера (всё остальное можно не трогать) -->
-<style>
- /* ─────── ЛОАДЕР ТОЧНО КАК НА contacts.html ─────── */
-.loader {
-  position: fixed;
-  inset: 0;
-  z-index: 999999;
-  background: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 1;
-  pointer-events: none;
-  transition: opacity 1.2s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.loader::before {
-  content: '';
-  width: 110px;
-  height: 110px;
-  border: 2px solid rgba(255,255,255,0.08);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 1.8s linear infinite;
-  box-shadow: 0 0 60px rgba(255,255,255,0.18);
-}
-
-.loader::after {
-  content: 'PILIGRIM';
-  position: absolute;
-  font-family: 'Inter', sans-serif;
-  font-size: 1.35rem;           /* ← как в contacts */
-  font-weight: 100;
-  letter-spacing: 14px;         /* ← как в contacts */
-  color: #fff;
-  opacity: 0;
-  animation: fadeIn 0.9s ease-out 0.45s forwards;   /* ← САМАЯ ГЛАВНАЯ СТРОКА */
-  /* 0.45s задержка — именно поэтому сначала только круг, а потом надпись */
-}
-
-.loader.hidden {
-  opacity: 0;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-@keyframes fadeIn {
-  to { opacity: 1; }
-}
-
-/* Светлая тема (если вдруг включишь) */
-html[data-theme="light"] .loader { background: #fafafa; }
-html[data-theme="light"] .loader::before {
-  border-color: rgba(0,0,0,0.08);
-  border-top-color: #000;
-  box-shadow: 0 0 60px rgba(0,0,0,0.14);
-}
-html[data-theme="light"] .loader::after { color: #000; }
-  </style>
-
 </head>
 <body>
   <div class="loader" id="pageLoader"></div>
@@ -90,7 +29,7 @@ html[data-theme="light"] .loader::after { color: #000; }
   <header>
     <a href="/" class="logo"><img src="/static/assets/logo.png" alt="Piligrim" class="logo-img"></a>
     <nav>
-      <a href="/zaza" class="nav-link">Главная</a>
+      <a href="/" class="nav-link">Главная</a>
       <a href="/goods" class="nav-link">Товары</a>
       <a href="/services" class="nav-link">Услуги</a>
       <a href="/news" class="nav-link">Новости</a>
@@ -135,7 +74,7 @@ html[data-theme="light"] .loader::after { color: #000; }
   <!-- ВЕСЬ КОНТЕНТ — БЕЗ ИЗМЕНЕНИЙ -->
   <section class="hero">
     <div class="hero-content">
-      <div class="hero-subtitle">TOKYO · 1987</div>
+      <div class="hero-subtitle">Калининград · 1255</div>
       <h1 class="hero-title">PILIGRIM</h1>
       <p class="hero-text">
         Минимализм. Точность. Вневременность. Мы создаём цифровые решения, которые работают десятилетиями.
@@ -143,43 +82,47 @@ html[data-theme="light"] .loader::after { color: #000; }
     </div>
   </section>
 
-  <div class="asymmetry-block">
-    <section class="clients-section">
-      <div class="clients-title">НАШИ КЛИЕНТЫ</div>
-      <div class="clients-grid">
-        <div class="client-item">Louise Brough</div>
-        <div class="client-item">Eliving Furniture</div>
-        <div class="client-item">Auxilius</div>
-        <div class="client-item">Unilever</div>
-        <div class="client-item">Revance Aesthetics</div>
-        <div class="client-item">CareerUp</div>
-        <div class="client-item">Lamiale</div>
-        <div class="client-item">FundMatch</div>
-        <div class="client-item">LeHibou</div>
-        <div class="client-item">ClutchGrowth</div>
-        <div class="client-item">Sambanova Systems</div>
-        <div class="client-item">RookieUp</div>
-        <div class="client-item">Momentick</div>
-      </div>
-    </section>
-  </div>
-
-  <section class="about-section">
-    <div class="image-wrapper">
-      <div class="image" style="background-image:url('https://mir-s3-cdn-cf.behance.net/project_modules/max_3840/03ef4657732573.59e13b5fb39ef.jpg');"></div>
-    </div>
-    <div class="content">
-      <div class="section-title">НАША МИССИЯ</div>
-      <p class="section-text">
-        Мы создаём цифровые продукты, которые не просто решают задачи, а формируют долгосрочные отношения между брендом и пользователем. 
-        Каждый проект — это баланс между эстетикой, функциональностью и технологической надёжностью.
-      </p>
+<div class="asymmetry-block">
+  <section class="clients-section">
+    <div class="clients-title">МЫ РАБОТАЕМ ТОЛЬКО С ТЕМИ, КТО ГОТОВ К РЕЗУЛЬТАТУ</div>
+    <div class="clients-grid">
+      <div class="client-item">Закрытые B2B-платформы</div>
+      <div class="client-item">AI-ассистенты с ROI ×10</div>
+      <div class="client-item">Корпоративные сайты 2025</div>
+      <div class="client-item">Автоворонки под ключ</div>
+      <div class="client-item">AI Meta Ads Creator</div>
+      <div class="client-item">Персональные решения</div>
+      <div class="client-item">Только измеримая прибыль</div>
+      <div class="client-item">Запуск за 14–30 дней</div>
+      <div class="client-item">Гарантия окупаемости</div>
+      <div class="client-item">Без шаблонов</div>
+      <div class="client-item">100 % конфиденциальность</div>
+      <div class="client-item">Премиум-дизайн</div>
+      <div class="client-item">Piligrim Standard</div>
     </div>
   </section>
+</div>
+
+<section class="about-section">
+  <div class="image-wrapper">
+    <div class="image" 
+         style="background-image: url('/static/assets/about_company/mission.png');">
+    </div>
+  </div>
+  <div class="content">
+    <div class="section-title">НАША МИССИЯ</div>
+    <p>
+      Делаем цифровые продукты для бизнеса, которые продают сами себя.<br>
+      Сайты, AI-юристы, закрытые платформы, автоматизация — всё, что превращает клиентов в постоянных и увеличивает ваш чек.
+    </p>
+  </div>
+</section>
 
   <section class="about-section">
     <div class="image-wrapper">
-      <div class="image" style="background-image:url('https://mir-s3-cdn-cf.behance.net/project_modules/max_3840/03ef4657732573.59e13b5fb39ef.jpg');"></div>
+      <div class="image" 
+      style="background-image: url('/static/assets/about_company/approach.png');">
+    </div>
     </div>
     <div class="content">
       <div class="section-title">НАШ ПОДХОД</div>
@@ -192,58 +135,72 @@ html[data-theme="light"] .loader::after { color: #000; }
 
   <section class="about-section">
     <div class="image-wrapper">
-      <div class="image" style="background-image:url('https://mir-s3-cdn-cf.behance.net/project_modules/max_3840/03ef4657732573.59e13b5fb39ef.jpg');"></div>
+      <div class="image" style="background-image: url('/static/assets/about_company/company.jpg');"></div>
     </div>
     <div class="content">
-      <div class="section-title">КОМАНДА</div>
-      <p class="section-text">
-        40+ специалистов: дизайнеры, разработчики, аналитики, PM.
-        Средний опыт — 8 лет. Работали с проектами от стартапов до корпораций уровня Fortune 500.
-        Все решения принимаются коллективно, но ответственность — личная.
-      </p>
+      <div class="section-title">О Piligrim</div>
+<p class="section-text">
+  Каждый продукт создаётся с нуля под конкретные задачи бизнеса.  
+  Только актуальные технологии, чистый код, премиальный дизайн и гарантия результата с первого месяца использования.
+</p>
     </div>
   </section>
 
-  <section class="about-section">
-    <div class="image-wrapper">
-      <div class="image" style="background-image:url('https://mir-s3-cdn-cf.behance.net/project_modules/max_3840/03ef4657732573.59e13b5fb39ef.jpg');"></div>
-    </div>
-    <div class="content">
-      <div class="section-title">ИСТОРИЯ</div>
-      <p class="section-text">
-        Основаны в 2017 году в Токио. За 8 лет — 200+ проектов, 40+ стран, 3 офиса (Токио, Варшава, Ванкувер). 
-        Начали с веб-студии, выросли в full-cycle digital agency с собственной R&D-лабораторией.
-      </p>
-    </div>
-  </section>
+<section class="about-section">
+  <div class="image-wrapper" style="position:relative; overflow:hidden;">
+    <!-- Тёмная версия (по умолчанию видима) -->
+    <img 
+      src="/static/assets/about_company/history_light.png"
+      alt="История компании (тёмная)"
+      class="theme-switch-image theme-dark-img"
+      style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; opacity:1; transition:opacity 0.38s ease;">
+    
+    <!-- Светлая версия (изначально скрыта) -->
+    <img 
+      src="/static/assets/about_company/history.png"
+      alt="История компании (светлая)"
+      class="theme-switch-image theme-light-img"
+      style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity 0.38s ease;">
+  </div>
 
-  <section class="transition-to-carousel">
-    <h2>Ключевые проекты</h2>
-    <p>
-      От корпоративных платформ до consumer-приложений. Каждый — пример того, как технологии меняют бизнес.
+  <div class="content">
+    <div class="section-title">ИСТОРИЯ</div>
+    <p class="section-text">
+      Мы не рассказываем истории.<br>
+      Мы просто делаем продукты, от которых невозможно отказаться.
     </p>
-  </section>
+  </div>
+</section>
 
   <section class="full-carousel-section">
     <div class="full-carousel-container" id="full-carousel">
-      <div class="full-carousel-slide active" style="background-image:url('https://images.unsplash.com/photo-1519389950471-9b1d3e8c8b9f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');">
-        <div class="full-carousel-content">
-          <h3>FINTECH PLATFORM</h3>
-          <p>Платформа для управления инвестициями. 2.5M пользователей. Увеличение конверсии на 340%.</p>
-        </div>
-      </div>
-      <div class="full-carousel-slide" style="background-image:url('https://images.unsplash.com/photo-1552664730-7c49f43b1b3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');">
-        <div class="full-carousel-content">
-          <h3>E-COMMERCE ECOSYSTEM</h3>
-          <p>Маркетплейс с AI-рекомендациями. Обработка 100K+ заказов в день.</p>
-        </div>
-      </div>
-      <div class="full-carousel-slide" style="background-image:url('https://images.unsplash.com/photo-1542744095-291d1f67b221?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80');">
-        <div class="full-carousel-content">
-          <h3>ENTERPRISE CRM</h3>
-          <p>Корпоративная система для 12K сотрудников. Интеграция с 40+ сервисами.</p>
-        </div>
-      </div>
+  <!-- Слайд 1 -->
+<div class="full-carousel-slide active" 
+     style="background-image: url('/static/assets/b2b.jpg');">
+  <div class="full-carousel-content">
+    <h3>ЗАКРЫТАЯ B2B-ПЛАТФОРМА</h3>
+    <p>Корпоративный портал нового поколения. Полная автоматизация процессов, аналитика в реальном времени, конфиденциальность банковского уровня.</p>
+  </div>
+</div>
+
+<!-- Слайд 2 -->
+<div class="full-carousel-slide" 
+     style="background-image: url('/static/assets/ai-sales.jpg');">
+  <div class="full-carousel-content">
+    <h3>AI-АВТОВОРОНКА ПРОДАЖ</h3>
+    <p>Персонализированная воронка, которая сама прогревает лиды, отправляет предложения и закрывает сделки 24/7 без участия менеджера.</p>
+  </div>
+</div>
+
+<!-- Слайд 3 -->
+<div class="full-carousel-slide" 
+     style="background-image: url('/static/assets/ai.jpeg');">
+  <div class="full-carousel-content">
+    <h3>AI-ЮРИСТ & SMART CONTRACTS</h3>
+    <p>Умный юридический ассистент + автоматизация договоров. Проверка, генерация и подписание документов за минуты вместо недель.</p>
+  </div>
+</div>
+
 
       <div class="full-carousel-controls">
         <div class="full-carousel-arrow prev" onclick="prevFullSlide()"><i class="fas fa-chevron-left"></i></div>
@@ -434,7 +391,18 @@ html[data-theme="light"] .loader::after { color: #000; }
       </div>
     </div>
   </div>
-
+<!-- ТУМБЛЕР ТЕМЫ — ВИСЯЩАЯ ЛАМПОЧКА -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
   <a href="#" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
   <!-- СКРИПТЫ -->
   <script src="/static/js/search.js"></script>
@@ -453,6 +421,52 @@ html[data-theme="light"] .loader::after { color: #000; }
       loader.classList.add('hidden');
     }, 900); 
   });
+</script>
+<script>
+  // === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ (ЛАМПОЧКА) ===
+const themeToggle = document.getElementById('theme-toggle');
+const html = document.documentElement;
+
+// Восстанавливаем сохранённую или системную тему
+if (localStorage.getItem('theme') === 'light' || 
+   (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+  html.setAttribute('data-theme', 'light');
+  themeToggle.checked = true;
+} else {
+  html.setAttribute('data-theme', 'dark');
+  themeToggle.checked = false;
+}
+
+// Переключение по клику
+themeToggle.addEventListener('change', () => {
+  if (themeToggle.checked) {
+    html.setAttribute('data-theme', 'light');
+    localStorage.setItem('theme', 'light');
+  } else {
+    html.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+  }
+});
+</script>
+<script>
+// Мгновенная и плавная смена картинок темы — БЕЗ МЕЛЬКАНИЙ!
+document.addEventListener('DOMContentLoaded', () => {
+  const updateThemeImages = () => {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    
+    document.querySelectorAll('.theme-dark-img').forEach(img => {
+      img.style.opacity = isLight ? '0' : '1';
+    });
+    document.querySelectorAll('.theme-light-img').forEach(img => {
+      img.style.opacity = isLight ? '1' : '0';
+    });
+  };
+
+  // При загрузке и при смене темы
+  updateThemeImages();
+  const observer = new MutationObserver(updateThemeImages);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+});
 </script>
 </body>
 </html>

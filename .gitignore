@@ -1,0 +1,41 @@
+# Секреты и личные данные — НИКОГДА не заливаем в гит!
+.env
+.env.local
+.env.*           
+*.env
+
+# Базы данных (если они в корне)
+*.db
+*.sqlite3
+database.db
+
+# Папки с загруженными файлами (фото товаров и т.д.)
+static/uploads/*
+!static/uploads/.gitkeep    # если хочешь оставить пустую папку в гите — создай в ней пустой файл .gitkeep
+
+# Логи, кэши и прочая ерунда
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.coverage
+.coverage.*
+.tox
+.nox
+.ipynb_checkpoints
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ОС
+.DS_Store
+Thumbs.db

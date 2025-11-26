@@ -24,19 +24,19 @@ def init_zaza_db():
         conn = sqlite3.connect(ZAZA_DB)
         c = conn.cursor()
 
-        # === ПРОЕКТЫ ===
+        # === ТАБЛИЦА КЛИКОВ ПО ХОТ-СПОТАМ ===
         c.execute('''
-        CREATE TABLE IF NOT EXISTS hotspot_clicks (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    carousel_type TEXT,      -- 'main' или 'services'
-                    slide_index INTEGER,     -- 0, 1, 2
-                    url TEXT,
-                    clicked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    user_agent TEXT
-                )
-            ''')
+            CREATE TABLE IF NOT EXISTS hotspot_clicks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                carousel_type TEXT,
+                slide_index INTEGER,
+                url TEXT,
+                clicked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                user_agent TEXT
+            )
+        ''')
 
-        # === СЛАЙДЫ ЛЕНДИНГА ===
+        # === СЛАЙДЫ ЛЕНДИНГА (обычные секции) ===
         c.execute('''
             CREATE TABLE IF NOT EXISTS slides (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -50,8 +50,17 @@ def init_zaza_db():
             )
         ''')
 
-        # === КАРУСЕЛИ: ФОНЫ ===
-        for table in ['carousel_main', 'carousel_services']:
+        # === ТАБЛИЦА ПРОЕКТОВ (если ещё нет) ===
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS projects (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        # === КАРУСЕЛИ: ФОНЫ (main, services, home) ===
+        for table in ['carousel_main', 'carousel_services', 'carousel_home', 'carousel_products1', 'carousel_products2']:
             c.execute(f'''
                 CREATE TABLE IF NOT EXISTS {table} (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,35 +70,37 @@ def init_zaza_db():
                 )
             ''')
 
-        # === СЛОИ ДЛЯ КАРУСЕЛЕЙ ===
+        # === СЛОИ (текст, картинки, хотспоты) ===
         c.execute('''
             CREATE TABLE IF NOT EXISTS carousel_layers (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                carousel_type TEXT,
+                carousel_type TEXT,        -- main, services, home
                 slide_index INTEGER,
                 layer_id TEXT UNIQUE,
-                layer_type TEXT,
+                layer_type TEXT,           -- text, image, hotspot
                 layer_data TEXT,
                 hidden INTEGER DEFAULT 0,
                 sort_order INTEGER DEFAULT 0
             )
         ''')
 
-        # === ИНИЦИАЛИЗАЦИЯ ===
+        # === ИНИЦИАЛИЗАЦИЯ ПРОЕКТА ===
         c.execute('SELECT id FROM projects LIMIT 1')
         if not c.fetchone():
             c.execute('INSERT INTO projects (name) VALUES (?)', ('Zaza Landing',))
 
         fallback = '/static/assets/fallback.jpg'
-        for kind in ['main', 'services']:
+
+        # Заполняем карусели fallback'ами, если пустые
+        for kind, count in [('main', 3), ('services', 3), ('home', 5), ('products1', 3), ('products2', 3)]:
             table = f'carousel_{kind}'
             c.execute(f'SELECT COUNT(*) FROM {table}')
             if c.fetchone()[0] == 0:
-                for i in range(3):
+                for i in range(count):
                     c.execute(f'INSERT INTO {table} (sort_order, image) VALUES (?, ?)', (i, fallback))
 
         conn.commit()
-        logger.info("ZAZA DB + КАРУСЕЛИ + СЛОИ инициализированы")
+        logger.info("ZAZA DB полностью инициализирована: main (3), services (3), home (5)")
     except Exception as e:
         logger.error(f"ZAZA INIT ERROR: {e}")
         raise
@@ -449,6 +460,286 @@ def save_carousel(kind):
     except Exception as e:
         logger.error(f"CAROUSEL SAVE ERROR: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+
+# === НОВАЯ КАРУСЕЛЬ: ГЛАВНАЯ СТРАНИЦА (5 слайдов) ===
+@zaza_editor.route('/carousel/home')
+def api_carousel_home():
+    try:
+        conn = sqlite3.connect(ZAZA_DB)
+        c = conn.cursor()
+
+        c.execute('SELECT image FROM carousel_home ORDER BY sort_order')
+        backgrounds = [row[0] for row in c.fetchall()]
+
+        c.execute('''
+            SELECT slide_index, layer_type, layer_data, hidden 
+            FROM carousel_layers 
+            WHERE carousel_type = 'home' 
+            ORDER BY slide_index, sort_order
+        ''')
+        layers_data = c.fetchall()
+
+        slides = []
+        for i in range(5):
+            bg_url = backgrounds[i] if i < len(backgrounds) else '/static/assets/fallback.jpg'
+            slide_layers = []
+            hotspots = []
+
+            for row in layers_data:
+                if row[0] == i:
+                    layer = json.loads(row[2])
+                    layer['hidden'] = bool(row[3])
+                    if row[1] == 'hotspot':
+                        hotspots.append(layer)
+                    else:
+                        slide_layers.append(layer)
+
+            slides.append({
+                "background": {"url": bg_url, "type": "image", "animation": "fadeIn"},
+                "layers": slide_layers,
+                "hotspots": hotspots
+            })
+
+        conn.close()
+        return jsonify(slides)
+    except Exception as e:
+        logger.error(f"HOME CAROUSEL LOAD ERROR: {e}")
+        return jsonify([{"background": {"url": "/static/assets/fallback.jpg", "type": "image"}, "layers": [], "hotspots": []}] * 5)
+
+
+@zaza_editor.route('/carousel/home', methods=['POST'])
+def save_carousel_home():
+    """Сохраняет карусель главной страницы (5 слайдов)"""
+    try:
+        data = request.get_json(force=True)
+        if not isinstance(data, list) or len(data) != 5:
+            return jsonify({"error": "expected array of 5 slides"}), 400
+
+        conn = sqlite3.connect(ZAZA_DB)
+        c = conn.cursor()
+
+        # Очищаем старые данные
+        c.execute('DELETE FROM carousel_home')
+        c.execute('DELETE FROM carousel_layers WHERE carousel_type = ?', ('home',))
+
+        for i, slide in enumerate(data):
+            # Фон
+            url = slide.get('background', {}).get('url')
+            if not url or url == 'null':
+                url = '/static/assets/fallback.jpg'
+            elif isinstance(url, str) and url.startswith('data:image'):
+                url = save_image_file(url)
+
+            c.execute('INSERT INTO carousel_home (sort_order, image) VALUES (?, ?)', (i, url))
+
+            # Слои
+            for j, layer in enumerate(slide.get('layers', [])):
+                layer_id = str(layer.get('id', f'home_s{i}_l{j}'))
+                layer_type = layer.get('type', 'text')
+
+                if layer_type == 'image' and layer.get('url', '').startswith('data:image'):
+                    layer['url'] = save_image_file(layer['url'])
+
+                layer_data = json.dumps(layer)
+                c.execute('''
+                    INSERT OR REPLACE INTO carousel_layers 
+                    (carousel_type, slide_index, layer_id, layer_type, layer_data, sort_order, hidden)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', ('home', i, layer_id, layer_type, layer_data, j, int(layer.get('hidden', False))))
+
+            # Хотспоты
+            for j, hotspot in enumerate(slide.get('hotspots', [])):
+                layer_id = str(hotspot.get('id', f'home_s{i}_h{j}'))
+                clean = {
+                    'id': layer_id, 'type': 'hotspot',
+                    'x': hotspot.get('x', 0), 'y': hotspot.get('y', 0),
+                    'w': hotspot.get('w', 10), 'h': hotspot.get('h', 10),
+                    'url': hotspot.get('url', ''), 'hidden': hotspot.get('hidden', False)
+                }
+                c.execute('''
+                    INSERT OR REPLACE INTO carousel_layers 
+                    (carousel_type, slide_index, layer_id, layer_type, layer_data, sort_order, hidden)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', ('home', i, layer_id, 'hotspot', json.dumps(clean), j + 1000, int(clean['hidden'])))
+
+        conn.commit()
+        conn.close()
+        logger.info("Карусель главной (home) сохранена: 5 слайдов")
+        return jsonify({"status": "saved"})
+    except Exception as e:
+        logger.error(f"HOME CAROUSEL SAVE ERROR: {e}")
+        return jsonify({"error": str(e)}), 500
+    
+# =============================================================================
+# ДОБАВЛЯЕМ ТОЛЬКО ТОВАРЫ 1 и ТОВАРЫ 2 — без изменений в main/services/home
+# =============================================================================
+
+@zaza_editor.route('/carousel/products1')
+def load_products1():
+    try:
+        conn = sqlite3.connect(ZAZA_DB)
+        c = conn.cursor()
+
+        # Фоны
+        c.execute('SELECT image FROM carousel_products1 ORDER BY sort_order')
+        backgrounds = [row[0] for row in c.fetchall()]
+
+        # Слои + хотспоты
+        c.execute('''
+            SELECT slide_index, layer_type, layer_data, hidden 
+            FROM carousel_layers 
+            WHERE carousel_type = 'products1' 
+            ORDER BY slide_index, sort_order
+        ''')
+        layers = c.fetchall()
+
+        slides = []
+        for i in range(3):
+            bg = backgrounds[i] if i < len(backgrounds) else '/static/assets/fallback.jpg'
+            slide_layers = []
+            hotspots = []
+
+            for slide_idx, ltype, ldata, hidden in layers:
+                if slide_idx != i: 
+                    continue
+                layer = json.loads(ldata)
+                layer['hidden'] = bool(hidden)
+                if ltype == 'hotspot':
+                    hotspots.append(layer)
+                else:
+                    slide_layers.append(layer)
+
+            slides.append({
+                "background": {"url": bg, "animation": "fadeIn"},
+                "layers": slide_layers,
+                "hotspots": hotspots
+            })
+
+        conn.close()
+        return jsonify(slides)
+    except Exception as e:
+        logger.error(f"PRODUCTS1 LOAD ERROR: {e}")
+        fallback = {"background": {"url": "/static/assets/fallback.jpg"}, "layers": [], "hotspots": []}
+        return jsonify([fallback] * 3)
+
+
+@zaza_editor.route('/carousel/products2')
+def load_products2():
+    try:
+        conn = sqlite3.connect(ZAZA_DB)
+        c = conn.cursor()
+
+        c.execute('SELECT image FROM carousel_products2 ORDER BY sort_order')
+        backgrounds = [row[0] for row in c.fetchall()]
+
+        c.execute('''
+            SELECT slide_index, layer_type, layer_data, hidden 
+            FROM carousel_layers 
+            WHERE carousel_type = 'products2' 
+            ORDER BY slide_index, sort_order
+        ''')
+        layers = c.fetchall()
+
+        slides = []
+        for i in range(3):
+            bg = backgrounds[i] if i < len(backgrounds) else '/static/assets/fallback.jpg'
+            slide_layers = []
+            hotspots = []
+
+            for slide_idx, ltype, ldata, hidden in layers:
+                if slide_idx != i: 
+                    continue
+                layer = json.loads(ldata)
+                layer['hidden'] = bool(hidden)
+                if ltype == 'hotspot':
+                    hotspots.append(layer)
+                else:
+                    slide_layers.append(layer)
+
+            slides.append({
+                "background": {"url": bg, "animation": "fadeIn"},
+                "layers": slide_layers,
+                "hotspots": hotspots
+            })
+
+        conn.close()
+        return jsonify(slides)
+    except Exception as e:
+        logger.error(f"PRODUCTS2 LOAD ERROR: {e}")
+        fallback = {"background": {"url": "/static/assets/fallback.jpg"}, "layers": [], "hotspots": []}
+        return jsonify([fallback] * 3)
+
+
+@zaza_editor.route('/carousel/products1', methods=['POST'])
+@zaza_editor.route('/carousel/products2', methods=['POST'])
+def save_products():
+    kind = request.path.split('/')[-1]  # products1 или products2
+    try:
+        data = request.get_json(force=True)
+        if not isinstance(data, list) or len(data) != 3:
+            return jsonify({"error": "expected 3 slides"}), 400
+
+        conn = sqlite3.connect(ZAZA_DB)
+        c = conn.cursor()
+
+        table = f"carousel_{kind}"
+        c.execute(f'DELETE FROM {table}')
+        c.execute('DELETE FROM carousel_layers WHERE carousel_type = ?', (kind,))
+
+        for i, slide in enumerate(data):
+            # Фон
+            bg_url = slide.get('background', {}).get('url', '')
+            bg_obj = slide.get('background') or {}
+            bg_url_raw = bg_obj.get('url')
+
+            if not bg_url_raw or bg_url_raw in (None, 'null', ''):
+                bg_url = '/static/assets/fallback.jpg'
+            elif isinstance(bg_url_raw, str) and bg_url_raw.startswith('data:image'):
+                bg_url = save_image_file(bg_url_raw)
+            elif isinstance(bg_url_raw, str) and (bg_url_raw.startswith('http') or bg_url_raw.startswith('/static/')):
+                bg_url = bg_url_raw
+            else:
+                bg_url = '/static/assets/fallback.jpg'
+            c.execute(f'INSERT INTO {table} (sort_order, image) VALUES (?, ?)', (i, bg_url))
+
+            # Обычные слои
+            for j, layer in enumerate(slide.get('layers', [])):
+                lid = str(layer.get('id', f'{kind}_s{i}_l{j}'))
+                ltype = layer.get('type', 'text')
+                if ltype == 'image' and str(layer.get('url', '')).startswith('data:image'):
+                    layer['url'] = save_image_file(layer['url'])
+                c.execute('''
+                    INSERT OR REPLACE INTO carousel_layers
+                    (carousel_type, slide_index, layer_id, layer_type, layer_data, sort_order, hidden)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (kind, i, lid, ltype, json.dumps(layer), j, int(layer.get('hidden', False))))
+
+            # Хотспоты
+            for j, hs in enumerate(slide.get('hotspots', [])):
+                lid = str(hs.get('id', f'{kind}_s{i}_h{j}'))
+                clean = {
+                    'id': lid, 'type': 'hotspot',
+                    'x': hs.get('x', 0), 'y': hs.get('y', 0),
+                    'w': hs.get('w', 10), 'h': hs.get('h', 10),
+                    'url': hs.get('url', ''),
+                    'hidden': bool(hs.get('hidden', False))
+                }
+                c.execute('''
+                    INSERT OR REPLACE INTO carousel_layers
+                    (carousel_type, slide_index, layer_id, layer_type, layer_data, sort_order, hidden)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (kind, i, lid, 'hotspot', json.dumps(clean), j + 1000, int(clean['hidden'])))
+
+        conn.commit()
+        conn.close()
+        logger.info(f"Карусель {kind} сохранена")
+        return jsonify({"status": "saved"})
+    except Exception as e:
+        logger.error(f"{kind.upper()} SAVE ERROR: {e}")
+        return jsonify({"error": str(e)}), 500
+
 
 # === ЗАГРУЗКА ФАЙЛА ===
 @zaza_editor.route('/upload', methods=['POST'])

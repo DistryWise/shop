@@ -17,7 +17,7 @@ from markupsafe import escape
 from datetime import datetime
 from flask import send_from_directory, current_app, abort
 from markupsafe import Markup
-
+from datetime import datetime, timedelta
 
 
 
@@ -119,6 +119,24 @@ def migrate_cart_if_needed():
             conn.rollback()
         finally:
             conn.close()
+
+# database_goods.py — только логика БД
+def create_product(title, price, description, category, brand, image_filenames):
+    conn = get_conn(DB_MAIN)
+    try:
+        conn.execute("""
+            INSERT INTO products 
+            (title, price, description, category, brand, image_filenames, in_stock, stock)
+            VALUES (?, ?, ?, ?, ?, ?, 1, -1)
+        """, (title, price, description, category, brand, json.dumps(image_filenames)))
+        conn.commit()
+        return conn.lastrowid
+    except Exception as e:
+        logger.error(f"create_product error: {e}")
+        conn.rollback()
+        return None
+    finally:
+        conn.close()
 
 # === ИНИЦИАЛИЗАЦИЯ БД ===
 def init_goods_db():
@@ -279,8 +297,10 @@ def init_reviews_db():
 
 def init_orders_db():
     conn = get_conn(DB_MAIN)
+    cursor = conn.cursor()
     try:
-        conn.execute('''
+        # === 1. Создаём таблицу orders — БЕЗ UNIQUE на display_id! ===
+        cursor.execute('''
             CREATE TABLE IF NOT EXISTS orders (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
@@ -289,11 +309,72 @@ def init_orders_db():
                 total_cents INTEGER NOT NULL,
                 status TEXT DEFAULT 'pending',
                 cancel_reason TEXT,
+                display_id TEXT,                          -- ← УБРАЛИ UNIQUE! Личный номер → дубли разрешены!
+                user_order_number INTEGER NOT NULL DEFAULT 1,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
             )
         ''')
-        conn.execute('''
+
+        # === 2. УБИРАЕМ UNIQUE с display_id, если он был (главная причина ошибки!) ===
+        try:
+            cursor.execute("DROP INDEX IF EXISTS orders_display_id_idx")
+            cursor.execute("DROP INDEX IF EXISTS uniq_display_id")
+            cursor.execute("DROP INDEX IF EXISTS idx_orders_display_id")
+            # На случай, если UNIQUE был встроен в саму таблицу — пересоздаём колонку
+            cursor.execute("PRAGMA table_info(orders)")
+            columns = [row[1] for row in cursor.fetchall()]
+            if 'display_id' in columns:
+                # Проверяем, есть ли UNIQUE в определении колонки
+                cursor.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='orders'")
+                table_sql = cursor.fetchone()[0]
+                if 'UNIQUE' in table_sql.upper() and 'DISPLAY_ID' in table_sql.upper():
+                    logger.info("Обнаружен UNIQUE на display_id → пересоздаём таблицу без него")
+                    cursor.execute("ALTER TABLE orders RENAME TO orders_with_unique")
+                    cursor.execute('''
+                        CREATE TABLE orders (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            user_id INTEGER NOT NULL,
+                            full_name TEXT NOT NULL,
+                            phone TEXT NOT NULL,
+                            total_cents INTEGER NOT NULL,
+                            status TEXT DEFAULT 'pending',
+                            cancel_reason TEXT,
+                            display_id TEXT,
+                            user_order_number INTEGER NOT NULL DEFAULT 1,
+                            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+                        )
+                    ''')
+                    cursor.execute('''
+                        INSERT INTO orders SELECT 
+                            id, user_id, full_name, phone, total_cents, 
+                            status, cancel_reason, display_id, user_order_number, created_at
+                        FROM orders_with_unique
+                    ''')
+                    cursor.execute("DROP TABLE orders_with_unique")
+                    logger.info("Таблица orders пересоздана БЕЗ UNIQUE на display_id — теперь всё работает!")
+        except Exception as e:
+            logger.warning(f"Не удалось убрать UNIQUE индекс: {e}")
+
+        # === 3. Добавляем display_id и user_order_number, если их нет ===
+        cursor.execute("PRAGMA table_info(orders)")
+        columns = {row[1] for row in cursor.fetchall()}
+
+        if 'display_id' not in columns:
+            cursor.execute("ALTER TABLE orders ADD COLUMN display_id TEXT")
+            logger.info("Добавлена колонка display_id")
+
+        if 'user_order_number' not in columns:
+            cursor.execute("ALTER TABLE orders ADD COLUMN user_order_number INTEGER NOT NULL DEFAULT 1")
+            logger.info("Добавлена колонка user_order_number")
+
+        if 'created_at' not in columns:
+            cursor.execute("ALTER TABLE orders ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP")
+            logger.info("Добавлена колонка created_at")
+
+        # === 4. order_items ===
+        cursor.execute('''
             CREATE TABLE IF NOT EXISTS order_items (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 order_id INTEGER NOT NULL,
@@ -305,10 +386,36 @@ def init_orders_db():
                 FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE
             )
         ''')
+
+        # === 5. (Опционально) Пересчитываем display_id для всех существующих заказов ===
+        cursor.execute("SELECT COUNT(*) FROM orders WHERE display_id IS NULL OR display_id = ''")
+        null_count = cursor.fetchone()[0]
+        if null_count > 0:
+            logger.info(f"Пересчитываем display_id для {null_count} старых заказов...")
+            cursor.execute('''
+                WITH numbered AS (
+                    SELECT 
+                        id,
+                        user_id,
+                        STRFTIME('%Y', created_at) AS year,
+                        ROW_NUMBER() OVER (PARTITION BY user_id, STRFTIME('%Y', created_at) ORDER BY id) AS num
+                    FROM orders 
+                    WHERE created_at IS NOT NULL
+                )
+                UPDATE orders 
+                SET display_id = printf('%s-%04d', year, num)
+                FROM numbered 
+                WHERE orders.id = numbered.id AND (display_id IS NULL OR display_id = '')
+            ''')
+            logger.info("display_id восстановлен для старых заказов")
+
         conn.commit()
-        logger.info("Таблицы orders и order_items созданы")
+        logger.info("init_orders_db: ГОТОВО! display_id — личный, без UNIQUE, всё идеально!")
+
     except Exception as e:
-        logger.error(f"init_orders_db: {e}")
+        logger.error(f"init_orders_db: ОШИБКА — {e}")
+        conn.rollback()
+        raise
     finally:
         conn.close()
 
@@ -395,7 +502,6 @@ def init_news_db():
         conn.rollback()
     finally:
         conn.close()
-
 
 def init_services_db():
     conn = get_conn(DB_SERVICES)
@@ -563,6 +669,7 @@ def init_all_dbs():
     init_news_db()
     init_services_db()
     init_feedback_db()
+    migrate_user_order_numbers()
     logger.info("Все БД инициализированы + заказы + статусы + миграция!")
 
 def get_total_users():
@@ -631,77 +738,113 @@ def delete_feedback_batch(ids):
         conn.close()
 
 # === СЛИЯНИЕ КОРЗИНЫ ПРИ ВХОДЕ ===
+# === СЛИЯНИЕ КОРЗИНЫ ПРИ ЛОГИНЕ — РАБОТАЕТ ПО ID, БЕЗОПАСНО, НАДЁЖНО ===
 def merge_cart_from_client(user_id, client_cart):
-    conn = get_conn(DB_MAIN)
+    """
+    client_cart = [
+        {"id": 5, "type": "product", "quantity": 1},
+        {"id": 3, "type": "service", "quantity": 2},
+        ...
+    ]
+    """
+    if not client_cart:
+        return
+
+    conn_main = get_conn(DB_MAIN)
+    conn_serv = get_conn(DB_SERVICES)
     try:
         for item in client_cart:
-            title = item.get('title')
-            type_ = item.get('type', 'product')
-            quantity = max(1, item.get('quantity', 1))
-            if not title:
+            item_id = item.get("id")
+            item_type = item.get("type", "product")
+            quantity = max(1, int(item.get("quantity", 1)))
+
+            if not item_id:
                 continue
-            if type_ == 'product':
-                p = conn.execute('SELECT id FROM products WHERE title = ?', (title,)).fetchone()
-                if p:
-                    conn.execute('''
-                        INSERT INTO cart_items (user_id, product_id, quantity)
-                        VALUES (?, ?, ?)
-                        ON CONFLICT(user_id, product_id) DO UPDATE SET quantity = quantity + excluded.quantity
-                    ''', (user_id, p['id'], quantity))
-            else:
-                serv_conn = get_conn(DB_SERVICES)
-                s = serv_conn.execute('SELECT id FROM services WHERE title = ?', (title,)).fetchone()
-                serv_conn.close()
-                if s:
-                    conn.execute('''
-                        INSERT INTO cart_services (user_id, service_id, quantity)
-                        VALUES (?, ?, ?)
-                        ON CONFLICT(user_id, service_id) DO UPDATE SET quantity = quantity + excluded.quantity
-                    ''', (user_id, s['id'], quantity))
-        conn.commit()
+
+            if item_type == "product":
+                # Проверяем, что товар вообще существует
+                exists = conn_main.execute(
+                    "SELECT 1 FROM products WHERE id = ?", (item_id,)
+                ).fetchone()
+                if not exists:
+                    logger.warning(f"Гость пытался слить несуществующий товар id={item_id}")
+                    continue
+
+                conn_main.execute("""
+                    INSERT INTO cart_items (user_id, product_id, quantity)
+                    VALUES (?, ?, ?)
+                    ON CONFLICT(user_id, product_id) DO UPDATE
+                    SET quantity = quantity + excluded.quantity
+                """, (user_id, item_id, quantity))
+
+            elif item_type == "service":
+                exists = conn_serv.execute(
+                    "SELECT 1 FROM services WHERE id = ?", (item_id,)
+                ).fetchone()
+                if not exists:
+                    logger.warning(f"Гость пытался слить несуществующую услугу id={item_id}")
+                    continue
+
+                conn_main.execute("""
+                    INSERT INTO cart_services (user_id, service_id, quantity)
+                    VALUES (?, ?, ?)
+                    ON CONFLICT(user_id, service_id) DO UPDATE
+                    SET quantity = quantity + excluded.quantity
+                """, (user_id, item_id, quantity))
+
+        conn_main.commit()
+        logger.info(f"Успешно смёрджена корзина гостя → user_id={user_id}, items={len(client_cart)}")
     except Exception as e:
-        logger.error(f"merge_cart error: {e}")
+        logger.error(f"merge_cart_from_client error: {e}", exc_info=True)
+        conn_main.rollback()
     finally:
-        conn.close()
+        conn_main.close()
+        conn_serv.close()
 
 def migrate_user_order_numbers():
-    """Одноразовая миграция: добавляем колонку и нумеруем заказы по пользователям"""
     conn = get_conn(DB_MAIN)
+    cursor = conn.cursor()
     try:
-        # 1. Добавляем колонку, если её нет
-        conn.execute("PRAGMA table_info(orders)")
-        columns = [row['name'] for row in conn.fetchall()]
+        # 1. Добавляем колонку, если её ещё нет
+        cursor.execute("PRAGMA table_info(orders)")
+        columns = [row['name'] for row in cursor.fetchall()]
         if 'user_order_number' not in columns:
-            conn.execute("ALTER TABLE orders ADD COLUMN user_order_number INTEGER DEFAULT 0")
-            logger.info("Добавлена колонка user_order_number в orders")
-        
-        # 2. Пересчитываем номера для ВСЕХ заказов (один раз в жизни)
-        # Только для тех, у кого номер = 0 (т.е. старые или новые до этого патча)
-        conn.execute("""
-            WITH numbered AS (
-                SELECT id, user_id,
-                       ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at, id) AS new_num
-                FROM orders 
-                WHERE user_order_number = 0
-            )
-            UPDATE orders 
-            SET user_order_number = (
-                SELECT new_num FROM numbered WHERE numbered.id = orders.id
-            )
-            WHERE id IN (SELECT id FROM numbered)
-        """)
-        updated = conn.total_changes
-        if updated > 0:
-            logger.info(f"УСПЕШНО перенумеровано {updated} заказов по пользователям!")
+            cursor.execute("ALTER TABLE orders ADD COLUMN user_order_number INTEGER DEFAULT 0")
+            logger.info("Добавлена колонка user_order_number")
+
+        # 2. Если в таблице есть заказы — нумеруем их
+        cursor.execute("SELECT COUNT(*) FROM orders")
+        if cursor.fetchone()[0] == 0:
+            logger.info("Таблица orders пуста — нумерация не требуется")
+            return
+
+        # (остальной код нумерации без изменений)
+        cursor.execute("SELECT DISTINCT user_id FROM orders WHERE user_order_number = 0 OR user_order_number IS NULL")
+        user_ids = [row['user_id'] for row in cursor.fetchall()]
+
+        total_updated = 0
+        for user_id in user_ids:
+            cursor.execute("""
+                SELECT id FROM orders 
+                WHERE user_id = ? AND (user_order_number = 0 OR user_order_number IS NULL)
+                ORDER BY created_at ASC, id ASC
+            """, (user_id,))
+            order_ids = [row['id'] for row in cursor.fetchall()]
+
+            for number, order_id in enumerate(order_ids, start=1):
+                cursor.execute("UPDATE orders SET user_order_number = ? WHERE id = ?", (number, order_id))
+                total_updated += 1
+
         conn.commit()
+        logger.info(f"Миграция завершена: обновлено {total_updated} заказов")
+
     except Exception as e:
-        logger.error(f"Ошибка миграции user_order_number: {e}")
+        logger.error(f"Ошибка миграции: {e}", exc_info=True)
         conn.rollback()
     finally:
         conn.close()
 
-# ← ВСТАВЬ ЭТУ СТРОЧКУ В init_all_dbs() или просто в конец файла
-migrate_user_order_numbers()  # ← ЭТА СТРОЧКА ДОЛЖНА БЫТЬ ВНЕ ЛЮБОЙ ФУНКЦИИ!
+migrate_user_order_numbers()  
 
 # === РЕГИСТРАЦИЯ РОУТОВ ===
 def register_admin_routes(app):
@@ -869,128 +1012,131 @@ def register_admin_routes(app):
             return jsonify([]), 500
 
    
-
-    # === КОРЗИНА: ДОБАВЛЕНИЕ ===
+    # === КОРЗИНА: ДОБАВЛЕНИЕ — ФИНАЛЬНО, БЕЗ ОШИБОК, ПО ID, ДВЕ БАЗЫ ===
     @app.route('/api/cart/add', methods=['POST'])
     def api_cart_add():
         if 'user_id' not in session:
             return jsonify({'error': 'Not logged in'}), 401
 
         data = request.get_json() or {}
-        product_title = data.get('product_title', '').strip()
-        service_title = data.get('service_title', '').strip()
+        user_id = session['user_id']
+
+        product_id = data.get('product_id')
+        service_id = data.get('service_id')
         quantity = max(1, int(data.get('quantity', 1) or 1))
 
-        conn = get_conn(DB_MAIN)
-        serv_conn = get_conn(DB_SERVICES)
+        if not product_id and not service_id:
+            return jsonify({'error': 'Не указан ID товара или услуги'}), 400
+
+        conn = get_conn(DB_MAIN)        # ← для cart_items, cart_services
+        serv_conn = get_conn(DB_SERVICES)  # ← для проверки services
 
         try:
-            if product_title:
-                item = conn.execute('SELECT id FROM products WHERE title = ?', (product_title,)).fetchone()
-                if not item:
-                    logger.warning(f"Товар не найден: '{product_title}'")
+            if product_id:
+                product_id = int(product_id)
+                exists = conn.execute('SELECT 1 FROM products WHERE id = ?', (product_id,)).fetchone()
+                if not exists:
                     return jsonify({'error': 'Товар не найден'}), 404
 
                 conn.execute('''
                     INSERT INTO cart_items (user_id, product_id, quantity)
                     VALUES (?, ?, ?)
-                    ON CONFLICT(user_id, product_id) DO UPDATE SET quantity = quantity + excluded.quantity
-                ''', (session['user_id'], item['id'], quantity))
-                logger.info(f"Добавлен товар в корзину: {product_title} (x{quantity})")
+                    ON CONFLICT(user_id, product_id) DO UPDATE 
+                    SET quantity = quantity + excluded.quantity
+                ''', (user_id, product_id, quantity))
 
-            elif service_title:
-                item = serv_conn.execute('SELECT id FROM services WHERE title = ?', (service_title,)).fetchone()
-                if not item:
-                    logger.warning(f"Услуга не найдена: '{service_title}'")
+            elif service_id:
+                service_id = int(service_id)
+                # ← ИСПРАВЛЕНО: ПРОВЕРЯЕМ В ПРАВИЛЬНОЙ БАЗЕ!
+                exists = serv_conn.execute('SELECT 1 FROM services WHERE id = ?', (service_id,)).fetchone()
+                if not exists:
                     return jsonify({'error': 'Услуга не найдена'}), 404
 
+                # ← Записываем в cart_services — в database.db!
                 conn.execute('''
                     INSERT INTO cart_services (user_id, service_id, quantity)
                     VALUES (?, ?, ?)
-                    ON CONFLICT(user_id, service_id) DO UPDATE SET quantity = quantity + excluded.quantity
-                ''', (session['user_id'], item['id'], quantity))
-                logger.info(f"Добавлена услуга в корзину: {service_title} (x{quantity})")
-
-            else:
-                return jsonify({'error': 'Нет данных'}), 400
+                    ON CONFLICT(user_id, service_id) DO UPDATE 
+                    SET quantity = quantity + excluded.quantity
+                ''', (user_id, service_id, quantity))
 
             conn.commit()
             return jsonify({'success': True})
 
+        except ValueError:
+            return jsonify({'error': 'Неверный ID'}), 400
         except Exception as e:
             logger.error(f"cart_add error: {e}")
             conn.rollback()
             return jsonify({'error': 'Ошибка сервера'}), 500
         finally:
             conn.close()
-            serv_conn.close()  # ← ЗАКРЫВАЕМ ВСЕГДА!
+            serv_conn.close()
 
-    # === КОРЗИНА: ОБНОВЛЕНИЕ ===
+    # === КОРЗИНА: ОБНОВЛЕНИЕ (ТОЛЬКО ПО ID — БЕЗОПАСНО И НАДЁЖНО) ===
     @app.route('/api/cart/update', methods=['POST'])
     def api_cart_update():
         if 'user_id' not in session:
             return jsonify({'error': 'Not logged in'}), 401
 
         data = request.get_json() or {}
-        title = data.get('title', '').strip()
-        type_ = data.get('type')
-        try:
-            quantity = int(data.get('quantity', 1))
-            quantity = max(0, quantity)  # 0 = удалить
-        except:
-            return jsonify({'error': 'Неверное количество'}), 400
+        user_id = session['user_id']
 
-        if not title or type_ not in ('product', 'service'):
-            return jsonify({'error': 'Неверные данные'}), 400
+        # Теперь принимаем ID, а не title!
+        product_id = data.get('product_id')
+        service_id = data.get('service_id')
+        quantity = int(data.get('quantity', 1))
+
+        if quantity < 0:
+            quantity = 0
 
         conn = get_conn(DB_MAIN)
-        serv_conn = get_conn(DB_SERVICES)
 
         try:
-            if type_ == 'product':
-                item = conn.execute('SELECT id FROM products WHERE title = ?', (title,)).fetchone()
-                if not item:
-                    return jsonify({'error': 'Товар не найден'}), 404
-
-                if quantity <= 0:
-                    conn.execute('DELETE FROM cart_items WHERE user_id = ? AND product_id = ?', (session['user_id'], item['id']))
-                    logger.info(f"Удалён товар из корзины: {title}")
+            if product_id is not None:
+                # === ТОВАР ===
+                product_id = int(product_id)
+                if quantity == 0:
+                    conn.execute('DELETE FROM cart_items WHERE user_id = ? AND product_id = ?', (user_id, product_id))
+                    logger.info(f"Удалён товар из корзины (ID: {product_id})")
                 else:
                     conn.execute('''
                         INSERT INTO cart_items (user_id, product_id, quantity)
                         VALUES (?, ?, ?)
                         ON CONFLICT(user_id, product_id) DO UPDATE SET quantity = excluded.quantity
-                    ''', (session['user_id'], item['id'], quantity))
-                    logger.info(f"Обновлён товар: {title} → {quantity}")
+                    ''', (user_id, product_id, quantity))
+                    logger.info(f"Обновлён товар в корзине (ID: {product_id}) → {quantity}")
 
-            else:  # service
-                item = serv_conn.execute('SELECT id FROM services WHERE title = ?', (title,)).fetchone()
-                if not item:
-                    return jsonify({'error': 'Услуга не найдена'}), 404
-
-                if quantity <= 0:
-                    conn.execute('DELETE FROM cart_services WHERE user_id = ? AND service_id = ?', (session['user_id'], item['id']))
-                    logger.info(f"Удалена услуга из корзины: {title}")
+            elif service_id is not None:
+                # === УСЛУГА ===
+                service_id = int(service_id)
+                if quantity == 0:
+                    conn.execute('DELETE FROM cart_services WHERE user_id = ? AND service_id = ?', (user_id, service_id))
+                    logger.info(f"Удалена услуга из корзины (ID: {service_id})")
                 else:
                     conn.execute('''
                         INSERT INTO cart_services (user_id, service_id, quantity)
                         VALUES (?, ?, ?)
                         ON CONFLICT(user_id, service_id) DO UPDATE SET quantity = excluded.quantity
-                    ''', (session['user_id'], item['id'], quantity))
-                    logger.info(f"Обновлена услуга: {title} → {quantity}")
+                    ''', (user_id, service_id, quantity))
+                    logger.info(f"Обновлена услуга в корзине (ID: {service_id}) → {quantity}")
+
+            else:
+                return jsonify({'error': 'Не указан ID товара или услуги'}), 400
 
             conn.commit()
             return jsonify({'success': True})
 
+        except ValueError:
+            return jsonify({'error': 'Неверный ID'}), 400
         except Exception as e:
             logger.error(f"cart_update error: {e}")
             conn.rollback()
             return jsonify({'error': 'Ошибка сервера'}), 500
         finally:
             conn.close()
-            serv_conn.close()
 
-    # === КОРЗИНА: ПОЛУЧЕНИЕ ===
+    # === КОРЗИНА: ПОЛУЧЕНИЕ ДЛЯ АВТОРИЗОВАННЫХ ===
     @app.route('/api/cart/get')
     def api_cart_get():
         if 'user_id' not in session:
@@ -1003,9 +1149,9 @@ def register_admin_routes(app):
         try:
             user_id = session['user_id']
 
-            # === ТОВАРЫ (из DB_MAIN) ===
+            # === ТОВАРЫ ===
             rows = conn.execute('''
-                SELECT p.title, p.price, ci.quantity, p.image_filenames
+                SELECT p.id, p.title, p.price, ci.quantity, p.image_filenames
                 FROM cart_items ci
                 JOIN products p ON ci.product_id = p.id
                 WHERE ci.user_id = ?
@@ -1014,50 +1160,45 @@ def register_admin_routes(app):
             for row in rows:
                 imgs = json.loads(row['image_filenames'] or '[]')
                 img_url = f"/static/uploads/{imgs[0]}" if imgs else '/static/assets/no-image.png'
+                price_cents = int(row['price'])  # УБЕДИСЬ, что в БД price уже в копейках!
                 items.append({
+                    'id': row['id'],
                     'title': row['title'],
-                    'price_cents': row['price'],
-                    'price_str': f"{row['price']//100}.{row['price']%100:02d} ₽",
+                    'price_cents': price_cents,
                     'quantity': row['quantity'],
                     'type': 'product',
                     'image_url': img_url
                 })
 
-            # === УСЛУГИ (из DB_SERVICES) ===
-            service_rows = conn.execute('''
+            # === УСЛУГИ ===
+            rows = conn.execute('''
                 SELECT cs.service_id, cs.quantity
                 FROM cart_services cs
                 WHERE cs.user_id = ?
             ''', (user_id,)).fetchall()
 
-            for srow in service_rows:
-                service_id = srow['service_id']
-                quantity = srow['quantity']
-
+            for row in rows:
                 service = serv_conn.execute('''
-                    SELECT title, price, image_urls FROM services WHERE id = ?
-                ''', (service_id,)).fetchone()
-
+                    SELECT id, title, price, image_urls FROM services WHERE id = ?
+                ''', (row['service_id'],)).fetchone()
                 if not service:
                     continue
 
-                # Правильный парсинг JSON (поддержка старого и нового формата)
                 try:
                     image_urls = json.loads(service['image_urls'] or '[]')
                     if not isinstance(image_urls, list):
                         image_urls = []
                 except:
-                    # На случай, если где-то ещё старая строка через запятую
                     image_urls = [u.strip() for u in (service['image_urls'] or '').split(',') if u.strip()]
 
                 img_url = f"/static/uploads/services/{image_urls[0]}" if image_urls else '/static/assets/no-image.png'
-                price_cents = parse_price_to_cents(service['price'])
+                price_cents = parse_price_to_cents(service['price'])  # или int(service['price']) если уже копейки
 
                 items.append({
+                    'id': service['id'],
                     'title': service['title'],
                     'price_cents': price_cents,
-                    'price_str': service['price'],
-                    'quantity': quantity,
+                    'quantity': row['quantity'],
                     'type': 'service',
                     'image_url': img_url
                 })
@@ -1071,11 +1212,91 @@ def register_admin_routes(app):
             conn.close()
             serv_conn.close()
 
-   # === ОФОРМЛЕНИЕ ЗАКАЗА (ВОЗВРАЩАЕТ order_id) ===
+
+    # === НОВЫЙ ЭНДПОИНТ: КОРЗИНА ДЛЯ ГОСТЕЙ (по ID) ===
+    @app.route('/api/cart/get-guest', methods=['POST'])
+    def api_cart_get_guest():
+        data = request.get_json() or {}
+        cart = data.get('cart', [])  # [{id: 123, type: 'product', quantity: 1}, ...]
+
+        if not cart:
+            return jsonify([])
+
+        conn = get_conn(DB_MAIN)
+        serv_conn = get_conn(DB_SERVICES)
+        items = []
+
+        try:
+            for item in cart:
+                item_id = item.get('id')
+                item_type = item.get('type', 'product')
+                quantity = item.get('quantity', 1)
+
+                if not item_id:
+                    continue
+
+                if item_type == 'product':
+                    row = conn.execute('''
+                        SELECT id, title, price, image_filenames
+                        FROM products WHERE id = ?
+                    ''', (item_id,)).fetchone()
+                    if not row:
+                        continue
+                    imgs = json.loads(row['image_filenames'] or '[]')
+                    img_url = f"/static/uploads/{imgs[0]}" if imgs else '/static/assets/no-image.png'
+                    price_cents = int(row['price'])  # ← УБЕДИСЬ, что price в копейках!
+
+                    items.append({
+                        'id': row['id'],
+                        'title': row['title'],
+                        'price_cents': price_cents,
+                        'quantity': quantity,
+                        'type': 'product',
+                        'image_url': img_url
+                    })
+
+                elif item_type == 'service':
+                    row = serv_conn.execute('''
+                        SELECT id, title, price, image_urls FROM services WHERE id = ?
+                    ''', (item_id,)).fetchone()
+                    if not row:
+                        continue
+
+                    try:
+                        image_urls = json.loads(row['image_urls'] or '[]')
+                        if not isinstance(image_urls, list):
+                            image_urls = []
+                    except:
+                        image_urls = [u.strip() for u in (row['image_urls'] or '').split(',') if u.strip()]
+
+                    img_url = f"/static/uploads/services/{image_urls[0]}" if image_urls else '/static/assets/no-image.png'
+                    price_cents = parse_price_to_cents(row['price'])
+
+                    items.append({
+                        'id': row['id'],
+                        'title': row['title'],
+                        'price_cents': price_cents,
+                        'quantity': quantity,
+                        'type': 'service',
+                        'image_url': img_url
+                    })
+
+            return jsonify(items)
+
+        except Exception as e:
+            logger.error(f"get-guest-cart error: {e}")
+            return jsonify([])
+        finally:
+            conn.close()
+            serv_conn.close()
+
+
+
     @app.route('/api/checkout', methods=['POST'])
     def api_checkout():
         if 'user_id' not in session:
             return jsonify({'error': 'Not logged in'}), 401
+
         data = request.get_json()
         full_name = data.get('full_name', '').strip()
         phone = data.get('phone', '').strip()
@@ -1083,18 +1304,20 @@ def register_admin_routes(app):
             return jsonify({'error': 'Заполните ФИО и телефон'}), 400
 
         conn_main = get_conn(DB_MAIN)
-        conn_services = get_conn(DB_SERVICES)  # ← ОТДЕЛЬНО!
-        try:
-            items = []
-            user_id = session['user_id']
+        conn_services = get_conn(DB_SERVICES)
 
-            # === ТОВАРЫ (из DB_MAIN) ===
+        try:
+            user_id = session['user_id']
+            items = []
+
+            # === Сбор корзины (оставляем как есть) ===
             rows = conn_main.execute('''
                 SELECT p.id, p.title, p.price, ci.quantity
                 FROM cart_items ci
                 JOIN products p ON ci.product_id = p.id
                 WHERE ci.user_id = ?
             ''', (user_id,)).fetchall()
+
             for row in rows:
                 items.append({
                     'id': row['id'],
@@ -1105,33 +1328,20 @@ def register_admin_routes(app):
                     'type': 'product'
                 })
 
-            # === УСЛУГИ (cart_services в DB_MAIN, services в DB_SERVICES) ===
             service_rows = conn_main.execute('''
-                SELECT cs.service_id, cs.quantity
-                FROM cart_services cs
-                WHERE cs.user_id = ?
+                SELECT cs.service_id, cs.quantity FROM cart_services cs WHERE cs.user_id = ?
             ''', (user_id,)).fetchall()
 
             for srow in service_rows:
-                service_id = srow['service_id']
-                quantity = srow['quantity']
-
-                # ← ОТДЕЛЬНЫЙ ЗАПРОС В DB_SERVICES
-                service = conn_services.execute('''
-                    SELECT title, price FROM services WHERE id = ?
-                ''', (service_id,)).fetchone()
-
-                if not service:
-                    logger.warning(f"Услуга с id={service_id} не найдена")
-                    continue
-
+                service = conn_services.execute('SELECT title, price FROM services WHERE id = ?', (srow['service_id'],)).fetchone()
+                if not service: continue
                 price_cents = parse_price_to_cents(service['price'])
                 items.append({
-                    'id': service_id,
+                    'id': srow['service_id'],
                     'title': service['title'],
                     'price_cents': price_cents,
                     'price_str': service['price'],
-                    'quantity': quantity,
+                    'quantity': srow['quantity'],
                     'type': 'service'
                 })
 
@@ -1140,22 +1350,39 @@ def register_admin_routes(app):
 
             total_cents = sum(item['price_cents'] * item['quantity'] for item in items)
 
-            # === СОЗДАЁМ ЗАКАЗ ===
+            # === ГЕНЕРАЦИЯ ЛИЧНОГО НОМЕРА ===
+            current_year = datetime.now().year
+
+            # Считаем, сколько заказов уже было у этого пользователя в этом году
+            last_num_row = conn_main.execute('''
+                SELECT COALESCE(MAX(CAST(SUBSTR(display_id, INSTR(display_id, '-') + 1) AS INTEGER)), 0) as num
+                FROM orders
+                WHERE user_id = ? AND SUBSTR(display_id, 1, 4) = ?
+            ''', (user_id, str(current_year))).fetchone()
+
+            next_num = last_num_row['num'] + 1
+            raw_display_id = f"{current_year}-{next_num:04d}"        # 2025-0001
+            pretty_display_id = f"№{raw_display_id}"                 # №2025-0001
+
+            # === СОЗДАЁМ ЗАКАЗ — ВСТАВЛЯЕМ ТОЛЬКО raw_display_id (БЕЗ №) ===
             cur = conn_main.execute('''
-                INSERT INTO orders (user_id, full_name, phone, total_cents, status)
-                VALUES (?, ?, ?, ?, 'pending')
+                INSERT INTO orders (
+                    user_id, full_name, phone, total_cents, status,
+                    display_id, user_order_number
+                ) VALUES (?, ?, ?, ?, 'pending', ?, ?)
                 RETURNING id
-            ''', (user_id, full_name, phone, total_cents))
+            ''', (user_id, full_name, phone, total_cents, raw_display_id, next_num))
+
             order_id = cur.fetchone()[0]
 
-            # === ДОБАВЛЯЕМ ТОВАРЫ В order_items ===
+            # === Добавляем товары ===
             for item in items:
                 conn_main.execute('''
                     INSERT INTO order_items (order_id, item_type, item_id, title, price_cents, quantity)
                     VALUES (?, ?, ?, ?, ?, ?)
                 ''', (order_id, item['type'], item['id'], item['title'], item['price_cents'], item['quantity']))
 
-            # === ОЧИЩАЕМ КОРЗИНУ ===
+            # === Очистка корзины ===
             conn_main.execute('DELETE FROM cart_items WHERE user_id = ?', (user_id,))
             conn_main.execute('DELETE FROM cart_services WHERE user_id = ?', (user_id,))
             conn_main.commit()
@@ -1163,8 +1390,16 @@ def register_admin_routes(app):
             return jsonify({
                 'success': True,
                 'order_id': order_id,
+                'display_id': pretty_display_id,
+                'raw_display_id': raw_display_id,
+                'message': f'Заказ {pretty_display_id} создан!',
+                # ← ЭТО ОДНА СТРОЧКА, и всё заработает идеально
                 'items': [
-                    {'id': item['id'], 'type': item['type'], 'title': item['title']}
+                    {
+                        'id': item['id'],
+                        'type': item['type'],
+                        'title': item['title']
+                    }
                     for item in items
                 ]
             })
@@ -1175,40 +1410,99 @@ def register_admin_routes(app):
             return jsonify({'error': 'Ошибка сервера'}), 500
         finally:
             conn_main.close()
-            conn_services.close()  # ← ЗАКРЫВАЕМ ОБЕ!
-
+            conn_services.close()
 
     @app.route('/api/order_status_public/<int:order_id>')
     def api_order_status_public(order_id):
-        phone = request.args.get('phone')  # передаём телефон из формы
+        phone = request.args.get('phone')
         if not phone:
             return jsonify({"error": "Phone required"}), 400
         
         conn = get_conn(DB_MAIN)
         try:
-            order = conn.execute(
-                'SELECT status, cancel_reason FROM orders WHERE id = ? AND phone = ?',
-                (order_id, phone)
-            ).fetchone()
+            order = conn.execute('''
+                SELECT status, cancel_reason, display_id 
+                FROM orders 
+                WHERE id = ? AND phone = ?
+            ''', (order_id, phone)).fetchone()
+
             if not order:
                 return jsonify({"error": "Not found"}), 404
                 
             status = order['status']
             label = status_map.get(status, ('Неизвестно', '#9ca3af', '#0b0d12'))
+
             return jsonify({
                 "status": status,
                 "label": label[0],
+                "display_id": order['display_id'] or f"#{order_id}",  # ← №2025-0001
                 "can_cancel": status in ['pending', 'processing'],
                 "completed": status in ['completed', 'cancelled'],
-                "cancel_reason": order['cancel_reason']
+                "cancel_reason": order['cancel_reason'] or None
             })
         finally:
             conn.close()
+    @app.route('/admin_feedback')
+    def admin_feedback():
+        """Админка → Все сообщения из формы обратной связи"""
+        if not session.get('is_admin'):
+            flash('Доступ запрещён', 'error')
+            return redirect(url_for('index'))
 
-# === СТАТУС ЗАКАЗА (ДЛЯ ЦЕПОЧКИ В bin.html И АДМИНКИ) ===
+        # === Пагинация ===
+        page = max(1, int(request.args.get('page', 1)))
+        per_page = 20
+        offset = (page - 1) * per_page
+
+        conn_main = get_conn(DB_MAIN)
+        conn_fb = get_conn(DB_FEEDBACK)
+
+        try:
+            # Общее количество
+            total_feedback = conn_fb.execute('SELECT COUNT(*) FROM feedback').fetchone()[0]
+            total_pages = max(1, (total_feedback + per_page - 1) // per_page)
+
+            # Список сообщений
+            rows = conn_fb.execute('''
+                SELECT id, name, email, phone, message, created_at
+                FROM feedback
+                ORDER BY created_at DESC
+                LIMIT ? OFFSET ?
+            ''', (per_page, offset)).fetchall()
+
+            feedbacks = [dict(row) for row in rows]  # ← именно feedbacks (как у тебя в HTML)
+
+            # Статистика для сайдбара
+            total_users = conn_main.execute('SELECT COUNT(*) FROM users').fetchone()[0]
+            total_orders = conn_main.execute('SELECT COUNT(*) FROM orders').fetchone()[0]
+            total_reviews = conn_main.execute('SELECT COUNT(*) FROM reviews').fetchone()[0]
+
+        except Exception as e:
+            logger.error(f"Ошибка в admin_feedback: {e}")
+            flash('Ошибка загрузки данных', 'error')
+            feedbacks = []
+            total_feedback = total_pages = 0
+            total_users = total_orders = total_reviews = 0
+        finally:
+            conn_main.close()
+            conn_fb.close()
+
+        return render_template(
+            'admin_callback.html',
+            feedbacks=feedbacks,           # ← важно именно так!
+            total_feedback=total_feedback,
+            total_users=total_users,
+            total_orders=total_orders,
+            total_reviews=total_reviews,
+            page=page,
+            total_pages=total_pages
+        )
+    
+    
+
     @app.route('/api/order_status/<int:order_id>')
     def api_order_status(order_id):
-        is_admin = request.args.get('admin', '0') == '1'  # Проверяем, запрос от админки
+        is_admin = request.args.get('admin', '0') == '1'
         if is_admin:
             password = request.args.get('password')
             if password != current_app.config.get('ADMIN_PASSWORD', 'admin123'):
@@ -1216,34 +1510,103 @@ def register_admin_routes(app):
         elif 'user_id' not in session:
             return jsonify({"error": "Unauthorized"}), 401
 
-        conn = get_conn(DB_MAIN)
+        conn_main = get_conn(DB_MAIN)
+        conn_serv = get_conn(DB_SERVICES)  # ← обязательно открываем services.db
         try:
+            # 1. Сам заказ
             params = [order_id]
-            query = 'SELECT status, cancel_reason FROM orders WHERE id = ?'
+            query = 'SELECT status, cancel_reason, display_id, total_cents FROM orders WHERE id = ?'
             if not is_admin:
                 query += ' AND user_id = ?'
                 params.append(session['user_id'])
 
-            order = conn.execute(query, params).fetchone()
+            order = conn_main.execute(query, params).fetchone()
             if not order:
                 return jsonify({"error": "Not found"}), 404
 
             status = order['status']
-            label = status_map.get(status, ('Неизвестно', '#9ca3af', '#0b0d12'))
+            label = status_map.get(status, ('Неизвестно', '#9ca3af', '#0b0d12'))[0]
+
+            # 2. Все позиции заказа
+            items_raw = conn_main.execute('''
+                SELECT item_type, item_id, title, price_cents, quantity
+                FROM order_items
+                WHERE order_id = ?
+                ORDER BY id
+            ''', [order_id]).fetchall()
+
+            items = []
+            for item in items_raw:
+                image_url = None
+                item_type = item['item_type']
+
+                if item_type == 'product':
+                    prod = conn_main.execute(
+                        'SELECT image_filenames FROM products WHERE id = ?',
+                        (item['item_id'],)
+                    ).fetchone()
+                    if prod and prod['image_filenames']:
+                        try:
+                            imgs = json.loads(prod['image_filenames'])
+                            if imgs and isinstance(imgs, list) and imgs[0]:
+                                image_url = f"/static/uploads/{imgs[0]}"
+                        except:
+                            pass
+
+                elif item_type == 'service':
+                    serv = conn_serv.execute(
+                        'SELECT image_urls FROM services WHERE id = ?',
+                        (item['item_id'],)
+                    ).fetchone()
+                    if serv and serv['image_urls']:
+                        try:
+                            imgs = json.loads(serv['image_urls'])
+                            if imgs and isinstance(imgs, list) and imgs[0]:
+                                image_url = f"/static/uploads/services/{imgs[0]}"
+                        except:
+                            # если JSON битый — пробуем старый формат через запятую
+                            imgs = [x.strip() for x in str(serv['image_urls']).split(',') if x.strip()]
+                            if imgs:
+                                image_url = f"/static/uploads/services/{imgs[0]}"
+
+                # ← Если по какой-то причине нет фото — ставим заглушку
+                if not image_url:
+                    if item_type == 'service':
+                        image_url = "/static/assets/service-placeholder.png"
+                    else:
+                        image_url = "/static/assets/no-image.png"
+
+                price_str = f"{item['price_cents']/100:,.2f} ₽".replace(',', ' ')
+
+                items.append({
+                    "title": item['title'],
+                    "quantity": item['quantity'],
+                    "price_cents": item['price_cents'],
+                    "price_str": price_str,
+                    "image_url": image_url,      # ← ВСЕГДА есть URL!
+                    "item_type": item_type
+                })
+
+            total_str = f"{(order['total_cents'] or 0)/100:,.2f} ₽".replace(',', ' ')
+
             return jsonify({
                 "status": status,
-                "label": label[0],
+                "label": label,
+                "display_id": order['display_id'] or f"№{order_id:04d}",
                 "can_cancel": status in ['pending', 'processing'],
                 "completed": status in ['completed', 'cancelled'],
-                "cancel_reason": order['cancel_reason'] or None
+                "cancel_reason": order['cancel_reason'],
+
+                "items": items,       # ← с реальными фотками и товаров, и услуг!
+                "total_str": total_str
             })
+
         except Exception as e:
-            logger.error(f"order_status: {e}")
+            logger.error(f"order_status error #{order_id}: {e}", exc_info=True)
             return jsonify({"error": "Server error"}), 500
         finally:
-            conn.close()
-
-
+            conn_main.close()
+            conn_serv.close()
 
     @app.route('/api/user_archived_orders')
     def user_archived_orders():
@@ -1252,69 +1615,69 @@ def register_admin_routes(app):
 
         conn = get_conn(DB_MAIN)
         try:
+            # ← БЕРЁМ display_id вместо user_order_number!
             rows = conn.execute('''
-                SELECT id, created_at, status, cancel_reason
+                SELECT id, status, cancel_reason, display_id
                 FROM orders 
                 WHERE user_id = ? AND status IN ('completed', 'cancelled')
-                ORDER BY created_at DESC
+                ORDER BY id DESC
             ''', (session['user_id'],)).fetchall()
 
             orders = []
             for r in rows:
-                status = r['status']  # ← ВАЖНО: ОПРЕДЕЛИЛИ status!
+                order_id = r['id']
+                status = r['status']
 
+                # === Товары ===
                 items_rows = conn.execute('''
                     SELECT oi.title, oi.quantity, oi.price_cents, oi.item_type, oi.item_id
                     FROM order_items oi
                     WHERE oi.order_id = ?
-                ''', (r['id'],)).fetchall()
+                ''', (order_id,)).fetchall()
 
                 items = []
                 total_cents = 0
 
                 for item in items_rows:
                     price_cents = int(item['price_cents'] or 0)
-                    rub = price_cents // 100
-                    kop = price_cents % 100
-                    price_str = f"{rub}.{kop:02d} ₽"
+                    total_cents += price_cents * item['quantity']
 
                     image_url = "/static/assets/no-image.png"
-
                     if item['item_type'] == 'product':
                         prod = conn.execute('SELECT image_filenames FROM products WHERE id = ?', (item['item_id'],)).fetchone()
                         if prod and prod['image_filenames']:
                             imgs = json.loads(prod['image_filenames'])
                             if imgs:
                                 image_url = f"/static/uploads/{imgs[0]}"
-
                     elif item['item_type'] == 'service':
-                        # ← ПОДКЛЮЧАЕМ services.db
                         serv_conn = get_conn(DB_SERVICES)
                         serv = serv_conn.execute('SELECT image_urls FROM services WHERE id = ?', (item['item_id'],)).fetchone()
                         serv_conn.close()
                         if serv and serv['image_urls']:
-                            imgs = [img.strip() for img in serv['image_urls'].split(',') if img.strip()]
+                            try:
+                                imgs = json.loads(serv['image_urls'])
+                            except:
+                                imgs = [img.strip() for img in serv['image_urls'].split(',') if img.strip()]
                             if imgs:
                                 image_url = f"/static/uploads/services/{imgs[0]}"
 
-                    total_cents += price_cents * item['quantity']
                     items.append({
                         'title': item['title'],
                         'quantity': item['quantity'],
-                        'price_str': price_str,
+                        'price_str': f"{price_cents//100}.{price_cents%100:02d} ₽",
                         'image_url': image_url
                     })
 
                 total_str = f"{total_cents // 100}.{total_cents % 100:02d} ₽"
-                
-                # ← ИСПРАВЛЕНО: status_map из глобальной области
                 label = status_map.get(status, ('Неизвестно', '#9ca3af', '#0b0d12'))
 
                 orders.append({
-                    'id': r['id'],
-                    'created_at': r['created_at'],
+                    'id': order_id,
+                    'display_id': r['display_id'] or f"#{order_id}",   # ← №2025-0001 — это и есть номер!
                     'status': status,
-                    'status_label': label,  # ← [текст, цвет, фон]
+                    'status_label': label[0],
+                    'status_color': label[1],
+                    'status_text_color': label[2],
                     'items': items,
                     'total_str': total_str,
                     'cancel_reason': r['cancel_reason'] or ''
@@ -1413,12 +1776,14 @@ def register_admin_routes(app):
             return jsonify([]), 403
         conn = get_conn(DB_MAIN)
         try:
+            # ← ДОБАВЛЯЕМ global_order_number в SELECT и сортируем по нему
             rows = conn.execute('''
-                SELECT o.*, u.phone
+                SELECT o.*, u.phone, o.global_order_number
                 FROM orders o
                 JOIN users u ON o.user_id = u.id
-                ORDER BY o.created_at DESC
+                ORDER BY o.global_order_number DESC
             ''').fetchall()
+            
             result = []
             for row in rows:
                 order = dict(row)
@@ -1428,25 +1793,32 @@ def register_admin_routes(app):
                     LEFT JOIN products p ON oi.item_type = 'product' AND oi.item_id = p.id
                     WHERE oi.order_id = ?
                 ''', (order['id'],)).fetchall()
+                
                 items = []
                 for i in items_list:
                     imgs = json.loads(i['image_filenames'] or '[]') if i['item_type'] == 'product' else []
-                    img_url = f"/static/uploads/{imgs[0]}" if imgs else safe_placeholder(i['title'])
+                    img_url = url_for('uploaded_file', filename=imgs[0]) if imgs else '/static/assets/no-image.png'
                     items.append({
                         'title': i['title'],
                         'quantity': i['quantity'],
                         'price_str': f"{i['price_cents']//100}.{i['price_cents']%100:02d} ₽",
                         'image_url': img_url
                     })
+                
                 total_cents = sum(i['price_cents'] * i['quantity'] for i in items_list)
                 status = order.get('status') or 'pending'
                 label = status_map.get(status, ('Неизвестно', '#9ca3af', '#0b0d12'))
+                
+                # ← ВАЖНО: добавляем красивый номер для админа
                 order.update({
                     'items': items,
                     'total_str': f"{total_cents // 100}.{total_cents % 100:02d} ₽",
-                    'status_label': label
+                    'status_label': label,
+                    'global_order_number': order['global_order_number'],  # ← явно передаём
+                    'display_id': f"№{order['global_order_number']}",     # ← то, что показываем в интерфейсе
                 })
                 result.append(order)
+            
             return jsonify(result)
         except Exception as e:
             logger.error(f"api_admin_orders error: {e}")
@@ -1586,43 +1958,60 @@ def register_admin_routes(app):
     def api_user_orders():
         if 'user_id' not in session:
             return jsonify([])
+
         conn = get_conn(DB_MAIN)
         try:
+            # Сортируем по id DESC — потому что created_at больше НЕТ!
             rows = conn.execute('''
                 SELECT o.*, u.phone
                 FROM orders o
                 JOIN users u ON o.user_id = u.id
                 WHERE o.user_id = ?
-                ORDER BY o.created_at DESC
+                ORDER BY o.id DESC
             ''', (session['user_id'],)).fetchall()
+
             result = []
-            status_map = {
-                'pending': ('В процессе', '#8fb3ff', '#0b0d12'),
-                'processing': ('В обработке', '#a3bffa', '#0b0d12'),
-                'shipping': ('В доставке', '#ffd93d', '#0b0d12'),
-                'completed': ('Выполнено', '#a0e7a0', '#0b0d12'),
-                'cancelled': ('Отменён', '#ff6b6b', '#0b0d12'),
-            }
             for row in rows:
                 order = dict(row)
-                items = conn.execute('SELECT title, quantity, price_cents FROM order_items WHERE order_id = ?', (order['id'],)).fetchall()
-                total_cents = sum(i['price_cents'] * i['quantity'] for i in items)
-                label = status_map.get(order['status'], ('Неизвестно', '#9ca3af', '#0b0d12'))
 
-                # ← ВОТ ЭТА СТРОЧКА — ВСЁ, ЧТО НУЖНО ДОБАВИТЬ
-                display_id = f"#{order['id']:04d}"  # → #0001, #1423, #9999 и т.д.
+                # КРАСИВЫЙ НОМЕР ЗАКАЗА
+                # У тебя теперь display_id = "2025-0001"
+                # Если по какой-то причине его нет — fallback на user_order_number
+                display_raw = order.get('display_id') or f"№{order.get('user_order_number', order['id'])}"
+                
+                # Делаем всегда красивым: №2025-0001
+                if not display_raw.startswith('№'):
+                    display_raw = f"№{display_raw}"
 
+                # Товары и сумма
+                items_rows = conn.execute('''
+                    SELECT title, quantity, price_cents, item_type, item_id
+                    FROM order_items 
+                    WHERE order_id = ?
+                ''', (order['id'],)).fetchall()
+
+                total_cents = sum(item['price_cents'] * item['quantity'] for item in items_rows)
+                status = order.get('status', 'pending')
+                label = status_map.get(status, ('Неизвестно', '#9ca3af', '#0b0d12'))
+
+                # Формируем финальный объект
                 order.update({
-                    'items': [dict(i) for i in items],
+                    'items': [dict(item) for item in items_rows],
                     'total_str': f"{total_cents // 100}.{total_cents % 100:02d} ₽",
-                    'status_label': label,
-                    'cancel_reason': order.get('cancel_reason'),
-                    'display_id': display_id  # ← НОВОЕ ПОЛЕ
+                    'status_label': label[0],
+                    'status_color': label[1],
+                    'status_text_color': label[2],
+                    'cancel_reason': order.get('cancel_reason') or '',
+                    'display_id': display_raw,           # ← №2025-0001 — используй это везде на фронте!
+                    'pretty_number': display_raw,        # ← можно и так назвать
                 })
+
                 result.append(order)
+
             return jsonify(result)
+
         except Exception as e:
-            logger.error(f"api_user_orders: {e}")
+            logger.error(f"api_user_orders error: {e}")
             return jsonify([])
         finally:
             conn.close()
@@ -1760,240 +2149,6 @@ def register_admin_routes(app):
                             phone=phone
             
         )
-
-
-    @app.route('/admin_feedback', methods=['GET', 'POST'])
-    def admin_feedback():
-        # ===================== POST — УДАЛЕНИЕ =====================
-        if request.method == 'POST':
-            # Определяем, AJAX это или обычный запрос
-            is_ajax = request.form.get('ajax') == '1' or request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
-            password = request.form.get('password', '')
-            if password != app.config['ADMIN_PASSWORD']:
-                if is_ajax:
-                    return jsonify({'success': False, 'message': 'Неверный пароль!'})
-                flash('Неверный пароль!', 'error')
-                return redirect(url_for('admin_feedback'))
-
-            action = request.form.get('action')
-
-            if action == 'delete_feedback':
-                success_count = 0
-                message = 'Ничего не удалено'
-
-                # 1. Массовое удаление (по списку id)
-                if 'ids' in request.form:
-                    try:
-                        ids = json.loads(request.form['ids'])
-                        if isinstance(ids, list) and ids:
-                            for fid in ids:
-                                if delete_feedback(fid):          # ← твоя функция
-                                    success_count += 1
-                            message = f'Удалено заявок: {success_count}'
-                    except Exception as e:
-                        logger.error(f"JSON parse error: {e}")
-                        message = 'Ошибка обработки списка ID'
-
-                # 2. Удалить ВСЁ
-                elif request.form.get('delete_all') == '1':
-                    conn = get_conn(DB_FEEDBACK)
-                    try:
-                        # Считаем сколько было до удаления (чтобы красиво написать в сообщении)
-                        total = conn.execute('SELECT COUNT(*) FROM feedback').fetchone()[0]
-                        conn.execute('DELETE FROM feedback')
-                        conn.commit()
-                        success_count = total
-                        message = f'Удалено всех заявок: {total}'
-                    except Exception as e:
-                        logger.error(f"delete_all_feedback error: {e}")
-                        message = 'Ошибка при полном удалении'
-                    finally:
-                        conn.close()
-
-                # ← ОТВЕЧАЕМ JSON ДЛЯ AJAX
-                if is_ajax:
-                    return jsonify({
-                        'success': success_count > 0,
-                        'message': message
-                    })
-
-                # ← Обычный запрос — flash + редирект
-                flash(message, 'success' if success_count > 0 else 'error')
-
-            # В любом другом случае — просто редиректим
-            return redirect(url_for('admin_feedback'))
-
-        # ===================== GET — просто показываем страницу
-        conn_main = get_conn(DB_MAIN)
-        conn_feedback = get_conn(DB_FEEDBACK)
-        try:
-            total_users = conn_main.execute('SELECT COUNT(*) FROM users').fetchone()[0]
-            total_feedback = conn_feedback.execute('SELECT COUNT(*) FROM feedback').fetchone()[0]
-            total_orders = conn_main.execute('SELECT COUNT(*) FROM orders').fetchone()[0]
-            total_reviews = conn_main.execute('SELECT COUNT(*) FROM reviews').fetchone()[0]
-        finally:
-            conn_main.close()
-            conn_feedback.close()
-
-        feedbacks = get_all_feedback()  # ← твоя функция, возвращает список объектов
-
-        return render_template(
-            'admin_callback.html',          # ← или admin_feedback.html — как у тебя называется
-            feedbacks=feedbacks,
-            total_users=total_users,
-            total_feedback=total_feedback,
-            total_orders=total_orders,
-            total_reviews=total_reviews
-        )
-            
-
-    @app.route('/admin', methods=['GET', 'POST'])
-    def admin():
-        if not session.get('is_admin'):
-            flash('Доступ запрещён', 'error')
-            return redirect('/')
-
-        upload_folder = current_app.config.get('UPLOAD_FOLDER')
-        if not upload_folder:
-            flash("UPLOAD_FOLDER не задан", "error")
-            return render_template('admin.html', products=[], total_users=get_total_users())
-
-        os.makedirs(upload_folder, exist_ok=True)
-        admin_password = current_app.config.get('ADMIN_PASSWORD', 'admin123')
-        conn = get_conn(DB_MAIN)
-        products = []
-
-        try:
-            if request.method == 'POST':
-                if request.form.get('password') != admin_password:
-                    flash('Неверный пароль!', 'error')
-                    return redirect(url_for('admin'))
-
-                action = request.form.get('action')
-
-                if action == 'add':
-                    imgs = []
-                    for f in request.files.getlist('images'):
-                        if f and f.filename:
-                            fn = secure_filename(f.filename)
-                            save_path = os.path.join(upload_folder, fn)
-                            f.save(save_path)
-                            imgs.append(fn)
-
-                    stock = -1
-                    if request.form.get('stock'):
-                        try:
-                            stock = int(request.form['stock'])
-                        except:
-                            stock = -1
-
-                    conn.execute('''
-                        INSERT INTO products 
-                        (title, price, description, category, brand, image_filenames, in_stock, stock)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    ''', (
-                        request.form['title'],
-                        int(float(request.form['price']) * 100),
-                        request.form.get('description', ''),
-                        request.form['category'],
-                        request.form.get('brand', ''),
-                        json.dumps(imgs),
-                        'in_stock' in request.form,
-                        stock
-                    ))
-
-                elif action == 'edit':
-                    pid = int(request.form.get('product_id'))
-                    p = conn.execute('SELECT * FROM products WHERE id = ?', (pid,)).fetchone()
-                    if not p:
-                        raise ValueError("Товар не найден")
-
-                    existing = json.loads(p['image_filenames'] or '[]')
-                    new_imgs = []
-                    for f in request.files.getlist('images'):
-                        if f and f.filename:
-                            fn = secure_filename(f.filename)
-                            save_path = os.path.join(upload_folder, fn)
-                            f.save(save_path)
-                            new_imgs.append(fn)
-                    all_imgs = existing + new_imgs
-
-                    stock = -1
-                    if request.form.get('stock'):
-                        try:
-                            stock = int(request.form['stock'])
-                        except:
-                            stock = -1
-
-                    conn.execute('''
-                        UPDATE products SET 
-                        title=?, price=?, description=?, category=?, brand=?, 
-                        image_filenames=?, in_stock=?, stock=? 
-                        WHERE id=?
-                    ''', (
-                        request.form['title'],
-                        int(float(request.form['price']) * 100),
-                        request.form.get('description', ''),
-                        request.form['category'],
-                        request.form.get('brand', ''),
-                        json.dumps(all_imgs),
-                        'in_stock' in request.form,
-                        stock,
-                        pid
-                    ))
-
-                elif action == 'delete':
-                    pid = int(request.form.get('product_id'))
-                    p = conn.execute('SELECT image_filenames FROM products WHERE id = ?', (pid,)).fetchone()
-                    if p:
-                        for img in json.loads(p['image_filenames'] or '[]'):
-                            path = os.path.join(upload_folder, img)
-                            if os.path.exists(path):
-                                try:
-                                    os.remove(path)
-                                except Exception as e:
-                                    logger.warning(f"Не удалён {path}: {e}")
-                    conn.execute('DELETE FROM products WHERE id = ?', (pid,))
-
-                conn.commit()
-                flash('Успешно!', 'success')
-
-            rows = conn.execute('SELECT * FROM products ORDER BY created_at DESC').fetchall()
-            products = [dict(row) for row in rows]
-
-        except Exception as e:
-            conn.rollback()
-            flash(f'Ошибка: {escape(str(e))}', 'error')
-            logger.error(f"admin error: {e}")
-            try:
-                rows = conn.execute('SELECT * FROM products ORDER BY created_at DESC').fetchall()
-                products = [dict(row) for row in rows]
-            except:
-                products = []
-
-        finally:
-            conn.close()
-
-            conn_main = get_conn(DB_MAIN)
-        conn_feedback = get_conn(DB_FEEDBACK)
-        try:
-            total_orders = conn_main.execute('SELECT COUNT(*) FROM orders').fetchone()[0]
-            total_feedback = conn_feedback.execute('SELECT COUNT(*) FROM feedback').fetchone()[0]
-            total_reviews = conn_main.execute('SELECT COUNT(*) FROM reviews').fetchone()[0]
-        finally:
-            conn_main.close()
-            conn_feedback.close()
-
-        return render_template(
-            'admin.html',
-            products=products,
-            total_users=get_total_users(),
-            total_orders=total_orders,
-            total_feedback=total_feedback,
-            total_reviews=total_reviews
-        )
-
 
 
     @app.route('/admin_services', methods=['GET', 'POST'])
@@ -2180,6 +2335,7 @@ def register_admin_routes(app):
         finally:
             conn.close()
 
+        
     @app.route('/static/uploads/services/<path:filename>')
     def uploaded_service_file(filename):
         # Защита от ../
@@ -2450,7 +2606,7 @@ def register_admin_routes(app):
                 p['description'] = escape(p.get('description', '')).replace('\n', '<br>')
                 imgs = json.loads(p['image_filenames'] or '[]')
                 safe_imgs = [img for img in imgs if isinstance(img, str) and not img.lower().startswith(('javascript:', 'data:'))]
-                p['image_urls'] = [f"/static/uploads/{img}" for img in safe_imgs]
+                p['image_urls'] = [f"/static/uploads/goods/{img}" for img in safe_imgs]
                 p['price_str'] = f"{p['price']//100}.{p['price']%100:02d} ₽"
                 p['placeholder'] = safe_placeholder(p['title'])
                 result.append(p)
@@ -2473,7 +2629,7 @@ def register_admin_routes(app):
             p['description'] = escape(p.get('description', '')).replace('\n', '<br>')
             imgs = json.loads(p['image_filenames'] or '[]')
             safe_imgs = [img for img in imgs if isinstance(img, str) and not img.lower().startswith(('javascript:', 'data:'))]
-            p['image_urls'] = [f"/static/uploads/{img}" for img in safe_imgs]
+            p['image_urls'] = [f"/static/uploads/goods/{img}" for img in safe_imgs]
             p['price_str'] = f"{p['price']//100}.{p['price']%100:02d} ₽"
             return jsonify(p)
         except Exception as e:
@@ -2493,7 +2649,7 @@ def register_admin_routes(app):
                 p_dict['title'] = escape(p_dict['title'])
                 imgs = json.loads(p_dict['image_filenames'] or '[]')
                 safe_imgs = [img for img in imgs if isinstance(img, str) and not img.lower().startswith(('javascript:', 'data:'))]
-                image_urls = [f"/static/uploads/{img}" for img in safe_imgs]
+                image_urls = [f"/static/uploads/goods/{img}" for img in safe_imgs]
                 result.append({
                     'id': p_dict['id'],
                     'title': p_dict['title'],
@@ -2714,7 +2870,7 @@ def register_admin_routes(app):
     @app.route('/admin_reviews', methods=['GET', 'POST'])
     def admin_reviews():
         if request.method == 'POST':
-            data = request.get_json()
+            data = request.get_json(force=True) or {}
             if not data:
                 return jsonify({'success': False, 'message': 'Нет данных'}), 400
             password = data.get('password')

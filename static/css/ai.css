@@ -182,3 +182,156 @@
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ==================================================================
+   AI РОБОТ-ЮРИСТ — СВЕТЛАЯ ТЕМА (2025) — macOS-стиль + премиум
+================================================================== */
+html[data-theme="light"] #ai-assistant {
+  filter: drop-shadow(0 10px 30px rgba(0,0,0,0.22)) !important;
+}
+
+html[data-theme="light"] .ai-robot {
+  filter: drop-shadow(0 0 16px rgba(212,175,55,0.35)) !important;
+}
+
+html[data-theme="light"] .ai-bubble {
+  background: rgba(255,255,255,0.96) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1.6px solid rgba(15,15,15,0.18) !important;
+  color: #000 !important;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.18) !important;
+}
+
+html[data-theme="light"] .ai-bubble::after {
+  border-top-color: rgba(255,255,255,0.96) !important;
+  border-width: 9px !important;
+  bottom: -9px !important;
+}
+
+/* Основное окно чата */
+html[data-theme="light"] .ai-chat-modal {
+  background: rgba(255,255,255,0.98) !important;
+  backdrop-filter: blur(32px) !important;
+  border: 1.8px solid rgba(15,15,15,0.18) !important;
+  box-shadow: 
+    0 40px 100px rgba(0,0,0,0.22),
+    0 15px 40px rgba(0,0,0,0.14),
+    0 0 20px rgba(212,175,55,0.12) !important;
+}
+
+html[data-theme="light"] .ai-chat-modal.show {
+  box-shadow: 
+    0 45px 110px rgba(0,0,0,0.25),
+    0 0 20px rgba(212,175,55,0.16),
+    0 0 40px rgba(0,0,0,0.08) !important;
+}
+
+/* Хедер */
+html[data-theme="light"] .ai-chat-header {
+  background: rgba(15,15,15,0.07) !important;
+  border-bottom: 1px solid rgba(15,15,15,0.12) !important;
+}
+
+html[data-theme="light"] .ai-btn-minimize,
+html[data-theme="light"] .ai-btn-close {
+  background: rgba(15,15,15,0.1) !important;
+  color: #000 !important;
+}
+html[data-theme="light"] .ai-btn-minimize:hover,
+html[data-theme="light"] .ai-btn-close:hover {
+  background: rgba(15,15,15,0.22) !important;
+  transform: scale(1.1);
+}
+
+/* Сообщения */
+html[data-theme="light"] .msg.ai {
+  background: rgba(15,15,15,0.08) !important;
+  border: 1px solid rgba(15,15,15,0.18) !important;
+  color: #000 !important;
+}
+
+html[data-theme="light"] .msg.user {
+  background: #000 !important;
+  color: #fff !important;
+}
+
+/* Инпут */
+html[data-theme="light"] .ai-chat-input {
+  background: rgba(15,15,15,0.05) !important;
+  border-top: 1px solid rgba(15,15,15,0.12) !important;
+}
+
+html[data-theme="light"] .ai-chat-input input {
+  background: rgba(15,15,15,0.08) !important;
+  border: 1.6px solid rgba(15,15,15,0.28) !important;
+  color: #000 !important;
+}
+html[data-theme="light"] .ai-chat-input input::placeholder {
+  color: rgba(0,0,0,0.55) !important;
+}
+html[data-theme="light"] .ai-chat-input input:focus {
+  outline: none !important;
+  border-color: #ff9500 !important;
+  background: rgba(15,15,15,0.12) !important;
+  box-shadow: 0 0 0 5px rgba(255,149,0,0.14) !important;
+}
+
+/* Кнопка отправки — чёрная с белым текстом */
+html[data-theme="light"] .ai-chat-input button {
+  background: #000 !important;
+  color: #fff !important;
+}
+html[data-theme="light"] .ai-chat-input button:hover {
+  background: #333 !important;
+  transform: scale(1.1);
+}
+
+/* Полноэкранный режим — тоже красиво */
+html[data-theme="light"] .ai-chat-modal.fullscreen {
+  box-shadow: 
+    0 60px 160px rgba(0,0,0,0.28),
+    0 0 30px rgba(212,175,55,0.14) !important;
+}
+
+/* Надпись "AI Юрист" — ЧЁРНАЯ в светлой теме */
+html[data-theme="light"] .ai-bubble,
+html[data-theme="light"] .ai-chat-modal {
+  color: #000000 !important;
+}
+
+/* Если вдруг где-то текст отдельным классом (на всякий случай) */
+html[data-theme="light"] .ai-bubble *,
+html[data-theme="light"] .ai-chat-modal * {
+  color: #000000 !important;
+}
+
+/* Специально для заголовка в чате, если там отдельный тег */
+html[data-theme="light"] .ai-chat-header,
+html[data-theme="light"] .ai-chat-header * {
+  color: #000000 !important;
+}
+
+
+/* КНОПКА ОТПРАВКИ В ЧАТЕ AI — СВЕТЛАЯ ТЕМА: БЕЛЫЙ КРУГ + ЧЁРНАЯ СТРЕЛКА */
+html[data-theme="light"] .ai-chat-input button {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 1.8px solid rgba(15, 15, 15, 0.25) !important;
+  box-shadow: 
+    0 6px 18px rgba(0, 0, 0, 0.14),
+    0 0 0 1px rgba(15, 15, 15, 0.08) inset !important;
+  transition: all 0.32s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+html[data-theme="light"] .ai-chat-input button:hover {
+  background: #f2f2f2 !important;
+  border-color: rgba(15, 15, 15, 0.38) !important;
+  transform: translateY(-2px) scale(1.08) !important;
+  box-shadow: 
+    0 12px 30px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(15, 15, 15, 0.12) inset !important;
+}
+
+html[data-theme="light"] .ai-chat-input button:active {
+  transform: translateY(0) scale(1.02) !important;
+}

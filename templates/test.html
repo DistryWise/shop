@@ -1,544 +1,126 @@
+// admin_goods.js — РАБОЧАЯ ВЕРСИЯ ОТ 23.11.2025 — ФОТКИ 100% ДОХОДЯТ
 
-</head>
-<body>
+fetch('/api/check_admin').then(r => r.json()).then(d => { if (!d.is_admin) location.href = '/404'; });
 
-    <div class="gradient-overlay"></div>
+window.goodsImg = filename => `/static/uploads/goods/${filename}`;
 
-    <!-- НАВИГАЦИЯ -->
-    <header class="navbar">
-        <div class="nav-container">
-            <div class="logo-section">
-                <img src="/static/assets/logo.png" alt="Piligrim" class="logo-img">
-                <span class="logo-text">piligrim</span>
-            </div>
-            <nav class="nav-menu">
-                <a href="/" class="nav-link">Главная</a>
-            </nav>
-        </div>
-    </header>
+function showAlert(msg, type = 'success') {
+    const t = document.createElement('div');
+    t.className = `zaza-toast ${type}`;
+    t.innerHTML = `<span>${msg}</span><button onclick="this.parentElement.remove()">×</button>`;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 4000);
+}
 
-    <!-- САЙДБАР -->
-    <aside class="sidebar">
-        <h3 class="sidebar-title">Админка</h3>
-        <div class="sidebar-menu">
-            <div class="sidebar-line line-1"></div>
-            <a href="/admin" class="sidebar-item">
-                <i class="fas fa-box"></i>
-                <span>Товары</span>
-            </a>
-            <div class="sidebar-line line-2"></div>
-            <a href="/admin_services" class="sidebar-item active">
-                <i class="fas fa-balance-scale"></i>
-                <span>
-                    Услуги
-                    <div class="sidebar-badge">{{ total_services }}</div>
-                </span>
-            </a>
-            <div class="sidebar-line line-3"></div>
-            <a href="/admin_news" class="sidebar-item">
-                <i class="fas fa-newspaper"></i>
-                <span>Новости</span>
-            </a>
-            <div class="sidebar-line line-4"></div>
-            <a href="/admin_feedback" class="sidebar-item">
-                <i class="fas fa-envelope"></i>
-                <span>
-                    Обратная связь
-                    <div class="sidebar-badge">{{ total_feedback }}</div>
-                </span>
-            </a>
-            <div class="sidebar-line line-5"></div>
-            <a href="/admin_users" class="sidebar-item">
-                <i class="fas fa-users"></i>
-                <span>
-                    Пользователи
-                    <div class="sidebar-badge">{{ total_users }}</div>
-                </span>
-            </a>
-            <div class="sidebar-line line-6"></div>
-            <a href="/admin_reviews" class="sidebar-item">
-                <i class="fas fa-star"></i>
-                <span>
-                    Отзывы
-                    <div class="sidebar-badge">{{ total_reviews | e }}</div>
-                </span>
-            </a>
-            <div class="sidebar-line line-7"></div>
-            <a href="/admin_orders" class="sidebar-item">
-                <i class="fas fa-shopping-cart"></i>
-                <span>
-                    Заказы
-                    <div class="sidebar-badge">{{ total_orders | e }}</div>
-                </span>
-            </a>
-        </div>
-    </aside>
+// ПРОСТЕЙШИЙ РАБОЧИЙ DRAG & DROP — НИКАКИХ DataTransfer БАГОВ
+function initUploader(dropId, inputId, previewId) {
+    const drop = document.getElementById(dropId);
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
 
-    <!-- КОНТЕНТ -->
-    <main class="main-content">
-        <div class="admin-container">
-            <div class="admin-header">
-                <h1 class="admin-title">Админка — Услуги</h1>
-                <p class="admin-subtitle">Добавление и редактирование юридических услуг</p>
-            </div>
+    drop.onclick = () => input.click();
+    drop.ondragover = e => { e.preventDefault(); drop.classList.add('dragover'); };
+    drop.ondragleave = drop.ondragend = () => drop.classList.remove('dragover');
+    drop.ondrop = e => {
+        e.preventDefault();
+        drop.classList.remove('dragover');
+        addFiles(e.dataTransfer.files);
+    };
+    input.onchange = () => addFiles(input.files);
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-              {% if messages %}
-                {% for category, message in messages %}
-                  <div class="flash {{ category }}">{{ message }}</div>
-                {% endfor %}
-              {% endif %}
-            {% endwith %}
+    function addFiles(fileList) {
+        const files = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+        if (!files.length) return;
 
-            <!-- ПОИСК -->
-            <div class="controls">
-                <input type="text" id="searchInput" class="search-input" placeholder="Поиск по названию или описанию..." onkeyup="debouncedSearch()">
-            </div>
+        const dt = new DataTransfer();
+        // Просто заменяем всё на новые файлы (для простоты)
+        files.forEach(f => dt.items.add(f));
+        input.files = dt.files;
 
-            <!-- ФОРМА ДОБАВЛЕНИЯ -->
-            <form id="addForm" enctype="multipart/form-data" onsubmit="openAddConfirmModal(event)">
-                <input type="hidden" name="action" value="add">
-                <div class="form-group">
-                    <label>Название</label>
-                    <input type="text" name="title" placeholder="Разработка сайта" required>
-                </div>
-                <div class="form-group">
-                    <label>Цена</label>
-                    <input type="text" name="price" placeholder="от 50 000 ₽" required>
-                </div>
-                <div class="form-group">
-                    <label>Краткое описание</label>
-                    <textarea name="short_desc" rows="2" placeholder="Адаптивный дизайн" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Полное описание</label>
-                    <textarea name="full_desc" rows="6" placeholder="Сайты под ключ" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Категория</label>
-                    <input type="text" name="category" placeholder="Юридические услуги" required>
-                </div>
-                <div class="form-group">
-                    <label>Фотографии (до 5)</label>
-                    <div class="image-upload" id="addUpload">
-                        <i class="fas fa-cloud-upload-alt" style="font-size:2.2rem;color:var(--primary);margin-bottom:0.8rem;"></i>
-                        <p style="color:#ccc;font-size:0.95rem;">Нажмите, чтобы загрузить фото</p>
-                        <input type="file" id="addImages" name="images" accept="image/*" multiple hidden>
-                    </div>
-                    <div class="image-preview" id="addPreview"></div>
-                </div>
-                <button type="submit">Добавить услугу</button>
-            </form>
-
-            <!-- СПИСОК УСЛУГ -->
-            <div class="services-list">
-                <h2>Существующие услуги ({{ total_services }})</h2>
-                <div id="servicesContainer">
-                    {% for s in services %}
-                    <div class="service-item" data-id="{{ s.id }}" data-title="{{ s.title|lower }}" data-desc="{{ s.short_desc|lower }}" data-category="{{ s.category|lower|default('') }}">
-                        <div class="service-thumb">
-                            {% if s.image_urls|length > 0 %}
-                                <img src="{{ s.image_urls[0] }}" alt="{{ s.title }}" onerror="this.src='/static/assets/no-image.png'">
-                            {% else %}
-                                <i class="fas fa-image"></i>
-                            {% endif %}
-                        </div>
-                        <div class="service-info">
-                            <div class="service-title">{{ s.title }}</div>
-                            <div class="service-price">{{ s.price }}</div>
-                            <div class="service-short">{{ s.short_desc }}</div>
-                            <div class="service-category">Категория: {{ s.category|default('Без категории') }}</div>
-                        </div>
-                        <div class="action-buttons">
-                            <button class="edit-btn"
-                                    data-id="{{ s.id }}"
-                                    data-title="{{ s.title|e }}"
-                                    data-price="{{ s.price|e }}"
-                                    data-short="{{ s.short_desc|e }}"
-                                    data-full="{{ s.full_desc|e }}"
-                                    data-images="{{ s.image_urls|tojson }}"
-                                    data-category="{{ s.category|e|default('') }}">
-                                Редактировать
-                            </button>
-                            <button class="delete-btn" onclick="openDeleteModal({{ s.id }})">Удалить</button>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-
-                <!-- ПАГИНАЦИЯ -->
-                <div class="pagination" id="pagination"></div>
-            </div>
-        </div>
-    </main>
-
-    <!-- МОДАЛКА ДОБАВЛЕНИЯ -->
-    <div class="modal-overlay" id="addConfirmModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h2>Подтвердите добавление</h2>
-                <button class="modal-close" onclick="closeAddConfirmModal()">x</button>
-            </div>
-            <form method="POST" id="finalAddForm" enctype="multipart/form-data">
-                <input type="hidden" name="action" value="add">
-                <input type="hidden" name="title" id="final_title">
-                <input type="hidden" name="price" id="final_price">
-                <input type="hidden" name="short_desc" id="final_short">
-                <input type="hidden" name="full_desc" id="final_full">
-                <input type="hidden" name="category" id="final_category">
-                <div class="form-group">
-                    <label>Пароль администратора</label>
-                    <input type="password" name="password" required placeholder="Введите пароль">
-                </div>
-                <div class="modal-actions">
-                    <button type="submit">Добавить</button>
-                    <button type="button" class="cancel-btn" onclick="closeAddConfirmModal()">Отмена</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-        <!-- МОДАЛКА РЕДАКТИРОВАНИЯ -->
-        <div class="modal-overlay" id="editModal">
-            <div class="modal">
-                <div class="modal-header">
-                    <h2>Редактировать услугу</h2>
-                    <button class="modal-close" onclick="closeEditModal()">x</button>
-                </div>
-                <form method="POST" id="editForm" enctype="multipart/form-data">
-                    <input type="hidden" name="action" value="edit">
-                    <input type="hidden" name="id" id="edit_id">
-                    <div class="form-group">
-                        <label>Пароль</label>
-                        <input type="password" name="password" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Название</label>
-                        <input type="text" name="title" id="edit_title" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Цена</label>
-                        <input type="text" name="price" id="edit_price" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Краткое описание</label>
-                        <textarea name="short_desc" rows="2" id="edit_short" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Полное описание</label>
-                        <textarea name="full_desc" rows="6" id="edit_full" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Категория</label>
-                        <input type="text" name="category" id="edit_category" placeholder="Юридические услуги" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Фотографии</label>
-                        <div class="image-upload" id="editUpload">
-                            <i class="fas fa-cloud-upload-alt" style="font-size:2.2rem;color:var(--primary);margin-bottom:0.8rem;"></i>
-                            <p style="color:#ccc;font-size:0.95rem;">Добавить новые фото</p>
-                            <input type="file" id="editImages" name="images" accept="image/*" multiple hidden>
-                        </div>
-                        <div class="image-preview" id="editPreview"></div>
-                    </div>
-                    <div class="modal-actions">
-                        <button type="submit">Сохранить</button>
-                        <button type="button" class="cancel-btn" onclick="closeEditModal()">Отмена</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-    <!-- МОДАЛКА УДАЛЕНИЯ -->
-    <div class="modal-overlay" id="deleteModal">
-        <div class="modal" style="max-width: 500px;">
-            <div class="modal-header">
-                <h2>Удалить услугу?</h2>
-                <button class="modal-close" onclick="closeDeleteModal()">x</button>
-            </div>
-            <form method="POST" id="deleteForm">
-                <input type="hidden" name="action" value="delete">
-                <input type="hidden" name="id" id="delete_id">
-                <div class="form-group">
-                    <label>Пароль</label>
-                    <input type="password" name="password" required>
-                </div>
-                <div class="modal-actions">
-                    <button type="submit">Удалить</button>
-                    <button type="button" class="cancel-btn" onclick="closeDeleteModal()">Отмена</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- ВИСЯЩИЙ ТУМБЛЕР ТЕМЫ -->
-<div class="theme-toggle-hanging">
-  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
-  <label for="theme-toggle" class="theme-toggle-label">
-    <div class="rope top"></div>
-    <div class="bulb">
-      <div class="bulb-light"></div>
-      <div class="bulb-glow"></div>
-    </div>
-    <div class="rope bottom"></div>
-  </label>
-</div>
-
-    <!-- СТИЛЬНЫЕ УВЕДОМЛЕНИЯ -->
-    <div id="toastContainer" style="position:fixed;bottom:20px;right:20px;z-index:3000;display:flex;flex-direction:column;gap:10px;"></div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            setTimeout(() => document.querySelector('.gradient-overlay').classList.add('active'), 100);
-            const header = document.querySelector('.admin-header');
-            const observer = new IntersectionObserver(e => e.forEach(en => en.isIntersecting && en.target.classList.add('visible')), { threshold: 0.1 });
-            observer.observe(header);
-            initServices();
-        });
-
-        let allServices = [];
-        const itemsPerPage = 10;
-        let currentPage = 1;
-        let filteredServices = [];
-
-        function initServices() {
-            allServices = Array.from(document.querySelectorAll('.service-item'));
-            filteredServices = [...allServices];
-            renderServices();
-            renderPagination();
-        }
-
-        function renderServices() {
-            const container = document.getElementById('servicesContainer');
-            const start = (currentPage - 1) * itemsPerPage;
-            const end = start + itemsPerPage;
-
-            allServices.forEach(item => item.style.display = 'none');
-            filteredServices.slice(start, end).forEach(item => item.style.display = 'flex');
-        }
-
-        function renderPagination() {
-            const totalPages = Math.ceil(filteredServices.length / itemsPerPage);
-            const container = document.getElementById('pagination');
-            container.innerHTML = '';
-
-            for (let i = 1; i <= totalPages; i++) {
-                const btn = document.createElement('button');
-                btn.className = 'page-btn';
-                btn.textContent = i;
-                btn.onclick = () => {
-                    currentPage = i;
-                    renderServices();
-                    document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                };
-                if (i === currentPage) btn.classList.add('active');
-                container.appendChild(btn);
-            }
-        }
-
-
-                    // === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ ===
-            const toggle = document.getElementById('theme-toggle');
-            const html = document.documentElement;
-
-            if (localStorage.getItem('theme') === 'light') {
-            html.setAttribute('data-theme', 'light');
-            if (toggle) toggle.checked = true;
-            } else {
-            html.setAttribute('data-theme', 'dark');
-            localStorage.setItem('theme', 'dark');
-            }
-
-            toggle?.addEventListener('change', () => {
-            const isLight = toggle.checked;
-            html.setAttribute('data-theme', isLight ? 'light' : 'dark');
-            localStorage.setItem('theme', isLight ? 'light' : 'dark');
-            });
-        // Поиск с дебаунсом
-        let searchTimeout;
-        function debouncedSearch() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                const query = document.getElementById('searchInput').value.toLowerCase();
-                filteredServices = allServices.filter(item => {
-                    const title = item.dataset.title;
-                    const desc = item.dataset.desc;
-                    return title.includes(query) || desc.includes(query);
-                });
-                currentPage = 1;
-                renderServices();
-                renderPagination();
-            }, 300);
-        }
-
-        // Уведомления
-        function showToast(message, type = 'success') {
-            const toast = document.createElement('div');
-            toast.style.cssText = `
-                min-width: 300px; padding: 1rem 1.5rem; border-radius: 16px; 
-                backdrop-filter: blur(10px); font-weight: 600; color: #fff;
-                box-shadow: 0 8px 25px rgba(0,0,0,0.3); animation: slideIn 0.4s ease;
-            `;
-            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
-            toast.style.background = type === 'success' ? 'rgba(0,255,149,0.2)' : 'rgba(255,68,68,0.2)';
-            toast.style.border = `1px solid ${type === 'success' ? 'var(--accent)' : '#ff6666'}`;
-            document.getElementById('toastContainer').appendChild(toast);
-            setTimeout(() => toast.remove(), 4000);
-        }
-
-        // Загрузка фото
-        function setupImageUpload(inputId, previewId, uploadBtnId) {
-            const input = document.getElementById(inputId);
-            const preview = document.getElementById(previewId);
-            const btn = document.getElementById(uploadBtnId);
-
-            btn.onclick = () => input.click();
-
-            input.onchange = () => {
-                preview.innerHTML = '';
-                const files = Array.from(input.files).slice(0, 5);
-                files.forEach((file, i) => {
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                        const div = document.createElement('div');
-                        div.className = 'image-item';
-                        div.innerHTML = `
-                            <img src="${e.target.result}" alt="preview">
-                            <div class="remove-image" onclick="removeNewImage(${i}, '${inputId}')">×</div>
-                        `;
-                        preview.appendChild(div);
-                    };
-                    reader.readAsDataURL(file);
-                });
-                const dt = new DataTransfer();
-                files.forEach(f => dt.items.add(f));
-                input.files = dt.files;
+        preview.innerHTML = '';
+        files.forEach((f, i) => {
+            const reader = new FileReader();
+            reader.onload = e => {
+                preview.innerHTML += `
+                    <div class="image-item">
+                        <img src="${e.target.result}">
+                        ${i===0 ? '<div class="main-badge">Главная</div>' : ''}
+                        <button type="button" onclick="this.parentElement.remove(); updateFiles('${inputId}')">×</button>
+                    </div>`;
             };
-        }
-
-        function removeNewImage(index, inputId) {
-            const input = document.getElementById(inputId);
-            const dt = new DataTransfer();
-            Array.from(input.files).forEach((f, i) => { if (i !== index) dt.items.add(f); });
-            input.files = dt.files;
-            setupImageUpload(inputId, inputId.replace('Images', 'Preview'), inputId.replace('Images', 'Upload'));
-        }
-
-        setupImageUpload('addImages', 'addPreview', 'addUpload');
-        setupImageUpload('editImages', 'editPreview', 'editUpload');
-
-        function openAddConfirmModal(e) {
-            e.preventDefault();
-            const form = document.getElementById('addForm');
-            const finalForm = document.getElementById('finalAddForm');
-
-            document.getElementById('final_title').value = form.title.value;
-            document.getElementById('final_price').value = form.price.value;
-            document.getElementById('final_short').value = form.short_desc.value;
-            document.getElementById('final_full').value = form.full_desc.value;
-            document.getElementById('final_category').value = form.category.value;
-
-            let finalFileInput = finalForm.querySelector('input[name="images"]');
-            if (!finalFileInput) {
-                finalFileInput = document.createElement('input');
-                finalFileInput.type = 'file';
-                finalFileInput.name = 'images';
-                finalFileInput.multiple = true;
-                finalFileInput.hidden = true;
-                finalForm.appendChild(finalFileInput);
-            }
-            finalFileInput.files = document.getElementById('addImages').files;
-
-            document.getElementById('addConfirmModal').classList.add('active');
-        }
-
-        function closeAddConfirmModal() {
-            document.getElementById('addConfirmModal').classList.remove('active');
-        }
-        // Редактирование
-        let currentEditImages = [];
-        document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const d = this.dataset;
-                document.getElementById('edit_id').value = d.id;
-                document.getElementById('edit_title').value = d.title;
-                document.getElementById('edit_price').value = d.price;
-                document.getElementById('edit_short').value = d.short;
-                document.getElementById('edit_category').value = d.category || '';
-
-                // Handle full_desc
-                try {
-                    document.getElementById('edit_full').value = d.full ? JSON.parse(d.full) : '';
-                } catch (e) {
-                    console.error('Error parsing full_desc:', e);
-                    document.getElementById('edit_full').value = '';
-                }
-
-                // Handle images
-                const preview = document.getElementById('editPreview');
-                preview.innerHTML = '';
-                try {
-                    currentEditImages = d.images ? JSON.parse(d.images) : [];
-                    currentEditImages.forEach((url, i) => {
-                        const div = document.createElement('div');
-                        div.className = 'image-item';
-                        div.dataset.index = i;
-                        div.innerHTML = `
-                            <img src="${url}" onerror="this.src='/static/assets/no-image.png'">
-                            <div class="remove-image" onclick="removeOldImage(${i})">×</div>
-                        `;
-                        preview.appendChild(div);
-                    });
-                } catch (e) {
-                    console.error('Error parsing images:', e);
-                    currentEditImages = [];
-                }
-
-                document.getElementById('editModal').classList.add('active');
-            });
+            reader.readAsDataURL(f);
         });
-        function removeOldImage(index) {
-            currentEditImages.splice(index, 1);
-            const items = document.querySelectorAll('#editPreview .image-item');
-            items[index].remove();
-            document.querySelectorAll('#editPreview .image-item').forEach((item, i) => {
-                item.dataset.index = i;
-                item.querySelector('.remove-image').setAttribute('onclick', `removeOldImage(${i})`);
-            });
+        window.updateFiles = id => {
+            const remaining = Array.from(preview.querySelectorAll('img')).map(img => {
+                const src = img.src;
+                const match = src.match(/^data:.+;base64,(.+)$/);
+                if (!match) return null;
+                const b64 = match[1];
+                const bin = atob(b64);
+                const arr = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+                return new File([arr], "photo.jpg", { type: "image/jpeg" });
+            }).filter(Boolean);
+            const dt2 = new DataTransfer();
+            remaining.forEach(f => dt2.items.add(f));
+            document.getElementById(id).files = dt2.files;
+        };
+    }
+}
+initUploader('addDropZone', 'addFileInput', 'addPreview');
+initUploader('editDropZone', 'editFileInput', 'editNewPreview');
+
+// САМАЯ ПРОСТАЯ ОТПРАВКА — РАБОТАЕТ ВСЕГДА
+async function addProduct() {
+    const form = document.getElementById('addForm');
+    const password = prompt('Пароль админа:');
+    if (!password) return;
+
+    const fd = new FormData();
+    fd.append('action', 'add');
+    fd.append('password', password);
+    fd.append('title', form.title.value.trim());
+    fd.append('price_rub', form.price_rub.value);
+    fd.append('category', form.category.value.trim());
+    fd.append('brand', form.brand?.value.trim() || '');
+    fd.append('description', form.description.value);
+    fd.append('stock', form.stock.value);
+    fd.append('in_stock', form.in_stock.checked ? '1' : '0');
+
+    const files = document.getElementById('addFileInput').files;
+    for (let file of files) {
+        fd.append('images', file);
+    }
+
+    // ДЕБАГ
+    console.log("ОТПРАВЛЯЮ ФАЙЛЫ:", files.length);
+    for (let f of files) console.log(f.name, f.size);
+
+    const btn = document.getElementById('addSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = 'Загрузка...';
+
+    try {
+        const r = await fetch('/admin', { method: 'POST', body: fd });
+        const text = await r.text();
+        console.log("Ответ сервера:", text);
+        if (r.ok) {
+            alert('ТОВАР ДОБАВЛЕН С ФОТКАМИ!');
+            location.reload();
+        } else {
+            alert('ОШИБКА: ' + text);
         }
+    } catch (e) {
+        alert('Нет связи с сервером');
+        console.error(e);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Добавить товар';
+    }
+}
 
-        function closeEditModal() {
-            document.getElementById('editModal').classList.remove('active');
-            currentEditImages = [];
-        }
-
-        // Удаление
-        function openDeleteModal(id) {
-            document.getElementById('delete_id').value = id;
-            document.getElementById('deleteModal').classList.add('active');
-        }
-
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').classList.remove('active');
-        }
-
-        // Закрытие по фону
-        document.querySelectorAll('.modal-overlay').forEach(overlay => {
-            overlay.addEventListener('click', e => {
-                if (e.target === overlay) overlay.classList.remove('active');
-            });
-        });
-
-        // Анимация тоста
-        const style = document.createElement('style');
-        style.innerHTML = `
-            @keyframes slideIn {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-        `;
-        document.head.appendChild(style);
-    </script>
-</body>
-</html>
+// ПРИВЯЗЫВАЕМ К КНОПКЕ
+document.getElementById('addSubmitBtn')?.addEventListener('click', e => {
+    e.preventDefault();
+    addProduct();
+});

@@ -7,10 +7,9 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">\
 
-     <link rel="stylesheet" href="/static/css/admin/admin_goods.css">
-
+    <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
+    <link rel="stylesheet" href="/static/css/admin/admin_goods.css">
 </head>
 <body>
 
@@ -52,76 +51,86 @@
                     <h3>Добавить новый товар</h3>
                     <i class="fas fa-chevron-down"></i>
                 </div>
-<!-- ====================== ФОРМА ДОБАВЛЕНИЯ ТОВАРА ====================== -->
-<div class="add-form-body">
-    <form id="addForm">
-        <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 1.2rem;">
-            <div class="form-group">
-                <label>Название <span style="color:#ff4444;">*</span></label>
-                <div class="input-wrapper">
-                    <i class="fas fa-tag input-icon"></i>
-                    <input type="text" name="title" placeholder="iPhone 15 Pro Max" required>
+
+                <div class="add-form-body">
+                    <form id="addForm">
+                        <input type="hidden" name="action" value="add">
+
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 1.2rem;">
+                            <div class="form-group">
+                                <label>Название <span style="color:#ff4444;">*</span></label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-tag input-icon"></i>
+                                    <input type="text" name="title" placeholder="iPhone 15 Pro Max" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Цена (₽) <span style="color:#ff4444;">*</span></label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-ruble-sign input-icon"></i>
+                                    <input type="number" step="0.01" name="price_rub" placeholder="129990.00" min="0.01" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Категория <span style="color:#ff4444;">*</span></label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-folder input-icon"></i>
+                                    <input type="text" name="category" placeholder="phones" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Бренд</label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-copyright input-icon"></i>
+                                    <input type="text" name="brand" placeholder="Apple">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Количество <small style="color:#888;">(-1 = ∞)</small></label>
+                                <div class="input-wrapper">
+                                    <i class="fas fa-boxes input-icon"></i>
+                                    <input type="number" name="stock" value="-1">
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="align-self: end;">
+                                <label class="checkbox-wrapper">
+                                    <input type="checkbox" name="in_stock" checked>
+                                    <span class="checkmark"></span>
+                                    В наличии
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="grid-column: 1 / -1; margin-top: 1.2rem;">
+                            <label>Описание</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-align-left input-icon" style="top:14px;"></i>
+                                <textarea name="description" rows="5" placeholder="Краткое описание товара, характеристики, преимущества..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="grid-column: 1 / -1; margin-top: 1rem;">
+                            <label>Фото товара</label>
+                            <div class="drop-zone" id="addDropZone">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 0.5rem; color:#666;"></i>
+                                <p>Перетащите фото сюда или <span style="color:#00ff9d; text-decoration:underline;">кликните для выбора</span></p>
+                                <input type="file" name="images" multiple accept="image/*" id="addFileInput" style="display:none;">
+                            </div>
+                            <div class="image-preview" id="addPreview"></div>
+                        </div>
+
+                        <div style="grid-column: 1 / -1; margin-top: 1rem;">
+                            <button type="button" class="btn-zaza-primary" id="addSubmitBtn">
+                                <i class="fas fa-plus-circle"></i> Добавить товар
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label>Цена (₽) <span style="color:#ff4444;">*</span></label>
-                <div class="input-wrapper">
-                    <i class="fas fa-ruble-sign input-icon"></i>
-                    <input type="number" step="0.01" name="price_rub" placeholder="129 990.00" min="0.01" required>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Категория <span style="color:#ff4444;">*</span></label>
-                <div class="input-wrapper">
-                    <i class="fas fa-folder input-icon"></i>
-                    <input type="text" name="category" placeholder="phones" required>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Бренд</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-copyright input-icon"></i>
-                    <input type="text" name="brand" placeholder="Apple">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Количество <small style="color:#888;">(-1 = ∞)</small></label>
-                <div class="input-wrapper">
-                    <i class="fas fa-boxes input-icon"></i>
-                    <input type="number" name="stock" value="-1" placeholder="-1">
-                </div>
-            </div>
-
-            <div class="form-group" style="align-self: end;">
-                <label class="checkbox-wrapper">
-                    <input type="checkbox" name="in_stock" checked>
-                    <span class="checkmark"></span>
-                    В наличии
-                </label>
-            </div>
-        </div>
-
-        <div class="form-group" style="grid-column: 1 / -1; margin-top: 1rem;">
-            <label>Фото товара</label>
-            <div class="drop-zone" id="addDropZone">
-                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 0.5rem; color:#666;"></i>
-                <p>Перетащите фото сюда или <span style="color:#00ff9d; text-decoration:underline;">кликните для выбора</span></p>
-                <input type="file" name="images" multiple accept="image/*" id="addFileInput" style="display:none;">
-            </div>
-            <div class="image-preview" id="addPreview"></div>
-        </div>
-
-        <div style="grid-column: 1 / -1; margin-top: 1rem;">
-            <button type="submit" class="btn-zaza-primary">
-                <i class="fas fa-plus-circle"></i> Добавить товар
-            </button>
-        </div>
-    </form>
-</div>
             </div>
 
             <div class="search-box">
@@ -149,7 +158,9 @@
                             <td>
                                 {% if p.image_filenames and p.image_filenames != '[]' %}
                                     {% set imgs = p.image_filenames|fromjson %}
-                                    <img src="{{ url_for('uploaded_file', filename=imgs[0]) }}" class="product-thumb" onerror="this.style.display='none';this.parentNode.innerHTML='<div style=\'width:56px;height:56px;background:#222;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#555;font-size:0.7rem;\'>—</div>'">
+                                    <img src="{{ url_for('static', filename='uploads/goods/' + imgs[0]) }}" 
+     class="product-thumb" 
+     onerror="this.onerror=null; this.src='/static/assets/no-image.png'; this.style.opacity='0.6';">
                                 {% else %}
                                     <div style="width:56px;height:56px;background:#222;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#555;font-size:0.7rem;">—</div>
                                 {% endif %}
@@ -176,10 +187,10 @@
                                         data-description="{{ (p.description or '')|e|replace('"', '&quot;') }}"
                                         data-in_stock="{{ p.in_stock|int }}"
                                         data-stock="{{ p.stock }}"
-                                        data-images="{{ p.image_filenames|e|replace('"', '&quot;') }}">
+                                        data-images="{{ p.image_filenames|tojson }}">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="action-btn delete" onclick="event.stopPropagation(); prepareAction('delete', {{ p.id }})">
+                                    <button class="action-btn delete" onclick="event.stopPropagation(); prepareAction('delete', '{{ p.id }}')">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
@@ -194,145 +205,420 @@
         </div>
     </main>
 
-    <!-- Карточка товара снизу -->
-    <div class="product-detail" id="productDetail">
-        <button class="detail-close" onclick="closeProductDetail()">×</button>
-        <div class="detail-grid">
-            <div class="detail-images" id="detailImages"></div>
-            <div class="detail-info">
-                <h3 id="detailTitle"></h3>
-                <div class="detail-price" id="detailPrice"></div>
-                <div id="detailCategoryBrand" style="color:#aaa; margin:0.5rem 0;"></div>
-                <div id="detailStock" style="color:#aaa;"></div>
-                <div class="detail-desc" id="detailDescription">Нет описания</div>
-            </div>
+    <!-- Модалка редактирования -->
+    <div id="editModal" class="modal-overlay">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('editModal')">×</button>
+            <h3><i class="fas fa-edit" style="margin-right:10px; color:#00ff9d;"></i> Редактировать товар</h3>
+            
+            <form id="editForm">
+                <input type="hidden" name="product_id" id="edit_id">
+                <input type="hidden" name="keep_images" id="keep_images">
+                <div class="form-grid" style="gap:1.2rem;">
+                    <div class="form-group">
+                        <label>Название</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-tag input-icon"></i>
+                            <input type="text" name="title" id="edit_title" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Цена (₽)</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-ruble-sign input-icon"></i>
+                            <input type="number" step="0.01" name="price_rub" id="edit_price_rub" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Категория</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-folder input-icon"></i>
+                            <input type="text" name="category" id="edit_category" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Бренд</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-copyright input-icon"></i>
+                            <input type="text" name="brand" id="edit_brand">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top:0.5rem;">
+                    <label>Описание</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-align-left input-icon" style="top:14px;"></i>
+                        <textarea name="description" id="edit_description" rows="4"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-grid" style="gap:1.2rem; align-items:end;">
+                    <div class="form-group">
+                        <label>Количество</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-boxes input-icon"></i>
+                            <input type="number" name="stock" id="edit_stock" value="-1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" name="in_stock" id="edit_in_stock">
+                            <span class="checkmark"></span>
+                            В наличии
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Текущие фото</label>
+                    <div class="image-preview" id="editCurrentPreview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Добавить новые фото</label>
+                    <div class="drop-zone" id="editDropZone">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 1.8rem; margin-bottom: 0.4rem; color:#666;"></i>
+                        <p>Перетащите или <span style="color:#00ff9d; text-decoration:underline;">кликните</span></p>
+                        <input type="file" name="images" multiple accept="image/*" id="editFileInput" style="display:none;">
+                    </div>
+                    <div class="image-preview" id="editNewPreview"></div>
+                </div>
+
+                <div class="modal-actions" style="margin-top:2rem;">
+                    <button type="button" class="btn-zaza-primary" id="editSubmitBtn">
+                        <i class="fas fa-save"></i> Сохранить изменения
+                    </button>
+                    <button type="button" onclick="closeModal('editModal')" class="btn-zaza-secondary">
+                        Отмена
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <!-- Модалка редактирования (без пароля) -->
-<!-- ====================== МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ ====================== -->
-<div id="editModal" class="modal-overlay">
-    <div class="modal">
-        <button class="modal-close" onclick="closeModal('editModal')">×</button>
-        <h3><i class="fas fa-edit" style="margin-right:10px; color:#00ff9d;"></i> Редактировать товар</h3>
-        
-        <form id="editForm">
-            <input type="hidden" name="product_id" id="edit_id">
-
-            <div class="form-grid" style="gap:1.2rem;">
-                <div class="form-group">
-                    <label>Название</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-tag input-icon"></i>
-                        <input type="text" name="title" id="edit_title" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Цена (₽)</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-ruble-sign input-icon"></i>
-                        <input type="number" step="0.01" name="price_rub" id="edit_price_rub" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Категория</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-folder input-icon"></i>
-                        <input type="text" name="category" id="edit_category" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Бренд</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-copyright input-icon"></i>
-                        <input type="text" name="brand" id="edit_brand">
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-group" style="margin-top:0.5rem;">
-                <label>Описание</label>
-                <div class="input-wrapper">
-                    <i class="fas fa-align-left input-icon" style="top:14px;"></i>
-                    <textarea name="description" id="edit_description" rows="4" placeholder="Краткое описание товара..."></textarea>
-                </div>
-            </div>
-
-            <div class="form-grid" style="gap:1.2rem; align-items:end;">
-                <div class="form-group">
-                    <label>Количество</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-boxes input-icon"></i>
-                        <input type="number" name="stock" id="edit_stock" value="-1">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="checkbox-wrapper">
-                        <input type="checkbox" name="in_stock" id="edit_in_stock">
-                        <span class="checkmark"></span>
-                        В наличии
-                    </label>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Текущие фото</label>
-                <div class="image-preview" id="editCurrentPreview"></div>
-            </div>
-
-            <div class="form-group">
-                <label>Добавить новые фото</label>
-                <div class="drop-zone" id="editDropZone">
-                    <i class="fas fa-cloud-upload-alt" style="font-size: 1.8rem; margin-bottom: 0.4rem; color:#666;"></i>
-                    <p>Перетащите или <span style="color:#00ff9d; text-decoration:underline;">кликните</span></p>
-                    <input type="file" name="images" multiple accept="image/*" id="editFileInput" style="display:none;">
-                </div>
-                <div class="image-preview" id="editNewPreview"></div>
-            </div>
-
-            <div class="modal-actions" style="margin-top:2rem;">
-                <button type="button" onclick="prepareAction('edit')" class="btn-zaza-primary">
-                    <i class="fas fa-save"></i> Сохранить изменения
-                </button>
-                <button type="button" onclick="closeModal('editModal')" class="btn-zaza-secondary">
-                    Отмена
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-    <!-- Универсальная модалка с паролем -->
-    <div id="passwordModal" class="modal-overlay">
+    <!-- Модалка с паролем -->
+    <div id="passwordModal" class="modal-overlay" style="display:none;">
         <div class="modal" style="max-width: 460px;">
-            <button class="modal-close" onclick="closeModal('passwordModal')">×</button>
+            <button class="modal-close" onclick="closePasswordModal()">×</button>
             <h3>Подтвердите действие</h3>
             <p style="color:#aaa; text-align:center; margin:1rem 0;">Введите пароль администратора</p>
-            <input type="password" id="adminPassword" placeholder="Пароль" autofocus style="width:100%; padding:1rem; font-size:1rem;">
-            <div id="passwordError">Неверный пароль</div>
+            <input type="password" id="adminPassword" placeholder="Пароль" autofocus>
+            <div id="passwordError" style="color:#ff4444; margin:0.5rem 0; display:none;">Неверный пароль</div>
             <div class="modal-actions">
-                <button class="btn-primary" onclick="executePendingAction()">Подтвердить</button>
-                <button class="cancel-btn" onclick="closeModal('passwordModal')">Отмена</button>
+                <button class="btn-zaza-primary" onclick="executePendingAction()">Подтвердить</button>
+                <button type="button" class="btn-zaza-secondary" onclick="closePasswordModal()">Отмена</button>
             </div>
         </div>
     </div>
 
-
-    <!-- ВИСЯЩИЙ СВЕТИЛЬНИК — ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ -->
-<div class="theme-toggle-hanging">
-  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
-  <label for="theme-toggle" class="theme-toggle-label">
-    <div class="rope top"></div>
-    <div class="bulb">
-      <div class="bulb-light"></div>
-      <div class="bulb-glow"></div>
+    <div class="theme-toggle-hanging">
+        <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+        <label for="theme-toggle" class="theme-toggle-label">
+            <div class="rope top"></div>
+            <div class="bulb">
+                <div class="bulb-light"></div>
+                <div class="bulb-glow"></div>
+            </div>
+            <div class="rope bottom"></div>
+        </label>
     </div>
-    <div class="rope bottom"></div>
-  </label>
-</div>
 
-<script src="/static/js/admin/admin_goods.js" defer></script>
+<script>
+'use strict';
+
+let pendingAction = null;
+
+// Всплывающие сообщения
+function showFlash(message, type = 'success') {
+    const flash = document.createElement('div');
+    flash.className = `flash ${type}`;
+    flash.textContent = message;
+    const container = document.querySelector('.admin-container');
+    if (container) {
+        container.insertBefore(flash, container.firstChild);
+        setTimeout(() => flash.remove(), 5000);
+    }
+}
+
+// Модальные окна
+function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');  // ← и эту тоже добавь
+    }
+    document.body.style.overflow = '';
+}
+
+function openPasswordModal() {
+    const modal = document.getElementById('passwordModal');
+    modal.style.display = 'flex';
+    modal.classList.add('active');  // ← ДОБАВЬ ЭТУ СТРОЧКУ
+    document.getElementById('adminPassword').focus();
+    document.body.style.overflow = 'hidden';
+}
+
+function closePasswordModal() {
+    const modal = document.getElementById('passwordModal');
+    modal.style.display = 'none';
+    modal.classList.remove('active');  // ← И ЭТУ
+    document.getElementById('adminPassword').value = '';
+    document.getElementById('passwordError').style.display = 'none';
+    pendingAction = null;
+    document.body.style.overflow = '';
+}
+
+// Подготовка действия (добавление/редактирование/удаление)
+function prepareAction(type, productId = null, form = null) {
+    let formData = null;
+    if (form) {
+        formData = new FormData(form);
+        formData.append('action', type);
+        if (type === 'edit') {
+            const keep = Array.from(document.querySelectorAll('#editCurrentPreview img'))
+                .map(img => img.dataset.filename).filter(Boolean);
+            document.getElementById('keep_images').value = JSON.stringify(keep);
+            formData.append('keep_images', document.getElementById('keep_images').value);
+        }
+    }
+    pendingAction = { type, formData, productId };
+    openPasswordModal();
+}
+
+async function executePendingAction() {
+    const pwd = document.getElementById('adminPassword').value.trim();
+    if (!pwd || !pendingAction) return;
+
+    let fd = pendingAction.formData || new FormData();
+    if (pendingAction.type === 'delete') {
+        fd = new FormData();
+        fd.append('action', 'delete');
+        fd.append('product_id', pendingAction.productId);
+    }
+    fd.append('password', pwd);
+    fd.append('ajax', '1');
+
+    try {
+        const res = await fetch('/admin', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.success) {
+            showFlash(data.message || 'Готово!', 'success');
+            closePasswordModal();
+            setTimeout(() => location.reload(), 800);
+        } else {
+            document.getElementById('passwordError').textContent = data.message || 'Неверный пароль';
+            document.getElementById('passwordError').style.display = 'block';
+        }
+    } catch (e) {
+        console.error(e);
+        showFlash('Ошибка сети', 'error');
+    }
+}
+
+// Открытие редактирования
+function openEditModal(btn) {
+    const d = btn.dataset;
+    document.getElementById('edit_id').value = d.id;
+    document.getElementById('edit_title').value = d.title;
+    document.getElementById('edit_price_rub').value = d.price_rub;
+    document.getElementById('edit_category').value = d.category;
+    document.getElementById('edit_brand').value = d.brand || '';
+    document.getElementById('edit_description').value = d.description || '';
+    document.getElementById('edit_stock').value = d.stock || '-1';
+    document.getElementById('edit_in_stock').checked = d.in_stock === '1';
+
+    const prev = document.getElementById('editCurrentPreview');
+    prev.innerHTML = '';
+    
+    let imgs = [];
+    try {
+        let raw = d.images || '[]';
+        raw = raw.replace(/&quot;/g, '"').replace(/\\"/g, '"');
+        imgs = JSON.parse(raw);
+        console.log('Успешно загружены изображения:', imgs);
+    } catch(e) {
+        console.error('Ошибка парсинга data-images:', e);
+        console.error('d.images содержит:', d.images);
+    }
+
+    imgs.forEach(f => {
+        prev.innerHTML += `<div class="image-item">
+            <img src="/static/uploads/goods/${f}" data-filename="${f}">
+            <button type="button" class="remove-img" onclick="this.parentNode.remove()">×</button>
+        </div>`;
+    });
+
+    document.getElementById('editNewPreview').innerHTML = '';
+    
+    const modal = document.getElementById('editModal');
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+// Drag & Drop
+function setupDropZone(zoneId, previewId, inputId) {
+    const zone = document.getElementById(zoneId);
+    const preview = document.getElementById(previewId);
+    const input = document.getElementById(inputId);
+    if (!zone || !preview || !input) return;
+
+    const handleFiles = files => {
+        [...files].forEach(file => {
+            if (!file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                preview.innerHTML += `<div class="image-item">
+                    <img src="${e.target.result}">
+                    <button type="button" class="remove-img" onclick="this.parentNode.remove()">×</button>
+                </div>`;
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    zone.addEventListener('click', () => input.click());
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+    input.addEventListener('change', () => handleFiles(input.files));
+}
+
+// Поиск
+window.filterProducts = () => {
+    const q = (document.getElementById('searchInput').value || '').toLowerCase();
+    document.querySelectorAll('.product-row').forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(q) ? '' : 'none';
+    });
+};
+
+// Инициализация — САМОЕ ГЛАВНОЕ ИСПРАВЛЕНИЕ
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('JS загружен и работает!');
+
+    setupDropZone('addDropZone', 'addPreview', 'addFileInput');
+    setupDropZone('editDropZone', 'editNewPreview', 'editFileInput');
+
+    // Надёжная привязка кнопок (без optional chaining!)
+    const addBtn = document.getElementById('addSubmitBtn');
+    const editBtn = document.getElementById('editSubmitBtn');
+    const pwdInput = document.getElementById('adminPassword');
+
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            const form = document.getElementById('addForm');
+            if (form.checkValidity()) {
+                prepareAction('add', null, form);
+            } else {
+                form.reportValidity();
+            }
+        });
+    }
+
+    if (editBtn) {
+        editBtn.addEventListener('click', () => {
+            const form = document.getElementById('editForm');
+            if (form.checkValidity()) {
+                prepareAction('edit', null, form);
+            } else {
+                form.reportValidity();
+            }
+        });
+    }
+
+    if (pwdInput) {
+        pwdInput.addEventListener('keypress', e => {
+            if (e.key === 'Enter') executePendingAction();
+        });
+    }
+        // === ОТКРЫТИЕ КАРТОЧКИ ТОВАРА ПРИ КЛИКЕ НА СТРОКУ ===
+    document.querySelectorAll('.product-row').forEach(row => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', function(e) {
+            // Не открывать карточку, если кликнули по кнопкам редактирования/удаления
+            if (e.target.closest('.action-btn')) return;
+
+            const editBtn = this.querySelector('.action-btn.edit');
+            if (!editBtn) return;
+
+            const d = editBtn.dataset;
+            const productId = this.dataset.id;
+
+            // Создаём или обновляем карточку снизу
+            const detail = document.querySelector('.product-detail') || document.createElement('div');
+            if (!document.querySelector('.product-detail')) {
+                detail.className = 'product-detail';
+                document.body.appendChild(detail);
+            }
+
+            let imagesHtml = '';
+            let imgs = [];
+            try { imgs = JSON.parse(d.images || '[]'); } catch(e) { console.error(e); }
+
+            if (imgs.length > 0) {
+                imagesHtml = '<div class="detail-images">';
+                imgs.forEach(img => {
+    imagesHtml += `<img src="/static/uploads/goods/${img}" alt="${d.title || 'Товар'}">`;
+});
+                imagesHtml += '</div>';
+            } else {
+                imagesHtml = `<div class="detail-images">
+                    <div style="width:320px;height:320px;background:#222;border-radius:14px;display:flex;align-items:center;justify-content:center;color:#666;font-size:1.2rem;">
+                        Нет фото
+                    </div>
+                </div>`;
+            }
+
+            detail.innerHTML = `
+                <button class="detail-close" onclick="this.parentElement.classList.remove('active'); document.body.style.overflow='';">×</button>
+                <div class="detail-grid">
+                    ${imagesHtml}
+                    <div class="detail-info">
+                        <h3>${d.title || 'Без названия'}</h3>
+                        <div class="detail-price">${parseFloat(d.price_rub || 0).toLocaleString('ru-RU')} ₽</div>
+                        ${d.brand ? `<p><strong>Бренд:</strong> ${d.brand}</p>` : ''}
+                        <p><strong>Категория:</strong> ${d.category || '—'}</p>
+                        <p><strong>Наличие:</strong> ${d.stock == -1 ? 'Бесконечно' : (d.stock + ' шт.')} 
+                            <span style="color:${d.in_stock === '1' ? '#0f830f' : '#a82323'}; font-weight:600;">
+                                ${d.in_stock === '1' ? 'В наличии' : 'Нет в наличии'}
+                            </span>
+                        </p>
+                        ${d.description ? 
+                            `<div class="detail-desc">${d.description.replace(/\n/g, '<br>')}</div>` : 
+                            '<p style="color:#888; font-style:italic;">Описание отсутствует</p>'
+                        }
+                        <div style="margin-top:2rem;">
+                            <button class="btn-zaza-primary" onclick="document.querySelector('.action-btn.edit[data-id=\\"${productId}\\"]').click(); 
+                                document.querySelector('.product-detail').classList.remove('active'); 
+                                document.body.style.overflow='';">
+                                Редактировать товар
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            detail.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+    });
+
+    // Закрытие карточки при клике по затемнённой области
+    document.addEventListener('click', e => {
+        const detail = document.querySelector('.product-detail.active');
+        if (detail && e.target === detail) {
+            detail.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    });
+});
+</script>
 
 </body>
 </html>

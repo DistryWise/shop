@@ -347,24 +347,47 @@ const cartBtn = document.getElementById('cartBtn');
 const miniCart = document.getElementById('miniCartDropdown');
 
 if (cartBtn && miniCart) {
-  let timeout;
+  let hideTimeout = null;
 
-  cartBtn.addEventListener('mouseenter', () => {
-    clearTimeout(timeout);
+  const showCart = () => {
+    clearTimeout(hideTimeout);
     miniCart.style.display = 'block';
-    setTimeout(() => miniCart.classList.add('show'), 10);
-  });
+    // небольшая задержка, чтобы анимация успела отработать
+    requestAnimationFrame(() => miniCart.classList.add('show'));
+  };
 
   const hideCart = () => {
     miniCart.classList.remove('show');
-    timeout = setTimeout(() => {
-      miniCart.style.display = 'none';
-    }, 350);
+    hideTimeout = setTimeout(() => {
+      if (!miniCart.classList.contains('show')) {
+        miniCart.style.display = 'none';
+      }
+    }, 400); // должно совпадать с длительностью transition в CSS (~0.35s → 0.4s)
   };
 
-  cartBtn.addEventListener('mouseleave', hideCart);
-  miniCart.addEventListener('mouseenter', () => clearTimeout(timeout));
+  // Открываем при наведении на кнопку
+  cartBtn.addEventListener('mouseenter', showCart);
+
+  // Закрываем только когда курсор ушёл и с кнопки, и с корзины
+  cartBtn.addEventListener('mouseleave', () => {
+    // проверяем, ушёл ли курсор в сторону мини-корзины
+    if (!miniCart.matches(':hover')) {
+      hideCart();
+    }
+  });
+
+  miniCart.addEventListener('mouseenter', () => {
+    clearTimeout(hideTimeout);        // отменяем закрытие, пока над корзиной
+  });
+
   miniCart.addEventListener('mouseleave', hideCart);
+
+  // Дополнительно: если кто-то кликнул вне — тоже закрываем
+  document.addEventListener('click', (e) => {
+    if (!cartBtn.contains(e.target) && !miniCart.contains(e.target)) {
+      hideCart();
+    }
+  });
 }
 
 

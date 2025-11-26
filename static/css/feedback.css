@@ -273,3 +273,5 @@ form.contact-form { novalidate: true; }
 .custom-alert-temp.error .alert-content { border-color: rgba(255,100,100,0.6); }
 .custom-alert-temp.success .alert-content i { color: #4ade80; }
 .custom-alert-temp.error .alert-content i { color: #ff6b6b; }
+
+

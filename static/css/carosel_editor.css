@@ -1,0 +1,487 @@
+
+    :root {
+      --bg: #000;
+      --panel: #111;
+      --border: #222;
+      --text: #fff;
+      --accent: #00ff88;
+      --hover: #333;
+      --danger: #ff3b30;
+      --grid: rgba(255,255,255,0.05);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+    header { padding: 20px 40px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-weight: 700; font-size: 1.6rem; }
+    .nav-btn { background: var(--panel); border: none; color: var(--text); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
+    .nav-btn:hover { background: var(--hover); }
+    main { flex: 1; padding: 40px; display: flex; gap: 30px; overflow: hidden; position: relative; }
+    .sidebar { width: 360px; display: flex; flex-direction: column; gap: 20px; z-index: 10;width: 360px;
+  max-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px; }
+    .carousel-tabs { display: flex; gap: 8px;grid-template-columns: 1fr 1fr 1fr; }
+    .tab { padding: 12px 18px; background: var(--panel); border-radius: 10px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: 0.2s; }
+    .tab.active { background: #fff; color: #000; }
+    .panel { background: var(--panel); padding: 24px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+    .panel h3 { font-size: 1rem; margin-bottom: 16px; color: #aaa; font-weight: 500; }
+    .upload-area { border: 2px dashed #444; border-radius: 14px; padding: 36px; text-align: center; cursor: pointer; transition: all 0.3s; position: relative; }
+    .upload-area:hover { border-color: var(--accent); background: rgba(0,255,136,0.05); }
+    .upload-area.dragover { border-color: var(--accent); background: rgba(0,255,136,0.1); transform: scale(1.02); }
+    .upload-area p { font-size: 0.9rem; color: #aaa; margin-bottom: 12px; }
+    .upload-area .preview { width: 100%; height: 160px; object-fit: cover; border-radius: 10px; margin-top: 12px; display: none; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 6px; font-weight: 500; }
+    input, select, textarea { width: 100%; padding: 10px 12px; background: #000; border: 1px solid #333; color: #fff; border-radius: 10px; font-size: 0.95rem; transition: 0.2s; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    .btn { width: 100%; padding: 14px; background: #fff; color: #000; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; margin-top: 16px; transition: 0.2s; }
+    .btn:hover { background: #f0f0f0; transform: translateY(-1px); }
+    .btn-secondary { background: var(--panel); color: #fff; }
+    .btn-secondary:hover { background: var(--hover); }
+    .btn-danger { background: var(--danger); }
+    .btn-danger:hover { background: #ff5f57; }
+    .nav-controls { display: flex; gap: 8px; margin-top: 12px; }
+    .nav-controls button { flex: 1; }
+    .canvas {
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%; /* 16:9 = 100 / 16 * 9 */
+    position: relative;
+    background: #111;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    background-image: 
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 30px 30px;
+    cursor: default;
+    }
+    #background { width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; z-index: 1; display: none; }
+    .layer { 
+      position: absolute; z-index: 10; cursor: move; user-select: none; 
+      box-shadow: 0 0 0 2px var(--accent) inset; border-radius: 8px; overflow: hidden;
+      min-width: 50px; min-height: 50px;
+    }
+    .layer.selected { box-shadow: 0 0 0 3px #00ff88; }
+    .layer img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .text-layer { 
+      padding: 12px; font-size: 32px; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.7); 
+      background: rgba(0,0,0,0.3); border-radius: 8px; display: flex; align-items: center; 
+      justify-content: center; white-space: pre-wrap; word-break: break-word;
+    }
+    .hotspot { 
+      position: absolute; border: 2px dashed var(--accent); 
+      background: rgba(0,255,136,0.1); border-radius: 8px; z-index: 5; 
+    }
+    .hotspot:hover { background: rgba(0,255,136,0.2); }
+    .action-btns { display: flex; gap: 8px; margin-top: 16px; }
+    .action-btns button { flex: 1; }
+    .hint { font-size: 0.8rem; color: #aaa; margin-top: 8px; text-align: center; }
+    .text-tools { background: var(--panel); padding: 16px; border-radius: 12px; margin-top: 16px; }
+    .resize-handle { position: absolute; width: 12px; height: 12px; background: var(--accent); border-radius: 50%; bottom: -6px; right: -6px; cursor: se-resize; z-index: 11; }
+    .undo-redo { display: flex; gap: 8px; margin-top: 12px; }
+    .undo-redo button { flex: 1; font-size: 1.2rem; }
+
+    /* УВЕДОМЛЕНИЯ */
+    .toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      background: var(--panel); color: #fff; padding: 16px 24px; border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4); z-index: 9999; font-size: 0.95rem;
+      display: flex; align-items: center; gap: 12px; opacity: 0; transition: all 0.4s ease;
+      min-width: 280px; max-width: 400px;
+    }
+    .toast.show { opacity: 1; bottom: 40px; }
+    .toast.success { border-left: 4px solid var(--accent); }
+    .toast.error { border-left: 4px solid var(--danger); }
+    .toast .icon { font-size: 1.4rem; }
+
+    /* ПОДСКАЗКА */
+    .footer-hint {
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(17,17,17,0.9); color: #aaa; padding: 10px 16px; border-radius: 10px;
+      font-size: 0.8rem; white-space: nowrap; backdrop-filter: blur(8px); border: 1px solid #333;z-index: 1000;
+    }
+
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }
+    .modal.active { display: flex; }
+    .preview-container { width: 90%; max-width: 1200px; height: 80vh; position: relative; background: #000; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    .preview-slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 0.6s ease; }
+    .preview-slide.active { opacity: 1; }
+    .preview-bg { width: 100%; height: 100%; object-fit: cover; }
+    .preview-layer { position: absolute; }
+    .preview-layer img { width: 100%; height: 100%; object-fit: contain; }
+    .close-modal { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.2); color: #fff; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; z-index: 10; }
+    .close-modal:hover { background: rgba(255,255,255,0.4); }
+    .preview-nav { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 10; }
+    .preview-dot { width: 12px; height: 12px; background: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; }
+    .preview-dot.active { background: #fff; }
+    .preview-text {
+  background: none !important;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.7);
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+    /* Рамка выделения */
+.selection-box {
+  position: absolute;
+  border: 2px dashed #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+  pointer-events: none;
+  z-index: 999;
+}
+/* Иконка помощи */
+.help-btn {
+  position: absolute;
+  top: 1160px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  cursor: pointer;
+  z-index: 100;
+  transition: 0.2s;
+}
+.help-btn:hover { background: var(--hover); }
+
+/* Модалка помощи */
+.help-modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.9);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+.help-modal.active { display: flex; }
+.help-content {
+  background: var(--panel);
+  padding: 32px;
+  border-radius: 16px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.help-content h2 { margin-bottom: 16px; font-size: 1.4rem; }
+.help-content ul { list-style: none; }
+.help-content li {
+  padding: 10px 0;
+  border-bottom: 1px solid #333;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+}
+.help-content li:last-child { border: none; }
+.help-content .key { background: #000; padding: 4px 8px; border-radius: 6px; font-family: monospace; font-size: 0.8rem; }
+.close-help { position: absolute; top: 16px; right: 16px; font-size: 1.5rem; cursor: pointer; }
+
+/* Подсказка при наведении */
+.hotspot-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #000;
+  color: #0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 100;
+}
+.hotspot:hover .hotspot-tooltip {
+  opacity: 1;
+}
+
+/* СЛОИ — ПОРЯДОК КАК В ФОТОШОПЕ */
+.layers-panel {
+  background: var(--panel);
+  padding: 16px;
+  border-radius: 12px;
+  margin-top: 16px;
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;        /* ← убирает горизонтальную прокрутку */
+  -ms-overflow-style: none;  /* ← убирает ползунок в IE и Edge */
+  scrollbar-width: none;     /* ← убирает ползунок в Firefox */
+}
+
+.layers-panel::-webkit-scrollbar {
+  display: none;             /* ← убирает ползунок в Chrome, Safari, новый Edge */
+}
+.layer-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #000;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  cursor: move;
+  transition: 0.2s;
+
+
+  
+}
+.layer-item:hover { background: #222; }
+.layer-item.selected { background: var(--accent); color: #000; }
+.layer-item .eye {
+  width: 20px; height: 20px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center/16px no-repeat;
+}
+.layer-item.hidden .eye { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpath d='M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a21.8 21.8 0 0 1 5.06-6.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a21.8 21.8 0 0 1-2.16 3.19m-6.84-8.1L15.74 9m-3.3-3.3L9.7 9m6.24 6.24L18.7 18m-3.3-3.3L12 12m-3.3 3.3L5.3 18'/%3E%3C/svg%3E"); }
+  
+.layer, .text-layer {
+  transform-origin: center center;
+  transition: transform 0.1s ease;
+}
+
+.animate__fadeIn {
+    animation-duration: 5.5s !important;
+  }
+
+
+  .layer {
+  z-index: 10;
+}
+.hotspot {
+  z-index: 5;
+}
+
+.back-btn {
+  background: var(--danger) !important;
+  color: white !important;
+}
+.back-btn:hover {
+  background: #ff5f57 !important;
+}
+
+.sidebar::-webkit-scrollbar { width: 0; }
+.sidebar { scrollbar-width: none; }
+
+/* ПРЕВЬЮ HOTSPOT */
+.hotspot-preview {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-8px);
+  background: rgba(0,0,0,0.95);
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: #0f0;
+  white-space: nowrap;
+  z-index: 10000; /* ВАЖНО: выше всех */
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  min-width: 180px;
+  max-width: 300px;
+  pointer-events: auto;
+}
+
+.hotspot-preview.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-12px);
+}
+
+.hotspot-preview .url {
+  color: #0f0;
+  font-family: monospace;
+  word-break: break-all;
+  margin-bottom: 6px;
+}
+
+.hotspot-preview .thumb {
+  width: 100%;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #222;
+  margin-top: 6px;
+  display: none;
+}
+
+.hotspot-preview .thumb.loading {
+  background: #222 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0V3a1 1 0 0 1 1-1zm0 15a1 1 0 0 1 1 1v2a1 1 0 1 1-2 0v-2a1 1 0 0 1 1-1zm8.66-10.66a1 1 0 0 1 0 1.42l-1.42 1.42a1 1 0 1 1-1.42-1.42l1.42-1.42a1 1 0 0 1 1.42 0zM7.76 14.24a1 1 0 0 1 0 1.42l-1.42 1.42a1 1 0 1 1-1.42-1.42l1.42-1.42a1 1 0 0 1 1.42 0zm13.9 3.9a1 1 0 0 1-1.42 0l-1.42-1.42a1 1 0 1 1 1.42-1.42l1.42 1.42a1 1 0 0 1 0 1.42zM5.18 4.58a1 1 0 0 1 0 1.42L3.76 7.42a1 1 0 1 1-1.42-1.42L3.76 4.58a1 1 0 0 1 1.42 0z' fill='%23666'/%3E%3C/svg%3E") center/24px no-repeat;
+}
+
+.carousel-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.carousel-tabs > .tab {
+  flex: 1;
+  min-width: 0;
+}
+
+.tab-row-2 {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.tab-row-2 .tab {
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .carousel-tabs,
+  .tab-row-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.carousel-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.tab-row-2 {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .carousel-tabs,
+  .tab-row-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.back-btn {
+  background: var(--danger) !important;
+  color: white !important;
+}
+.back-btn:hover {
+  background: #ff5f57 !important;
+}
+
+
+.mini-modal {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background: #0f0f0f;
+  border: 2px solid #333;
+  border-radius: 20px;
+  padding: 40px 28px 28px 28px; /* увеличил сверху, чтобы крестик не перекрывал текст */
+  width: 320px;
+  max-width: 90vw;
+  text-align: center;
+  z-index: 1002;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 20px 60px rgba(0, 255, 136, 0.15), 0 0 30px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.mini-modal.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.mini-content {
+  position: relative;
+}
+
+.mini-modal h3 {
+  margin: 0 0 24px;
+  color: #00ff88;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.option {
+  background: #1a1a1a;
+  padding: 16px;
+  margin: 10px 0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-weight: 500;
+  border: 1px solid #333;
+}
+
+.option:hover {
+  background: #00ff88;
+  color: #000;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 255, 136, 0.3);
+  font-weight: 700;
+}
+
+/* КРЕСТИК — ПРИЖАТ ВПЛОТНУЮ К УГЛУ */
+.close {
+  position: absolute;
+  top: -30px;        /* отступ от верха */
+  right: -25px;      /* отступ от правого края */
+  width: 38px;
+  height: 38px;
+  font-size: 28px;
+  color: #888;
+  background: rgba(20, 20, 20, 0.9);
+  border: 1px solid #444;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  z-index: 100;
+  font-weight: bold;
+  line-height: 1;
+  backdrop-filter: blur(4px);
+}
+
+.close:hover {
+  background: #00ff88;
+  color: #000;
+  transform: scale(1.15) rotate(90deg);
+  border-color: #00ff88;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.6);
+}
+
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(8px);
+  z-index: 1001;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s;
+}
+
+#overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-trigger {
+  cursor: pointer;
+}

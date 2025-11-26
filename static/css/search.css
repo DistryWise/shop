@@ -698,3 +698,57 @@ html[data-theme="light"] .product-content::-webkit-scrollbar,
 html[data-theme="light"] .product-modal::-webkit-scrollbar {
   display: none !important;
 }
+
+  /* АВТОДОПОЛНЕНИЕ — СВЕТЛАЯ ТЕМА — ФИНАЛЬНЫЙ ВАРИАНТ (ЧЁРНЫЕ КАРТИНКИ + ВСЁ ВИДНО) */
+  html[data-theme="light"] #autocompleteList {
+    background: rgba(255, 255, 255, 0.98) !important;
+    border: 1.6px solid rgba(0, 0, 0, 0.22) !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18) !important;
+    backdrop-filter: blur(24px);
+    border-radius: 18px;
+  }
+
+  html[data-theme="light"] #autocompleteList .autocomplete-item {
+    color: #000 !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.09) !important;
+  }
+
+  html[data-theme="light"] #autocompleteList .autocomplete-item:hover,
+  html[data-theme="light"] #autocompleteList .autocomplete-item.highlighted {
+    background: rgba(0, 0, 0, 0.08) !important;
+  }
+
+  html[data-theme="light"] #autocompleteList .item-title {
+    color: #000 !important;
+    font-weight: 600 !important;
+  }
+
+  html[data-theme="light"] #autocompleteList .item-type {
+    color: #555 !important;
+    font-size: 0.8rem !important;
+  }
+
+  html[data-theme="light"] #autocompleteList small {
+    color: #000 !important;
+    font-weight: 700 !important;
+  }
+
+  html[data-theme="light"] #autocompleteList .autocomplete-item strong {
+    color: #444 !important;
+    font-weight: 700 !important;
+  }
+
+  html[data-theme="light"] #autocompleteList .autocomplete-empty {
+    color: #555 !important;
+  }
+
+  /* ГЛАВНОЕ — ЧЁРНЫЙ СИЛУЭТ КАРТИНКИ (ВСЁ ВИДНО!) */
+  html[data-theme="light"] #autocompleteList .autocomplete-item img {
+    border: 2px solid #000 !important;
+    background: transparent !important;     /* ← УБИРАЕМ БЕЛЫЙ ФОН */
+    filter: brightness(0) invert(0) !important;  /* ← Делает чёрным */
+    mix-blend-mode: normal;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25) !important;
+    border-radius: 10px;
+    object-fit: contain;
+  }

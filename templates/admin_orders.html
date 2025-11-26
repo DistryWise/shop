@@ -7,227 +7,212 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Shadows+Into+Light&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-
-    <!-- Твой главный CSS (в котором уже всё: хедер, сайдбар, темы, лампочка и т.д.) -->
     <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
+    <link rel="stylesheet" href="/static/css/admin/admin_orders.css">
 
     <style>
-        /* ====================== ДОБАВОЧНЫЕ СТИЛИ ДЛЯ admin_orders.html ====================== */
-/* Вставь в <style> или в отдельный файл admin_orders.css и подключи ПОСЛЕ admin_reviews.css */
-
-.main-content { 
-    margin-left: 320px; 
-    padding: 2.5rem 5vw; 
-    min-height: 100vh;
+/* Apple-style модальные окна */
+.apple-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 9998;
 }
 
-/* Статистика */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2.5rem;
-}
-.stat-card {
-    background: var(--glass);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.8rem 2rem;
+.apple-modal-backdrop.show { opacity: 1; visibility: visible; }
+
+.apple-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    width: 90%;
+    max-width: 480px;
+    background: rgba(28,28,35,0.95);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 32px 28px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    color: #fff;
     text-align: center;
-    backdrop-filter: blur(20px);
-    box-shadow: var(--shadow);
-    transition: var(--transition);
-}
-.stat-card:hover { transform: translateY(-8px); }
-.stat-number {
-    font-size: 2.8rem;
-    font-weight: 800;
-    color: var(--white);
-    text-shadow: 0 3px 10px rgba(0,0,0,0.5);
-}
-.stat-label {
-    font-size: 1.1rem;
-    color: var(--gray);
-    margin-top: 0.5rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 9999;
 }
 
-/* Фильтры */
-.filters {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2.5rem;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-}
-.search-input, .filter-select {
-    padding: 0.9rem 1.4rem;
-    background: var(--glass);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--white);
-    font-size: 1rem;
-    min-width: 300px;
-    transition: var(--transition);
-}
-.search-input::placeholder { color: rgba(255,255,255,0.5); }
-.search-input:focus, .filter-select:focus {
-    outline: none;
-    border-color: #fff;
-    box-shadow: 0 0 25px rgba(255,255,255,0.25);
+.apple-modal.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
 }
 
-/* Карточка заказа — используем тот же стиль, что и review-item */
-.order-item {
-    position: relative;
-    background: var(--glass);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 2rem;
-    margin-bottom: 1.8rem;
-    backdrop-filter: blur(20px);
-    box-shadow: var(--shadow);
-    transition: var(--transition);
-}
-.order-item:hover {
-    transform: translateY(-8px);
-    border-color: rgba(255,255,255,0.3);
-}
-
-.order-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1.2rem;
-}
-.order-id {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--white);
-}
-.order-status {
-    padding: 0.5rem 1.2rem;
-    border-radius: 12px;
-    font-size: 0.9rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-.status-pending    { background: rgba(255,193,7,0.25);   color: #ffc107; }
-.status-processing { background: rgba(0,123,255,0.25);  color: #007bff; }
-.status-shipping   { background: rgba(255,152,0,0.25);  color: #ff9800; }
-.status-completed  { background: rgba(0,255,149,0.25);  color: #00ff95; }
-.status-cancelled  { background: rgba(255,68,68,0.25);   color: #ff6b6b; }
-
-.order-items {
-    margin: 1.5rem 0;
-    padding: 1.5rem;
-    background: rgba(255,255,255,0.05);
-    border-radius: var(--radius-sm);
-    border: 1px dashed rgba(255,255,255,0.15);
-}
-.order-product {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.9rem;
-    background: rgba(255,255,255,0.06);
-    border-radius: var(--radius-sm);
-    margin-bottom: 0.8rem;
-    cursor: pointer;
-    transition: var(--transition);
-}
-.order-product:hover {
-    background: rgba(255,255,255,0.12);
-    transform: translateX(6px);
-}
-.product-thumb {
-    width: 68px;
-    height: 68px;
-    object-fit: cover;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.1);
-}
-
-.order-total {
-    font-size: 1.7rem;
-    font-weight: 800;
-    color: #00ff95;
-    text-align: right;
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-    border-top: 2px dashed rgba(0,255,149,0.3);
-}
-
-.order-actions {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    display: flex;
-    gap: 0.6rem;
-    z-index: 10;
-}
-.action-btn {
-    width: 44px;
-    height: 44px;
+.apple-modal-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
     border-radius: 50%;
-    background: var(--glass);
-    border: 1px solid var(--border);
-    color: var(--white);
-    font-size: 1.2rem;
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: var(--transition);
-}
-.action-btn:hover { 
-    background: rgba(255,255,255,0.25); 
-    transform: scale(1.15); 
-}
-.action-btn.delete { color: #ff5555; }
-.action-btn.delete:hover { background: #ff5555; color: #fff; }
-
-/* Пустое состояние */
-.empty-state {
-    text-align: center;
-    padding: 6rem 2rem;
-    color: var(--gray);
-}
-.empty-state i {
-    font-size: 5rem;
-    opacity: 0.3;
-    margin-bottom: 1rem;
+    font-size: 36px;
+    box-shadow: 0 0 40px rgba(0,0,0,0.4);
 }
 
-/* Светлая тема — адаптация только для новых блоков */
-[data-theme="light"] .stat-card,
-[data-theme="light"] .order-item,
-[data-theme="light"] .order-items,
-[data-theme="light"] .order-product {
-    background: rgba(255,255,255,0.92);
-    border-color: rgba(0,0,0,0.12);
-}
-[data-theme="light"] .stat-number { color: #111; text-shadow: none; }
-[data-theme="light"] .order-total { color: #00cc7a; }
-[data-theme="light"] .action-btn { 
-    background: rgba(0,0,0,0.08); 
-    border-color: rgba(0,0,0,0.15); 
-}
-[data-theme="light"] .action-btn.delete:hover { background: #ff4444; }
+.apple-modal-icon.red    { background: linear-gradient(135deg,#ff453a,#ff375f); }
+.apple-modal-icon.orange { background: linear-gradient(135deg,#ff9f0a,#ff375f); }
+.apple-modal-icon.blue   { background: linear-gradient(135deg,#007aff,#5ac8fa); }
 
-@media (max-width: 992px) {
-    .main-content { margin-left: 90px; }
-    .sidebar { width: 90px; padding: 2rem 1rem; }
-    .sidebar-title, .sidebar-item span, .sidebar-badge { display: none; }
+.apple-modal h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    letter-spacing: -0.5px;
 }
-@media (max-width: 768px) {
-    .main-content { margin-left: 0; padding: 2rem 1rem; }
-    .filters { flex-direction: column; }
-    .search-input, .filter-select { min-width: 100%; }
+
+.apple-modal p {
+    font-size: 17px;
+    color: rgba(255,255,255,0.75);
+    margin: 0 0 24px;
+    line-height: 1.5;
 }
-    </style>
+
+.apple-modal-password input,
+.apple-modal-textarea textarea {
+    width: 100%;
+    padding: 14px 18px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    color: #fff;
+    font-size: 17px;
+    margin-top: 12px;
+    outline: none;
+    transition: all 0.3s;
+}
+
+.apple-modal-password input::placeholder,
+.apple-modal-textarea textarea::placeholder {
+    color: rgba(255,255,255,0.5);
+}
+
+.apple-modal-password input:focus,
+.apple-modal-textarea textarea:focus {
+    border-color: #007aff;
+    box-shadow: 0 0 0 3px rgba(0,122,255,0.3);
+}
+
+.apple-modal-textarea {
+    margin-bottom: 16px;
+}
+
+.apple-status-grid {
+    display: grid;
+    gap: 12px;
+    margin: 20px 0 24px;
+    text-align: left;
+}
+
+.apple-status-option {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.apple-status-option:hover { background: rgba(255,255,255,0.15); }
+
+.apple-status-option.danger { color: #ff453a; }
+
+.apple-status-option input {
+    opacity: 0;
+    position: absolute;
+}
+
+.apple-status-option .checkmark {
+    width: 22px;
+    height: 22px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-radius: 50%;
+    margin-right: 14px;
+    position: relative;
+    transition: all 0.3s;
+}
+
+.apple-status-option input:checked + .checkmark {
+    background: #007aff;
+    border-color: #007aff;
+}
+
+.apple-status-option input:checked + .checkmark::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 6px;
+    height: 10px;
+    border: 2px solid white;
+    transform: rotate(45deg);
+}
+
+.apple-modal-error {
+    color: #ff453a;
+    font-weight: 500;
+    margin: 12px 0;
+    min-height: 20px;
+}
+
+.apple-modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.apple-modal-actions button {
+    flex: 1;
+    padding: 14px;
+    border-radius: 14px;
+    font-size: 17px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.apple-btn-cancel {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+}
+
+.apple-btn-primary  { background: #007aff; color: #fff; }
+.apple-btn-warning  { background: #ff9f0a; color: #000; }
+.apple-btn-danger   { background: #ff453a; color: #fff; }
+
+.apple-modal-actions button:hover { opacity: 0.9; transform: translateY(-1px); }
+.apple-modal-actions button:active { transform: translateY(1px); }
+.apple-modal-textarea textarea {
+    width: 100%;
+    padding: 14px 18px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    color: #fff;
+    font-size: 17px;
+    outline: none;
+    resize: vertical;
+    box-sizing: border-box;
+}
+</style>
 </head>
 <body>
 
@@ -264,28 +249,38 @@
 <main class="main-content">
     <div class="admin-container">
         <h1 class="section-title">Заказы</h1>
+      <div class="apple-stats-grid" id="statsFilterGrid">
+    <div class="apple-stat active" data-filter="" onclick="filterByStat('')">
+        <div class="apple-stat-value" id="statTotal">0</div>
+        <div class="apple-stat-label">Всего</div>
+    </div>
 
-        <!-- Статистика -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-number" id="statTotal">0</div>
-                <div class="stat-label">Всего заказов</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="statPending">0</div>
-                <div class="stat-label">В обработке</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="statCompleted">0</div>
-                <div class="stat-label">Выполнено</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="statCancelled">0</div>
-                <div class="stat-label">Отменено</div>
-            </div>
-        </div>
+    <div class="apple-stat" data-filter="pending" onclick="filterByStat('pending')">
+        <div class="apple-stat-value" id="statPending">0</div>
+        <div class="apple-stat-label">Ожидает</div>
+    </div>
 
-        <!-- Флешки -->
+    <div class="apple-stat" data-filter="processing" onclick="filterByStat('processing')">
+        <div class="apple-stat-value" id="statProcessing">0</div>
+        <div class="apple-stat-label">Обработка</div>
+    </div>
+
+    <div class="apple-stat" data-filter="shipping" onclick="filterByStat('shipping')">
+        <div class="apple-stat-value" id="statShipping">0</div>
+        <div class="apple-stat-label">В доставке</div>
+    </div>
+
+    <div class="apple-stat" data-filter="completed" onclick="filterByStat('completed')">
+        <div class="apple-stat-value" id="statCompleted">0</div>
+        <div class="apple-stat-label">Выполнено</div>
+    </div>
+
+    <div class="apple-stat" data-filter="cancelled" onclick="filterByStat('cancelled')">
+        <div class="apple-stat-value" id="statCancelled">0</div>
+        <div class="apple-stat-label">Отменено</div>
+    </div>
+</div>
+
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
             {% for category, message in messages %}
@@ -294,227 +289,454 @@
           {% endif %}
         {% endwith %}
 
-        <!-- Фильтры -->
-        <div class="filters">
-            <input type="text" id="searchInput" class="search-input" placeholder="Поиск по ФИО, телефону, товару, #ID...">
-            <select id="statusFilter" class="filter-select">
-                <option value="">Все статусы</option>
-                <option value="pending">В процессе</option>
-                <option value="processing">В обработке</option>
-                <option value="shipping">В доставке</option>
-                <option value="completed">Выполнено</option>
-                <option value="cancelled">Отменён</option>
-            </select>
-        </div>
 
-        <div id="ordersContainer">
-            {% if orders|length == 0 %}
-                <div class="empty-state">
-                    <i class="fas fa-shopping-cart"></i>
-                    <p style="font-size:1.8rem;">Пока нет заказов</p>
-                </div>
-            {% else %}
-                {% for o in orders %}
-                <div class="review-item order-item" data-status="{{ o.status }}">
-                    <div class="review-header order-header">
-                        <div class="review-user order-id">#{{ o.id }} — {{ o.full_name }}</div>
-                        <div class="review-date" style="color:var(--gray);">
-                            <i class="fas fa-phone"></i> {{ o.phone }} • 
-                            <i class="far fa-calendar-alt"></i> {{ o.created_at }}
-                        </div>
-                        <div class="order-status {{ o.status }}">{{ o.status_label[0] }}</div>
-                    </div>
 
-                    <div class="order-items">
-                        {% for item in o.order_items %}
-                        <div class="review-product order-product" onclick="showProductModal(this)"
-                             data-title="{{ item.title }}" data-desc="{{ item.description }}"
-                             data-price="{{ item.price_str }}" data-img="{{ item.image_url }}">
-                            <img src="{{ item.image_url }}" alt="{{ item.title }}" class="product-thumb" onerror="this.src='/static/assets/no-image.png'">
-                            <div>
-                                <strong>{{ item.title }}</strong> ×{{ item.quantity }}<br>
-                                <small style="opacity:0.8;">{{ item.price_str }}</small>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
+<!-- НА ЭТОТ (только поиск, без селекта) -->
+<div class="apple-search-wrapper">
+    <div class="apple-search">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Поиск по ФИО, телефону, #ID заказа…">
+    </div>
+</div>
 
-                    <div class="order-total">Итого: {{ o.total_str }}</div>
-
-                    {% if o.cancel_reason %}
-                    <div style="margin-top:1rem;padding:1.2rem;background:rgba(255,68,68,0.15);border-left:4px solid #ff6b6b;border-radius:12px;color:#ff8a8a;">
-                        <strong>Причина отмены:</strong> {{ o.cancel_reason }}
-                    </div>
-                    {% endif %}
-
-                    <div class="review-actions order-actions">
-                        {% if o.status not in ['cancelled', 'completed'] %}
-                        <button class="action-btn btn-cancel" onclick="openCancelModal({{ o.id }})">
-                            <i class="fas fa-ban"></i>
-                        </button>
-                        {% endif %}
-                        <button class="action-btn delete btn-delete" onclick="openDeleteModal({{ o.id }})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-                {% endfor %}
-            {% endif %}
-        </div>
+        <div id="ordersContainer" class="apple-orders"></div>
     </div>
 </main>
 
-<!-- Модалки — полностью в твоём стиле -->
-<div id="cancelModal" class="modal-overlay">
-    <div class="modal">
-        <button class="modal-close" onclick="closeModal('cancelModal')">×</button>
-        <h3>Отменить заказ #<span id="cancelOrderId"></span></h3>
-        <div class="form-group">
-            <textarea id="cancelReason" rows="4" placeholder="Укажите причину отмены (обязательно)"></textarea>
-        </div>
-        <div class="form-group">
-            <input type="password" id="cancelPassword" placeholder="Пароль администратора">
-        </div>
-        <div class="modal-actions">
-            <button class="cancel-btn" onclick="closeModal('cancelModal')">Отмена</button>
-            <button class="btn-primary" onclick="submitCancel()">Подтвердить отмену</button>
-        </div>
+
+<!-- МОДАЛКА УДАЛЕНИЯ -->
+<div id="deleteModal" class="apple-modal">
+    <div class="apple-modal-icon red">
+        <i class="fas fa-trash-alt"></i>
+    </div>
+    <h2>Удалить заказ навсегда?</h2>
+    <p>Заказ №<span id="deleteOrderId"></span> и все связанные данные будут безвозвратно удалены.</p>
+    <div class="apple-modal-password">
+        <input type="password" id="deletePassword" placeholder="Пароль администратора" autocomplete="off">
+    </div>
+    <div class="apple-modal-error" id="deleteError"></div>
+    <div class="apple-modal-actions">
+        <button class="apple-btn-cancel" onclick="closeAppleModal('deleteModal')">Отмена</button>
+        <button class="apple-btn-danger" id="confirmDeleteBtn">Удалить</button>
     </div>
 </div>
 
-<div id="deleteModal" class="modal-overlay">
-    <div class="modal">
-        <button class="modal-close" onclick="closeModal('deleteModal')">×</button>
-        <h3>Удалить заказ навсегда?</h3>
-        <p style="margin:1.5rem 0;color:var(--gray);">Это действие нельзя отменить.</p>
-        <div class="form-group">
-            <input type="password" id="deletePassword" placeholder="Пароль администратора">
-        </div>
-        <div class="modal-actions">
-            <button class="cancel-btn" onclick="closeModal('deleteModal')">Отмена</button>
-            <button class="btn-primary" onclick="submitDelete()">Удалить заказ</button>
-        </div>
+<!-- МОДАЛКА ОТМЕНЫ -->
+<div id="cancelModal" class="apple-modal">
+    <div class="apple-modal-icon orange">
+        <i class="fas fa-times-circle"></i>
+    </div>
+    <h2>Отменить заказ?</h2>
+    <p>Заказ №<span id="cancelOrderId"></span> будет помечен как «Отменён».</p>
+    <div class="apple-modal-textarea">
+        <textarea id="cancelReason" placeholder="Обязательная причина отмены" rows="3"></textarea>
+    </div>
+    <div class="apple-modal-password">
+        <input type="password" id="cancelPassword" placeholder="Пароль администратора" autocomplete="off">
+    </div>
+    <div class="apple-modal-error" id="cancelError"></div>
+    <div class="apple-modal-actions">
+        <button class="apple-btn-cancel" onclick="closeAppleModal('cancelModal')">Отмена</button>
+        <button class="apple-btn-warning" id="confirmCancelBtn">Отменить заказ</button>
     </div>
 </div>
 
-<div id="productModal" class="modal-overlay">
-    <div class="modal item-modal">
-        <button class="modal-close" onclick="closeModal('productModal')">×</button>
-        <div class="item-modal-image">
-            <img id="modalImg" src="" alt="">
-        </div>
-        <h3 id="modalTitle"></h3>
-        <div class="item-modal-content">
-            <p id="modalDesc"></p>
-            <p class="item-modal-price" id="modalPrice"></p>
-        </div>
+<!-- МОДАЛКА СМЕНЫ СТАТУСА -->
+<div id="statusModal" class="apple-modal">
+    <div class="apple-modal-icon blue">
+        <i class="fas fa-exchange-alt"></i>
+    </div>
+    <h2>Сменить статус заказа</h2>
+    <p>Заказ №<span id="statusOrderId"></span></p>
+
+    <div class="apple-status-grid">
+        <label class="apple-status-option">
+            <input type="radio" name="newStatus" value="pending" checked>
+            <span class="checkmark"></span>
+            <span class="label">Ожидает оплаты</span>
+        </label>
+        <label class="apple-status-option">
+            <input type="radio" name="newStatus" value="processing">
+            <span class="checkmark"></span>
+            <span class="label">В обработке</span>
+        </label>
+        <label class="apple-status-option">
+            <input type="radio" name="newStatus" value="shipping">
+            <span class="checkmark"></span>
+            <span class="label">В доставке</span>
+        </label>
+        <label class="apple-status-option">
+            <input type="radio" name="newStatus" value="completed">
+            <span class="checkmark"></span>
+            <span class="label">Выполнен</span>
+        </label>
+        <label class="apple-status-option danger">
+            <input type="radio" name="newStatus" value="cancelled">
+            <span class="checkmark"></span>
+            <span class="label">Отменён</span>
+        </label>
+    </div>
+
+    <div class="apple-modal-password">
+        <input type="password" id="statusPassword" placeholder="Пароль администратора" autocomplete="off">
+    </div>
+    <div class="apple-modal-error" id="statusError"></div>
+    <div class="apple-modal-actions">
+        <button class="apple-btn-cancel" onclick="closeAppleModal('statusModal')">Отмена</button>
+        <button class="apple-btn-primary" id="confirmStatusBtn">Сменить статус</button>
     </div>
 </div>
-
-<!-- ОБЯЗАТЕЛЬНЫЙ БЛОК ДЛЯ ЦЕПОЧКИ -->
-<div id="orderChain"></div>
-
-<!-- МОДАЛКА СМЕНЫ СТАТУСА — ТЫ ЕЁ ИСПОЛЬЗУЕШЬ В СКРИПТЕ -->
-<div id="statusModal" class="modal-overlay">
-    <div class="modal">
-        <button class="modal-close" onclick="closeModal('statusModal')">x</button>
-        <h3 id="statusChangeText">Сменить статус?</h3>
-        <div class="form-group">
-            <input type="password" id="statusPassword" placeholder="Пароль администратора" autocomplete="off">
-        </div>
-        <div class="error-message" style="color:#ff6b6b; margin:1rem 0; display:none;"></div>
-        <div class="modal-actions">
-            <button class="cancel-btn" onclick="closeModal('statusModal')">Отмена</button>
-            <button class="btn-primary" onclick="submitStatus()">Сменить</button>
-        </div>
-    </div>
-</div>
-
- <script src="/static/js/admin/admin_goods.js" defer></script>
 
 <script>
-// === Тема (уже работает из твоего CSS) ===
-const themeToggle = document.getElementById('theme-toggle');
-const html = document.documentElement;
-if (localStorage.getItem('theme') === 'light') {
-    html.setAttribute('data-theme', 'light');
-    themeToggle.checked = true;
+// Данные из Flask
+window.initialOrders = {{ orders | tojson }};
+
+// Бэкдроп — один раз в HTML (не через JS)
+document.body.insertAdjacentHTML('beforeend', '<div id="appleModalBackdrop" class="apple-modal-backdrop"></div>');
+const backdrop = document.getElementById('appleModalBackdrop');
+
+// === Универсальные функции модалок ===
+function openAppleModal(id) {
+    backdrop.classList.add('show');
+    document.getElementById(id).classList.add('show');
+    setTimeout(() => document.querySelector(`#${id} input, #${id} textarea`)?.focus(), 350);
 }
-themeToggle.addEventListener('change', () => {
-    const theme = themeToggle.checked ? 'light' : 'dark';
-    html.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-});
 
-// === Статистика ===
-function updateStats() {
-    const items = document.querySelectorAll('.order-item');
-    const total = items.length;
-    const pending = [...items].filter(i => ['pending','processing','shipping'].includes(i.dataset.status)).length;
-    const completed = [...items].filter(i => i.dataset.status === 'completed').length;
-    const cancelled = [...items].filter(i => i.dataset.status === 'cancelled').length;
-
-    document.getElementById('statTotal').textContent = total;
-    document.getElementById('statPending').textContent = pending;
-    document.getElementById('statCompleted').textContent = completed;
-    document.getElementById('statCancelled').textContent = cancelled;
+function closeAppleModal(id) {
+    backdrop.classList.remove('show');
+    document.getElementById(id).classList.remove('show');
+    setTimeout(() => {
+        document.querySelectorAll(`#${id} input, #${id} textarea, #${id} .apple-modal-error`).forEach(el => {
+            if (el.type === 'password' || el.tagName === 'TEXTAREA') el.value = '';
+            if (el.classList.contains('apple-modal-error')) el.textContent = '';
+        });
+        // Сброс радио
+        document.querySelectorAll(`#${id} input[name="newStatus"]`).forEach(r => r.checked = r.value === 'pending');
+    }, 400);
 }
-updateStats();
 
-// === Поиск и фильтр ===
-document.getElementById('searchInput').addEventListener('input', filterOrders);
-document.getElementById('statusFilter').addEventListener('change', filterOrders);
+backdrop.onclick = () => document.querySelectorAll('.apple-modal.show').forEach(m => closeAppleModal(m.id));
+document.addEventListener('keydown', e => e.key === 'Escape' && document.querySelectorAll('.apple-modal.show').forEach(m => closeAppleModal(m.id)));
 
-function filterOrders() {
-    const query = document.getElementById('searchInput').value.toLowerCase();
-    const status = document.getElementById('statusFilter').value;
-    document.querySelectorAll('.order-item').forEach(item => {
-        const text = item.textContent.toLowerCase();
-        const matchesSearch = text.includes(query);
-        const matchesStatus = !status || item.dataset.status === status;
-        item.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+// === КЛЮЧЕВАЯ ФУНКЦИЯ — обновление одной карточки без перерендера ===
+// === УДАЛь СТАРУЮ refreshOrderCard полностью ===
+// И вставь НОВУЮ — БЕЗ applyFilters() внутри!
+function refreshOrderCard(order) {
+    const card = document.querySelector(`[data-order-id="${order.id}"]`);
+    if (!card) return;
+
+    card.dataset.status = order.status;  // ← только меняем статус
+
+    const selector = card.querySelector('.apple-status-selector');
+    if (selector) {
+        const labels = { pending: 'Ожидает', processing: 'Обработка', shipping: 'В доставке', completed: 'Выполнен', cancelled: 'Отменён' };
+        selector.innerHTML = `${labels[order.status][0]} <i class="fas fa-chevron-down" style="margin-left:8px;"></i>`;
+    }
+
+    // Прогресс-бар (оставляем как есть)
+    const circles = card.querySelectorAll('.order-status-chain > div > div > div');
+    circles.forEach(c => {
+        c.style.background = '#333';
+        c.style.boxShadow = 'none';
+        c.querySelector('i')?.classList.remove('fa-spin');
     });
-    updateStats();
+
+    if (order.status === 'pending') {
+        circles[0].style.background = '#00ff95';
+        circles[0].style.boxShadow = '0 0 20px rgba(0,255,149,0.4)';
+    } else if (order.status === 'processing') {
+        [0,1].forEach(i => { circles[i].style.background = '#00ff95'; circles[i].style.boxShadow = '0 0 20px rgba(0,255,149,0.4)'; });
+        circles[1].querySelector('i').classList.add('fa-spin');
+    } else if (order.status === 'shipping') {
+        [0,1,2].forEach(i => { circles[i].style.background = '#00ff95'; circles[i].style.boxShadow = '0 0 20px rgba(0,255,149,0.4)'; });
+        circles[1].querySelector('i').classList.add('fa-spin');
+    } else if (order.status === 'completed') {
+        [0,1,2,3].forEach(i => { circles[i].style.background = '#00ff95'; circles[i].style.boxShadow = '0 0 20px rgba(0,255,149,0.4)'; });
+        circles[3].innerHTML = '<i class="fas fa-check" style="color:#000;font-size:1.6rem;"></i>';
+        card.querySelector('.order-status-chain > div > div:last-child div:last-child').textContent = 'Выполнено';
+        card.querySelector('.order-status-chain > div > div:last-child div:last-child').style.color = '#0f0';
+    } else if (order.status === 'cancelled') {
+        circles[3].style.background = '#ff4444';
+        circles[3].style.boxShadow = '0 0 20px rgba(255,68,68,0.4)';
+        circles[3].innerHTML = '<i class="fas fa-times" style="color:#fff;font-size:1.6rem;"></i>';
+        card.querySelector('.order-status-chain > div > div:last-child div:last-child').textContent = 'Отменён';
+        card.querySelector('.order-status-chain > div > div:last-child div:last-child').style.color = '#ff6b6b';
+    }
+
+    // Причина отмены
+    let reasonBlock = card.querySelector('.apple-order-content > div:last-child');
+    if (order.cancel_reason) {
+        if (!reasonBlock || !reasonBlock.innerHTML.includes('Причина отмены')) {
+            reasonBlock = document.createElement('div');
+            reasonBlock.style.cssText = 'margin-top:1rem;padding:1.3rem;background:rgba(255,68,68,.15);border-radius:18px;color:#ff8a8a;border-left:4px solid #ff6b6b;';
+            card.querySelector('.apple-order-content').appendChild(reasonBlock);
+        }
+        reasonBlock.innerHTML = `<strong>Причина отмены:</strong> ${order.cancel_reason}`;
+    } else if (reasonBlock && reasonBlock.innerHTML.includes('Причина отмены')) {
+        reasonBlock.remove();
+    }
 }
+// === УДАЛЕНИЕ ===
+window.deleteOrder = id => {
+    document.getElementById('deleteOrderId').textContent = id;
+    openAppleModal('deleteModal');
 
-// === Модалки ===
-let pendingOrderId = null;
-function openCancelModal(id) { pendingOrderId = id; document.getElementById('cancelOrderId').textContent = id; openModal('cancelModal'); }
-function openDeleteModal(id) { pendingOrderId = id; openModal('deleteModal'); }
-function openModal(id) { document.getElementById(id).classList.add('active'); }
-function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    document.getElementById('confirmDeleteBtn').onclick = async () => {
+        const pw = document.getElementById('deletePassword').value.trim();
+        if (!pw) return;
 
-async function submitCancel() {
-    const reason = document.getElementById('cancelReason').value.trim();
-    const pw = document.getElementById('cancelPassword').value;
-    if (!reason || !pw) return alert('Заполните все поля');
-    // POST на твой бэкенд
-    alert('Отмена заказа — подключи POST-запрос');
-}
+        const res = await fetch('/admin_orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete_order', order_id: id, password: pw })
+        });
+        const data = await res.json();
 
-async function submitDelete() {
-    const pw = document.getElementById('deletePassword').value;
-    if (!pw) return alert('Введите пароль');
-    // POST на удаление
-    alert('Удаление заказа — подключи POST-запрос');
-}
+        if (data.success) {
+            closeAppleModal('deleteModal');
+            document.querySelector(`[data-order-id="${id}"]`).style.opacity = '0';
+            setTimeout(() => {
+                document.querySelector(`[data-order-id="${id}"]`)?.remove();
+                window.initialOrders = window.initialOrders.filter(o => o.id !== id);
+                updateStats(window.initialOrders);
+                applyFilters();
+                if (window.reliableToast) reliableToast('Заказ удалён');
+            }, 300);
+        } else {
+            document.getElementById('deleteError').textContent = data.error || 'Ошибка';
+        }
+    };
+};
 
-function showProductModal(el) {
-    document.getElementById('modalTitle').textContent = el.dataset.title;
-    document.getElementById('modalDesc').textContent = el.dataset.desc || 'Описание отсутствует';
-    document.getElementById('modalPrice').textContent = el.dataset.price;
-    document.getElementById('modalImg').src = el.dataset.img || '/static/assets/no-image.png';
-    openModal('productModal');
-}
+// === ОТМЕНА ===
+window.cancelOrder = id => {
+    document.getElementById('cancelOrderId').textContent = id;
+    openAppleModal('cancelModal');
 
-// Закрытие по оверлею
-document.addEventListener('click', e => {
-    ['cancelModal','deleteModal','productModal'].forEach(id => {
-        const overlay = document.getElementById(id);
-        if (overlay.classList.contains('active') && e.target === overlay) closeModal(id);
+    document.getElementById('confirmCancelBtn').onclick = async () => {
+        const reason = document.getElementById('cancelReason').value.trim();
+        const pw = document.getElementById('cancelPassword').value.trim();
+        if (!reason) return document.getElementById('cancelError').textContent = 'Укажите причину';
+        if (!pw) return;
+
+        const res = await fetch('/admin_orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'cancel_order', order_id: id, reason, password: pw })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+    closeAppleModal('cancelModal');
+    order.status = 'cancelled';
+    order.cancel_reason = reason;
+    refreshOrderCard(order);
+    updateStats(window.initialOrders);
+    applyFilters();  // ← И ЗДЕСЬ ТОЖЕ!
+    if (window.reliableToast) reliableToast('Заказ отменён');
+        } else {
+            document.getElementById('cancelError').textContent = data.error || 'Ошибка';
+        }
+    };
+};
+
+// === СМЕНА СТАТУСА ===
+window.openStatusModal = id => {
+    const order = window.initialOrders.find(o => o.id === id);
+    if (!order) return;
+
+    document.getElementById('statusOrderId').textContent = id;
+
+    // Устанавливаем текущий статус
+    document.querySelectorAll('input[name="newStatus"]').forEach(radio => {
+        radio.checked = (radio.value === order.status);
     });
+
+    openAppleModal('statusModal');
+
+    document.getElementById('confirmStatusBtn').onclick = async () => {
+        const status = document.querySelector('input[name="newStatus"]:checked').value;
+        const pw = document.getElementById('statusPassword').value.trim();
+        if (!pw) return;
+
+        const res = await fetch('/admin_orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'set_status', order_id: id, status, password: pw })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+    closeAppleModal('statusModal');
+    order.status = status;
+    refreshOrderCard(order);
+    updateStats(window.initialOrders);
+    applyFilters();  // ← ОБЯЗАТЕЛЬНО!
+    if (window.reliableToast) reliableToast('Статус изменён');
+        } else {
+            document.getElementById('statusError').textContent = data.error || 'Ошибка';
+        }
+    };
+};
+
+// === РЕНДЕР, СТАТИСТИКА, ФИЛЬТРЫ — твои оригинальные (без изменений) ===
+document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('ordersContainer');
+
+    function renderOrders(orders = window.initialOrders) {
+        if (!orders || orders.length === 0) {
+            container.innerHTML = `<div class="apple-empty"><i class="fas fa-receipt"></i><div style="font-size:1.8rem;margin-top:1rem;">Заказов пока нет</div></div>`;
+            updateStats([]);
+            return;
+        }
+
+        container.innerHTML = orders.map(o => {
+            const displayId = o.display_id 
+                ? (String(o.display_id).match(/\d{4}$/) ? `№${o.display_id.match(/\d{4}$/)[0]}` : o.display_id)
+                : `№${o.id}`;
+
+            return `
+                <div class="apple-order-card collapsed" data-order-id="${o.id}" data-status="${o.status}" style="transition: opacity .3s;">
+                   <div class="apple-order-header" onclick="this.parentElement.classList.toggle('collapsed')">
+    <div style="display:flex; align-items:center; gap:16px; flex:1;">
+        <div class="apple-order-id">${displayId} — ${o.full_name}</div>
+        <div class="apple-order-meta">
+            <i class="fas fa-phone"></i> ${o.phone} • ${new Date(o.created_at).toLocaleDateString('ru-RU')}
+        </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:12px;">
+        <div class="apple-status-selector" onclick="event.stopPropagation(); openStatusModal(${o.id})">
+            ${o.status_label ? o.status_label[0] : o.status}
+            <i class="fas fa-chevron-down" style="margin-left:8px;"></i>
+        </div>
+        <i class="fas fa-chevron-down apple-toggle-arrow"></i>
+    </div>
+</div>
+
+                    <div class="apple-order-content">
+                        <div class="order-status-chain">
+                            <div style="display:flex;justify-content:space-between;align-items:center;position:relative;padding:1rem 0;">
+                                <div style="text-align:center;flex:1;">
+                                    <div style="width:52px;height:52px;margin:0 auto 10px;border-radius:50%;background:${o.status === 'pending' ? '#00ff95' : '#333'};display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px ${o.status === 'pending' ? 'rgba(0,255,149,0.4)' : 'transparent'};transition:all .4s;">
+                                        <i class="fas fa-hourglass-half" style="color:${o.status === 'pending' ? '#000' : '#888'};font-size:1.4rem;"></i>
+                                    </div>
+                                    <div style="font-size:0.9rem;color:${o.status === 'pending' ? '#aaa' : '#666'};">Ожидает</div>
+                                </div>
+                                <div style="text-align:center;flex:1;">
+                                    <div style="width:52px;height:52px;margin:0 auto 10px;border-radius:50%;background:${['processing','shipping','completed'].includes(o.status) ? '#00ff95' : '#333'};display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px ${['processing','shipping','completed'].includes(o.status) ? 'rgba(0,255,149,0.4)' : 'transparent'};transition:all .4s;">
+                                        <i class="fas fa-cog ${['processing','shipping','completed'].includes(o.status) ? 'fa-spin' : ''}" style="color:${['processing','shipping','completed'].includes(o.status) ? '#000' : '#888'};font-size:1.4rem;"></i>
+                                    </div>
+                                    <div style="font-size:0.9rem;color:${['processing','shipping','completed'].includes(o.status) ? '#aaa' : '#666'};">Обработка</div>
+                                </div>
+                                <div style="text-align:center;flex:1;">
+                                    <div style="width:52px;height:52px;margin:0 auto 10px;border-radius:50%;background:${['shipping','completed'].includes(o.status) ? '#00ff95' : '#333'};display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px ${['shipping','completed'].includes(o.status) ? 'rgba(0,255,149,0.4)' : 'transparent'};transition:all .4s;">
+                                        <i class="fas fa-truck" style="color:${['shipping','completed'].includes(o.status) ? '#000' : '#888'};font-size:1.4rem;"></i>
+                                    </div>
+                                    <div style="font-size:0.9rem;color:${['shipping','completed'].includes(o.status) ? '#aaa' : '#666'};">Доставка</div>
+                                </div>
+                                <div style="text-align:center;flex:1;">
+                                    <div style="width:52px;height:52px;margin:0 auto 10px;border-radius:50%;background:${o.status === 'completed' ? '#00ff95' : o.status === 'cancelled' ? '#ff4444' : '#333'};display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px ${o.status === 'completed' ? 'rgba(0,255,149,0.4)' : o.status === 'cancelled' ? 'rgba(255,68,68,0.4)' : 'transparent'};transition:all .4s;">
+                                        ${o.status === 'completed' ? '<i class="fas fa-check" style="color:#000;font-size:1.6rem;"></i>' :
+                                          o.status === 'cancelled' ? '<i class="fas fa-times" style="color:#fff;font-size:1.6rem;"></i>' :
+                                          '<i class="fas fa-box-open" style="color:#888;font-size:1.4rem;"></i>'}
+                                    </div>
+                                    <div style="font-size:0.9rem;color:${o.status === 'completed' ? '#0f0' : o.status === 'cancelled' ? '#ff6b6b' : '#666'};">
+                                        ${o.status === 'completed' ? 'Выполнено' : o.status === 'cancelled' ? 'Отменён' : 'Готово'}
+                                    </div>
+                                </div>
+                                <div style="position:absolute;top:50%;left:12%;right:12%;height:4px;background:linear-gradient(to right, 
+                                    #00ff95 0%, #00ff95 ${o.status === 'pending' ? '15%' : o.status === 'processing' ? '45%' : o.status === 'shipping' ? '75%' : o.status === 'completed' ? '100%' : '0%'}, 
+                                    ${o.status === 'cancelled' ? '#ff4444' : '#444'} ${o.status === 'cancelled' ? '100%' : '0%'}, #444 100%
+                                );border-radius:2px;z-index:-1;"></div>
+                            </div>
+                        </div>
+
+                        <div class="apple-items">
+                            ${o.order_items.length > 0 ? o.order_items.map(item => `
+                                <div class="apple-item">
+                                    <img src="${(item.image_urls && item.image_urls[0]) || '/static/assets/no-image.png'}" 
+     onerror="this.src='/static/assets/no-image.png'" 
+     style="width:52px;height:52px;border-radius:12px;object-fit:cover;background:#222;">
+                                    <div>
+                                        <div style="font-weight:600;">${item.title}</div>
+                                        <div style="opacity:0.8;font-size:0.95rem;">${item.quantity} × ${item.price_str}</div>
+                                    </div>
+                                </div>
+                            `).join('') : '<div style="padding:1rem;color:#888;text-align:center;">Товаров нет</div>'}
+                        </div>
+
+                        <div class="apple-total">Итого: ${o.total_str}</div>
+
+                        ${o.cancel_reason ? `<div style="margin-top:1rem;padding:1.3rem;background:rgba(255,68,68,.15);border-radius:18px;color:#ff8a8a;border-left:4px solid #ff6b6b;">
+                            <strong>Причина отмены:</strong> ${o.cancel_reason}</div>` : ''}
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="action-btn btn-cancel" onclick="event.stopPropagation(); cancelOrder(${o.id})">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                        <button class="action-btn btn-delete" onclick="event.stopPropagation(); deleteOrder(${o.id})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>`;
+        }).join('');
+
+        updateStats(orders);
+    }
+
+function updateStats(orders) {
+    const total      = orders.length;
+    const pending    = orders.filter(o => o.status === 'pending').length;
+    const processing = orders.filter(o => o.status === 'processing').length;
+    const shipping   = orders.filter(o => o.status === 'shipping').length;
+    const completed  = orders.filter(o => o.status === 'completed').length;
+    const cancelled  = orders.filter(o => o.status === 'cancelled').length;
+
+    document.getElementById('statTotal').textContent      = total;
+    document.getElementById('statPending').textContent    = pending;
+    document.getElementById('statProcessing').textContent = processing;
+    document.getElementById('statShipping').textContent   = shipping;
+    document.getElementById('statCompleted').textContent  = completed;
+    document.getElementById('statCancelled').textContent  = cancelled;
+}
+
+    function applyFilters() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    const statFilter = currentStatFilter;
+
+    document.querySelectorAll('.apple-order-card').forEach(card => {
+        const text   = card.textContent.toLowerCase();
+        const status = card.dataset.status;
+
+        const matchSearch = !q || text.includes(q);
+        const matchStat = !statFilter || 
+            (statFilter === 'pending' ? status === 'pending' : 
+             statFilter === ''        ? true : 
+                                        status === statFilter);
+
+        card.style.display = (matchSearch && matchStat) ? '' : 'none';
+    });
+}
+
+    let currentStatFilter = '';
+    window.filterByStat = status => {
+        document.querySelectorAll('#statsFilterGrid .apple-stat').forEach(el => el.classList.remove('active'));
+        const target = status === '' 
+            ? document.querySelector('#statsFilterGrid .apple-stat[data-filter=""]')
+            : document.querySelector(`#statsFilterGrid .apple-stat[data-filter="${status}"]`);
+        target?.classList.add('active');
+        currentStatFilter = status;
+        applyFilters();
+    };
+
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    window.filterByStat('');
+    renderOrders();
 });
 </script>
+
 
 </body>
 </html>
