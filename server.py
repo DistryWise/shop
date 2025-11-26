@@ -388,9 +388,11 @@ def create_app():
 
     return app
 
+# ЭТО САМОЕ ГЛАВНОЕ ДЛЯ RENDER.COM
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
-    logger.info("Сервер запущен!")
-    logger.info("Админка доступна ТОЛЬКО с IP: 188.123.58.214")
-    logger.info("http://127.0.0.1:5000")
+    # Локально будет работать как раньше
+    logger.info("Сервер запущен локально!")
+    logger.info("Админка доступна ТОЛЬКО с разрешённых IP")
     app.run(host='0.0.0.0', port=5000, debug=True)
