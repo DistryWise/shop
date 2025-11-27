@@ -1148,3 +1148,29 @@ html[data-theme="light"] .custom-cursor.hover,
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.45);
   background: #000 !important;
 }
+/* ============================================= */
+/* КРЕСТИК В МОДАЛКЕ НОВОСТЕЙ — ЧЁРНЫЙ В СВЕТЛОЙ ТЕМЕ */
+/* ============================================= */
+[data-theme="light"] .news-modal-close,
+html[data-theme="light"] .news-modal-close {
+  background: rgba(0, 0, 0, 0.08) !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.25) !important;
+  color: #111111 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+}
+
+[data-theme="light"] .news-modal-close:hover,
+html[data-theme="light"] .news-modal-close:hover {
+  background: rgba(0, 0, 0, 0.16) !important;
+  border-color: #000 !important;
+  color: #000 !important;
+  transform: rotate(90deg) scale(1.1) !important;
+}
+
+/* На всякий случай — если вдруг иконка через ::before или SVG */
+[data-theme="light"] .news-modal-close i,
+[data-theme="light"] .news-modal-close svg,
+[data-theme="light"] .news-modal-close * {
+  color: #111111 !important;
+  fill: #111111 !important;
+}

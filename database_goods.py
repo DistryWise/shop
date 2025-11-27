@@ -1159,7 +1159,7 @@ def register_admin_routes(app):
 
             for row in rows:
                 imgs = json.loads(row['image_filenames'] or '[]')
-                img_url = f"/static/uploads/{imgs[0]}" if imgs else '/static/assets/no-image.png'
+                img_url = f"/static/uploads/goods/{imgs[0]}" if imgs else '/static/assets/no-image.png'
                 price_cents = int(row['price'])  # УБЕДИСЬ, что в БД price уже в копейках!
                 items.append({
                     'id': row['id'],

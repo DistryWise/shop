@@ -1083,7 +1083,7 @@ themeToggle?.addEventListener('change', () => {
   }
 });
   </script>
-</div>
+
 
 <!-- === КРАСИВОЕ ПРОЗРАЧНОЕ МОДАЛЬНОЕ ОКНО ДЛЯ ФОРМЫ === -->
 <div id="feedbackModal" class="feedback-modal">
@@ -1475,6 +1475,85 @@ document.head.insertAdjacentHTML('beforeend', `
 #global-cart-flood-alert i { font-size: 1.8rem; }
 </style>
 `);
+</script>
+<script>
+// УЛЬТРА-КРАСИВАЯ АДМИН-ИКОНКА В ХЕДЕРЕ — 2025 СТИЛЬ
+const ADMIN_CHECK_INTERVAL = setInterval(async () => {
+  try {
+    const res = await fetch('/api/session');
+    if (!res.ok) return;
+    const data = await res.json();
+
+    const isAdmin = data.is_real_admin || 
+                    data.real_admin || 
+                    data.is_admin || 
+                    data.admin || 
+                    data.is_staff || 
+                    data.superuser || 
+                    data.role === "admin" || 
+                    data.role === "administrator";
+
+    if (isAdmin && !document.getElementById('adminHeaderBtn')) {
+      // Удаляем проверку каждые 2 сек — больше не нужна
+      clearInterval(ADMIN_CHECK_INTERVAL);
+
+      // Вставляем иконку в хедер (рядом с корзиной)
+      const headerIcons = document.querySelector('.header-icons');
+      if (!headerIcons) return;
+
+      headerIcons.insertAdjacentHTML('beforeend', `
+        <a href="/admin" id="adminHeaderBtn" class="icon-btn admin-glow" title="Админ-панель">
+          <svg viewBox="0 0 100 100" width="28" height="28" style="filter:drop-shadow(0 0 8px #ff00ff)">
+            <defs>
+              <linearGradient id="adminGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ff00cc"/>
+                <stop offset="100%" stop-color="#ff3399"/>
+              </linearGradient>
+            </defs>
+            <circle cx="50" cy="50" r="44" fill="none" stroke="url(#adminGrad)" stroke-width="8"/>
+            <text x="50" y="68" text-anchor="middle" fill="white" font-size="38" font-weight="900" font-family="Arial Black">A</text>
+          </svg>
+          <span class="admin-pulse"></span>
+        </a>
+      `);
+
+      console.log("АДМИН-ИКОНКА В ХЕДЕРЕ АКТИВИРОВАНА — ДОСТУП РАЗРЕШЁН");
+
+      // Добавляем CSS-анимацию пульсации
+      const style = document.createElement('style');
+      style.textContent = `
+        #adminHeaderBtn {
+          position: relative;
+          animation: adminFloat 4s ease-in-out infinite;
+        }
+        .admin-pulse {
+          position: absolute;
+          top: 50%; left: 50%;
+          width: 36px; height: 36px;
+          background: radial-gradient(circle, #ff00ff 0%, transparent 70%);
+          border-radius: 50%;
+          transform: translate(-50%, -50%);
+          animation: adminPulse 2s infinite;
+          pointer-events: none;
+        }
+        @keyframes adminPulse {
+          0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.8; }
+          70% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+          100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+        }
+        @keyframes adminFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+        .icon-btn.admin-glow:hover {
+          transform: scale(1.15);
+          filter: drop-shadow(0 0 16px #ff00ff) !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  } catch (e) {}
+}, 1800); // проверяем каждые 1.8 сек — быстрее реагирует
 </script>
 </body>
 </html>

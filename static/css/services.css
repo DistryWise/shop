@@ -1308,5 +1308,3 @@ body.scrolled-past-hero .top-persistent-title {
   transform: translateX(-50%) translateY(-30px);
 }
 
-/* На белом фоне — чёрная надпись (если нужно) */
-body.white .top-persistent-title { color: #000; opacity: 0.6; }

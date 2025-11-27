@@ -871,12 +871,22 @@ async function openModal(id, pushHistory = true) {
     document.getElementById('no-reviews').style.display = 'block';
 
     // === ОТКРЫВАЕМ ЕДИНУЮ КРАСИВУЮ МОДАЛКУ ===
-    document.getElementById('modal').classList.add('active');
+    const modal = document.getElementById('modal');
+    modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+
+    // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+    // САМОЕ ГЛАВНОЕ — ЭТО РЕШАЕТ ВСЁ! (ДОБАВЬ ЭТИ 2 СТРОКИ)
+    modal.dataset.currentProductId = productId;
+    modal.dataset.currentType = isGoodsPage ? 'product' : 'service';
+    // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 
     // URL с хешем
     if (pushHistory) {
-      const slug = (p.slug || p.title || '').toLowerCase().replace(/[^a-zа-я0-9]+/g, '-').replace(/^-|-$/g, '');
+      const slug = (p.slug || p.title || p.name || 'product')
+        .toLowerCase()
+        .replace(/[^a-zа-я0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
       history.pushState({ modal: true, id: productId }, '', `#${slug}`);
     }
 
@@ -1456,6 +1466,7 @@ document.getElementById('exitWhiteZoneBtn')?.addEventListener('click', () => {
 
   // Инициализация
   setTimeout(checkZone, 800);
+
 })();
 
 

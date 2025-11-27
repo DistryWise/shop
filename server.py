@@ -7,18 +7,28 @@ from functools import wraps
 import sqlite3          
 import time
 import httpx
+
 import asyncio
 import json
 from flask import stream_with_context, Response
 from admin_goods import admin_goods_bp
 from dotenv import load_dotenv
+import os
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s | %(levelname)s | %(name)s | %(message)s'
+)
+logger = logging.getLogger(__name__)
 
+# ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+# ПРОПИСЫВАЕМ РУКАМИ — БЕЗ .env
+ALLOWED_ADMIN_IPS = ["62.217.186.199", "188.123.58.214", "127.0.0.1", "::1"]
+ADMIN_PHONES = ["79530357851"]          # ← ТВОЙ НОМЕР БЕЗ +7
+# ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 
-load_dotenv()  
-
-# === ЧИТАЕМ ИЗ .env ===
-ALLOWED_ADMIN_IPS = [ip.strip() for ip in os.getenv("ADMIN_IPS", "127.0.0.1,::1").split(",") if ip.strip()]
-ADMIN_PHONES = [phone.strip() for phone in os.getenv("ADMIN_PHONES", "").split(",") if phone.strip()]
+logger.info(f"IP whitelist (вшито в код): {ALLOWED_ADMIN_IPS}")
+logger.info(f"Админ-телефоны (вшито в код): {ADMIN_PHONES}")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSy...твой_ключ_по_умолчанию_если_надо")
 ADMIN_PASSWORD_HASH = os.getenv("ADMIN_PASSWORD_HASH", "")
 
 # хэш пароля админа
@@ -34,9 +44,6 @@ from use_db import init_users_db, users_bp, track_visits
 from editor import zaza_editor, init_zaza_db
 from auth_backend import init_auth_db, generate_and_send_code, verify_user_code
 from dispatch import init_dispatch_db, register_dispatch_routes, get_stats
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 def get_client_ip():
@@ -79,7 +86,8 @@ def create_app():
         return {
             'total_users': get_total_users() if session.get('is_admin') else 0,
             'current_user_id': session.get('user_id'),
-            'is_admin': session.get('is_admin', False)
+            'is_admin': session.get('is_admin', False),
+            'is_real_admin': session.get('real_admin', False)  # ← ЭТО НОВОЕ! Кнопка будет только у настоящего админа
         }
 
     # === ЖЁСТКАЯ ЗАЩИТА АДМИНКИ ПО IP ===
@@ -101,7 +109,7 @@ def create_app():
                 return render_template("404.html"), 404
 
             # 2. IP в списке, но нет метки real_admin → тоже 404 (не выдаём, что нужна авторизация)
-            if not session.get('real_admin'):
+            if 'real_admin' not in session or not session['real_admin']:
                 logger.info(f"Доступ к админке без real_admin | IP: {client_ip} | Путь: {request.path}")
                 return render_template("404.html"), 404
 
@@ -376,15 +384,21 @@ def create_app():
         # === ГЛАВНАЯ ЛОГИКА АДМИН-ДОСТУПА ===
         client_ip = get_client_ip()
 
-        # Проверяем: это ТЫ? (IP + номер из .env)
-        if client_ip in ALLOWED_ADMIN_IPS and clean_phone in ADMIN_PHONES:
-            session['real_admin'] = True
-            session['is_admin'] = True
+        # ОТЛАДКА — теперь ты точно увидишь, что происходит
+        logger.info(f"Проверка админа → IP: {client_ip} | в списке: {client_ip in ALLOWED_ADMIN_IPS}")
+        logger.info(f"Проверка админа → Телефон: {clean_phone} | в списке: {clean_phone in ADMIN_PHONES}")
+
+        # Это ТЫ? (IP + телефон из .env)
+        is_real_admin = (client_ip in ALLOWED_ADMIN_IPS) and (clean_phone in ADMIN_PHONES)
+
+        # Записываем флаги — без else, который всё ломает!
+        session['real_admin'] = is_real_admin
+        session['is_admin'] = is_real_admin or (user['is_admin'] if user else False)
+
+        if is_real_admin:
             logger.warning(f"АДМИН ВОШЁЛ В СИСТЕМУ | {clean_phone} | IP: {client_ip}")
         else:
-            session['real_admin'] = False
-            # Обычные пользователи могут быть админами только если ты вручную выдал права в БД
-            session['is_admin'] = bool(user['is_admin']) if user else False
+            logger.info(f"Обычный вход | {clean_phone} | IP: {client_ip}")
 
         # Записываем базовые данные в сессию
         session['user_id'] = user_id
@@ -395,7 +409,8 @@ def create_app():
             from database_goods import merge_cart_from_client
             merge_cart_from_client(user_id, client_cart)
 
-        logger.info(f"Вход: {clean_phone} (ID: {user_id}) | is_admin: {session['is_admin']} | real_admin: {session.get('real_admin')}")
+        # Финальный лог — теперь всегда будет True, если ты с нужного IP и номера
+        logger.info(f"Вход: {clean_phone} (ID: {user_id}) | is_admin: {session['is_admin']} | real_admin: {session['real_admin']}")
 
         return jsonify({
             "success": True,

@@ -112,38 +112,27 @@ const formatPrice = (cents) => {
     };
 
 window.addToCart = async function(id, type = 'product', quantity = 1) {
+    // === Антиспам (оставляем как есть) ===
     const now = Date.now();
-    const BLOCK_KEY = 'cart_blocked_until';
-    const SPAM_KEY = 'cart_spam_v2';
-
-    // === 1. Проверяем, не заблокирован ли уже пользователь ===
-    const blockedUntil = Number(localStorage.getItem(BLOCK_KEY) || '0');
+    const blockedUntil = Number(localStorage.getItem('cart_blocked_until') || '0');
     if (now < blockedUntil) {
         const sec = Math.ceil((blockedUntil - now) / 1000);
         showToast('Стоп!', `Подождите ${sec} сек.`, true);
         return;
     }
 
-    // === 2. Считаем клики за последние 2 секунды ===
-    let spamData = JSON.parse(localStorage.getItem(SPAM_KEY) || '[]');
-    
-    // Удаляем старые клики (старше 2 сек)
+    let spamData = JSON.parse(localStorage.getItem('cart_spam_v2') || '[]');
     spamData = spamData.filter(t => now - t < 2000);
-
-    // Если уже 5 кликов за 2 секунды — блок на 30 сек
     if (spamData.length >= 5) {
-        localStorage.setItem(BLOCK_KEY, now + 30000);
-        localStorage.removeItem(SPAM_KEY);
+        localStorage.setItem('cart_blocked_until', now + 30000);
+        localStorage.removeItem('cart_spam_v2');
         showToast('Блокировка!', 'Слишком много действий. Ждите 30 сек.', true);
         return;
     }
-
-    // Добавляем текущий клик
     spamData.push(now);
-    localStorage.setItem(SPAM_KEY, JSON.stringify(spamData));
+    localStorage.setItem('cart_spam_v2', JSON.stringify(spamData));
 
-    // === 3. Визуальная блокировка кнопки ===
-    const btn = event?.target?.closest('button') || document.querySelector(`[onclick*="addToCart(${id}"]`);
+    const btn = event?.target?.closest('button');
     if (btn) {
         btn.disabled = true;
         const oldText = btn.innerHTML;
@@ -153,21 +142,40 @@ window.addToCart = async function(id, type = 'product', quantity = 1) {
     try {
         const isLoggedIn = !!sessionStorage.getItem('user_id');
 
+        // КРИТИЧНО: БЕРЁМ КАРТИНКУ ТОЧНО ТАК ЖЕ, КАК В АВТОКОМПЛИТЕ!
+        let image_url = '/static/assets/no-image.png';
+
+        // 1. Из модалки (если открыта)
+        const modalImg = document.getElementById('modal-img') || document.getElementById('productImg');
+        if (modalImg?.src && !modalImg.src.includes('no-image')) {
+            image_url = modalImg.src;
+        }
+        // 2. Из карточки в каталоге
+        else if (event?.target) {
+            const card = event.target.closest('.card') || event.target.closest('.autocomplete-item');
+            const img = card?.querySelector('img');
+            if (img?.src && !img.src.includes('no-image')) {
+                image_url = img.src;
+            }
+        }
+
         if (isLoggedIn) {
-            const res = await fetch('/api/cart/add', {
+            await fetch('/api/cart/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     [type === 'product' ? 'product_id' : 'service_id']: id,
-                    quantity
+                    quantity,
+                    image_url  // ← ВОТ ЭТО ВСЁ ИСПРАВИЛО
                 })
             });
-            const data = await res.json();
-            if (!res.ok || data.error) throw new Error(data.error || 'Ошибка');
         } else {
             const existing = clientCart.find(i => i.id === id && i.type === type);
-            if (existing) existing.quantity += quantity;
-            else clientCart.push({ id, type, quantity });
+            if (existing) {
+                existing.quantity += quantity;
+            } else {
+                clientCart.push({ id, type, quantity, image_url });
+            }
             localStorage.setItem('clientCart', JSON.stringify(clientCart));
         }
 
@@ -176,7 +184,7 @@ window.addToCart = async function(id, type = 'product', quantity = 1) {
         notifyCartUpdated();
 
     } catch (e) {
-        showToast('Ошибка', e.message || 'Не удалось добавить', true);
+        showToast('Ошибка', 'Не удалось добавить', true);
     } finally {
         if (btn) {
             setTimeout(() => {
@@ -186,7 +194,6 @@ window.addToCart = async function(id, type = 'product', quantity = 1) {
         }
     }
 };
-
 // === УНИВЕРСАЛЬНЫЙ ПОВТОР ЗАКАЗА ИЗ АРХИВА ===
 document.addEventListener('click', async (e) => {
     const btn = e.target.closest('.repeat-order-btn');

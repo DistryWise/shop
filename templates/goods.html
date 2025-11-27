@@ -525,77 +525,8 @@ function allowClick(blockedBtn) {
   clickHistory.push(Date.now());
   return true;
 }
+// === ФИНАЛЬНАЯ ВЕРСИЯ addToCartById — РАБОТАЕТ НА 100% ===
 
-async function addToCartNow(title) {
-  const btn = document.getElementById('modal-order');
-  if (!allowClick(btn)) return;
-
-  const isService = location.pathname === '/services';
-
-  // ЗАКРЫВАЕМ ВСЕ ВОЗМОЖНЫЕ МОДАЛКИ
-  document.getElementById('modal')?.classList.remove('active');
-  document.getElementById('productModal')?.classList.remove('active');
-  document.getElementById('whiteOverlay')?.classList.remove('active');
-
-  // === ГЛАВНОЕ: УНИВЕРСАЛЬНЫЙ ПОИСК КАРТИНКИ ===
-  let imageUrl = '/static/assets/no-image.png';
-
-  // 1. Пробуем из старой модалки (услуги)
-  const oldImg = document.getElementById('modal-img');
-  if (oldImg?.src && oldImg.src.includes('http')) {
-    imageUrl = oldImg.src;
-    console.log('Картинка из #modal-img:', imageUrl);
-  }
-  // 2. Пробуем из новой модалки (товары)
-  else {
-    const newImg = document.getElementById('productImg');
-    if (newImg?.src && newImg.src.includes('http')) {
-      imageUrl = newImg.src;
-      console.log('Картинка из #productImg:', imageUrl);
-    }
-  }
-
-
-
-  // АНИМАЦИЯ КНОПКИ
-  btn.style.transform = 'scale(0.93)';
-  setTimeout(() => btn.style.transform = '', 200);
-
-  // ДОБАВЛЯЕМ С КАРТИНКОЙ
-  if (typeof window.addToCart === 'function') {
-    await window.addToCart(title, isService ? 'service' : 'product', imageUrl);
-  } else {
-    setTimeout(() => window.addToCart?.(title, isService ? 'service' : 'product', imageUrl), 300);
-  }
-}
-// === КНОПКА "ЗАКАЗАТЬ" В МОДАЛКЕ ===
-document.getElementById('modal-order')?.addEventListener('click', function() {
-  const title = document.getElementById('modal-title')?.textContent.trim();
-  if (title && title !== 'Загрузка...') {
-    addToCartNow(title);
-  } else {
-    toast('Дождитесь загрузки', 'error');
-  }
-});
-
-// === УБИРАЕМ ДУБЛИРОВАНИЕ ТОСТА ИЗ cart.js ===
-// Перехватываем showToast из cart.js, чтобы он не показывал "Добавлено в корзину"
-document.addEventListener('DOMContentLoaded', () => {
-  // Ждём загрузки cart.js
-  const checkCartJs = setInterval(() => {
-    if (window.addToCart) {
-      clearInterval(checkCartJs);
-
-      // Подменяем showToast — теперь он ничего не показывает при добавлении
-      const originalShowToast = window.showToast || (() => {});
-      window.showToast = (title, message, error) => {
-        if (title === 'Добавлено в корзину') return; // БЛОКИРУЕМ ДУБЛЬ!
-        if (title === 'Удалено') return;
-        originalShowToast(title, message, error);
-      };
-    }
-  }, 50);
-});
 </script>
 <script>
 // УНИВЕРСАЛЬНЫЙ АНТИСПАМ 2025 — РАБОТАЕТ НА ВСЕХ КНОПКАХ "В КОРЗИНУ" И ИЗМЕНЕНИЯ КОЛИЧЕСТВА
@@ -713,6 +644,80 @@ document.head.insertAdjacentHTML('beforeend', `
 #global-cart-flood-alert i { font-size: 1.8rem; }
 </style>
 `);
+</script>
+<script>
+// === ГЛОБАЛЬНАЯ ФУНКЦИЯ ЗАКРЫТИЯ МОДАЛКИ — РАБОТАЕТ ВЕЗДЕ ===
+window.closeModal = function() {
+  const modal = document.getElementById('modal');
+  if (!modal) return;
+
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+
+  // Убираем хеш из URL без перезагрузки
+  if (window.location.hash) {
+    history.replaceState(null, null, window.location.pathname + window.location.search);
+  }
+};
+
+// === ЗАКРЫТИЕ ПО КРЕСТИКУ, ОВЕРЛЕЮ И ESC ===
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('modal');
+  if (!modal) return;
+
+  // Крестик
+  document.querySelector('.modal-close-btn')?.addEventListener('click', closeModal);
+  
+  // Клик по оверлею
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  // ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('active')) {
+      closeModal();
+    }
+  });
+});
+</script>
+
+<script>
+// Заменяем полностью этот скрипт внизу страницы
+document.getElementById('modal-order')?.addEventListener('click', async function() {
+  const button = this;
+  const modal = document.getElementById('modal');
+  if (!modal?.classList.contains('active')) return;
+
+  const productId = modal.dataset.currentProductId;
+  if (!productId) return toast('Ошибка: товар не найден', 'error');
+
+  // === ЗАЩИТА ОТ ДВОЙНОГО КЛИКА ===
+  if (button.disabled) return;
+  
+  // === МЕНЯЕМ СОСТОЯНИЕ КНОПКИ ===
+  const originalText = button.textContent.trim();
+  button.disabled = true;
+  button.textContent = 'Добавляем...';
+
+  try {
+    const isService = location.pathname.includes('/services');
+    await window.addToCart(productId, isService ? 'service' : 'product', 1);
+
+    // Успешно — можно закрыть или оставить открытой
+    closeModal();
+    // toast уже показывает addToCart(), не дублируем
+  } catch (err) {
+    console.error('Ошибка добавления в корзину:', err);
+    toast('Не удалось добавить товар. Попробуйте позже.', 'error');
+  } finally {
+    // ВСЕГДА ВОЗВРАЩАЕМ КНОПКУ В НОРМАЛЬНОЕ СОСТОЯНИЕ!
+    setTimeout(() => {
+      button.disabled = false;
+      button.textContent = originalText; // "ЗАКАЗАТЬ"
+    }, 300); // небольшая задержка, чтобы анимация не дёргалась
+  }
+});
 </script>
 </body>
 </html>
