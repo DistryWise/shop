@@ -1,4 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+  const getDevice = () => {
+    const w = window.innerWidth;
+    if (w <= 1024) return 'mobile';
+    if (w <= 1887) return 'tablet';
+    return 'desktop';
+  };
     // ==================== МОБИЛЬНЫЙ ПОИСК — ШТОРКА СВЕРХУ ====================
   const mobileSearchBtn     = document.getElementById('mobileSearchBtn');
   const mobileSearchTop     = document.getElementById('mobileSearchTop');
@@ -7,6 +14,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const mobileAutocomplete  = document.getElementById('mobileAutocompleteList');
   const mobileEmptyState    = document.getElementById('mobileEmptyState');
   const mobileClearBtn      = document.getElementById('mobileSearchClear');
+    // ==================== ПЛАНШЕТНЫЙ ПОИСК 1025–1440px ====================
+  const tabletSearchSheet     = document.getElementById('tabletSearchSheet');
+  const tabletSearchInput     = document.getElementById('tabletSearchInput');
+  const tabletAutocomplete    = document.getElementById('tabletAutocompleteList');
+  const tabletClearBtn        = document.getElementById('tabletSearchClear');
+  const closeTabletSearchBtn  = document.getElementById('closeTabletSearch');
 
   if (mobileSearchBtn && mobileSearchTop) {
     // Открытие шторки
@@ -107,9 +120,36 @@ searchContainer.addEventListener('transitionend', (e) => {
 
 
   // === КЛИК ПО ЛУПЕ ===
-  document.querySelector('.search-icon').addEventListener('click', (e) => {
-    e.stopPropagation();
-    searchContainer.classList.contains('active') ? close() : open();
+  // === КЛИК ПО ЛУПЕ — УМНЫЙ ВЫБОР ПОВЕДЕНИЯ ПО ШИРИНЕ ЭКРАНА ===
+  document.querySelectorAll('.search-icon, #mobileSearchBtn').forEach(trigger => {
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+
+      const currentDevice = getDevice();
+
+      // Мобильный ≤1024px — шторка сверху
+      if (currentDevice === 'mobile') {
+        mobileSearchTop.classList.add('active');
+        mobileSearchResults.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => mobileSearchInput?.focus(), 400);
+        mobileEmptyState.style.display = 'block';
+        mobileAutocomplete.innerHTML = '';
+        return;
+      }
+
+      // Планшет 1025–1440px — полноэкранная шторка снизу
+      if (currentDevice === 'tablet') {
+        tabletSearchSheet.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => tabletSearchInput?.focus(), 300);
+        tabletAutocomplete.innerHTML = '';
+        return;
+      }
+
+      // Десктоп ≥1441px — старое поведение (выезд вправо)
+      searchContainer.classList.contains('active') ? close() : open();
+    });
   });
 
   // === ХОВЕР (как в bin — открывается при наведении) ===
@@ -131,7 +171,11 @@ searchContainer.addEventListener('mouseleave', () => {
   // === ВВОД ===
 const handleSearchInput = () => {
     clearTimeout(searchTimeout);
-    const query = (isMobileDevice() ? mobileSearchInput?.value : searchInput.value)?.trim() || '';
+    const activeInput = getDevice() === 'mobile' ? mobileSearchInput :
+                    getDevice() === 'tablet' ? tabletSearchInput :
+                    searchInput;
+
+const query = activeInput?.value.trim() || '';
 
     if (!query) {
       if (!isMobileDevice()) {
@@ -209,7 +253,6 @@ const fetchSuggestions = async (query) => {
       ...services.map(s => ({ ...s, type: 'service' }))
     ].slice(0, 10);
 
-    const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const highlight = (text) => text.replace(new RegExp(`(${escapeRegExp(query)})`, 'gi'), '<strong>$1</strong>');
 
     const html = all.length === 0
@@ -229,10 +272,21 @@ const fetchSuggestions = async (query) => {
           </div>
         `).join('');
 
-    // Выводим в нужный список
-    if (isMobileDevice() && mobileAutocomplete) {
+    // === ВЫВОДИМ В ПРАВИЛЬНОЕ МЕСТО В ЗАВИСИМОСТИ ОТ УСТРОЙСТВА ===
+    const device = getDevice();
+
+    if (device === 'mobile' && mobileAutocomplete) {
       mobileAutocomplete.innerHTML = html;
-    } else {
+      mobileEmptyState.style.display = 'none';
+    }
+    else if (device === 'tablet' && tabletAutocomplete) {
+      tabletAutocomplete.innerHTML = html;
+      const emptyState = document.getElementById('tabletEmptyState');
+      if (emptyState) emptyState.style.display = 'none';
+      tabletAutocomplete.classList.add('active');
+    }
+    else {
+      // десктоп
       autocompleteList.innerHTML = html;
       autocompleteList.classList.add('active');
     }
@@ -240,9 +294,19 @@ const fetchSuggestions = async (query) => {
   } catch (e) {
     console.error('Ошибка поиска:', e);
     const err = `<div style="text-align:center;padding:80px;color:#ff3b30;">Ошибка сервера</div>`;
-    if (isMobileDevice() && mobileAutocomplete) {
+
+    const device = getDevice();
+
+    if (device === 'mobile' && mobileAutocomplete) {
       mobileAutocomplete.innerHTML = err;
-    } else {
+      mobileEmptyState.style.display = 'none';
+    }
+    else if (device === 'tablet' && tabletAutocomplete) {
+      tabletAutocomplete.innerHTML = err;
+      document.getElementById('tabletEmptyState')?.style.setProperty('display', 'none');
+      tabletAutocomplete.classList.add('active');
+    }
+    else {
       autocompleteList.innerHTML = err;
       autocompleteList.classList.add('active');
     }
@@ -529,4 +593,52 @@ modal.querySelector('#productReviewsCount').textContent =
       if (resetTimer) clearTimeout(resetTimer);
     }
   }, true); // используем capturing, чтобы перехватить до onclick в разметке
+    // ==================== ЗАКРЫТИЕ ПЛАНШЕТНОЙ ШТОРКИ ====================
+  if (tabletSearchSheet) {
+    // Кнопка ←
+    closeTabletSearchBtn?.addEventListener('click', () => {
+      tabletSearchSheet.classList.remove('active');
+      document.body.style.overflow = '';
+      tabletSearchInput.value = '';
+      tabletClearBtn.style.opacity = '0';
+    });
+
+    // Клик по бэкдропу
+    tabletSearchSheet.addEventListener('click', (e) => {
+      if (e.target === tabletSearchSheet) {
+        tabletSearchSheet.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    });
+
+    // Очистка в планшетной шторке
+    tabletClearBtn?.addEventListener('click', () => {
+      tabletSearchInput.value = '';
+      tabletSearchInput.focus();
+      tabletClearBtn.style.opacity = '0';
+    });
+
+    tabletSearchInput?.addEventListener('input', () => {
+      tabletClearBtn.style.opacity = tabletSearchInput.value ? '1' : '0';
+      handleSearchInput(); // используем ту же функцию, что и везде
+    });
+  }
+
+  // Добавляем планшетный инпут в общий обработчик поиска
+  tabletSearchInput?.addEventListener('input', handleSearchInput);
+    // УЛУЧШЕНИЕ: на ноутбуках закрываем шторку по Esc и по клику вне контейнера
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && tabletSearchSheet?.classList.contains('active')) {
+      tabletSearchSheet.classList.remove('active');
+      document.body.style.overflow = '';
+      tabletSearchInput.value = '';
+      tabletClearBtn.style.opacity = '0';
+    }
+  });
+
+  // Закрытие по клику на бэкдроп (уже есть, но на всякий)
+  document.getElementById('tabletSearchBackdrop')?.addEventListener('click', () => {
+    tabletSearchSheet.classList.remove('active');
+    document.body.style.overflow = '';
+  });
 });

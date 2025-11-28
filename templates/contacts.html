@@ -134,7 +134,32 @@
   </div>
 
 </div>
+<!-- ПОЛНОЭКРАННАЯ ШТОРКА СВЕРХУ ДЛЯ НОУТБУКОВ — КАК НА МОБИЛКЕ, НО НА ВЕСЬ ЭКРАН -->
+<div class="tablet-search-full" id="tabletSearchSheet">
+  <!-- Бэкдроп -->
+  <div class="tablet-search-backdrop"></div>
 
+  <!-- Шапка с ← и строкой поиска -->
+  <div class="tablet-search-header-full">
+    <button class="tablet-search-back" id="closeTabletSearch">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <div class="tablet-search-input-wrapper-full">
+      <i class="fas fa-search"></i>
+      <input type="text" id="tabletSearchInput" placeholder="Поиск по каталогу..." autocomplete="off">
+      <button class="tablet-search-clear" id="tabletSearchClear">×</button>
+    </div>
+  </div>
+
+  <!-- Пустое состояние (как на мобиле) -->
+  <div class="tablet-search-empty" id="tabletEmptyState">
+    <i class="fas fa-search"></i>
+    <p>Начните вводить запрос...</p>
+  </div>
+
+  <!-- Результаты поиска -->
+  <div id="tabletAutocompleteList" class="tablet-autocomplete-list-full"></div>
+</div>
 <!-- НОВЫЙ МОБИЛЬНЫЙ ПОИСК — СВЕРХУ, КАК В WILDBERRIES 2025 -->
 <div class="mobile-search-top" id="mobileSearchTop">
   <div class="mobile-search-header">
@@ -892,5 +917,6 @@ if (window.matchMedia("(max-width: 1024px)").matches) {
   window.addEventListener('resize', update);
 }
 </script>
+
 </body>
 </html>

@@ -1,8 +1,7 @@
 // feedback.js — РИГА 28 НОЯБРЯ 2025 — ✅ ДВЕ ФОРМЫ РАБОТАЮТ!
 document.addEventListener('DOMContentLoaded', () => {
   console.clear();
-  console.log('%c🔥 ФИДБЕК — ДВЕ ФОРМЫ РАБОТАЮТ! 🔥', 'color: #ff6b35; font-size: 20px; font-weight: bold');
-
+ 
   // === ГЛОБАЛЬНЫЕ ЭЛЕМЕНТЫ ===
   const authAlert = document.getElementById('authAlert');
   
