@@ -862,7 +862,7 @@ if (window.matchMedia("(max-width: 1024px)").matches) {
 </script>
 
 <script>
-// СВАЙП ВЛЕВО ДЛЯ ЗАКРЫТИЯ ШТОРКИ — САМАЯ ПЛАВНАЯ ВЕРСИЯ (iOS 18 style)
+// СВАЙП ВЛЕВО ОТ ЛЮБОГО МЕСТА — РАБОТАЕТ КАК В TELEGRAM / INSTAGRAM / WILDBERRIES
 (() => {
   const sidebar = document.getElementById('mobileSidebar');
   if (!sidebar) return;
@@ -870,65 +870,63 @@ if (window.matchMedia("(max-width: 1024px)").matches) {
   let startX = 0;
   let currentX = 0;
   let isDragging = false;
-  const openClass = 'active';
+  let initialTransform = 0;
 
-  const close = () => {
-    sidebar.classList.remove(openClass);
+  const closeSidebar = () => {
+    sidebar.classList.remove('active');
     document.body.classList.remove('sidebar-open');
-    sidebar.style.transition = '';
-    sidebar.style.transform = '';
   };
 
-  const startDrag = (e) => {
-    if (!sidebar.classList.contains(openClass)) return;
+  sidebar.addEventListener('touchstart', (e) => {
+    if (!sidebar.classList.contains('active')) return;
 
-    // Свайп только с левого края (до 90px)
+    // Разрешаем свайп только влево (не вправо)
     startX = e.touches[0].clientX;
-    if (startX > 90) return;
-
-    isDragging = true;
     currentX = startX;
+    isDragging = true;
 
-    // Отключаем анимацию только на время свайпа
+    // Отключаем анимацию на время свайпа
     sidebar.style.transition = 'none';
-  };
+  }, { passive: true });
 
-  const moveDrag = (e) => {
+  sidebar.addEventListener('touchmove', (e) => {
     if (!isDragging) return;
-    e.preventDefault(); // важно! чтобы не скроллился фон
 
     currentX = e.touches[0].clientX;
     const diff = currentX - startX;
 
+    // Разрешаем только свайп влево
     if (diff < 0) {
+      e.preventDefault(); // критично! блокирует скролл страницы
       sidebar.style.transform = `translateX(${diff}px)`;
     }
-  };
+  }, { passive: false });
 
-  const endDrag = () => {
+  sidebar.addEventListener('touchend', () => {
     if (!isDragging) return;
     isDragging = false;
 
     const diff = currentX - startX;
 
-    // Восстанавливаем родную супер-плавную анимацию
+    // Восстанавливаем плавную анимацию
     sidebar.style.transition = 'transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1)';
 
-    // Если свайпнули хотя бы на 35% ширины экрана или >140px — закрываем
-    if (diff < -140 || diff < -0.35 * window.innerWidth) {
-      sidebar.style.transform = `translateX(-100%)`;
-      setTimeout(close, 400);
+    // Если свайпнули хотя бы на 100px влево — закрываем
+    if (diff < -100) {
+      sidebar.style.transform = 'translateX(-100%)';
+      setTimeout(closeSidebar, 400);
     } else {
-      // Возвращаем шторку на место — максимально плавно
+      // Возвращаем на место
       sidebar.style.transform = 'translateX(0)';
     }
-  };
+  });
 
-  // События
-  sidebar.addEventListener('touchstart', startDrag, { passive: true });
-  sidebar.addEventListener('touchmove', moveDrag, { passive: false });
-  sidebar.addEventListener('touchend', endDrag);
-  sidebar.addEventListener('touchcancel', endDrag); // на всякий случай
+  // На всякий случай — если палец ушёл за пределы
+  sidebar.addEventListener('touchcancel', () => {
+    isDragging = false;
+    sidebar.style.transition = 'transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1)';
+    sidebar.style.transform = 'translateX(0)';
+  });
 })();
 </script>
 </body>

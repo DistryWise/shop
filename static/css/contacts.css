@@ -3759,3 +3759,42 @@ html[data-theme="light"] .philosophy cite {
   }
 }
 
+/* БОКОВАЯ ШТОРКА — СВАЙП ВЛЕВО ОТ ЛЮБОГО МЕСТА */
+.mobile-sidebar {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 86vw;
+  max-width: 380px;
+  height: 100dvh;
+  background: var(--bg-primary, #111);
+  z-index: 9999;
+  transform: translateX(-100%);
+  transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain; /* важно! */
+}
+
+.mobile-sidebar.active {
+  transform: translateX(0) !important;
+}
+
+/* Тёмный бэкдроп (по желанию) */
+body.sidebar-open::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(10px);
+  z-index: 9998;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.35s ease;
+  pointer-events: none;
+}
+body.sidebar-open::before {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
+}
