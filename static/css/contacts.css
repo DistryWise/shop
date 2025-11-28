@@ -3400,159 +3400,151 @@ body.sheet-open {
 }
 
 /* ============================================= */
-/* 1. ДЕСКТОП — СЕТКА 3×N с БОЛЬШИМИ ОТСТУПАМИ   */
-/* ============================================= */
-/* ============================================= */
-/* TELEGRAM-КАРУСЕЛЬ 2025 — ФИНАЛЬНАЯ ВЕРСИЯ     */
-/* ПК: сетка 3×N | МОБИЛКА: одна фотка + 5 полосок */
+/* TELEGRAM-КАРУСЕЛЬ 2025 — БЕЗ СТРЕЛОК, С КРУТЫМ БАРОМ */
+/* ПК: сетка 3×N | МОБИЛКА: одна фотка + прогресс-бар снизу */
 /* ============================================= */
 
-/* ============================================= */
-/* TELEGRAM-КАРУСЕЛЬ 2025 — ТОЛЬКО МОБИЛКА + ПК */
-/* Одна маленькая фотка + 5 полосок снизу, без фона */
-/* ============================================= */
+.instagram-feed h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-weight: 700;
+  font-size: 1.8rem;
+}
 
-/* Десктоп — сетка 3×N */
+.insta-wrapper {
+  position: relative;
+  margin: 4rem 0;
+  padding: 0 16px;
+}
+
+/* ДЕСКТОП — красивая сетка 3×N */
 @media (min-width: 1025px) {
-  .insta-wrapper { margin: 6rem 0; padding: 0 8px; }
+  .insta-wrapper {
+    margin: 6rem 0;
+    padding: 0 8px;
+  }
   #instaCarousel {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+    gap: 20px;
   }
   .insta-slide {
     aspect-ratio: 1 / 1;
+    border-radius: 24px;
     overflow: hidden;
-    border-radius: 18px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+    transition: all 0.4s ease;
   }
   .insta-slide img {
-    width: 100%; height: 100%; object-fit: cover;
-    transition: transform .5s ease;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.7s ease;
   }
-  .insta-slide:hover img { transform: scale(1.09); }
+  .insta-slide:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 28px 60px rgba(0,0,0,0.35);
+  }
+  .insta-slide:hover img {
+    transform: scale(1.15);
+  }
   .insta-bottom-ui { display: none !important; }
 }
 
-/* МОБИЛЬНАЯ ВЕРСИЯ — одна фотка + 5 полосок */
+/* МОБИЛЬНАЯ ВЕРСИЯ — ОДНА ФОТКА + КРУТОЙ ПРОГРЕСС-БАР */
 @media (max-width: 1024px) {
-
-  .instagram-feed h2 {
-    font-size: 2.8rem !important;
-    text-align: center;
-    margin-bottom: 2.5rem;
-  }
-
-  /* Полностью убираем любой фон */
-  .insta-wrapper {
-    width: 100%;
-    padding: 30px 0 160px 0;           /* место под бар + safe-area */
-    background: transparent !important;
-    overflow: hidden;
-  }
-
-  /* Карусель */
   #instaCarousel {
     display: flex;
-    scroll-snap-type: x mandatory;
     overflow-x: auto;
-    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding: 0;
+    scroll-behavior: smooth;
+    padding: 0 8px 40px 8px;
   }
   #instaCarousel::-webkit-scrollbar { display: none; }
 
-  /* Одна фотка по центру, без фона*/
   .insta-slide {
-    flex: 0 0 100vw;                   /* занимает всю ширину экрана */
-    height: 100vh;
+    flex: 0 0 100%;
+    width: 100%;
+    aspect-ratio: 1 / 1;
     scroll-snap-align: center;
-    position: relative;
-    background: transparent !important;   /* УБИРАЕТ ЛЮБОЙ ФОН*/
   }
-
-  .insta-slide::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: transparent !important;
-    z-index: 1;
+  .insta-slide a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 26px;
+    overflow: hidden;
+    box-shadow: 0 16px 50px rgba(0,0,0,0.45);
   }
-
   .insta-slide img {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 86vw;
-    max-width: 400px;
-    height: 72vh;
-    max-height: 72vh;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    border-radius: 28px;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
-    z-index: 2;
+    border-radius: 26px;
   }
 
-  /* 5 ПОЛОСОК — ВСЕГДА ВИДНЫ СНИЗУ */
+  /* КРУТОЙ ПРОГРЕСС-БАР СНИЗУ — КАК В INSTAGRAM STORIES 2025 */
   .insta-bottom-ui {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 20px 40px calc(20px + env(safe-area-inset-bottom));
-    background: linear-gradient(transparent, rgba(0,0,0,0.92));
-    z-index: 9999;
-    pointer-events: none;
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 40px;
+    z-index: 10;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
   }
 
-  #progressBar {
+  .insta-progress {
     display: flex;
     gap: 9px;
-    justify-content: center;
   }
 
-  #progressBar > div {
-    flex: 1;
-    max-width: 80px;
-    height: 3.5px;
-    background: rgba(255,255,255,0.35);
+  .insta-progress > div {
+    width: 44px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.35);
     border-radius: 3px;
     overflow: hidden;
+    position: relative;
   }
 
-  #progressBar > div > div {
+  .insta-progress > div::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 0%;
     height: 100%;
-    width: 0;
-    background: #fff;
+    background: #ffffff;
     border-radius: 3px;
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.7);
   }
 
-  #progressBar > div.active > div {
-    animation: fill 6s linear forwards;
+  .insta-progress > div.active::before {
+    width: 100%;
   }
 
-  @keyframes fill {
-    from { width: 0; }
-    to   { width: 100%; }
+  /* СВЕТЛАЯ ТЕМА — БАР */
+  [data-theme="light"] .insta-bottom-ui {
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 10px 35px rgba(0,0,0,0.15);
   }
-
-  /* Скрываем превьюшки — тебе нужны только полоски */
-  #thumbs { display: none !important; }
-
-  /* iPhone SE и старые узкие экраны */
-  @media (max-width: 380px) {
-    .insta-slide img {
-      width: 84vw;
-      height: 68vh;
-      border-radius: 26px;
-    }
-    #progressBar > div { max-width: 65px; }
+  [data-theme="light"] .insta-progress > div {
+    background: rgba(0, 0, 0, 0.2);
+  }
+  [data-theme="light"] .insta-progress > div::before {
+    background: #000000;
+    box-shadow: 0 0 14px rgba(0,0,0,0.4);
   }
 }
-
-
 /* ================================================= */
 /* ФИКС ЦИТАТЫ — ТОЛЬКО НА МОБИЛЬНЫХ (≤1023px)      */
 /* На десктопе — всё остаётся как было изначально   */

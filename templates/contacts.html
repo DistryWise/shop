@@ -438,35 +438,29 @@
 <div class="instagram-feed">
   <h2>TELEGRAM</h2>
 
-  <!-- ЭТОТ НОВЫЙ КОНТЕЙНЕР — ГЛАВНОЕ ИЗМЕНЕНИЕ -->
   <div class="insta-wrapper">
     <div class="insta-carousel" id="instaCarousel">
-      <a href="https://t.me/..." class="insta-slide">
-        <img src="/static/assets/b2b.jpg" loading="lazy">
-      </a>
-      <a href="https://t.me/..." class="insta-slide">
-        <img src="/static/insta/2.jpg" loading="lazy">
-      </a>
-      <a href="https://t.me/..." class="insta-slide">
-        <img src="/static/insta/3.jpg" loading="lazy">
-      </a>
-      <a href="https://t.me/..." class="insta-slide">
-        <img src="/static/insta/4.jpg" loading="lazy">
-      </a>
-      <a href="https://t.me/..." class="insta-slide">
-        <img src="/static/insta/5.jpg" loading="lazy">
-      </a>
-      <a href="https://t.me/..." class="insta-slide">
-        <img src="/static/insta/6.jpg" loading="lazy">
-      </a>
+      <a href="https://t.me/..." class="insta-slide"><img src="/static/assets/b2b.jpg" loading="lazy" alt=""></a>
+      <a href="https://t.me/..." class="insta-slide"><img src="/static/insta/2.jpg" loading="lazy" alt=""></a>
+      <a href="https://t.me/..." class="insta-slide"><img src="/static/insta/3.jpg" loading="lazy" alt=""></a>
+      <a href="https://t.me/..." class="insta-slide"><img src="/static/insta/4.jpg" loading="lazy" alt=""></a>
+      <a href="https://t.me/..." class="insta-slide"><img src="/static/insta/5.jpg" loading="lazy" alt=""></a>
+      <a href="https://t.me/..." class="insta-slide"><img src="/static/insta/6.jpg" loading="lazy" alt=""></a>
     </div>
 
-    <!-- Прогресс-бар + превьюшки — теперь внутри общего контейнера -->
+    <!-- Только бар — без стрелок -->
     <div class="insta-bottom-ui">
-      <div class="insta-progress" id="progressBar"></div>
-      <div class="insta-thumbs" id="thumbs"></div>
+      <div class="insta-progress">
+        <div><div></div></div>
+        <div><div></div></div>
+        <div><div></div></div>
+        <div><div></div></div>
+        <div><div></div></div>
+        <div><div></div></div>
+      </div>
     </div>
   </div>
+</div>
 </div>
 </section>
     <div class="newsletter"><h2>SUBSCRIBE</h2><p>Получайте первые новости о новых товарах и услугах.</p>
@@ -796,108 +790,33 @@ document.addEventListener('click', (e) => {
 </script>
 
 <script>
-if (window.matchMedia("(max-width: 1024px)").matches) {
-  const carousel   = document.getElementById('instaCarousel');
-  const progress   = document.getElementById('progressBar');
-  const thumbs     = document.getElementById('thumbs');
-  const slides     = carousel.children;
-  let current      = 0;
-  let timer        = null;
-
-  // Создаём прогресс-бар и превьюшки
-  for (let i = 0; i < slides.length; i++) {
-    progress.innerHTML += '<div><div></div></div>';
-    thumbs.innerHTML   += `<img src="${slides[i].querySelector('img').src}" loading="lazy">`;
-  }
-
-  const bars      = progress.querySelectorAll('div > div');
-  const thumbImgs = thumbs.querySelectorAll('img');
-
-  const goTo = (i) => {
-    carousel.scrollTo({ left: i * innerWidth, behavior: 'smooth' });
-    current = i;
-
-    // прогресс-бар
-    bars.forEach((bar, j) => {
-      const segment = bar.parentNode;
-      segment.classList.toggle('active', j === i);
-      if (j < i) bar.style.width = '100%';
-      if (j === i) bar.style.width = '0%';
-      if (j > i) bar.style.width = '0';
-    });
-
-    // превьюшки
-    thumbImgs.forEach((t, j) => t.classList.toggle('active', j === i));
-  };
-
-  const next = () => goTo((current + 1) % slides.length);
-
-  const startAuto = () => {
-    clearTimeout(timer);
-    timer = setTimeout(next, 6000); // 6 секунд
-  };
-
-  // при окончании скролла (свайп/тап)
-  carousel.addEventListener('scrollend', () => {
-    current = Math.round(carousel.scrollLeft / innerWidth);
-    bars.forEach((b, j) => b.parentNode.classList.toggle('active', j === current));
-    thumbImgs.forEach((t, j) => t.classList.toggle('active', j === current));
-    startAuto();
-  });
-
-  // тап по фото = следующее
-  carousel.addEventListener('click', next);
-
-  // стартовая инициализация
-  bars[0].parentNode.classList.add('active');
-  thumbImgs[0].classList.add('active');
-  startAuto();
-
-  // пауза при уходе со вкладки
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) clearTimeout(timer);
-    else startAuto();
-  });
-}
-</script>
-
-<script>
-// СВАЙП ВЛЕВО ОТ ЛЮБОГО МЕСТА — РАБОТАЕТ КАК В TELEGRAM / INSTAGRAM / WILDBERRIES
+// СВАЙП ВЛЕВО — МОМЕНТАЛЬНОЕ ЗАКРЫТИЕ (Telegram / Wildberries 2025 стиль)
 (() => {
   const sidebar = document.getElementById('mobileSidebar');
   if (!sidebar) return;
 
   let startX = 0;
-  let currentX = 0;
   let isDragging = false;
-  let initialTransform = 0;
 
-  const closeSidebar = () => {
+  const close = () => {
     sidebar.classList.remove('active');
     document.body.classList.remove('sidebar-open');
   };
 
   sidebar.addEventListener('touchstart', (e) => {
     if (!sidebar.classList.contains('active')) return;
-
-    // Разрешаем свайп только влево (не вправо)
     startX = e.touches[0].clientX;
-    currentX = startX;
     isDragging = true;
-
-    // Отключаем анимацию на время свайпа
-    sidebar.style.transition = 'none';
+    sidebar.style.transition = 'none'; // мгновенно реагирует на палец
   }, { passive: true });
 
   sidebar.addEventListener('touchmove', (e) => {
     if (!isDragging) return;
-
-    currentX = e.touches[0].clientX;
+    const currentX = e.touches[0].clientX;
     const diff = currentX - startX;
 
-    // Разрешаем только свайп влево
     if (diff < 0) {
-      e.preventDefault(); // критично! блокирует скролл страницы
+      e.preventDefault();
       sidebar.style.transform = `translateX(${diff}px)`;
     }
   }, { passive: false });
@@ -906,28 +825,71 @@ if (window.matchMedia("(max-width: 1024px)").matches) {
     if (!isDragging) return;
     isDragging = false;
 
-    const diff = currentX - startX;
+    const diff = parseFloat(getComputedStyle(sidebar).transform.split(',')[4] || 0);
 
-    // Восстанавливаем плавную анимацию
-    sidebar.style.transition = 'transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1)';
-
-    // Если свайпнули хотя бы на 100px влево — закрываем
-    if (diff < -100) {
+    if (diff < -80) {
+      // МОМЕНТАЛЬНО убираем шторку
+      sidebar.style.transition = 'transform 0.15s ease-out';
       sidebar.style.transform = 'translateX(-100%)';
-      setTimeout(closeSidebar, 400);
+      // Сразу убираем классы — без ожидания анимации
+      requestAnimationFrame(() => {
+        close();
+        sidebar.style.transition = '';
+        sidebar.style.transform = '';
+      });
     } else {
-      // Возвращаем на место
+      // Возврат на место — тоже быстро и красиво
+      sidebar.style.transition = 'transform 0.22s cubic-bezier(0.2, 0.8, 0.4, 1)';
       sidebar.style.transform = 'translateX(0)';
     }
   });
-
-  // На всякий случай — если палец ушёл за пределы
-  sidebar.addEventListener('touchcancel', () => {
-    isDragging = false;
-    sidebar.style.transition = 'transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1)';
-    sidebar.style.transform = 'translateX(0)';
-  });
 })();
+</script>
+<script>
+if (window.matchMedia("(max-width: 1024px)").matches) {
+  const carousel = document.getElementById('instaCarousel');
+  const bars = document.querySelectorAll('.insta-progress > div');
+  let currentIndex = 0;
+
+  const updateProgress = () => {
+    const scrollLeft = carousel.scrollLeft;
+    const width = carousel.clientWidth;
+    const newIndex = Math.round(scrollLeft / width);
+
+    if (newIndex !== currentIndex && newIndex >= 0 && newIndex < bars.length) {
+      currentIndex = newIndex;
+      bars.forEach((bar, i) => {
+        bar.classList.toggle('active', i === currentIndex);
+      });
+    }
+  };
+
+  // Обновляем при скролле (с дебаунсом)
+  let scrollTimeout;
+  carousel.addEventListener('scroll', () => {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(updateProgress, 50);
+  });
+
+  // При загрузке и ресайзе
+  updateProgress();
+  window.addEventListener('resize', updateProgress);
+
+  // Самый точный метод — IntersectionObserver
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const index = Array.from(carousel.children).indexOf(entry.target.parentElement);
+        if (index !== currentIndex) {
+          currentIndex = index;
+          bars.forEach((bar, i) => bar.classList.toggle('active', i === index));
+        }
+      }
+    });
+  }, { root: carousel, threshold: 0.6 });
+
+  carousel.querySelectorAll('.insta-slide').forEach(slide => observer.observe(slide));
+}
 </script>
 </body>
 </html>
