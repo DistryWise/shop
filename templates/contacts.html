@@ -438,31 +438,34 @@
 <div class="instagram-feed">
   <h2>TELEGRAM</h2>
 
-  <div class="insta-carousel" id="instaCarousel">
-    <a href="https://t.me/..." class="insta-slide">
-      <img src="/static/assets/b2b.jpg" loading="lazy">
-    </a>
-    <a href="https://t.me/..." class="insta-slide">
-      <img src="/static/insta/2.jpg" loading="lazy">
-    </a>
-    <a href="https://t.me/..." class="insta-slide">
-      <img src="/static/insta/3.jpg" loading="lazy">
-    </a>
-    <a href="https://t.me/..." class="insta-slide">
-      <img src="/static/insta/4.jpg" loading="lazy">
-    </a>
-    <a href="https://t.me/..." class="insta-slide">
-      <img src="/static/insta/5.jpg" loading="lazy">
-    </a>
-    <a href="https://t.me/..." class="insta-slide">
-      <img src="/static/insta/6.jpg" loading="lazy">
-    </a>
-  </div>
+  <!-- ЭТОТ НОВЫЙ КОНТЕЙНЕР — ГЛАВНОЕ ИЗМЕНЕНИЕ -->
+  <div class="insta-wrapper">
+    <div class="insta-carousel" id="instaCarousel">
+      <a href="https://t.me/..." class="insta-slide">
+        <img src="/static/assets/b2b.jpg" loading="lazy">
+      </a>
+      <a href="https://t.me/..." class="insta-slide">
+        <img src="/static/insta/2.jpg" loading="lazy">
+      </a>
+      <a href="https://t.me/..." class="insta-slide">
+        <img src="/static/insta/3.jpg" loading="lazy">
+      </a>
+      <a href="https://t.me/..." class="insta-slide">
+        <img src="/static/insta/4.jpg" loading="lazy">
+      </a>
+      <a href="https://t.me/..." class="insta-slide">
+        <img src="/static/insta/5.jpg" loading="lazy">
+      </a>
+      <a href="https://t.me/..." class="insta-slide">
+        <img src="/static/insta/6.jpg" loading="lazy">
+      </a>
+    </div>
 
-  <!-- Прогресс-бар + превьюшки снизу -->
-  <div class="insta-bottom-ui">
-    <div class="insta-progress" id="progressBar"></div>
-    <div class="insta-thumbs" id="thumbs"></div>
+    <!-- Прогресс-бар + превьюшки — теперь внутри общего контейнера -->
+    <div class="insta-bottom-ui">
+      <div class="insta-progress" id="progressBar"></div>
+      <div class="insta-thumbs" id="thumbs"></div>
+    </div>
   </div>
 </div>
 </section>

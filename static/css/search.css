@@ -865,6 +865,7 @@ html[data-theme="light"] .product-modal::-webkit-scrollbar {
   right: 0;
   bottom: 0;
   background: var(--bg-primary, #fff);
+
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   display: none;
@@ -1062,4 +1063,123 @@ html[data-theme="dark"] .autocomplete-item:active {
     height: 34px;
     font-size: 16px;
   }
+}
+/* ===================================================== */
+/* МОБИЛЬНЫЙ ПОИСК — ПОЛНОСТЬЮ НЕПРОЗРАЧНАЯ ШТОРКА 2025 */
+/* Чёрная в тёмной теме, белая в светлой — как в нативных приложениях */
+/* ===================================================== */
+
+.mobile-search-top,
+.mobile-search-results {
+  background: #000 !important;                    /* по умолчанию тёмная */
+  backdrop-filter: none !important;                /* УБИРАЕМ размытие полностью */
+  -webkit-backdrop-filter: none !important;
+  transition: background 0.35s ease;
+}
+
+/* Светлая тема — чисто белый фон */
+html[data-theme="light"] .mobile-search-top,
+html[data-theme="light"] .mobile-search-results {
+  background: #fff !important;
+}
+
+/* Дополнительно: убираем полупрозрачность у всех детей, если где-то переопределена */
+.mobile-search-top *,
+.mobile-search-results * {
+  background: transparent !important;
+}
+
+/* Нижний бар оставляем с размытием (он должен быть "стеклянным", как у Apple) */
+.mobile-bottom-bar {
+  background: rgba(28,28,30,0.92) !important;      /* тёмная */
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+html[data-theme="light"] .mobile-bottom-bar {
+  background: rgba(255,255,255,0.92) !important;
+}
+
+/* Убираем старый border, он больше не нужен */
+.mobile-search-top,
+.mobile-search-results,
+.mobile-bottom-bar {
+  border: none !important;
+}
+
+/* Плавный переход при смене темы (если юзер переключает тему с открытым поиском) */
+@media (prefers-color-scheme: dark),
+html[data-theme="dark"] {
+  .mobile-search-top,
+  .mobile-search-results {
+    background: #000 !important;
+  }
+}
+
+@media (prefers-color-scheme: light),
+html[data-theme="light"] {
+  .mobile-search-top,
+  .mobile-search-results {
+    background: #fff !important;
+  }
+}
+
+/* ===================================================== */
+/* МОБИЛЬНЫЙ ПОИСК — ЧИТАЕМЫЙ ТЕКСТ В ТЕМНОЙ ТЕМЕ */
+/* ===================================================== */
+
+/* Тёмная тема — белый текст в строке поиска */
+html[data-theme="dark"] .mobile-search-input,
+html[data-theme="dark"] .mobile-search-input::placeholder {
+  color: #ffffff !important;
+}
+
+/* Если где-то остался серый placeholder — делаем его тоже белым и чуть прозрачным */
+html[data-theme="dark"] .mobile-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.65) !important;
+  opacity: 1;
+}
+
+/* Иконка лупы и крестик — тоже белые */
+html[data-theme="dark"] .mobile-search-input-wrapper i,
+html[data-theme="dark"] .mobile-search-clear {
+  color: #ffffff !important;
+}
+
+/* Фон крестика очистки — тёмно-серый, чтобы был виден */
+html[data-theme="dark"] .mobile-search-clear {
+  background: rgba(255, 255, 255, 0.25) !important;
+}
+
+html[data-theme="dark"] .mobile-search-clear:hover,
+html[data-theme="dark"] .mobile-search-clear:active {
+  background: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Результаты поиска — текст тоже должен быть белым */
+html[data-theme="dark"] .item-title,
+html[data-theme="dark"] .item-type,
+html[data-theme="dark"] .autocomplete-item small,
+html[data-theme="dark"] .search-empty-state {
+  color: #ffffff !important;
+}
+
+html[data-theme="dark"] .item-type {
+  color: #999999 !important;
+}
+
+html[data-theme="dark"] .search-empty-state {
+  color: #888888 !important;
+}
+
+/* Светлая тема — чёрный текст (на всякий случай, чтобы не сломалось) */
+html[data-theme="light"] .mobile-search-input,
+html[data-theme="light"] .mobile-search-input::placeholder,
+html[data-theme="light"] .item-title,
+html[data-theme="light"] small {
+  color: #000000 !important;
+}
+
+html[data-theme="light"] .mobile-search-input::placeholder {
+  color: #8e8e93 !important;
 }

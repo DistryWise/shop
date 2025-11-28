@@ -522,30 +522,68 @@ const updateMobileAuthBtn = () => {
   checkSession();
 
   // === ТОСТЫ ===
-  function showToast(title, msg = '', error = false) {
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
-      background: ${error ? 'rgba(255,107,107,0.94)' : 'rgba(255,255,255,0.96)'};
-      color: ${error ? '#fff' : '#000'};
-      padding: 1.2rem 2.4rem; border-radius: 20px; z-index: 99999;
-      font-weight: 700; font-size: 1.1rem; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-      backdrop-filter: blur(15px); border: 1.5px solid rgba(255,255,255,0.15);
-      animation: toastPop 0.6s cubic-bezier(0.22,1,0.36,1);
-    `;
-    toast.innerHTML = `${title}${msg ? '<br><small style="font-weight:500;opacity:0.85;">' + msg + '</small>' : ''}`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3500);
-  }
+ function showToast(title, msg = '', error = false) {
+  // Определяем текущую тему
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+                 document.body.classList.contains('dark');
 
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes toastPop {
-      0% { transform: translateX(-50%) translateY(40px) scale(0.85); opacity: 0; }
-      100% { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
-    }
+  // Цвета под каждую тему
+  const colors = {
+    bg: error 
+      ? 'rgba(255, 107, 107, 0.96)'                                 // красный для ошибок — одинаковый везде
+      : isDark 
+        ? 'rgba(35, 35, 40, 0.97)'                                 // тёмный фон в тёмной теме
+        : 'rgba(255, 255, 255, 0.97)',                             // белый фон в светлой теме
+
+    text: error 
+      ? '#ffffff'                                                  // белый текст на ошибке
+      : isDark 
+        ? '#ffffff'                                                // белый текст в тёмной теме
+        : '#000000',                                               // чёрный текст в светлой теме
+
+    border: isDark 
+      ? 'rgba(255, 255, 255, 0.18)' 
+      : 'rgba(0, 0, 0, 0.12)'
+  };
+
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: ${colors.bg};
+    color: ${colors.text};
+    padding: 1.2rem 2.6rem;
+    border-radius: 20px;
+    border: 1.5px solid ${colors.border};
+    z-index: 99999;
+    font-weight: 700;
+    font-size: 1.1rem;
+    box-shadow: 0 20px 50px rgba(0,0,0,${isDark ? '0.6' : '0.35'});
+    backdrop-filter: blur(16px);
+    animation: toastPop 0.6s cubic-bezier(0.22,1,0.36,1);
+    max-width: 90vw;
+    text-align: center;
+    line-height: 1.4;
   `;
-  document.head.appendChild(style);
+
+  toast.innerHTML = `
+    ${title}
+    ${msg ? `<br><small style="font-weight:500; opacity:0.88; font-size:0.95rem;">${msg}</small>` : ''}
+  `;
+
+  document.body.appendChild(toast);
+
+  // Автоудаление
+  setTimeout(() => {
+    toast.style.transition = 'all 0.4s ease';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(20px) scale(0.9)';
+    setTimeout(() => toast.remove(), 400);
+  }, 3200);
+}
+
 
   // === ESC ===
   document.addEventListener('keydown', (e) => {
