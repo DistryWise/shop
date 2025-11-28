@@ -1,9 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   const $ = (id) => document.getElementById(id);
   
-
-
-
   let currentUser = null;  // ← ЭТО ВНЕ DOMContentLoaded!
   let isSubmitting = false;
 
@@ -159,6 +156,7 @@ updateSendBtnState();
 
         localStorage.removeItem(SAVED_PHONE_KEY);
         updateAuthBtn();
+        
         setTimeout(closeModalFunc, 1800);
 
         if (document.getElementById('subsBody')) {
@@ -428,7 +426,19 @@ authBtnFresh.innerHTML = `
       sendCodeBtn.textContent = 'Получить код';
     }
   });
-
+const updateMobileAuthBtn = () => {
+  if (!mobileAuthBtn) return;
+  
+  if (currentUser) {
+    const emojis = ['😊','😎','😍','🤩','😇','😋','🤔','😴','🥳','🤗','🤪','😏','🐱','🐶','🦊','🐼','🦁','🐸','🐵','🤖','👻','🎃','💩','🦄','😀','😂','🤣','🤠','🤡','👽','🥷','🦸','🧙','🕵️'];
+    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+    mobileAuthBtn.innerHTML = `<div class="live-emoji">${randomEmoji}</div>`;
+    mobileAuthBtn.classList.add('logged-in');
+  } else {
+    mobileAuthBtn.innerHTML = `<i class="fas fa-user"></i>`;
+    mobileAuthBtn.classList.remove('logged-in');
+  }
+};
 
   // Таймер повторной отправки
   const startResendTimer = () => {
@@ -501,6 +511,7 @@ authBtnFresh.innerHTML = `
         sessionStorage.setItem('is_admin', data.is_admin);
         
         updateAuthBtn();
+        updateMobileAuthBtn();
       }
     } catch {}
   };
@@ -605,6 +616,7 @@ const logout = async () => {
       if (codeInput) codeInput.value = '';
 
       updateAuthBtn();
+      updateMobileAuthBtn();
       window.dispatchEvent(new Event('storage'));
       window.dispatchEvent(new CustomEvent('authChanged', { detail: { authenticated: false } }));
 
@@ -647,6 +659,14 @@ const logout = async () => {
       if (authBtn) authBtn.click();
     }
   });
+    // === МОБИЛЬНАЯ КНОПКА АВТОРИЗАЦИИ — работает точно как десктопная (как в поиске) ===
+  const mobileAuthBtn = $('mobileAuthBtn');
+  if (mobileAuthBtn) {
+    mobileAuthBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      currentUser ? window.logout() : openModalWithState();
+    });
+  }
 });
 
 

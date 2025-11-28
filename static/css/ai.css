@@ -335,3 +335,65 @@ html[data-theme="light"] .ai-chat-input button:hover {
 html[data-theme="light"] .ai-chat-input button:active {
   transform: translateY(0) scale(1.02) !important;
 }
+
+
+@media (max-width: 1023px) {
+
+  /* Замени на точный ID/класс твоего окна чата — скорее всего один из этих: */
+  #aiChatModal,
+  .ai-chat-modal,
+  .ai-chat-window,
+  #aiAssistantModal,
+  .ai-modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100dvh !important;          /* полная высота с учётом safe-area */
+    max-height: none !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left) !important;
+    border-radius: 0 !important;        /* убираем все закругления */
+    transform: none !important;
+    box-sizing: border-box;
+  }
+
+  /* Возвращаем красивые закруглённые углы ТОЛЬКО сверху */
+  #aiChatModal::before,
+  .ai-chat-modal::before,
+  .ai-chat-window::before,
+  #aiAssistantModal::before,
+  .ai-modal::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 38px;
+    background: inherit;
+    border-radius: 28px 28px 0 0;        /* только верхние углы */
+    z-index: -1;
+  }
+
+
+  /* Анимация появления — смахивание снизу (как у всех крутых чатов 2025) */
+  #aiChatModal,
+  .ai-chat-modal,
+  .ai-chat-window {
+    transform: translateY(100%) !important;
+    transition: transform 0.58s cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+  }
+
+  #aiChatModal.show,
+  .ai-chat-modal.show,
+  .ai-chat-window.show {
+    transform: translateY(0) !important;
+  }
+}
+
+/* Светлая тема — ничего не ломается */
+html[data-theme="light"] #aiChatModal,
+html[data-theme="light"] .ai-chat-modal {
+  background: rgba(255,255,255,0.98) !important;
+}

@@ -1,5 +1,75 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // ==================== МОБИЛЬНЫЙ ПОИСК — ШТОРКА СВЕРХУ ====================
+  const mobileSearchBtn     = document.getElementById('mobileSearchBtn');
+  const mobileSearchTop     = document.getElementById('mobileSearchTop');
+  const mobileSearchResults = document.getElementById('mobileSearchResults');
+  const mobileSearchInput   = document.getElementById('mobileSearchInput');
+  const mobileAutocomplete  = document.getElementById('mobileAutocompleteList');
+  const mobileEmptyState    = document.getElementById('mobileEmptyState');
+  const mobileClearBtn      = document.getElementById('mobileSearchClear');
+
+  if (mobileSearchBtn && mobileSearchTop) {
+    // Открытие шторки
+    mobileSearchBtn.addEventListener('click', () => {
+      mobileSearchTop.classList.add('active');
+      mobileSearchResults.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => mobileSearchInput?.focus(), 400);
+      mobileEmptyState.style.display = 'block';
+      mobileAutocomplete.innerHTML = '';
+    });
+
+    // Закрытие по стрелке назад
+    document.getElementById('closeMobileSearchTop')?.addEventListener('click', () => {
+      mobileSearchTop.classList.remove('active');
+      mobileSearchInput.value = '';
+      mobileClearBtn.style.opacity = '0';
+      document.body.style.overflow = '';
+      setTimeout(() => mobileSearchResults.style.display = 'none', 600);
+    });
+
+    // Очистка поля
+    mobileClearBtn?.addEventListener('click', () => {
+      mobileSearchInput.value = '';
+      mobileSearchInput.focus();
+      mobileClearBtn.style.opacity = '0';
+      mobileEmptyState.style.display = 'block';
+      mobileAutocomplete.innerHTML = '';
+    });
+
+    // Крестик при вводе
+    mobileSearchInput?.addEventListener('input', () => {
+      mobileClearBtn.style.opacity = mobileSearchInput.value ? '1' : '0';
+    });
+
+    // Закрытие по клику вне и Esc
+    document.addEventListener('click', e => {
+      if (mobileSearchTop.classList.contains('active') &&
+          !e.target.closest('#mobileSearchTop') &&
+          !e.target.closest('#mobileSearchBtn')) {
+        mobileSearchTop.classList.remove('active');
+        mobileSearchInput.value = '';
+        mobileClearBtn.style.opacity = '0';
+        document.body.style.overflow = '';
+        setTimeout(() => mobileSearchResults.style.display = 'none', 600);
+      }
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && mobileSearchTop.classList.contains('active')) {
+        mobileSearchTop.classList.remove('active');
+        document.body.style.overflow = '';
+        setTimeout(() => mobileSearchResults.style.display = 'none', 600);
+      }
+    });
+  }
+  // =====================================================================
   const $ = (id) => document.getElementById(id);
+
+  const isMobileDevice = () => window.innerWidth <= 768;
+  window.addEventListener('resize', () => {
+  // ничего не делаем — просто обновляем значение при смене ориентации
+});
 
   // === НОВАЯ СТРУКТУРА ИЗ BIN.CSS ===
   const searchContainer = document.querySelector('.search-container');
@@ -59,18 +129,28 @@ searchContainer.addEventListener('mouseleave', () => {
 });
 
   // === ВВОД ===
-searchInput.addEventListener('input', () => {
-  clearTimeout(searchTimeout);
-  const query = searchInput.value.trim();
+const handleSearchInput = () => {
+    clearTimeout(searchTimeout);
+    const query = (isMobileDevice() ? mobileSearchInput?.value : searchInput.value)?.trim() || '';
 
-  // КРЕСТИК МЁРТВ — НИКАКИХ СЛЕДОВ
-  if (!query) {
-    autocompleteList.classList.remove('active');
-    return;
+    if (!query) {
+      if (!isMobileDevice()) {
+        autocompleteList.classList.remove('active');
+      } else if (mobileAutocomplete) {
+        mobileAutocomplete.innerHTML = '';
+        mobileEmptyState.style.display = 'block';
+      }
+      return;
+    }
+
+    searchTimeout = setTimeout(() => fetchSuggestions(query), 180);
+  };
+
+  // Привязываем к обоим инпутам
+  searchInput.addEventListener('input', handleSearchInput);
+  if (mobileSearchInput) {
+    mobileSearchInput.addEventListener('input', handleSearchInput);
   }
-
-  searchTimeout = setTimeout(() => fetchSuggestions(query), 200);
-});
 
 
   // === КЛИК ВНЕ ===
@@ -106,8 +186,14 @@ const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const fetchSuggestions = async (query) => {
   if (!query.trim()) {
     autocompleteList.classList.remove('active');
+    if (mobileAutocomplete) {
+      mobileAutocomplete.innerHTML = '';
+      mobileEmptyState.style.display = 'block';
+    }
     return;
   }
+
+  if (mobileEmptyState) mobileEmptyState.style.display = 'none';
 
   try {
     const [prodRes, servRes] = await Promise.all([
@@ -119,47 +205,47 @@ const fetchSuggestions = async (query) => {
     const services = servRes.ok ? await servRes.json() : [];
 
     const all = [
-      ...products.map(p => ({
-        id: p.id,
-        title: p.title,
-        price_str: p.price_str || formatPrice(p.price_cents || p.price),
-        image_url: p.image_urls?.[0] || p.image_url || '/static/assets/no-image.png',
-        type: 'product'
-      })),
-      ...services.map(s => ({
-        id: s.id,
-        title: s.title,
-        price_str: s.price_str || formatPrice(s.price_cents || s.price),
-        image_url: s.image_urls?.[0] || '/static/assets/no-image.png',
-        type: 'service'
-      }))
-    ].slice(0, 6);
+      ...products.map(p => ({ ...p, type: 'product' })),
+      ...services.map(s => ({ ...s, type: 'service' }))
+    ].slice(0, 10);
 
-    autocompleteList.innerHTML = all.length === 0
-      ? `<div class="autocomplete-empty">Ничего не найдено</div>`
+    const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const highlight = (text) => text.replace(new RegExp(`(${escapeRegExp(query)})`, 'gi'), '<strong>$1</strong>');
+
+    const html = all.length === 0
+      ? `<div style="text-align:center;padding:80px;color:#888;">Ничего не найдено</div>`
       : all.map(item => `
           <div class="autocomplete-item" onclick="selectAutocomplete(${item.id}, '${item.type}')">
-            <img src="${item.image_url}" onerror="this.src='/static/assets/no-image.png'">
+            <img src="${item.image_urls?.[0] || item.image_url || '/static/assets/no-image.png'}"
+                 onerror="this.src='/static/assets/no-image.png'" loading="lazy">
             <div class="item-info">
-              <div class="item-title">${item.title.replace(
-                new RegExp(`(${escapeRegExp(query)})`, 'gi'),
-                '<strong>$1</strong>'
-              )}</div>
+              <div class="item-title">${highlight(item.title)}</div>
               <div class="item-type">${item.type === 'product' ? 'Товар' : 'Услуга'}</div>
             </div>
-            <small>${item.price_str}</small>
-            <div class="autocomplete-add" 
-                 onclick="event.stopPropagation(); addToCart(${item.id}, '${item.type}')">
+            <small>${formatPrice(item.price_str || item.price_cents || item.price)}</small>
+            <div class="autocomplete-add" onclick="event.stopPropagation(); addToCart(${item.id}, '${item.type}')">
               <i class="fas fa-plus"></i>
             </div>
           </div>
         `).join('');
 
-    autocompleteList.classList.add('active');
+    // Выводим в нужный список
+    if (isMobileDevice() && mobileAutocomplete) {
+      mobileAutocomplete.innerHTML = html;
+    } else {
+      autocompleteList.innerHTML = html;
+      autocompleteList.classList.add('active');
+    }
+
   } catch (e) {
     console.error('Ошибка поиска:', e);
-    autocompleteList.innerHTML = `<div class="autocomplete-empty">Ошибка сервера</div>`;
-    autocompleteList.classList.add('active');
+    const err = `<div style="text-align:center;padding:80px;color:#ff3b30;">Ошибка сервера</div>`;
+    if (isMobileDevice() && mobileAutocomplete) {
+      mobileAutocomplete.innerHTML = err;
+    } else {
+      autocompleteList.innerHTML = err;
+      autocompleteList.classList.add('active');
+    }
   }
 };
 

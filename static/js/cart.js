@@ -16,14 +16,24 @@ const setCartBlockedUntil = (time) => sessionStorage.setItem('cartBlockedUntil',
 
     // === ЭЛЕМЕНТЫ ===
     const elements = {
-        cartBtn: $('cartBtn'),
-        cartCount: $('cartCount'),
-        cartModal: $('cartModal'),
-        miniCartItems: $('miniCartItems'),
-        miniCartTotal: $('miniCartTotal'),
-        closeCartModal: $('closeCartModal'),
-        goToCartBtn: $('goToCartBtn')
-    };
+    cartBtn: $('cartBtn'),
+    cartCount: $('cartCount'),
+    cartModal: $('cartModal'),
+    miniCartItems: $('miniCartItems'),
+    miniCartTotal: $('miniCartTotal'),
+    closeCartModal: $('closeCartModal'),
+    goToCartBtn: $('goToCartBtn'),
+    
+    // ✅ ДОБАВЬТЕ МОБИЛЬНЫЕ:
+    mobileCartBtn: $('mobileCartBtn'),
+    mobileCartSheet: $('mobileCartSheet'),
+    mobileCartBackdrop: $('mobileCartBackdrop'),
+    mobileMiniCartItems: $('mobileMiniCartItems'),
+    mobileMiniCartTotal: $('mobileMiniCartTotal'),
+    mobileCloseCart: $('mobileCloseCart'),
+    mobileGoToCartBtn: $('mobileGoToCartBtn'),
+    mobileCartHeaderCount: $('mobileCartHeaderCount')
+};
 
     // === ПЕРЕМЕННЫЕ ===
     let cartItems = [];
@@ -67,15 +77,31 @@ const formatPrice = (cents) => {
         .replace(/\r/g, '\\r');
 
         const notifyCartUpdated = () => {
-        const { count, sumStr } = calculateTotal(cartItems);
-        document.dispatchEvent(new CustomEvent('cartUpdated', {
-            detail: {
-                items: cartItems,
-                count,
-                total: sumStr
-            }
-        }));
-    };
+    const { count, sumStr } = calculateTotal(cartItems);
+    
+    // ✅ ДОБАВЬТЕ СИНХРОНИЗАЦИЮ МОБИЛЬНЫХ СЧЁТЧИКОВ:
+    const desktopCount = document.getElementById('cartCount');
+    const mobileBottomCount = document.getElementById('mobileCartCount');
+    const mobileHeaderCount = document.getElementById('mobileCartHeaderCount');
+    
+    if (desktopCount) {
+        desktopCount.textContent = count;
+        desktopCount.classList.toggle('show', count > 0);
+    }
+    if (mobileBottomCount) {
+        mobileBottomCount.textContent = count;
+        mobileBottomCount.style.display = count > 0 ? 'flex' : 'none';
+    }
+    if (mobileHeaderCount) {
+        mobileHeaderCount.textContent = count;
+        mobileHeaderCount.style.display = count > 0 ? 'flex' : 'none';
+    }
+    
+    // ⭐ СТАРЫЙ КОД:
+    document.dispatchEvent(new CustomEvent('cartUpdated', {
+        detail: { items: cartItems, count, total: sumStr }
+    }));
+};
 
 
 
@@ -285,35 +311,6 @@ window.updateQuantity = async (id, type, delta) => {
     notifyCartUpdated();
 };
 
-    window.updateQuantity = async (id, type, delta) => {
-    const isLoggedIn = !!sessionStorage.getItem('user_id');
-    let newQty;
-
-    if (isLoggedIn) {
-        const item = cartItems.find(i => i.id === id && i.type === type);
-        if (!item) return;
-        newQty = Math.max(0, item.quantity + delta);
-        await api('/api/cart/update', {
-            method: 'POST',
-            body: JSON.stringify({
-                [type === 'product' ? 'product_id' : 'service_id']: id,
-                quantity: newQty
-            })
-        });
-    } else {
-        const item = clientCart.find(i => i.id === id && i.type === type);
-        if (!item) return;
-        newQty = Math.max(0, item.quantity + delta);
-        if (newQty === 0) {
-            clientCart = clientCart.filter(i => !(i.id === id && i.type === type));
-        } else {
-            item.quantity = newQty;
-        }
-        localStorage.setItem('clientCart', JSON.stringify(clientCart));
-    }
-    await loadCart();
-    notifyCartUpdated();
-};
 
     // === ЗАГРУЗКА КОРЗИНЫ ===
 window.loadCart = async () => {
@@ -346,7 +343,7 @@ window.loadCart = async () => {
     notifyCartUpdated();
 };
 
-    const renderMiniCart = () => {
+const renderMiniCart = () => {
     const { count, sumStr } = calculateTotal(cartItems);
 
     elements.cartCount.textContent = count;
@@ -372,7 +369,35 @@ window.loadCart = async () => {
                 </button>
             </div>
         `).join('');
-};
+
+    // ✅ МОБИЛЬНАЯ ШТОРКА
+    if (elements.mobileMiniCartItems && elements.mobileCartSheet?.classList.contains('active')) {
+        elements.mobileMiniCartItems.innerHTML = cartItems.length === 0
+            ? '<div style="padding:3rem 1.5rem;text-align:center;color:#888;"><i class="fas fa-shopping-bag" style="font-size:3rem;margin-bottom:1rem;opacity:0.3;"></i><p>Корзина пуста</p></div>'
+            : cartItems.map(item => `
+                <div class="sheet-cart-item">
+                    <img src="${item.image_url}" class="sheet-cart-img" onerror="this.src='/static/assets/no-image.png'">
+                    <div class="sheet-cart-info">
+                        <h4 class="sheet-cart-title">${escapeJS(item.title)}</h4>
+                        <div class="sheet-cart-price">${formatPrice(item.price_cents || 0)}</div>
+                        <div class="sheet-quantity-controls">
+                            <button class="quantity-btn" onclick="updateQuantity(${item.id}, '${item.type}', -1)">−</button>
+                            <span>${item.quantity}</span>
+                            <button class="quantity-btn" onclick="updateQuantity(${item.id}, '${item.type}', 1)">+</button>
+                        </div>
+                    </div>
+                    <button class="clear-cart-btn" onclick="removeFromCart(${item.id}, '${item.type}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        
+        // ✅ ИСПРАВЛЕНИЕ: Обновляем ИТОГО ДЛЯ ШТОРКИ
+        if (elements.mobileMiniCartTotal) {
+            elements.mobileMiniCartTotal.textContent = sumStr;  // ← БЕЗ "Итого: "
+        }
+    }  // ← УБЕДИТЕСЬ, ЧТО ЗАКРЫВАЮЩАЯ СКОБКА НА СВОЁМ МЕСТЕ
+};  // ← И ЭТА ТУТ
 
     // === АНИМАЦИЯ КОРЗИНЫ ===
     const openCartModal = () => {
@@ -499,6 +524,52 @@ window.loadCart = async () => {
             }
         });
     }
+    // === МОБИЛЬНАЯ ШТОРКА ===
+if (elements.mobileCartBtn && elements.mobileCartSheet) {
+    elements.mobileCartBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        elements.mobileCartSheet.classList.add('active');
+        elements.mobileCartBackdrop.classList.add('active');
+        document.body.classList.add('no-scroll');
+        loadCart(); // Загружаем данные
+    });
+
+    elements.mobileCloseCart?.addEventListener('click', () => {
+        elements.mobileCartSheet.classList.remove('active');
+        elements.mobileCartBackdrop.classList.remove('active');
+        document.body.classList.remove('no-scroll');
+    });
+
+    elements.mobileGoToCartBtn?.addEventListener('click', () => {
+        location.href = '/bin';
+    });
+
+    elements.mobileCartBackdrop?.addEventListener('click', () => {
+        elements.mobileCartSheet.classList.remove('active');
+        elements.mobileCartBackdrop.classList.remove('active');
+        document.body.classList.remove('no-scroll');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (elements.mobileCartSheet.classList.contains('active') &&
+            !e.target.closest('#mobileCartSheet') &&
+            !e.target.closest('#mobileCartBtn')) {
+            elements.mobileCartSheet.classList.remove('active');
+            elements.mobileCartBackdrop.classList.remove('active');
+            document.body.classList.remove('no-scroll');
+        }
+    });
+
+    // ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && elements.mobileCartSheet?.classList.contains('active')) {
+            elements.mobileCartSheet.classList.remove('active');
+            elements.mobileCartBackdrop.classList.remove('active');
+            document.body.classList.remove('no-scroll');
+        }
+    });
+}
 
     // === ИНИЦИАЛИЗАЦИЯ ===
     loadCart();
@@ -546,4 +617,5 @@ window.loadCart = async () => {
         }
         return originalRemoveItem.apply(this, arguments);
     };
+    
 });
