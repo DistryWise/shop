@@ -3732,3 +3732,30 @@ html[data-theme="light"] .philosophy cite {
   }
 }
 
+@media (max-width: 1024px) {
+  body {
+    padding-bottom: calc(92px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* ФИКС: поднимаем подпись "PILIGRIM MANIFESTO" выше — ближе к прогресс-бару */
+@media (max-width: 1024px) {
+  .philosophy {
+    margin: 14rem 0 8rem !important; /* было 18rem снизу → стало 8rem */
+  }
+
+  .philosophy cite {
+    margin-top: 2.8rem !important;     /* было 5–6rem → теперь 2.8rem */
+    margin-bottom: 6rem !important;    /* ← это и есть расстояние от подписи до полосок */
+    padding-bottom: env(safe-area-inset-bottom); /* чтобы не налезало на safe-area */
+  }
+
+  /* Если вдруг подпись всё ещё далеко — дополнительно прижимаем на очень узких экранах */
+  @media (max-width: 380px) {
+    .philosophy cite {
+      margin-top: 2.4rem !important;
+      margin-bottom: 5.5rem !important;
+    }
+  }
+}
+
