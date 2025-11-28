@@ -184,53 +184,63 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // === ОТПРАВКА ОБРАТНОЙ СВЯЗИ ===
-  contactForm?.addEventListener('submit', async e => {
-    e.preventDefault();
-    contactForm.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+// === ОТПРАВКА ОБРАТНОЙ СВЯЗИ — РАБОЧАЯ ВЕРСИЯ 28.11.2025 ===
+contactForm?.addEventListener('submit', async e => {
+  e.preventDefault();
+  contactForm.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
 
-    const name = contactForm.querySelector('input[type="text"], .name-input')?.value.trim() || '';
-    const phone = phoneInput?.value.replace(/\D/g, '') || '';
-    const email = contactForm.querySelector('input[type="email"]')?.value.trim() || '';
-    const message = contactForm.querySelector('textarea')?.value.trim() || '';
-
-    if (!name || name.length < 2) return showFieldError(contactForm.querySelector('input[type="text"], .name-input'), 'Укажите имя');
-    if (phone.length !== 11) return showFieldError(phoneInput, 'Неверный номер');
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showFieldError(contactForm.querySelector('input[type="email"]'), 'Неверный email');
-    if (!message || message.length < 10) return showFieldError(contactForm.querySelector('textarea'), 'Сообщение слишком короткое');
-
-    submitBtn.disabled = true;
-    btnText && (btnText.textContent = 'Отправка...');
-
-    try {
-      const res = await fetch('/api/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, email, message })
-      });
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        showCustomAlert('Спасибо! Мы свяжемся с вами в ближайшее время', false, true);
-        feedbackModal.classList.remove('show');
-        document.body.style.overflow = '';
-        contactForm.reset();
-        editPhoneBtn.style.display = 'none';
-      } else {
-        throw new Error(data.error || 'Ошибка отправки');
-      }
-    } catch (err) {
-      showCustomAlert('Нет соединения с сервером', true);
-      submitBtn.disabled = false;
-      btnText && (btnText.textContent = 'Отправить сообщение');
+  // КРИТИЧЕСКАЯ ПРОВЕРКА: авторизован ли?
+  if (!isAuthenticated()) {
+    // 1. Закрываем форму обратной связи
+    feedbackModal.classList.remove('show');
+    
+    // 2. Показываем алерт "Нужно войти"
+    const authAlert = document.getElementById('authAlert');
+    if (authAlert) {
+      authAlert.classList.add('show');
+      document.body.style.overflow = 'hidden'; // остаётся скрытым
     }
-  });
+    
+    return;
+  }
 
-  const showFieldError = (field, msg) => {
-    field?.classList.add('error');
-    field?.focus();
-    showCustomAlert(msg, true);
-  };
+  // ← дальше всё как было, только чуть чище
+  const name = contactForm.querySelector('input[type="text"], .name-input')?.value.trim() || '';
+  const phone = phoneInput?.value.replace(/\D/g, '') || '';
+  const email = contactForm.querySelector('input[type="email"]')?.value.trim() || '';
+  const message = contactForm.querySelector('textarea')?.value.trim() || '';
+
+  if (!name || name.length < 2) return showFieldError(contactForm.querySelector('input[type="text"], .name-input'), 'Укажите имя');
+  if (phone.length !== 11) return showFieldError(phoneInput, 'Неверный номер');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showFieldError(contactForm.querySelector('input[type="email"]'), 'Неверный email');
+  if (!message || message.length < 10) return showFieldError(contactForm.querySelector('textarea'), 'Сообщение слишком короткое');
+
+  submitBtn.disabled = true;
+  btnText && (btnText.textContent = 'Отправка...');
+
+  try {
+    const res = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, phone, email, message })
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      showCustomAlert('Спасибо! Мы свяжемся с вами в ближайшее время', false, true);
+      feedbackModal.classList.remove('show');
+      document.body.style.overflow = '';
+      contactForm.reset();
+      editPhoneBtn.style.display = 'none';
+    } else {
+      throw new Error(data.error || 'Ошибка отправки');
+    }
+  } catch (err) {
+    showCustomAlert('Ошибка отправки. Попробуйте позже', true);
+    submitBtn.disabled = false;
+    btnText && (btnText.textContent = 'Отправить сообщение');
+  }
+});
 
 
 // === РАССЫЛКА — УМНАЯ ПОДПИСКА (ФИНАЛЬНАЯ ВЕРСИЯ — ПРИВЯЗКА К ТЕЛЕФОНУ) ===
@@ -306,59 +316,66 @@ if (newsletterForm) {
     emailInput.dataset.originalPlaceholder = emailInput.placeholder;
   }
 
-  // Обработчик формы
-  newsletterForm.addEventListener('submit', async function (e) {
-    e.preventDefault();
+newsletterForm.addEventListener('submit', async function (e) {
+  e.preventDefault();
 
-    const email = emailInput?.value.trim().toLowerCase();
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      showCustomAlert('Введите корректный email', true);
-      emailInput?.focus();
-      return;
+  // НОВАЯ ПРОВЕРКА — ТРЕБУЕМ АВТОРИЗАЦИЮ ДЛЯ ПОДПИСКИ
+  if (!isAuthenticated()) {
+    // Закрываем всё лишнее и показываем алерт
+    const authAlert = document.getElementById('authAlert');
+    if (authAlert) {
+      authAlert.classList.add('show');
+      document.body.style.overflow = 'hidden';
     }
+    return;
+  }
 
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = 'Отправка...';
+  const email = emailInput?.value.trim().toLowerCase();
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    showCustomAlert('Введите корректный email', true);
+    emailInput?.focus();
+    return;
+  }
 
-    try {
-      const payload = { email, source: 'newsletter_bottom' };
-      const savedPhone = getCurrentPhone();
-      if (savedPhone) payload.phone = savedPhone;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = 'Отправка...';
 
-      const res = await fetch('/api/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+  try {
+    const payload = { email, source: 'newsletter_bottom' };
+    const savedPhone = getCurrentPhone();
+    if (savedPhone) payload.phone = savedPhone;
 
-      const data = await res.json();
+    const res = await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-      if (res.ok && (data.success || data.already_subscribed || data.new_subscription)) {
-        // УСПЕШНО — помечаем как подписанного (даже если уже был)
-        markAsSubscribed();
-        updateFormState();
+    const data = await res.json();
 
-        showCustomAlert(
-          data.new_subscription 
-            ? 'Спасибо! Вы успешно подписаны!' 
-            : 'Вы уже подписаны на рассылку',
-          false, true
-        );
+    if (res.ok && (data.success || data.already_subscribed || data.new_subscription)) {
+      markAsSubscribed();
+      updateFormState();
 
-        emailInput.value = '';
-      } else {
-        showCustomAlert(data.error || 'Ошибка подписки', true);
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = submitBtn.dataset.originalText;
-      }
-    } catch (err) {
-      console.error(err);
-      showCustomAlert('Ошибка сети', true);
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = submitBtn.dataset.originalText;
+      showCustomAlert(
+        data.new_subscription 
+          ? 'Спасибо! Вы успешно подписаны!' 
+          : 'Вы уже подписаны на рассылку',
+        false, true
+      );
+
+      emailInput.value = '';
+    } else {
+      showCustomAlert(data.error || 'Ошибка подписки', true);
     }
-  });
-
+  } catch (err) {
+    console.error(err);
+    showCustomAlert('Ошибка сети', true);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = submitBtn.dataset.originalText;
+  }
+});
   // Обновляем состояние при загрузке и при изменении авторизации
   updateFormState();
 
@@ -420,4 +437,29 @@ if (newsletterForm) {
       }, 600);
     }
   }, 800);
+    // === ПОЛНОЕ УПРАВЛЕНИЕ МОДАЛКОЙ "Нужно авторизоваться" ===
+  const authAlert = document.getElementById('authAlert');
+  if (authAlert) {
+    // Закрытие по крестику или фону
+    authAlert.addEventListener('click', e => {
+      if (e.target === authAlert || e.target.classList.contains('alert-close')) {
+        authAlert.classList.remove('show');
+        document.body.style.overflow = '';
+      }
+    });
+
+    // Кнопка "Войти" — открывает настоящую авторизацию
+    document.getElementById('authBtnFeedback')?.addEventListener('click', () => {
+      authAlert.classList.remove('show');
+      document.getElementById('authBtn')?.click(); // используем уже существующую кнопку входа
+    });
+
+    // Esc тоже закрывает
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && authAlert.classList.contains('show')) {
+        authAlert.classList.remove('show');
+        document.body.style.overflow = '';
+      }
+    });
+  }
 });

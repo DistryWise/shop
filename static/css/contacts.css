@@ -2380,7 +2380,7 @@ html[data-theme="light"] #ai-assistant:hover {
 
   /* 3. AI-робот — чуть выше кнопки "наверх" */
   #ai-assistant {
-    bottom: calc(170px + env(safe-area-inset-bottom)) !important; /* над back-to-top */
+    bottom: calc(100px + env(safe-area-inset-bottom)) !important; /* над back-to-top */
     right: 16px !important;
     z-index: 997 !important;
   }
@@ -3211,3 +3211,477 @@ body.sheet-open {
 .sheet-submit-btn::after {
   display: none !important;
 }
+
+/* ===================================================== */
+/* ПОЛНАЯ МОБИЛЬНАЯ АДАПТАЦИЯ 2025 — iPhone SE и выше  */
+/* Работает на 320–480px, включая старый SE (320×568)    */
+/* ===================================================== */
+
+@media (max-width: 480px) {
+  /* Отступы страницы — место под хедер + нижняя панель */
+  main {
+    padding: 100px 5% 160px !important; /* сверху место под шапку, снизу под bottom bar + safe-area */
+  }
+
+  /* Заголовки */
+  .page-title {
+    font-size: 2.9rem !important;
+    letter-spacing: 6px !important;
+    line-height: 1.1;
+    word-break: keep-all;
+  }
+  .page-subtitle {
+    font-size: 0.95rem !important;
+    letter-spacing: 4px !important;
+    margin-bottom: 5rem !important;
+  }
+
+  /* Контакты */
+  .contacts-wrapper {
+    grid-template-columns: 1fr !important;
+    gap: 3.5rem !important;
+    margin-bottom: 9rem !important;
+  }
+  .contact-value {
+    font-size: 1.8rem !important;
+  }
+  .contact-label {
+    font-size: 0.75rem !important;
+  }
+
+  /* Блоки Visit Us / Showroom / Instagram / Newsletter */
+  .visit-us h2,
+  .showroom h2,
+  .instagram-feed h2,
+  .newsletter h2 {
+    font-size: 3.3rem !important;
+    letter-spacing: 8px !important;
+  }
+  .visit-us p,
+  .showroom p {
+    font-size: 1.15rem !important;
+  }
+
+  /* Typewriter цитата */
+  #typewriter, .philosophy blockquote {
+    font-size: 1.65rem !important;
+    line-height: 1.5;
+  }
+  #typewriter .center-last,
+  .philosophy .center-last {
+    font-size: 2.1rem !important;
+    margin-top: 3rem !important;
+  }
+  #typewriter .center-last::after {
+    margin-top: 2.8rem !important;
+  }
+
+  /* Instagram */
+  .insta-grid {
+    gap: 4px !important;
+  }
+
+  /* Форма рассылки */
+  .newsletter-form {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .newsletter-input,
+  .newsletter-btn {
+    height: 56px !important;
+    border-radius: 16px !important;
+  }
+
+  /* Соцсети */
+  .social-wrapper {
+    gap: 2.2rem !important;
+    margin: 8rem 0 !important;
+  }
+  .social-wrapper a {
+    font-size: 2.3rem !important;
+  }
+
+  /* Реквизиты — по центру */
+  .requisites-wrapper {
+    margin: 9rem auto 0 !important;
+    padding: 0 6% !important;
+  }
+  .requisites-grid {
+    grid-template-columns: 1fr !important;
+    gap: 2.2rem !important;
+    text-align: center;
+  }
+
+  /* Футер */
+  footer {
+    grid-template-columns: 1fr !important;
+    gap: 2.5rem !important;
+    padding: 5rem 6% 4rem !important;
+    text-align: center;
+  }
+  .footer-links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+  .footer-logo {
+    height: 66px !important;
+  }
+
+  /* Нижняя панель — ещё компактнее */
+  .mobile-bottom-bar {
+    height: 86px !important;
+    padding: 6px 16px calc(16px + env(safe-area-inset-bottom)) !important;
+    gap: 18px !important;
+  }
+  .mobile-bottom-bar .bottom-bar-btn,
+  .mobile-bottom-bar #authBtn {
+    font-size: 1.45rem !important;
+    height: 62px !important;
+    gap: 3px !important;
+  }
+  .mobile-bottom-bar .bottom-bar-btn::after,
+  .mobile-bottom-bar #authBtn::after {
+    font-size: 0.62rem !important;
+    bottom: 5px !important;
+  }
+
+  /* AI-чат и кнопка наверх — поднимаем выше нижней панели */
+  #ai-assistant {
+    bottom: calc(100px + env(safe-area-inset-bottom)) !important;
+    right: 14px !important;
+    width: 56px !important;
+    height: 56px !important;
+    font-size: 1.8rem !important;
+  }
+}
+
+/* Экстра-узкие экраны: iPhone SE 1-го поколения, iPhone 5/5s (320px) */
+@media (max-width: 360px) {
+  main { padding: 100px 4% 150px !important; }
+
+  .page-title { font-size: 2.55rem !important; letter-spacing: 5px !important; }
+  .contact-value { font-size: 1.65rem !important; }
+
+  .visit-us h2,
+  .showroom h2,
+  .instagram-feed h2,
+  .newsletter h2 { font-size: 3rem !important; }
+
+  #typewriter,
+  .philosophy blockquote { font-size: 1.5rem !important; }
+  #typewriter .center-last { font-size: 1.95rem !important; }
+
+  .mobile-bottom-bar {
+    height: 82px !important;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom)) !important;
+  }
+  .mobile-bottom-bar .bottom-bar-btn,
+  .mobile-bottom-bar #authBtn {
+    font-size: 1.4rem !important;
+  }
+
+  #ai-assistant {
+    width: 52px !important;
+    height: 52px !important;
+    font-size: 1.7rem !important;
+    bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+  }
+}
+
+/* Safe Area для iPhone с чёлкой и без */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mobile-bottom-bar {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+  }
+  body {
+    padding-bottom: env(safe-area-inset-bottom) !important;
+  }
+}
+
+/* ============================================= */
+/* 1. ДЕСКТОП — СЕТКА 3×N с БОЛЬШИМИ ОТСТУПАМИ   */
+/* ============================================= */
+@media (min-width: 1025px) {
+  .insta-carousel {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;                    /* ← БОЛЬШИЕ ОТСТУПЫ между ячейками */
+    background: transparent;      /* убираем чёрный фон, если был */
+    margin: 5rem 0;
+    padding: 0 8px;
+  }
+  .insta-slide {
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 12px;          /* красивые скругления */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  .insta-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .5s ease;
+  }
+  .insta-slide:hover img {
+    transform: scale(1.07);
+  }
+  .insta-bottom-ui { 
+    display: none; 
+  }
+}
+
+/* ============================================= */
+/* 2. МОБИЛЬНАЯ ВЕРСИЯ — КАРУСЕЛЬ + ВИДИМЫЙ БАР  */
+/* ============================================= */
+@media (max-width: 1024px) {
+  .instagram-feed h2 {
+    font-size: 2.8rem;
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 0 1rem;
+  }
+
+  .insta-carousel {
+    all: unset;
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    height: 100vh;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+  }
+  .insta-carousel::-webkit-scrollbar { display: none; }
+
+  .insta-slide {
+    flex: 0 0 100vw;
+    height: 100vh;
+    width: 100vw;
+    scroll-snap-align: center;
+    background: #000;
+  }
+  .insta-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  /* НИЖНИЙ БЛОК — ВСЕГДА ВИДЕН */
+  .insta-bottom-ui {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 24px 16px calc(24px + env(safe-area-inset-bottom));
+    background: linear-gradient(transparent, rgba(0,0,0,0.85));
+    z-index: 1000;
+    pointer-events: none;
+  }
+
+  /* 5 ПЛОСКИХ ЛИНИЙ — ВСЕГДА ВИДНЫ */
+  .insta-progress {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .insta-progress > div {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.35);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .insta-progress > div > div {
+    height: 100%;
+    width: 0;
+    background: #ffffff;
+    border-radius: 2px;
+  }
+  .insta-progress > div.active > div {
+    animation: fill 6s linear forwards;
+  }
+  @keyframes fill {
+    to { width: 100%; }
+  }
+
+  /* Мини-превьюшки по центру (по желанию можно убрать) */
+  .insta-thumbs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+  .insta-thumbs img {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2.5px solid rgba(255,255,255,0.3);
+    opacity: 0.6;
+    transition: all .3s;
+  }
+  .insta-thumbs img.active {
+    opacity: 1;
+    border-color: #fff;
+    transform: scale(1.15);
+  }
+}
+
+/* ================================================= */
+/* ФИКС ЦИТАТЫ — ТОЛЬКО НА МОБИЛЬНЫХ (≤1023px)      */
+/* На десктопе — всё остаётся как было изначально   */
+/* ================================================= */
+@media (max-width: 1023px) {
+  .philosophy {
+    margin: 14rem 0 18rem;
+    padding: 0 1.5rem;
+  }
+
+  .philosophy blockquote {
+    font-size: clamp(1.75rem, 5.8vw, 2.6rem) !important;
+    line-height: 1.48 !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    max-width: 100% !important;
+  }
+
+  .philosophy .typewriter {
+    display: block !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    white-space: normal !important;
+  }
+
+  /* Самое важное — подпись всегда под текстом и не уезжает вверх */
+  .philosophy cite {
+    display: block !important;
+    margin-top: 5rem !important;        /* большой отступ от текста */
+    margin-bottom: -1rem !important;
+    font-size: 0.98rem !important;
+    letter-spacing: 5px !important;
+    color: var(--gray) !important;
+    text-align: center !important;
+    position: relative !important;
+    z-index: 2;
+  }
+}
+
+/* Дополнительно — для iPhone SE и совсем узких экранов */
+@media (max-width: 380px) {
+  .philosophy {
+    margin: 12rem 0 16rem;
+  }
+  
+  .philosophy blockquote {
+    font-size: 1.7rem !important;
+  }
+  
+  .philosophy cite {
+    margin-top: 6rem !important;
+    font-size: 0.92rem !important;
+  }
+}
+
+/* Светлая тема — чтобы подпись не сливалась */
+html[data-theme="light"] .philosophy cite {
+  color: #555 !important;
+}
+
+#authAlert .alert-content {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center !important;
+  text-align: center !important;
+  padding: 2.8rem 2rem 2.4rem !important;
+}
+
+#authAlert .alert-icon {
+  margin-bottom: 1.4rem !important;
+}
+
+#authAlert .alert-text {
+  margin-bottom: 1.8rem !important;
+}
+
+#authAlert .alert-login-btn,
+#authAlert #authBtnFeedback {
+  width: 100% !important;
+  max-width: 320px !important;
+  margin: 0 auto !important;
+  display: block !important;
+  text-align: center !important;
+}
+
+/* Дополнительно — на совсем узких экранах (iPhone SE) */
+@media (max-width: 370px) {
+  #authAlert .alert-content {
+    padding: 2.4rem 1.6rem !important;
+  }
+  #authAlert .alert-login-btn {
+    font-size: 1rem !important;
+    padding: 0.9rem 1.6rem !important;
+  }
+}
+
+/* ======================================================= */
+/* ФИКС ПОИСХОДА ПОИСКА НА 1024–1440 px (ноутбуки, планшеты) */
+/* ======================================================= */
+@media (max-width: 1440px) and (min-width: 1024px) {
+  /* 1. Сужаем логотип при открытом поиске */
+  header.main-header.search-active .logo-img {
+    height: 80px !important;           /* было 120px → теперь влезает */
+    transition: height 0.4s ease;
+  }
+
+  /* 2. Сдвигаем навигацию и иконки чуть левее, когда поиск открыт */
+  header.main-header.search-active .desktop-nav {
+    gap: 1.8rem;                      /* вместо clamp(2rem,4vw,5rem) */
+  }
+
+  header.main-header.search-active .header-icons {
+    gap: 0.8rem;                      /* сильно экономим место справа */
+  }
+
+  /* 3. Если всё равно не влезает — прячем иконку корзины и профиля,
+        оставляем только крестик закрытия поиска */
+  header.main-header.search-active .header-icons .icon-btn:not(.search-close-btn) {
+    opacity: 0;
+    visibility: hidden;
+    width: 0;
+    margin: 0;
+    overflow: hidden;
+    transition: all 0.4s ease;
+  }
+
+  /* 4. Крестик закрытия поиска делаем чуть меньше и ближе к краю */
+  header.main-header.search-active .search-close-btn {
+    width: 42px !important;
+    height: 42px !important;
+    margin-right: 12px !important;
+  }
+
+  /* 5. Сама поисковая строка — чуть меньше шрифт и отступы */
+  header.main-header.search-active .search-input {
+    font-size: 1.1rem !important;
+    padding: 0.8rem 1.4rem !important;
+    max-width: 460px !important;       /* ограничиваем, чтобы не разъезжалось */
+  }
+}
+
+/* Дополнительно — если экран совсем узкий (1024–1200px), прячем ещё и навигацию */
+@media (max-width: 1200px) and (min-width: 1024px) {
+  header.main-header.search-active .desktop-nav {
+    opacity: 0;
+    visibility: hidden;
+    width: 0;
+    overflow: hidden;
+    transition: all 0.4s ease;
+  }
+
+  header.main-header.search-active .logo-img {
+    height: 76px !important;
+  }
+}
+

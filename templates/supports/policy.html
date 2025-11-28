@@ -6,208 +6,9 @@
   <title>Политика конфиденциальности • Piligrim</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    :root {
-      --bg: #000000;
-      --text: #ffffff;
-      --gray: #888;
-      --light: rgba(255,255,255,0.08);
-      --hover: rgba(255,255,255,0.15);
-      --accent: #ff6b6b;
-    }
 
-    *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
-    html { scroll-behavior: smooth; }
-    body {
-      min-height: 100vh; background: var(--bg); color: var(--text);
-      font-family: 'Inter', sans-serif; line-height: 1.9; overflow-x: hidden; position: relative;
-    }
+  <link rel="stylesheet" href="/static/css/support/support.css">
 
-    body::before {
-      content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100" height="100" filter="url(%23n)" opacity="0.08"/></svg>') repeat;
-    }
-
-    main {
-      padding: calc(90px + 18vh) 14% 30vh;
-      max-width: 1600px;
-      margin: 0 auto;
-    }
-
-    .page-title {
-      font-size: 8.5rem;
-      font-weight: 100;
-      letter-spacing: 22px;
-      text-align: center;
-      margin-bottom: 12rem;
-      opacity: 0.92;
-    }
-
-    .content {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8rem 10rem;
-      font-size: 1.18rem;
-      letter-spacing: 0.8px;
-    }
-
-    .section {
-      break-inside: avoid;
-    }
-
-    .section-title {
-      font-size: 3.2rem;
-      font-weight: 100;
-      letter-spacing: 10px;
-      margin-bottom: 3rem;
-      position: relative;
-      display: inline-block;
-    }
-
-    .section-title::after {
-      content: '';
-      position: absolute;
-      bottom: -16px; left: 0;
-      width: 90px; height: 1px;
-      background: var(--accent);
-    }
-
-    p { margin-bottom: 1.8rem; color: #ddd; }
-    ul { padding-left: 1.6rem; margin: 2.4rem 0; }
-    li { margin: 1rem 0; padding-left: 0.6rem; }
-    li::marker { color: var(--accent); }
-
-    .highlight {
-      grid-column: 1 / -1;
-      background: rgba(255,107,107,0.07);
-      border-left: 4px solid var(--accent);
-      padding: 2.8rem 3rem;
-      border-radius: 12px;
-      margin: 5rem 0;
-      font-size: 1.3rem;
-      backdrop-filter: blur(10px);
-    }
-
-    .contact-box {
-      grid-column: 1 / -1;
-      background: var(--light);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 20px;
-      padding: 4rem;
-      text-align: center;
-      font-size: 1.4rem;
-    }
-
-    .contact-box a {
-      color: var(--accent);
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .contact-box a:hover { text-decoration: underline; }
-
-    .update-date {
-      grid-column: 1 / -1;
-      text-align: center;
-      color: var(--gray);
-      letter-spacing: 4px;
-      font-size: 0.95rem;
-      margin-top: 10rem;
-      opacity: 0.7;
-    }
-
-    /* ===== КНОПКА «НАЗАД» — всегда с пользователем ===== */
-    .btn-back {
-      position: fixed;
-      left: 40px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 56px; height: 56px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      backdrop-filter: blur(12px);
-      color: #fff;
-      font-size: 1.4rem;
-      z-index: 998;
-      transition: all 0.4s ease;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-    }
-
-    .btn-back:hover {
-      background: var(--hover);
-      border-color: var(--text);
-      transform: translateY(-50%) scale(1.12);
-    }
-
-    /* ===== КНОПКА «НАВЕРХ» — появляется при скролле ===== */
-    .btn-top {
-      position: fixed;
-      right: 40px;
-      bottom: 40px;
-      width: 56px; height: 56px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      backdrop-filter: blur(12px);
-      color: #fff;
-      font-size: 1.6rem;
-      z-index: 998;
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(20px);
-      transition: all 0.5s cubic-bezier(0.25,0.8,0.25,1);
-      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-    }
-
-    .btn-top.visible {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-
-    .btn-top:hover, .btn-back:hover {
-      background: var(--hover);
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    /* Светлая тема */
-    html[data-theme="light"] {
-      --bg: #fafafa;
-      --text: #0f0f0f;
-      --gray: #666;
-      --light: rgba(15,15,15,0.08);
-      --hover: rgba(15,15,15,0.15);
-    }
-    html[data-theme="light"] body::before { opacity: 0.04; }
-    html[data-theme="light"] .btn-back,
-    html[data-theme="light"] .btn-top {
-      background: rgba(15,15,15,0.08);
-      border-color: rgba(15,15,15,0.15);
-      color: #000;
-    }
-    html[data-theme="light"] .btn-back:hover,
-    html[data-theme="light"] .btn-top:hover {
-      background: rgba(15,15,15,0.18);
-      border-color: var(--accent);
-    }
-
-    @media (max-width: 1024px) {
-      .content { grid-template-columns: 1fr; gap: 6rem; }
-      main { padding: calc(76px + 12vh) 8% 20vh; }
-      .page-title { font-size: 6rem; letter-spacing: 12px; }
-      .btn-back { left: 20px; }
-      .btn-top { right: 20px; bottom: 20px; }
-    }
-
-    @media (max-width: 640px) {
-      .page-title { font-size: 4.5rem; letter-spacing: 8px; }
-      main { padding: calc(76px + 10vh) 5% 16vh; }
-    }
-  </style>
 </head>
 <body>
 
@@ -220,7 +21,14 @@
   <div class="btn-top" id="btnTop" title="Наверх">
     <i class="fas fa-arrow-up"></i>
   </div>
-
+  <div class="loader" id="loader">
+  <div class="loader-logo">PILIGRIM</div>
+  <div class="loader-bar">
+    <div class="loader-progress"></div>
+  </div>
+</div>
+<!-- Apple-style «свайп влево → назад» подсказка -->
+<div class="swipe-back-hint"></div>
   <main>
     <h1 class="page-title">PRIVACY POLICY</h1>
 
@@ -286,7 +94,7 @@
 
       <div class="contact-box">
         <p>По всем вопросам:<br>
-        <a href="mailto:privacy@piligrim.ru">privacy@piligrim.ru</a></p>
+        <a href="mailto:privacy@piligrim.ru">piligrim_service39@mail.ru</a></p>
       </div>
 
       <p class="update-date">Обновлено: 19 ноября 2025</p>
@@ -294,26 +102,7 @@
     </div>
   </main>
 
-  <script>
-    // Авто-тема
-    const saved = localStorage.getItem('theme');
-    if (saved) document.documentElement.setAttribute('data-theme', saved);
-    else if (matchMedia('(prefers-color-scheme: light)').matches)
-      document.documentElement.setAttribute('data-theme', 'light');
+  <script src="/static/js/support/support.js"></script>
 
-    // Кнопка «Наверх»
-    const btnTop = document.getElementById('btnTop');
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 600) {
-        btnTop.classList.add('visible');
-      } else {
-        btnTop.classList.remove('visible');
-      }
-    });
-
-    btnTop.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-  </script>
 </body>
 </html>

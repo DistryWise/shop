@@ -435,14 +435,37 @@
     <div class="divider"></div>
     <div class="showroom"><h2>SHOWROOM</h2><p>Приходите в любое время<br>Калининград, ул. Балашовская,4</p></div>
     <div class="philosophy"><blockquote><span class="typewriter" id="typewriter"></span></blockquote><cite>— PILIGRIM MANIFESTO</cite></div>
-    <div class="instagram-feed"><h2>INSTAGRAM</h2><div class="insta-grid">
-      <div class="insta-item"><i class="fab fa-instagram"></i></div>
-      <div class="insta-item"><i class="fab fa-instagram"></i></div>
-      <div class="insta-item"><i class="fab fa-instagram"></i></div>
-      <div class="insta-item"><i class="fab fa-instagram"></i></div>
-      <div class="insta-item"><i class="fab fa-instagram"></i></div>
-      <div class="insta-item"><i class="fab fa-instagram"></i></div>
-    </div></div>
+<div class="instagram-feed">
+  <h2>TELEGRAM</h2>
+
+  <div class="insta-carousel" id="instaCarousel">
+    <a href="https://t.me/..." class="insta-slide">
+      <img src="/static/assets/b2b.jpg" loading="lazy">
+    </a>
+    <a href="https://t.me/..." class="insta-slide">
+      <img src="/static/insta/2.jpg" loading="lazy">
+    </a>
+    <a href="https://t.me/..." class="insta-slide">
+      <img src="/static/insta/3.jpg" loading="lazy">
+    </a>
+    <a href="https://t.me/..." class="insta-slide">
+      <img src="/static/insta/4.jpg" loading="lazy">
+    </a>
+    <a href="https://t.me/..." class="insta-slide">
+      <img src="/static/insta/5.jpg" loading="lazy">
+    </a>
+    <a href="https://t.me/..." class="insta-slide">
+      <img src="/static/insta/6.jpg" loading="lazy">
+    </a>
+  </div>
+
+  <!-- Прогресс-бар + превьюшки снизу -->
+  <div class="insta-bottom-ui">
+    <div class="insta-progress" id="progressBar"></div>
+    <div class="insta-thumbs" id="thumbs"></div>
+  </div>
+</div>
+</section>
     <div class="newsletter"><h2>SUBSCRIBE</h2><p>Получайте первые новости о новых товарах и услугах.</p>
       <form class="newsletter-form" id="newsletterForm">
         <input type="email" class="newsletter-input" placeholder="YOUR EMAIL">
@@ -456,7 +479,7 @@
     </div>
     <div class="requisites-wrapper">
       <div class="requisites-grid">
-        <div><span class="req-title">ООО «ПИЛИГРИМ»</span><p>ИНН 3900046405</p></div>
+        <div><span class="req-title">ООО «ПИЛИГРИМ СЕРВИС»</span><p>ИНН 3900046405</p></div>
         <div><span class="req-title">ОГРН</span><p>1253900010880</p></div>
         <div><span class="req-title">Юр. адрес</span><p>236003, Калининград,<br>Балашовская ул, д. 4, помещ. 14 </p></div>
         <div><span class="req-title">Р/с</span><p>40702810420710001349</p></div>
@@ -470,23 +493,60 @@
         <stop offset="0%" stop-color="#f5d78a"/>
         <stop offset="100%" stop-color="#d4af37"/>
       </linearGradient>
+      <linearGradient id="suitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#2d2d2d"/>
+        <stop offset="100%" stop-color="#1a1a1a"/>
+      </linearGradient>
     </defs>
-    <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
-    <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
-    <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
-    <circle cx="39" cy="40" r="2.5" fill="#fff"/>
-    <circle cx="63" cy="40" r="2.5" fill="#fff"/>
-    <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <g transform="translate(8, 62)">
-      <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
-      <rect x="3" y="3" width="24" height="32" rx="1" fill="#f8f8f8"/>
-      <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
-      <line x1="5" y1="17" x2="25" y2="17" stroke="#000" stroke-width="0.9"/>
-      <line x1="5" y1="21" x2="25" y2="21" stroke="#000" stroke-width="0.9"/>
-      <line x1="5" y1="25" x2="23" y2="25" stroke="#000" stroke-width="0.9"/>
-      <line x1="5" y1="29" x2="21" y2="29" stroke="#000" stroke-width="0.9"/>
+
+    <!-- Голова робота (золотая) -->
+    <circle cx="50" cy="35" r="18" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+
+    <!-- Глаза -->
+    <circle cx="44" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="56" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="45.5" cy="31" r="1.8" fill="#fff"/>
+    <circle cx="57.5" cy="31" r="1.8" fill="#fff"/>
+
+    <!-- Светящиеся акценты в глазах -->
+    <circle cx="46" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+    <circle cx="58" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+
+    <!-- Туловище — пиджак -->
+    <path d="M30 52 L28 98 L72 98 L70 52 
+             Q62 58 50 58 Q38 58 30 52 Z" 
+          fill="url(#suitGrad)" stroke="#000" stroke-width="2"/>
+
+    <!-- Лацканы пиджака -->
+    <path d="M50 52 L42 64 L42 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+    <path d="M50 52 L58 64 L58 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+
+    <!-- Галстук -->
+    <path d="M50 58 L46 72 L50 78 L54 72 Z" fill="#8b1e1e"/>
+    <polygon points="46,72 50,78 54,72" fill="#5c1212"/>
+
+    <!-- Пуговицы пиджака -->
+    <circle cx="50" cy="70" r="2.5" fill="#333"/>
+    <circle cx="50" cy="78" r="2.5" fill="#333"/>
+    <circle cx="50" cy="86" r="2.5" fill="#333"/>
+
+    <!-- Руки -->
+    <rect x="24" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+    <rect x="64" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+
+    <!-- Планшет с Конституцией в левой руке -->
+    <g transform="translate(12, 68)">
+      <rect x="0" y="0" width="28" height="36" rx="4" fill="#fff" stroke="#111" stroke-width="2"/>
+      <rect x="2" y="2" width="24" height="30" rx="2" fill="#f0f0f0"/>
+      <text x="14" y="11" font-family="Arial, sans-serif" font-size="5.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+      <line x1="4" y1="15" x2="24" y2="15" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="19" x2="24" y2="19" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="23" x2="22" y2="23" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="27" x2="20" y2="27" stroke="#333" stroke-width="0.8"/>
     </g>
-    <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
+
+    <!-- Блеск на голове -->
+    <path d="M42 24 Q46 20 50 24" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.6"/>
   </svg>
 </div>
 
@@ -557,7 +617,7 @@
   </footer>
 
   <a href="#" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
-  <div class="alert" id="alert">Спасибо! Вы подписаны.</div>
+
 
   <script src="/static/js/search.js"></script>
   <script src="/static/js/auth.js"></script>
@@ -732,6 +792,70 @@ document.addEventListener('click', (e) => {
 });
 </script>
 
+<script>
+if (window.matchMedia("(max-width: 1024px)").matches) {
+  const carousel   = document.getElementById('instaCarousel');
+  const progress   = document.getElementById('progressBar');
+  const thumbs     = document.getElementById('thumbs');
+  const slides     = carousel.children;
+  let current      = 0;
+  let timer        = null;
 
+  // Создаём прогресс-бар и превьюшки
+  for (let i = 0; i < slides.length; i++) {
+    progress.innerHTML += '<div><div></div></div>';
+    thumbs.innerHTML   += `<img src="${slides[i].querySelector('img').src}" loading="lazy">`;
+  }
+
+  const bars      = progress.querySelectorAll('div > div');
+  const thumbImgs = thumbs.querySelectorAll('img');
+
+  const goTo = (i) => {
+    carousel.scrollTo({ left: i * innerWidth, behavior: 'smooth' });
+    current = i;
+
+    // прогресс-бар
+    bars.forEach((bar, j) => {
+      const segment = bar.parentNode;
+      segment.classList.toggle('active', j === i);
+      if (j < i) bar.style.width = '100%';
+      if (j === i) bar.style.width = '0%';
+      if (j > i) bar.style.width = '0';
+    });
+
+    // превьюшки
+    thumbImgs.forEach((t, j) => t.classList.toggle('active', j === i));
+  };
+
+  const next = () => goTo((current + 1) % slides.length);
+
+  const startAuto = () => {
+    clearTimeout(timer);
+    timer = setTimeout(next, 6000); // 6 секунд
+  };
+
+  // при окончании скролла (свайп/тап)
+  carousel.addEventListener('scrollend', () => {
+    current = Math.round(carousel.scrollLeft / innerWidth);
+    bars.forEach((b, j) => b.parentNode.classList.toggle('active', j === current));
+    thumbImgs.forEach((t, j) => t.classList.toggle('active', j === current));
+    startAuto();
+  });
+
+  // тап по фото = следующее
+  carousel.addEventListener('click', next);
+
+  // стартовая инициализация
+  bars[0].parentNode.classList.add('active');
+  thumbImgs[0].classList.add('active');
+  startAuto();
+
+  // пауза при уходе со вкладки
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) clearTimeout(timer);
+    else startAuto();
+  });
+}
+</script>
 </body>
 </html>
