@@ -463,3 +463,384 @@ newsletterForm.addEventListener('submit', async function (e) {
     });
   }
 });
+
+
+const themeToggle = document.getElementById('theme-toggle');
+const html = document.documentElement;
+
+// Автоопределение системной темы + сохранение
+if (localStorage.getItem('theme') === 'light' || 
+   (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+  html.setAttribute('data-theme', 'light');
+  if (themeToggle) themeToggle.checked = true;
+} else {
+  html.setAttribute('data-theme', 'dark');
+  if (themeToggle) themeToggle.checked = false;
+}
+
+themeToggle?.addEventListener('change', () => {
+  if (themeToggle.checked) {
+    html.setAttribute('data-theme', 'light');
+    localStorage.setItem('theme', 'light');
+  } else {
+    html.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+  }
+});
+
+// УНИВЕРСАЛЬНЫЙ АНТИСПАМ 2025 — РАБОТАЕТ НА ВСЕХ КНОПКАХ "В КОРЗИНУ" И ИЗМЕНЕНИЯ КОЛИЧЕСТВА
+// Защищает от спама: + / – / удалить / любые onclick="addToCart(...)" / кнопки с классами
+const GlobalAddToCartProtection = (() => {
+  const STORAGE_KEY = 'cart_flood_protection_2025';
+  const COOLDOWN_MS = 20000;    // 20 сек блок после спама
+  const MAX_CLICKS = 9;         // сколько быстрых кликов разрешено
+
+  let clickCount = 0;
+  let resetTimer = null;
+  let blockedUntil = 0;
+
+  // Загружаем состояние
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      blockedUntil = data.blockedUntil || 0;
+    }
+  } catch (e) {}
+
+  const block = () => {
+    blockedUntil = Date.now() + COOLDOWN_MS;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ blockedUntil }));
+
+    // Красивый красный алерт с таймером
+    const alert = document.createElement('div');
+    alert.id = 'global-cart-flood-alert';
+    alert.innerHTML = `
+      <i class="fas fa-hand-paper"></i>
+      <div>
+        <strong>Слишком быстро!</strong><br>
+        <small>Подождите <span class="timer">20</span> сек</small>
+      </div>
+    `;
+    Object.assign(alert.style, {
+      position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
+      background: 'linear-gradient(135deg,#ff453a,#ff2d55)', color: 'white',
+      padding: '16px 32px', borderRadius: '26px', fontSize: '1.15rem',
+      fontWeight: '600', boxShadow: '0 20px 50px rgba(255,45,85,0.5)',
+      backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', gap: '14px',
+      zIndex: '999999', animation: 'slideDown 0.5s ease'
+    });
+    document.body.appendChild(alert);
+
+    let seconds = 20;
+    const timerSpan = alert.querySelector('.timer');
+    const interval = setInterval(() => {
+      seconds--;
+      timerSpan.textContent = seconds;
+      if (seconds <= 0) {
+        clearInterval(interval);
+        alert.remove();
+      }
+    }, 1000);
+
+    setTimeout(() => alert.remove(), COOLDOWN_MS + 1000);
+  };
+
+  return {
+    check() {
+      const now = Date.now();
+      if (blockedUntil > now) return false;
+
+      clickCount++;
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => { clickCount = 0; }, 10000);
+
+      if (clickCount > MAX_CLICKS) {
+        block();
+        clickCount = 0;
+        return false;
+      }
+      return true;
+    }
+  };
+})();
+
+// УНИВЕРСАЛЬНЫЙ ПЕРЕХВАТЧИК — ЛОВИТ ВСЁ
+document.addEventListener('click', function(e) {
+  const target = e.target.closest(
+    'button, .add-to-cart-btn, .buy-btn, .apple-qty-btn, .apple-remove-btn, ' +
+    '.quantity-btn, .clear-cart-btn, [onclick*="addToCart("]'
+  );
+
+  if (!target) return;
+
+  // Проверяем, это действие с корзиной?
+  const onclick = target.getAttribute('onclick') || '';
+  const isCartAction = 
+    onclick.includes('addToCart(') ||
+    target.classList.contains('apple-qty-btn') ||
+    target.classList.contains('apple-remove-btn') ||
+    target.classList.contains('quantity-btn') ||
+    target.classList.contains('clear-cart-btn') ||
+    target.classList.contains('add-to-cart-btn') ||
+    target.classList.contains('buy-btn');
+
+  if (isCartAction && !GlobalAddToCartProtection.check()) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    e.stopPropagation();
+    return false;
+  }
+}, true); // true = capture phase → срабатывает раньше всех остальных обработчиков
+
+// Анимация алерта
+document.head.insertAdjacentHTML('beforeend', `
+
+`);
+
+
+
+// Открытие/закрытие шторки
+document.getElementById('openSidebarMenu')?.addEventListener('click', () => {
+  document.getElementById('mobileSidebar').classList.add('active');
+  document.body.classList.add('sidebar-open');
+});
+
+document.getElementById('closeSidebar')?.addEventListener('click', () => {
+  document.getElementById('mobileSidebar').classList.remove('active');
+  document.body.classList.remove('sidebar-open');
+});
+
+// Закрытие по клику вне шторки
+document.addEventListener('click', (e) => {
+  const sidebar = document.getElementById('mobileSidebar');
+  if (sidebar.classList.contains('active') && 
+      !e.target.closest('.mobile-sidebar') && 
+      !e.target.closest('#openSidebarMenu')) {
+    sidebar.classList.remove('active');
+    document.body.classList.remove('sidebar-open');
+  }
+});
+
+
+
+// КАРУСЕЛЬ — РАБОТАЕТ ИДЕАЛЬНО (первый слайд активен сразу, остальные — только по свайпу)
+if (window.matchMedia("(max-width: 1024px)").matches) {
+  const carousel = document.getElementById('instaCarousel');
+  const bars = document.querySelectorAll('.insta-progress > div');
+
+  const update = () => {
+    const index = Math.round(carousel.scrollLeft / carousel.clientWidth);
+    bars.forEach((bar, i) => {
+      bar.classList.toggle('active', i === index);
+    });
+  };
+
+  // Инициализация: первый слайд активен сразу
+  update();
+
+  // При скролле
+  carousel.addEventListener('scroll', () => requestAnimationFrame(update));
+
+  // При ресайзе/повороте
+  window.addEventListener('resize', update);
+}
+
+// СВАЙП ВНИЗ — ТОЛЬКО ДЛЯ ОБРАТНОЙ СВЯЗИ (mobileFeedbackSheet) — 100% БЕЗ ЛАГОВ
+// =============================================================================
+
+// =============================================================================
+// БОКОВАЯ ШТОРКА — СВАЙП ВЛЕВО ДЛЯ ЗАКРЫТИЯ — КАК В ТЕЛЕГРАМЕ / FIGMA / iOS 18
+// =============================================================================
+// =============================================================================
+// БОКОВАЯ ШТОРКА — СВАЙП ВЛЕВО ДЛЯ ЗАКРЫТИЯ — РАБОТАЕТ ВЕЗДЕ (2025 ГОД)
+// =============================================================================
+(() => {
+  const sidebar = document.getElementById('mobileSidebar');
+  if (!sidebar) return;
+
+  let startX = 0;
+  let isDragging = false;
+  const threshold = 80; // 80px — мгновенно закрывается
+
+  const open = () => {
+    sidebar.classList.add('open');
+    document.body.classList.add('sidebar-open');
+  };
+
+  const close = () => {
+    sidebar.classList.remove('open');
+    document.body.classList.remove('sidebar-open');
+  };
+
+  const handleStart = e => {
+    if (!sidebar.classList.contains('open')) return;
+
+    // УБРАЛИ ЭТУ СТРОКУ — теперь свайп работает везде, а не только с края
+    // if (e.touches?.[0].clientX > 80) return;
+
+    startX = e.touches?.[0].clientX || e.clientX;
+    isDragging = true;
+    sidebar.style.transition = 'none';
+  };
+
+  const handleMove = e => {
+    if (!isDragging) return;
+
+    const currentX = e.touches?.[0].clientX || e.clientX;
+    const diff = currentX - startX; // отрицательное = влево
+
+    if (diff < 0) { // только влево
+      e.preventDefault();
+      sidebar.style.transform = `translate3d(${diff}px, 0, 0)`;
+    }
+  };
+
+  const handleEnd = () => {
+    if (!isDragging) return;
+    isDragging = false;
+
+    const endX = event?.changedTouches?.[0]?.clientX || event?.clientX || startX;
+    const diff = endX - startX;
+
+    if (diff < -threshold) {
+      // Свайп влево — закрываем
+      sidebar.style.transition = 'transform 0.44s cubic-bezier(0.22, 1, 0.36, 1)';
+      sidebar.style.transform = 'translate3d(-100%, 0, 0)';
+      
+      setTimeout(() => {
+        close();
+        sidebar.style.transition = '';
+        sidebar.style.transform = '';
+      }, 450);
+    } else {
+      // Возврат
+      sidebar.style.transition = 'transform 0.38s cubic-bezier(0.2, 0.9, 0.3, 1)';
+      sidebar.style.transform = 'translate3d(0, 0, 0)';
+      setTimeout(() => sidebar.style.transition = '', 380);
+    }
+  };
+
+  // Свайп работает везде по шторке
+  document.addEventListener('touchstart', handleStart, { passive: true });
+  document.addEventListener('touchmove', handleMove, { passive: false });
+  document.addEventListener('touchend', handleEnd);
+
+  document.addEventListener('mousedown', handleStart);
+  document.addEventListener('mousemove', e => isDragging && handleMove(e));
+  document.addEventListener('mouseup', handleEnd);
+
+  // Остальное
+  document.getElementById('openSidebarMenu')?.addEventListener('click', e => {
+    e.stopPropagation();
+    open();
+  });
+
+  document.getElementById('closeSidebar')?.addEventListener('click', close);
+
+  document.addEventListener('click', e => {
+    if (sidebar.classList.contains('open') && 
+        !e.target.closest('#mobileSidebar') && 
+        !e.target.closest('#openSidebarMenu')) {
+      close();
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && sidebar.classList.contains('open')) close();
+  });
+})();
+// =============================================================================
+
+// =============================================================================
+// МОБИЛЬНАЯ ОБРАТНАЯ СВЯЗЬ — СВАЙП ВНИЗ — 120 FPS, КАК В КОРЗИНЕ (2025)
+// =============================================================================
+(() => {
+  const sheet = document.getElementById('mobileFeedbackSheet');
+  if (!sheet) return;
+
+  let startY = 0;
+  let currentY = 0;
+  let isDragging = false;
+  const threshold = 140;
+
+  const openSheet = () => {
+    sheet.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeSheet = () => {
+    sheet.style.transition = 'transform 0.42s cubic-bezier(0.22, 0.88, 0.38, 1)';
+    sheet.style.transform = 'translateY(100%)';
+    setTimeout(() => {
+      sheet.classList.remove('active');
+      document.body.style.overflow = '';
+      sheet.style.transition = '';
+      sheet.style.transform = '';
+    }, 420);
+  };
+
+  // Открытие (кнопка в хедере или bottom bar)
+  document.getElementById('feedbackBtnMobile')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    openSheet();
+  });
+
+  // Крестик
+  document.getElementById('closeMobileFeedback')?.addEventListener('click', closeSheet);
+
+  // === САМЫЙ ПЛАВНЫЙ СВАЙП 2025 ГОДА ===
+  const handleStart = (e) => {
+    if (!sheet.classList.contains('active')) return;
+    startY = e.touches?.[0].clientY || e.clientY;
+    currentY = startY;
+    isDragging = true;
+    sheet.style.transition = 'none'; // ← мгновенная реакция
+  };
+
+  const handleMove = (e) => {
+    if (!isDragging) return;
+    const y = e.touches?.[0].clientY || e.clientY;
+    const diff = y - startY;
+
+    if (diff > 0) {
+      e.preventDefault();
+      sheet.style.transform = `translateY(${diff}px)`; // ← ИСПРАВЛЕНО: без двойного px!
+    }
+  };
+
+  const handleEnd = () => {
+    if (!isDragging) return;
+    isDragging = false;
+
+    const diff = (event.changedTouches?.[0]?.clientY || currentY) - startY;
+
+    if (diff > threshold) {
+      closeSheet();
+    } else {
+      sheet.style.transition = 'transform 0.34s cubic-bezier(0.2, 0.8, 0.4, 1)';
+      sheet.style.transform = 'translateY(0)';
+      setTimeout(() => sheet.style.transition = '', 340);
+    }
+  };
+
+  // Вешаем на document — чтобы палец не терялся!
+  document.addEventListener('touchstart', handleStart, { passive: true });
+  document.addEventListener('touchmove', handleMove, { passive: false });
+  document.addEventListener('touchend', handleEnd);
+
+  // Поддержка мыши (для теста на десктопе)
+  document.addEventListener('mousedown', handleStart);
+  document.addEventListener('mousemove', handleMove);
+  document.addEventListener('mouseup', handleEnd);
+
+  // Закрытие по бекдропу (если есть)
+  sheet.addEventListener('click', (e) => {
+    if (e.target === sheet) closeSheet();
+  });
+
+  // Esc
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sheet.classList.contains('active')) closeSheet();
+  });
+})();

@@ -3774,7 +3774,9 @@ html[data-theme="light"] .philosophy cite {
   }
 }
 
-/* БОКОВАЯ ШТОРКА — СВАЙП ВЛЕВО ОТ ЛЮБОГО МЕСТА */
+/* ============================================================================= */
+/* БОКОВАЯ ШТОРКА — ПОЛНОСТЬЮ РАБОЧАЯ ВЕРСИЯ 2025 (СВАЙП + СКРОЛЛ) */
+/* ============================================================================= */
 .mobile-sidebar {
   position: fixed !important;
   top: 0;
@@ -3782,20 +3784,30 @@ html[data-theme="light"] .philosophy cite {
   width: 86vw;
   max-width: 380px;
   height: 100dvh;
-  background: var(--bg-primary, #111);
+  background: var(--bg-primary, #0a0a0a);
   z-index: 9999;
-  transform: translateX(-100%);
-  transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
-  overflow-y: auto;
+  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain; /* важно! */
+  overflow-y: auto;
+
+  transform: translate3d(-100%, 0, 0);
+  visibility: hidden;
+  pointer-events: none;
+
+  transition: transform 0.56s cubic-bezier(0.22, 0.88, 0.177, 1),
+              visibility 0s linear 0.56s;
+  will-change: transform;
 }
 
-.mobile-sidebar.active {
-  transform: translateX(0) !important;
+.mobile-sidebar.open {
+  transform: translate3d(0, 0, 0);
+  visibility: visible;
+  pointer-events: all;
+  transition: transform 0.62s cubic-bezier(0.22, 1, 0.36, 1),
+              visibility 0s linear 0s;
 }
 
-/* Тёмный бэкдроп (по желанию) */
+/* Бекдроп — как у тебя было */
 body.sidebar-open::before {
   content: '';
   position: fixed;
@@ -3805,12 +3817,19 @@ body.sidebar-open::before {
   z-index: 9998;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.35s ease;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
   pointer-events: none;
 }
+
 body.sidebar-open::before {
   opacity: 1;
   visibility: visible;
   pointer-events: all;
 }
+
+@keyframes slideDown {
+  from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+#global-cart-flood-alert i { font-size: 1.8rem; }
 

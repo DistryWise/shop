@@ -18,7 +18,8 @@
   <link rel="stylesheet" href="/static/css/auth.css">
   <link rel="stylesheet" href="/static/css/cart.css">
   <link rel="stylesheet" href="/static/css/ai.css">
-  <link rel="stylesheet" href="/static/css/contacts.css"> <!-- Оставлен, но не ломает хедер -->
+  <link rel="stylesheet" href="/static/css/feedback.css">
+  <link rel="stylesheet" href="/static/css/contacts.css"> 
 
 </head>
 <body>
@@ -26,18 +27,23 @@
   <div class="custom-cursor"></div>
 
   <!-- ХЕДЕР — ОРИГИНАЛЬНЫЙ ИЗ about_company.css -->
-  <header>
-    <a href="/" class="logo"><img src="/static/assets/logo.png" alt="Piligrim" class="logo-img"></a>
-    <nav>
-      <a href="/" class="nav-link">Главная</a>
-      <a href="/goods" class="nav-link">Товары</a>
-      <a href="/services" class="nav-link">Услуги</a>
-      <a href="/news" class="nav-link">Новости</a>
-      <a href="/about_company" class="nav-link active">О компании</a>
-      <a href="/contacts" class="nav-link">Контакты</a>
-    </nav>
+<!-- ВЕРХНИЙ ХЕДЕР — ТОЛЬКО НА ДЕСКТОПЕ -->
+<header class="main-header desktop-only">
+  <a href="/" class="logo">
+    <img src="/static/assets/logo.png" alt="Piligrim" class="logo-img">
+  </a>
+
+  <nav class="desktop-nav">
+    <a href="/" class="nav-link">Главная</a>
+    <a href="/goods" class="nav-link">Товары</a>
+    <a href="/services" class="nav-link">Услуги</a>
+    <a href="/news" class="nav-link">Новости</a>
+    <a href="/about_company" class="nav-link active">О компании</a> <!-- ← active здесь! -->
+    <a href="/contacts" class="nav-link">Контакты</a>
+  </nav>
+
+  <div class="header-right">
     <div class="header-icons">
-      <!-- ПОИСК -->
       <div class="search-wrapper">
         <div class="search-container">
           <div class="search-icon"><i class="fas fa-search"></i></div>
@@ -47,18 +53,18 @@
         <div id="autocompleteList" class="autocomplete-list"></div>
       </div>
 
-      <!-- ВХОД -->
       <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
 
-      <!-- КОРЗИНА -->
-      <div style="position: relative;">
+      <div class="cart-wrapper">
         <button class="icon-btn" id="cartBtn">
           <i class="fas fa-shopping-bag"></i>
           <span class="cart-count" id="cartCount">0</span>
         </button>
-        <div id="miniCartDropdown">
+        <div id="miniCartDropdown" class="mini-cart-dropdown">
           <div class="mini-cart-header"><div class="mini-cart-title">Корзина</div></div>
-          <div class="mini-cart-items" id="miniCartItems"><div class="mini-cart-empty">Корзина пуста</div></div>
+          <div class="mini-cart-items" id="miniCartItems">
+            <div class="mini-cart-empty">Корзина пуста</div>
+          </div>
           <div class="mini-cart-footer">
             <div class="mini-cart-total" id="miniCartTotal">Итого: 0.00 ₽</div>
             <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
@@ -66,10 +72,184 @@
         </div>
       </div>
 
-      <!-- ОБРАТНАЯ СВЯЗЬ -->
       <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
     </div>
-  </header>
+  </div>
+</header>
+
+<!-- НИЖНЯЯ ПАНЕЛЬ — ТОЛЬКО НА МОБИЛЬНЫХ -->
+<nav class="mobile-bottom-bar">
+  <button class="bottom-bar-btn" id="mobileSearchBtn" data-label="Поиск">
+    <i class="fas fa-search"></i>
+  </button>
+
+  <button class="bottom-bar-btn" id="mobileAuthBtn" data-label="Вход">
+    <i class="fas fa-user"></i>
+  </button>
+
+  <button class="bottom-bar-btn active" id="openSidebarMenu" data-label="Меню">
+    <i class="fas fa-home"></i>
+  </button>
+
+  <button class="bottom-bar-btn" id="mobileCartBtn" data-label="Корзина">
+    <i class="fas fa-shopping-bag"></i>
+    <span class="cart-count" id="mobileCartCount">0</span>
+  </button>
+
+  <button class="bottom-bar-btn" id="feedbackBtnMobile" data-label="Поддержка">
+    <i class="fas fa-envelope"></i>
+  </button>
+</nav>
+<!-- ПОЛНОЭКРАННАЯ ШТОРКА ПОИСКА ДЛЯ НОУТБУКОВ/ПЛАНШЕТОВ -->
+<div class="tablet-search-full" id="tabletSearchSheet">
+  <div class="tablet-search-backdrop"></div>
+  <div class="tablet-search-header-full">
+    <button class="tablet-search-back" id="closeTabletSearch">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <div class="tablet-search-input-wrapper-full">
+      <i class="fas fa-search"></i>
+      <input type="text" id="tabletSearchInput" placeholder="Поиск по каталогу..." autocomplete="off">
+      <button class="tablet-search-clear" id="tabletSearchClear">×</button>
+    </div>
+  </div>
+  <div class="tablet-search-empty" id="tabletEmptyState">
+    <i class="fas fa-search"></i>
+    <p>Начните вводить запрос...</p>
+  </div>
+  <div id="tabletAutocompleteList" class="tablet-autocomplete-list-full"></div>
+</div>
+
+<!-- МОБИЛЬНЫЙ ПОИСК СВЕРХУ (2025 стиль) -->
+<div class="mobile-search-top" id="mobileSearchTop">
+  <div class="mobile-search-header">
+    <button class="mobile-search-back" id="closeMobileSearchTop">←</button>
+    <div class="mobile-search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input type="text" class="mobile-search-input" id="mobileSearchInput" placeholder="Поиск по каталогу..." autocomplete="off">
+      <button class="mobile-search-clear" id="mobileSearchClear">×</button>
+    </div>
+  </div>
+</div>
+
+<!-- РЕЗУЛЬТАТЫ МОБИЛЬНОГО ПОИСКА -->
+<div class="mobile-search-results" id="mobileSearchResults">
+  <div class="search-empty-state" id="mobileEmptyState">
+    <i class="fas fa-search"></i>
+    <p>Начните вводить запрос...</p>
+  </div>
+  <div id="mobileAutocompleteList" class="mobile-autocomplete-list"></div>
+</div>
+
+<!-- МОБИЛЬНАЯ ШТОРКА КОРЗИНЫ -->
+<div class="mobile-cart-sheet" id="mobileCartSheet">
+  <div class="sheet-backdrop" id="mobileCartBackdrop"></div>
+  <div class="sheet-container">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="cart-header-icon">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="cart-count" id="mobileCartHeaderCount">0</span>
+      </div>
+      <h3>Корзина</h3>
+      <button class="sheet-close-btn" id="mobileCloseCart">×</button>
+    </div>
+    <div class="sheet-items" id="mobileMiniCartItems">
+      <div style="padding:3rem 1.5rem;text-align:center;color:#888;">
+        <i class="fas fa-shopping-bag" style="font-size:3rem;margin-bottom:1rem;opacity:0.3;"></i>
+        <p>Корзина пуста</p>
+      </div>
+    </div>
+    <div class="sheet-total">
+      Итого: <strong id="mobileMiniCartTotal">0 ₽</strong>
+    </div>
+    <div class="sheet-footer">
+      <button class="checkout-btn-full" id="mobileGoToCartBtn">
+        Перейти к оформлению
+      </button>
+    </div>
+  </div>
+</div>
+<!-- МОДАЛКА "АВТОРИЗУЙТЕСЬ" ПЕРЕД ОТПРАВКОЙ ФИДБЕКА -->
+<div class="custom-alert" id="authAlert">
+  <div class="alert-content">
+    <button class="alert-close">×</button>
+    <div class="alert-icon">
+      <i class="fas fa-user-lock"></i>
+    </div>
+    <div class="alert-text">
+      <strong>Авторизуйтесь</strong>
+      <span>Для отправки сообщения нужно войти в аккаунт</span>
+    </div>
+    <button class="alert-login-btn" id="authBtnFeedback">Войти</button>
+  </div>
+</div>
+<!-- МОБИЛЬНАЯ ШТОРКА ОБРАТНОЙ СВЯЗИ (2025 стиль) -->
+<div class="mobile-feedback-sheet" id="mobileFeedbackSheet">
+  <div class="sheet-header">
+    <button class="sheet-back-btn" id="closeMobileFeedback">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <div class="sheet-title-wrapper">
+      <i class="fas fa-envelope-open-text"></i>
+      <h2>Обратная связь</h2>
+    </div>
+  </div>
+  <div class="sheet-handle"></div>
+  <form class="contact-form sheet-form" novalidate id="contactFormMobile">
+    <div class="sheet-field">
+      <label>Ваше имя</label>
+      <input type="text" class="name-input" name="name" placeholder="Ваше имя..." required autocomplete="name" />
+    </div>
+    <div class="sheet-field phone-field-wrapper">
+      <label>Телефон <span class="required">*</span></label>
+      <input type="tel" class="phone-input" name="phone" placeholder="+7 (___) ___-__-__" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+    </div>
+    <div class="sheet-field">
+      <label>Email <span class="required">*</span></label>
+      <input type="email" name="email" placeholder="your@email.com" required autocomplete="email" />
+    </div>
+    <div class="sheet-field">
+      <label>Сообщение <span class="required">*</span></label>
+      <textarea name="message" placeholder="Опишите ваш вопрос или предложение..." rows="4" required></textarea>
+    </div>
+    <button type="submit" class="sheet-submit-btn" id="submitBtnMobile">
+      <span class="btn-text">Отправить заявку</span>
+      <span class="btn-loading"><i class="fas fa-spinner fa-spin"></i></span>
+      <span class="btn-cooldown" style="display:none;"><span class="timer">30</span>с</span>
+    </button>
+  </form>
+</div>
+<!-- ШТОРКА СЛЕВА — МЕНЮ -->
+<div class="mobile-sidebar" id="mobileSidebar">
+  <div class="sidebar-top">
+    <button class="sidebar-close" id="closeSidebar">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <img src="/static/assets/logo.png" alt="Piligrim" class="sidebar-logo-big">
+  </div>
+
+  <nav class="sidebar-nav-modern">
+    <div class="nav-divider top"></div>
+    <a href="/" class="sidebar-link-modern">Главная</a>
+    <a href="/goods" class="sidebar-link-modern">Товары</a>
+    <a href="/services" class="sidebar-link-modern">Услуги</a>
+    <a href="/news" class="sidebar-link-modern">Новости</a>
+    <a href="/about_company" class="sidebar-link-modern active">О компании</a>
+    <a href="/contacts" class="sidebar-link-modern">Контакты</a>
+    <div class="nav-divider bottom"></div>
+  </nav>
+
+  <div class="sidebar-bottom-theme">
+    <div class="sidebar-theme-toggle">
+      <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+      <label for="theme-toggle" class="theme-toggle-label">
+        <i class="fas fa-moon"></i>
+        <i class="fas fa-sun"></i>
+      </label>
+    </div>
+  </div>
+</div>
 
   <!-- ВЕСЬ КОНТЕНТ — БЕЗ ИЗМЕНЕНИЙ -->
   <section class="hero">
@@ -221,6 +401,8 @@
       Напишите нам — обсудим, как вывести ваш проект на новый уровень.
     </p>
   </section>
+
+  
 
   <footer>
     <div class="footer-left">© PILIGRIM 2025. ALL RIGHTS RESERVED.</div>
@@ -422,32 +604,7 @@
     }, 900); 
   });
 </script>
-<script>
-  // === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ (ЛАМПОЧКА) ===
-const themeToggle = document.getElementById('theme-toggle');
-const html = document.documentElement;
 
-// Восстанавливаем сохранённую или системную тему
-if (localStorage.getItem('theme') === 'light' || 
-   (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: light)').matches)) {
-  html.setAttribute('data-theme', 'light');
-  themeToggle.checked = true;
-} else {
-  html.setAttribute('data-theme', 'dark');
-  themeToggle.checked = false;
-}
-
-// Переключение по клику
-themeToggle.addEventListener('change', () => {
-  if (themeToggle.checked) {
-    html.setAttribute('data-theme', 'light');
-    localStorage.setItem('theme', 'light');
-  } else {
-    html.setAttribute('data-theme', 'dark');
-    localStorage.setItem('theme', 'dark');
-  }
-});
-</script>
 <script>
 // Мгновенная и плавная смена картинок темы — БЕЗ МЕЛЬКАНИЙ!
 document.addEventListener('DOMContentLoaded', () => {
@@ -467,6 +624,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const observer = new MutationObserver(updateThemeImages);
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 });
+</script>
+
+<script>
+  // Простой и лёгкий свайп для карусели (добавь в about_company.js)
+let touchStartX = 0;
+let touchEndX = 0;
+
+const carousel = document.getElementById('full-carousel');
+
+carousel.addEventListener('touchstart', e => {
+  touchStartX = e.changedTouches[0].screenX;
+}, { passive: true });
+
+carousel.addEventListener('touchend', e => {
+  touchEndX = e.changedTouches[0].screenX;
+  handleSwipe();
+}, { passive: true });
+
+function handleSwipe() {
+  if (touchEndX < touchStartX - 50) nextFullSlide();   // влево → следующий
+  if (touchEndX > touchStartX + 50) prevFullSlide();   // вправо → предыдущий
+}
 </script>
 </body>
 </html>

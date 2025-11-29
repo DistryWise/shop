@@ -1,28 +1,5 @@
 /* static/css/cart.css */
-.cart-count {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: #dfdedd;
-    color: #000;
-    font-size: 0.7rem;
-    font-weight: 700;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    transition: all 0.3s ease;
-    opacity: 0;
-    transform: scale(0);
-}
 
-.cart-count.show {
-    opacity: 1;
-    transform: scale(1);
-}
 
 .cart-modal {
     position: absolute;
@@ -518,30 +495,59 @@ html[data-theme="light"] header:not(.scrolled) div {
 }
 
 /* 🔥 ШТОРКА ДО ВЕРХА ЭКРАНА 🔥 */
-#mobileCartSheet .sheet-container {
+/* ====== МОБИЛЬНАЯ КОРЗИНА — УБИРАЕМ "БЛОК ТЕНИ" НАВСЕГДА ====== */
+#mobileCartSheet {
   position: fixed;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100dvh;                    /* ✅ ПОЛНАЯ ВЫСОТА ЭКРАНА */
-  background: rgba(15, 15, 15, 0.98);
-  border-radius: 0;                  /* ✅ БЕЗ СКРУГЛЕНИЙ СВЕРХУ */
-  border: none;
-  box-shadow: none;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  contain: strict;                     /* ← критично! */
+}
+
+#mobileCartSheet.active {
+  pointer-events: all;
+}
+
+/* Бэкдроп — только затемнение, без блюра (чтобы не было артефактов) */
+#mobileCartBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);      /* ← можно даже 0.4 */
+  opacity: 0;
+  transition: opacity 0.42s ease;
+}
+
+#mobileCartSheet.active #mobileCartBackdrop {
+  opacity: 1;
+}
+
+/* Сама шторка — без backdrop-filter и без box-shadow */
+#mobileCartSheet .sheet-container {
+  position: absolute;                  /* ← меняем с fixed на absolute */
+  inset: 0;
+  background: rgb(15, 15, 15);         /* ← полностью непрозрачный */
   transform: translateY(100%);
-  transition: transform 0.48s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 0.42s cubic-bezier(0.22, 0.88, 0.38, 1);
+  will-change: transform;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  will-change: transform;
 }
 
 #mobileCartSheet.active .sheet-container {
-  transform: translateY(0) !important;
+  transform: translateY(0);
 }
 
+/* Если всё-таки хочешь блюр — делаем его только на шторке, но без бага */
+#mobileCartSheet .sheet-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  pointer-events: none;
+  z-index: -1;
+}
 /* === БЕЗ РУЧКИ (полноэкранная) === */
 #mobileCartSheet .sheet-handle {
   display: none;
@@ -974,3 +980,4 @@ html[data-theme="light"] .cart-toast {
   color: #000 !important;
   border-color: rgba(0, 0, 0, 0.15) !important;
 }
+

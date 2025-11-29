@@ -525,51 +525,123 @@ const renderMiniCart = () => {
         });
     }
     // === МОБИЛЬНАЯ ШТОРКА ===
-if (elements.mobileCartBtn && elements.mobileCartSheet) {
-    elements.mobileCartBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        elements.mobileCartSheet.classList.add('active');
-        elements.mobileCartBackdrop.classList.add('active');
-        document.body.classList.add('no-scroll');
-        loadCart(); // Загружаем данные
+(() => {
+  const sheet = document.getElementById('mobileCartSheet');
+  const backdrop = document.getElementById('mobileCartBackdrop');
+  if (!sheet || !backdrop) return;
+
+  let startY = 0;
+  let isDragging = false;
+  const threshold = 140;
+
+  const openSheet = () => {
+    if (sheet.classList.contains('active')) return;
+
+    sheet.style.display = 'block';
+    backdrop.style.display = 'block';
+
+    sheet.style.transform = 'translateY(100%)';
+    sheet.style.transition = 'none';
+    void sheet.offsetHeight;
+
+    sheet.classList.add('active');
+    backdrop.classList.add('active');
+    document.body.classList.add('no-scroll');
+
+    requestAnimationFrame(() => {
+      // Твоя медленная премиальная анимация — как в "Поддержке"
+      sheet.style.transition = 'transform 0.52s cubic-bezier(0.12, 1.15, 0.28, 1)';
+      sheet.style.transform = 'translateY(0)';
     });
 
-    elements.mobileCloseCart?.addEventListener('click', () => {
-        elements.mobileCartSheet.classList.remove('active');
-        elements.mobileCartBackdrop.classList.remove('active');
-        document.body.classList.remove('no-scroll');
-    });
+    loadCart?.();
+  };
 
-    elements.mobileGoToCartBtn?.addEventListener('click', () => {
-        location.href = '/bin';
-    });
+  const closeSheet = () => {
+    if (!sheet.classList.contains('active')) return;
 
-    elements.mobileCartBackdrop?.addEventListener('click', () => {
-        elements.mobileCartSheet.classList.remove('active');
-        elements.mobileCartBackdrop.classList.remove('active');
-        document.body.classList.remove('no-scroll');
-    });
+    sheet.style.transition = 'transform 0.52s cubic-bezier(0.3, 0.8, 0.42, 1)';
+    sheet.style.transform = 'translateY(100%)';
 
-    document.addEventListener('click', (e) => {
-        if (elements.mobileCartSheet.classList.contains('active') &&
-            !e.target.closest('#mobileCartSheet') &&
-            !e.target.closest('#mobileCartBtn')) {
-            elements.mobileCartSheet.classList.remove('active');
-            elements.mobileCartBackdrop.classList.remove('active');
-            document.body.classList.remove('no-scroll');
-        }
-    });
+    const cleanup = () => {
+      sheet.classList.remove('active');
+      backdrop.classList.remove('active');
+      document.body.classList.remove('no-scroll');
+      sheet.style.display = 'none';
+      backdrop.style.display = 'none';
+      sheet.style.transition = '';
+      sheet.style.transform = '';
+      sheet.removeEventListener('transitionend', cleanup);
+    };
 
-    // ESC
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && elements.mobileCartSheet?.classList.contains('active')) {
-            elements.mobileCartSheet.classList.remove('active');
-            elements.mobileCartBackdrop.classList.remove('active');
-            document.body.classList.remove('no-scroll');
-        }
-    });
-}
+    sheet.addEventListener('transitionend', cleanup);
+    setTimeout(cleanup, 600); // 100% надёжно
+  };
+
+  // Открытие
+  document.getElementById('mobileCartBtn')?.addEventListener('click', e => {
+    e.preventDefault();
+    openSheet();
+  });
+
+  // Крестик
+  document.getElementById('mobileCloseCart')?.addEventListener('click', closeSheet);
+
+  // Бекдроп — теперь точно работает
+  backdrop.addEventListener('click', e => {
+    if (e.target === backdrop) closeSheet();
+  });
+
+  // Свайп вниз — плавный и надёжный
+  const handleStart = e => {
+    if (!sheet.classList.contains('active')) return;
+    startY = e.touches?.[0].clientY || e.clientY;
+    isDragging = true;
+    sheet.style.transition = 'none';
+  };
+
+  const handleMove = e => {
+    if (!isDragging) return;
+    const y = e.touches?.[0].clientY || e.clientY;
+    const diff = y - startY;
+    if (diff > 0) {
+      e.preventDefault();
+      sheet.style.transform = `translateY(${diff}px)`;
+    }
+  };
+
+  const handleEnd = () => {
+    if (!isDragging) return;
+    isDragging = false;
+    const diff = (event?.changedTouches?.[0]?.clientY || event?.clientY || startY) - startY;
+
+    if (diff > threshold) {
+      closeSheet();
+    } else {
+      sheet.style.transition = 'transform 0.44s cubic-bezier(0.22, 1, 0.36, 1)';
+      sheet.style.transform = 'translateY(0)';
+      setTimeout(() => sheet.style.transition = '', 450);
+    }
+  };
+
+  document.addEventListener('touchstart', handleStart, { passive: true });
+  document.addEventListener('touchmove', handleMove, { passive: false });
+  document.addEventListener('touchend', handleEnd);
+  document.addEventListener('mousedown', handleStart);
+  document.addEventListener('mousemove', e => isDragging && handleMove(e));
+  document.addEventListener('mouseup', handleEnd);
+
+  // Переход в корзину
+  document.getElementById('mobileGoToCartBtn')?.addEventListener('click', () => {
+    closeSheet();
+    setTimeout(() => location.href = '/bin', 200);
+  });
+
+  // Esc
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && sheet.classList.contains('active')) closeSheet();
+  });
+})();
 
     // === ИНИЦИАЛИЗАЦИЯ ===
     loadCart();

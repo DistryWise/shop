@@ -36,52 +36,7 @@
       opacity: 0.3;
     }
 
-    .custom-cursor {
-      position: fixed; width: 12px; height: 12px; border: 1px solid #fff;
-      border-radius: 50%; pointer-events: none; z-index: 9999;
-      transform: translate(-50%, -50%); mix-blend-mode: difference;
-      transition: all 0.12s ease;
-    }
-    [data-theme="light"] .custom-cursor { border-color: #000; }
 
-    /* Хедер */
-    header {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
-      padding: 1.5rem 5%; height: 80px; display: flex; justify-content: space-between; align-items: center;
-      backdrop-filter: blur(20px); background: transparent;
-      border-bottom: 1px solid var(--border); transition: all .4s ease;
-    }
-    header.scrolled { padding: 1rem 5%; background: rgba(0,0,0,0.92); height: 70px; }
-    [data-theme="light"] header { background: rgba(255,255,255,0.95); }
-    [data-theme="light"] header.scrolled { background: rgba(255,255,255,0.98); }
-
-    .logo-img {
-      height: -50px; transition: all .4s ease;
-      filter: brightness(0) invert(1);
-    }
-    [data-theme="light"] .logo-img { filter: none; }
-    header.scrolled .logo-img { height: -60px; }
-
-    nav { display: flex; gap: 2rem; }
-    .nav-link {
-      font-size: 0.8rem; font-weight: 400; letter-spacing: 2px; text-transform: uppercase;
-      color: #aaa; text-decoration: none; position: relative; cursor: pointer;
-    }
-    [data-theme="light"] .nav-link { color: #777; }
-    .nav-link::after {
-      content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 1px;
-      background: var(--text); transition: all .4s;
-    }
-    .nav-link:hover::after, .nav-link.active::after { width: 100%; }
-    .nav-link:hover, .nav-link.active { color: var(--text); }
-
-    .header-icons { display: flex; gap: 0.8rem; }
-    .icon-btn {
-      width: 40px; height: 40px; border-radius: 50%; background: var(--light);
-      border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
-      color: var(--text); font-size: 0.8rem; transition: var(--transition);
-    }
-    .icon-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--text); }
 
     /* === ГЕРОЙ === */
     .hero {
@@ -334,6 +289,34 @@
     .full-progress-fill { height: 100%; background: #fff; width: 0%; border-radius: 2px; transition: width 5s linear; }
     .full-progress-bar.active .full-progress-fill { width: 100%; }
 
+    .full-progress-bar {
+  width: 70px;
+  height: 3px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+
+
+.full-progress-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;                    /* стартуем с 0 */
+  background: #ffffff;
+  border-radius: 2px;
+  transform: translateX(-100%); /* ключевой момент */
+  transition: transform 5s linear;   /* анимируем transform, а не width */
+}
+
+/* Только активный бар анимируется */
+.full-progress-bar.active .full-progress-fill {
+  transform: translateX(0);    /* плавно выезжает от -100% до 0% */
+}
+
     /* === НИЖНЯЯ СЕКЦИЯ === */
     .bridging-section {
       background: #000000;
@@ -468,20 +451,6 @@
    Работает 100% в тёмной и светлой теме
 ====================================================================*/
 
-/* 1. ИКОНКИ В ХЕДЕРЕ — ВИДНЫ ВСЕГДА */
-.header-icons .icon-btn,
-.header-icons .icon-btn i,
-.header-icons .icon-btn svg {
-  color: var(--text) !important;
-  fill: currentColor !important;
-  opacity: 1 !important;
-  font-size: 1.1rem !important;   /* чуть крупнее, чтобы точно было видно */
-}
-[data-theme="light"] .header-icons .icon-btn,
-[data-theme="light"] .header-icons .icon-btn i,
-[data-theme="light"] .header-icons .icon-btn svg {
-  color: #111 !important;
-}
 
 /* Бейджик на корзине — контрастный */
 .cart-count {
@@ -694,7 +663,7 @@
   .bridging-section { clip-path: none; }
 }
 
-<style>
+
   
  /* ─────── ЛОАДЕР ТОЧНО КАК НА contacts.html ─────── */
 .loader {
@@ -797,44 +766,6 @@ header.scrolled ~ main .theme-toggle-hanging {
 }
 
 
-/* === СВЕТЛАЯ ТЕМА: ХЕДЕР ДО СКРОЛЛА — ПОЛНОСТЬЮ ПРОЗРАЧНЫЙ + BLUR === */
-html[data-theme="light"] header:not(.scrolled) {
-  background: transparent !important;           /* полностью прозрачный */
-  backdrop-filter: blur(16px);                  /* только эффект размытия фона */
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);   /* едва заметная линия */
-  box-shadow: none;
-  transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Белый логотип */
-html[data-theme="light"] header:not(.scrolled) .logo-img {
-  filter: brightness(0) invert(1);
-  opacity: 0.98;
-}
-
-/* Белый текст навигации и счётчик */
-html[data-theme="light"] header:not(.scrolled) .nav-link,
-html[data-theme="light"] header:not(.scrolled) .cart-count {
-  color: #ffffff !important;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
-}
-
-/* Иконки: чёрная заливка + белая неоновая обводка */
-html[data-theme="light"] header:not(.scrolled) .header-icons i,
-html[data-theme="light"] header:not(.scrolled) .search-icon i {
-  color: #000000 !important;
-  -webkit-text-stroke: 2.6px #ffffff;
-  text-stroke: 2.6px #ffffff;
-  paint-order: stroke fill;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
-}
-
-/* Ховер — чуть ярче */
-html[data-theme="light"] header:not(.scrolled) .icon-btn:hover i {
-  -webkit-text-stroke: 3px #ffffff;
-  text-shadow: 0 0 16px rgba(255, 255, 255, 0.9);
-}
 
 /* === ПОСЛЕ СКРОЛЛА — БЕЛЫЙ ХЕДЕР С ЧЁРНЫМ ТЕКСТОМ === */
 html[data-theme="light"] header.scrolled {
@@ -856,36 +787,179 @@ html[data-theme="light"] header.scrolled .cart-count {
   -webkit-text-stroke: 0 !important;
   text-shadow: none !important;
 }
-/* СВЕТЛАЯ ТЕМА ДО СКРОЛЛА — ВСЕ ИКОНКИ В ХЕДЕРЕ В БЕЛОМ КРУГЕ */
-html[data-theme="light"] header:not(.scrolled) .icon-btn {
-  background: rgba(255, 255, 255, 0.96) !important;
-  border: 1.8px solid rgba(255, 255, 255, 0.45) !important;
-  backdrop-filter: blur(12px) !important;
-  box-shadow: 
-    0 8px 25px rgba(0, 0, 0, 0.18),
-    0 0 0 1px rgba(255, 255, 255, 0.3) inset !important;
-  transition: all 0.4s ease !important;
-}
 
-html[data-theme="light"] header:not(.scrolled) .icon-btn:hover {
-  background: #ffffff !important;
-  border-color: #ffffff !important;
-  transform: translateY(-3px) !important;
-  box-shadow: 
-    0 14px 35px rgba(0, 0, 0, 0.25),
-    0 0 0 1.5px #ffffff inset !important;
-}
-
-/* Иконки внутри — чёрные (чтобы были видны на белом фоне) */
-html[data-theme="light"] header:not(.scrolled) .icon-btn i,
-html[data-theme="light"] header:not(.scrolled) .icon-btn svg {
-  color: #000000 !important;
-  fill: #000000 !important;
-  -webkit-text-stroke: 0 !important;   /* убираем белую обводку — она больше не нужна */
-  text-shadow: none !important;
-}
 
 /* Чуть опускаем логотип вниз — работает и в тёмной, и в светлой теме */
 header .logo-img {
   transform: translateY(3px);   /* ← вот сюда ставишь нужное значение: 4px, 6px, 8px… */
 }
+/* ================================================================= */
+/* ФИНАЛЬНАЯ МОБИЛЬНАЯ АДАПТАЦИЯ — ЧИСТЫЙ 2025 СТИЛЬ                 */
+/* Только "Калининград · 1255" + свайп + прогресс-бар + фото сверху   */
+/* ================================================================= */
+
+@media screen and (max-width: 1024px) {
+
+  /* === ГЕРОЙ — ТОЛЬКО "Калининград · 1255" === */
+  .hero {
+    height: 100dvh;
+    min-height: 620px;
+    background-attachment: scroll;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 15vh;
+  }
+
+  .hero::before {
+    background: linear-gradient(to bottom, 
+      rgba(0,0,0,0.1) 0%, 
+      rgba(0,0,0,0.5) 50%, 
+      rgba(0,0,0,0.95) 100%
+    );
+  }
+
+  .hero-content {
+    position: static;
+    transform: none;
+    text-align: center;
+    max-width: 90%;
+    opacity: 1 !important;
+  }
+
+  .hero-subtitle {
+    font-size: 0.84rem;
+    letter-spacing: 0.48em;
+    font-weight: 400;
+    opacity: 0.94;
+    margin: 0;
+  }
+
+  /* Скрываем PILIGRIM и описание — они под экраном */
+  .hero-title,
+  .hero-text {
+    position: absolute;
+    left: -9999px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Тонкая линия над надписью */
+  .hero-content::before {
+    content: '';
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 72px;
+    height: 1.5px;
+    background: rgba(255,255,255,0.38);
+  }
+
+
+  /* === СЕКЦИИ "О КОМПАНИИ" — КАРТИНКА СВЕРХУ, ТЕКСТ СНИЗУ === */
+  .about-section,
+  .about-section:nth-child(even),
+  .about-section:nth-child(odd) {
+    flex-direction: column !important;
+    padding: 11vh 6% 13vh;
+    min-height: auto;
+  }
+
+  .about-section .image-wrapper {
+    order: -1 !important;
+    width: 100%;
+    height: 64vh;
+    max-height: 540px;
+    margin-bottom: 4.8rem;
+    border-radius: 18px;
+    overflow: hidden;
+  }
+
+  .about-section .image {
+    border-radius: 18px;
+  }
+
+  .about-section .content {
+    order: 2 !important;
+    width: 100%;
+    padding: 0;
+    text-align: center;
+    max-width: 100%;
+  }
+
+  .section-title {
+    font-size: clamp(2.3rem, 8.5vw, 3.6rem);
+    letter-spacing: 3.2px;
+    margin-bottom: 1.8rem;
+  }
+
+  .section-text {
+    font-size: 1.09rem;
+    line-height: 1.88;
+  }
+
+
+  /* === КАРУСЕЛЬ — СВАЙП + ПРОГРЕСС-БАР (БЕЗ СТРЕЛОК) === */
+  .full-carousel-section {
+    clip-path: none !important;
+    margin-top: 0 !important;
+    padding: 10vh 0 16vh;
+  }
+
+  .full-carousel-container,
+  .full-carousel-slide {
+    height: 78vh;
+    min-height: 540px;
+  }
+
+  /* Убираем стрелки, оставляем только прогресс */
+  .full-carousel-arrow {
+    display: none !important;
+  }
+
+  .full-carousel-controls {
+    bottom: 9%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    gap: 18px;
+    background: none;
+    padding: 0;
+  }
+
+  .full-carousel-progress {
+    display: flex !important;
+    gap: 16px;
+  }
+
+  .full-progress-bar {
+    width: 64px;
+    height: 2px;
+    background: rgba(255,255,255,0.26);
+    border-radius: 2px;
+  }
+
+  .full-progress-fill {
+    background: #ffffff;
+    border-radius: 2px;
+  }
+
+  .full-progress-bar.active .full-progress-fill {
+    width: 100%;
+  }
+}
+
+/* iPhone SE и меньше — ещё чище */
+@media screen and (max-width: 420px) {
+  .hero { padding-top: 17vh; }
+  .hero-content::before { width: 64px; top: -24px; }
+
+  .about-section .image-wrapper {
+    height: 58vh;
+    margin-bottom: 4rem;
+  }
+
+  .full-progress-bar { width: 52px; }
+}
+

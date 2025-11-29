@@ -119,38 +119,42 @@ searchContainer.addEventListener('transitionend', (e) => {
 });
 
 
-  // === КЛИК ПО ЛУПЕ ===
-  // === КЛИК ПО ЛУПЕ — УМНЫЙ ВЫБОР ПОВЕДЕНИЯ ПО ШИРИНЕ ЭКРАНА ===
-  document.querySelectorAll('.search-icon, #mobileSearchBtn').forEach(trigger => {
-    trigger.addEventListener('click', (e) => {
-      e.stopPropagation();
+// ЕДИНЫЙ УМНЫЙ КЛИК ПО ЛУПЕ — РАБОТАЕТ НА ВСЕХ УСТРОЙСТВАХ БЕЗ ДУБЛЕЙ
+document.addEventListener('click', (e) => {
+  const trigger = e.target.closest('#mobileSearchBtn') || e.target.closest('.search-icon');
+  if (!trigger) return;
 
-      const currentDevice = getDevice();
+  e.preventDefault();
+  e.stopPropagation();
 
-      // Мобильный ≤1024px — шторка сверху
-      if (currentDevice === 'mobile') {
-        mobileSearchTop.classList.add('active');
-        mobileSearchResults.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-        setTimeout(() => mobileSearchInput?.focus(), 400);
-        mobileEmptyState.style.display = 'block';
-        mobileAutocomplete.innerHTML = '';
-        return;
-      }
+  const width = window.innerWidth;
 
-      // Планшет 1025–1440px — полноэкранная шторка снизу
-      if (currentDevice === 'tablet') {
-        tabletSearchSheet.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        setTimeout(() => tabletSearchInput?.focus(), 300);
-        tabletAutocomplete.innerHTML = '';
-        return;
-      }
+  // МОБИЛКА ≤1024px — шторка сверху
+  if (width <= 1024) {
+    mobileSearchTop.classList.add('active');
+    mobileSearchResults.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    mobileEmptyState.style.display = 'block';
+    mobileAutocomplete.innerHTML = '';
+    setTimeout(() => mobileSearchInput?.focus(), 400);
+    return;
+  }
 
-      // Десктоп ≥1441px — старое поведение (выезд вправо)
-      searchContainer.classList.contains('active') ? close() : open();
-    });
-  });
+  // ПЛАНШЕТ 1025–1887px — полноэкранная шторка
+  if (width <= 1887) {
+    tabletSearchSheet.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => tabletSearchInput?.focus(), 300);
+    return;
+  }
+
+  // ДЕСКТОП ≥1888px — обычное расширение строки
+  if (searchContainer.classList.contains('active')) {
+    close();
+  } else {
+    open();
+  }
+});
 
   // === ХОВЕР (как в bin — открывается при наведении) ===
   let hoverTimeout;
@@ -642,3 +646,102 @@ modal.querySelector('#productReviewsCount').textContent =
     document.body.style.overflow = '';
   });
 });
+// =============================================================================
+// МОБИЛЬНЫЙ ПОИСК — СВАЙП ВНИЗ КАК КОРЗИНА В TELEGRAM X (2025 ГОД)
+// =============================================================================
+(() => {
+  const wrapper = document.getElementById('mobileSearchWrapper');
+  const header  = document.getElementById('mobileSearchTop');
+  const results = document.getElementById('mobileSearchResults');
+  const input   = document.getElementById('mobileSearchInput');
+
+  if (!wrapper) return;
+
+  let startY = 0;
+  let isDragging = false;
+  const threshold = 100;
+
+  const open = () => {
+    wrapper.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => input?.focus(), 400);
+  };
+
+  const close = () => {
+    wrapper.style.transition = 'transform 0.52s cubic-bezier(0.22, 1, 0.36, 1)';
+    wrapper.style.transform = 'translateY(-100%)';
+
+    setTimeout(() => {
+      wrapper.classList.remove('active');
+      document.body.style.overflow = '';
+      wrapper.style.transition = '';
+      wrapper.style.transform = '';
+      // Очистка при закрытии
+      if (input) input.value = '';
+      document.getElementById('mobileSearchClear')?.style.setProperty('opacity', '0');
+      document.getElementById('mobileEmptyState').style.display = 'block';
+      document.getElementById('mobileAutocompleteList').innerHTML = '';
+    }, 520);
+  };
+
+  // Открытие по клику на лупу (твой существующий код уже работает — оставляем)
+  // Если нужно — просто вызывай open() вместо кучи classList.add
+
+  // СВАЙП ВНИЗ
+  const handleStart = e => {
+    if (!wrapper.classList.contains('active')) return;
+    const y = e.touches?.[0].clientY || e.clientY;
+    if (y > 140) return; // только с верхней части
+
+    startY = y;
+    isDragging = true;
+    wrapper.style.transition = 'none';
+  };
+
+  const handleMove = e => {
+    if (!isDragging) return;
+    const diff = (e.touches?.[0].clientY || e.clientY) - startY;
+    if (diff > 0) {
+      e.preventDefault();
+      wrapper.style.transform = `translateY(${diff}px)`;
+      // Плавное затемнение при свайпе
+      const opacity = Math.min(diff / 300, 0.65);
+      wrapper.style.setProperty('--backdrop-opacity', opacity);
+      wrapper.querySelector('::before')?.style.setProperty('opacity', opacity);
+    }
+  };
+
+  const handleEnd = () => {
+    if (!isDragging) return;
+    isDragging = false;
+    const diff = (event?.changedTouches?.[0]?.clientY || event?.clientY || startY) - startY;
+
+    if (diff > threshold) {
+      close();
+    } else {
+      wrapper.style.transition = 'transform 0.42s cubic-bezier(0.2, 0.9, 0.3, 1)';
+      wrapper.style.transform = 'translateY(0)';
+      setTimeout(() => wrapper.style.transition = '', 420);
+    }
+  };
+
+  document.addEventListener('touchstart', handleStart, { passive: true });
+  document.addEventListener('touchmove', handleMove, { passive: false });
+  document.addEventListener('touchend', handleEnd);
+  document.addEventListener('mousedown', handleStart);
+  document.addEventListener('mousemove', e => isDragging && handleMove(e));
+  document.addEventListener('mouseup', handleEnd);
+
+  // Кнопка ← и Esc
+  document.getElementById('closeMobileSearchTop')?.addEventListener('click', close);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && wrapper.classList.contains('active')) close();
+  });
+
+  // Вместо всех твоих старых open/close — теперь просто:
+  window.openMobileSearch = open;
+  window.closeMobileSearch = close;
+
+  // Если у тебя где-то был mobileSearchBtn.addEventListener('click', ...) — замени на:
+  // mobileSearchBtn?.addEventListener('click', open);
+})();

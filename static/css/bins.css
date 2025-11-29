@@ -1780,3 +1780,174 @@ html[data-theme="dark"] button[onclick="closeMultiOrderModal()"]:hover {
   .apple-remove-btn{grid-column:1;grid-row:3;margin-top:10px;}
   .apple-cart-total{grid-column:2/4;grid-row:3;text-align:right;font-size:1.45rem;}
 }
+/* УБИЙЦА ВСЕХ ЛЕВЫХ ШТОРОК 2025 */
+#mobileFeedbackSheet,
+.mobile-feedback-sheet {
+  position: fixed !important;
+  top: auto !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: 96vh !important;
+  border-radius: 28px 28px 0 0 !important;
+  transform: translateY(120%) !important;
+  transition: transform 0.58s cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+  box-shadow: 0 -20px 80px rgba(0,0,0,0.5) !important;
+  z-index: 9999 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+#mobileFeedbackSheet.active,
+.mobile-feedback-sheet.active {
+  transform: translateY(0) !important;
+}
+
+/* На всякий случай — убиваем старые анимации */
+.mobile-feedback-sheet * {
+  transform: none !important;
+}
+/* #floatingOrderBar — переезжает НАВЕРХ на всех телефонах */
+@media (max-width: 768px) {
+  #floatingOrderBar {
+    top: max(env(safe-area-inset-top), 12px) !important;
+    bottom: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    border-radius: 0 0 20px 20px !important;
+    width: calc(100% - 32px) !important;
+    max-width: 420px !important;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4) !important;
+    animation: slideDownFromTopBar 0.5s cubic-bezier(0.22,1,0.36,1) !important;
+    z-index: 1 !important;
+  }
+
+  /* Если у тебя есть состояние .show / .hide — тоже поправим */
+  #floatingOrderBar.show {
+    transform: translateX(-50%) translateY(0) !important;
+  }
+
+  #floatingOrderBar.hide {
+    transform: translateX(-50%) translateY(-120%) !important;
+  }
+}
+
+@keyframes slideDownFromTopBar {
+  from { transform: translateX(-50%) translateY(-120%); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);     opacity: 1; }
+}
+
+@media (max-width: 768px) {
+
+  /* Шторка сверху — НО НЕ ПЕРЕКРЫВАЕТ НИЖНИЕ ЭЛЕМЕНТЫ */
+  #orderChain {
+    position: fixed !important;
+    top: 0; left: 0; right: 0;
+    width: 100% !important;
+    /* Главное: ограничиваем высоту, чтобы не лезть под нижние сайдбары */
+    max-height: calc(100dvh - 120px) !important; /* 120px — примерная высота нижних элементов */
+    background: rgba(15,15,25,0.98) !important;
+    backdrop-filter: blur(40px);
+    border-radius: 0 0 28px 28px !important;
+    padding: 0 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    /* z-index ниже, чем у нижних фиксированных элементов */
+    z-index: 900 !important; /* вместо 99999 */
+    transform: translateY(-100%);
+    transition: transform 0.58s cubic-bezier(0.22,1,0.36,1) !important;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+  }
+
+  #orderChain.show {
+    transform: translateY(0) !important;
+  }
+
+  /* Шапка шторки — sticky, чтобы не уезжала */
+  #orderChain::before {
+    content: '';
+    position: sticky;
+    top: 0;
+    left: 0; right: 0;
+    height: calc(env(safe-area-inset-top) + 64px);
+    background: rgba(15,15,25,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: env(safe-area-inset-top) 20px 0;
+  }
+
+  /* Кнопки в шапке */
+  #orderChain::after { /* Свернуть ↑ */
+    content: '↑';
+    position: absolute;
+    top: calc(env(safe-area-inset-top) + 12px);
+    left: 20px;
+    width: 48px; height: 48px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: #fff;
+    backdrop-filter: blur(10px);
+    z-index: 11;
+  }
+
+  #orderChain > .close-btn { /* Закрыть × */
+    position: absolute !important;
+    top: calc(env(safe-area-inset-top) + 12px) !important;
+    right: 20px !important;
+    width: 48px !important; height: 48px !important;
+    background: rgba(255,255,255,0.15) !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 28px !important;
+    color: #fff !important;
+    backdrop-filter: blur(10px) !important;
+    z-index: 11 !important;
+  }
+
+  /* Контент — отступ под шапку */
+  #orderChain > div {
+    padding: calc(env(safe-area-inset-top) + 80px) 20px 40px !important;
+  }
+
+  /* Остальные стили (цепочка, товары) — оставляем как есть */
+  #orderChain > div > div[style*="flex-wrap"] {
+    flex-direction: column !important;
+    gap: 32px !important;
+    align-items: center !important;
+  }
+
+  #orderChain .chain-img-circle {
+    width: 80px !important;
+    height: 80px !important;
+    border-width: 5px !important;
+  }
+
+  /* Вертикальные линии */
+  #orderChain div[style*="position:absolute;top:30px"],
+  #orderChain div[style*="position:absolute"][style*="left:70px"] {
+    width: 5px !important;
+    height: 60px !important;
+    left: 50% !important;
+    top: 90px !important;
+    transform: translateX(-50%) !important;
+    background: #444 !important;
+  }
+  #orderChain div[style*="background:#00ff95"] {
+    background: #00ff95 !important;
+    box-shadow: 0 0 20px rgba(0,255,149,0.6) !important;
+  }
+}
+
