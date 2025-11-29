@@ -18,13 +18,46 @@
   <link rel="stylesheet" href="/static/css/auth.css">
   <link rel="stylesheet" href="/static/css/cart.css">
   <link rel="stylesheet" href="/static/css/ai.css">
-  <link rel="stylesheet" href="/static/css/feedback.css">
   <link rel="stylesheet" href="/static/css/contacts.css"> 
+  
+
+<style>
+/* ДЕСКТОП ≥1025px — БЕЛАЯ КНОПКА ОБРАТНОЙ СВЯЗИ С КРАСИВЫМ ХОВЕРОМ */
+@media screen and (min-width: 1025px) {
+  html[data-theme="light"] * 
+  html[data-theme="light"] #feedbackFloatingBtn,
+  html[data-theme="light"] [class*="feedback"] > div:first-child,
+  html[data-theme="light"] .feedback-btn,
+  html[data-theme="light"] [id*="feedback"] {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.16) !important;
+
+  }
+}
+
+  /* ЭФФЕКТ ПРИ НАВЕДЕНИИ — поднятие + усиленная тень */
+  html[data-theme="light"] #feedbackFloatingBtn:hover,
+  html[data-theme="light"] .feedback-btn:hover,
+  html[data-theme="light"] [class*="feedback"] button:hover,
+  html[data-theme="light"] [id*="feedback"]:hover {
+    background: #ffffff !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.24) !important;
+    transform: translateY(-6px) scale(1.08) !important;
+  }
+
+  /* Если иконка внутри отдельного элемента — делаем её чёрной и без фона */
+  html[data-theme="light"] #feedbackFloatingBtn *,
+  html[data-theme="light"] [id*="feedback"] * {
+    background: transparent !important;
+    color: #111111 !important;
+  }
+
+</style>
 
 </head>
 <body>
   <div class="loader" id="pageLoader"></div>
-  <div class="custom-cursor"></div>
 
   <!-- ХЕДЕР — ОРИГИНАЛЬНЫЙ ИЗ about_company.css -->
 <!-- ВЕРХНИЙ ХЕДЕР — ТОЛЬКО НА ДЕСКТОПЕ -->
@@ -315,7 +348,7 @@
 
   <section class="about-section">
     <div class="image-wrapper">
-      <div class="image" style="background-image: url('/static/assets/about_company/company.jpg');"></div>
+      <div class="image" style="background-image: url('/static/assets/about_company/history.png');"></div>
     </div>
     <div class="content">
       <div class="section-title">О Piligrim</div>
@@ -356,7 +389,7 @@
     <div class="full-carousel-container" id="full-carousel">
   <!-- Слайд 1 -->
 <div class="full-carousel-slide active" 
-     style="background-image: url('/static/assets/b2b.jpg');">
+     style="background-image: url('/static/assets/123.jpg');">
   <div class="full-carousel-content">
     <h3>ЗАКРЫТАЯ B2B-ПЛАТФОРМА</h3>
     <p>Корпоративный портал нового поколения. Полная автоматизация процессов, аналитика в реальном времени, конфиденциальность банковского уровня.</p>
@@ -365,7 +398,7 @@
 
 <!-- Слайд 2 -->
 <div class="full-carousel-slide" 
-     style="background-image: url('/static/assets/ai-sales.jpg');">
+     style="background-image: url('/static/assets/123.jpg');">
   <div class="full-carousel-content">
     <h3>AI-АВТОВОРОНКА ПРОДАЖ</h3>
     <p>Персонализированная воронка, которая сама прогревает лиды, отправляет предложения и закрывает сделки 24/7 без участия менеджера.</p>
@@ -374,7 +407,7 @@
 
 <!-- Слайд 3 -->
 <div class="full-carousel-slide" 
-     style="background-image: url('/static/assets/ai.jpeg');">
+     style="background-image: url('/static/assets/123.jpeg');">
   <div class="full-carousel-content">
     <h3>AI-ЮРИСТ & SMART CONTRACTS</h3>
     <p>Умный юридический ассистент + автоматизация договоров. Проверка, генерация и подписание документов за минуты вместо недель.</p>

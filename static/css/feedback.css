@@ -275,3 +275,33 @@ form.contact-form { novalidate: true; }
 .custom-alert-temp.error .alert-content i { color: #ff6b6b; }
 
 
+/* ЯДЕРНЫЙ ФИКС — КНОПКА ОБРАТНОЙ СВЯЗИ В СВЕТЛОЙ ТЕМЕ + ТОНКАЯ РАМКА */
+html[data-theme="light"] [class*="feedback"],
+html[data-theme="light"] #feedbackFloatingBtn,
+html[data-theme="light"] .floating-feedback-btn,
+html[data-theme="light"] .feedback-btn,
+html[data-theme="light"] [id*="feedback"] {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 1.2px solid rgba(0,0,0,0.18) !important;   /* ← тонкая рамка */
+  box-shadow: 0 12px 36px rgba(0,0,0,0.16) !important;
+  opacity: 1 !important;
+}
+
+html[data-theme="light"] [class*="feedback"] *,
+html[data-theme="light"] #feedbackFloatingBtn *,
+html[data-theme="light"] .floating-feedback-btn * {
+  fill: #000000 !important;
+  color: #000000 !important;
+  stroke: #000000 !important;
+  opacity: 1 !important;
+}
+
+/* Ховер — чуть темнее и приподнимается */
+html[data-theme="light"] [class*="feedback"]:hover,
+html[data-theme="light"] .floating-feedback-btn:hover {
+  background: #f8f8f8 !important;
+  border-color: rgba(0,0,0,0.28) !important;
+  transform: translateY(-3px) scale(1.06) !important;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.22) !important;
+}

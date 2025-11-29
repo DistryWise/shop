@@ -963,3 +963,112 @@ header .logo-img {
   .full-progress-bar { width: 52px; }
 }
 
+/* ===================================================== */
+/* ТОЛЬКО МОБИЛКИ 375–1024px — ФУТЕР ВСЕГДА СНИЗУ + ПО ЦЕНТРУ */
+/* НИЧЕГО НЕ ЛОМАЕТ НА ДЕСКТОПЕ — 100% безопасно            */
+/* ===================================================== */
+
+@media screen and (max-width: 1024px) {
+
+  /* Прижимаем футер к низу, если контента мало */
+  body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+  }
+
+  main {
+    flex: 1 0 auto;
+  }
+
+  footer {
+    flex-shrink: 0;
+    padding: 7vh 5% 6vh !important;
+    text-align: center !important;           /* только на мобилках */
+    border-top: none !important;
+    position: relative;
+  }
+
+  /* Полоска на всю ширину (красивая, с плавным затуханием) */
+  footer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 5%;
+    right: 5%;
+    height: 1px;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(255,255,255,0.4) 15%, 
+      rgba(255,255,255,0.4) 85%, 
+      transparent 100%
+    );
+  }
+
+  [data-theme="light"] footer::after {
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(0,0,0,0.2) 15%, 
+      rgba(0,0,0,0.2) 85%, 
+      transparent 100%
+    );
+  }
+
+  /* Логотип по центру */
+  .footer-center {
+    display: block !important;
+    margin: 0 auto !important;
+  }
+
+ 
+  .footer-center img {
+    height: 72px;
+    filter: brightness(0) invert(1);
+  }
+
+  [data-theme="light"] .footer-center img {
+    filter: none;
+  }
+
+  /* Ссылки и копирайт — под логотипом по центру */
+  .footer-right,
+  .footer-left {
+    margin-top: 4.5vh;
+  }
+
+  .footer-right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.4rem;
+    font-size: 0.88rem;
+    letter-spacing: 0.2em;
+  }
+
+  .footer-left {
+    font-size: 0.76rem;
+    letter-spacing: 0.24em;
+    opacity: 0.7;
+  }
+}
+
+/* iPhone SE */
+@media (max-width: 420px) {
+  .footer-center img { height: 64px; }
+  footer { padding: 6vh 5% 5vh !important; }
+}
+/* ================================================================== */
+/* ФИКС: ЦИФРА В КОРЗИНЕ ВСЕГДА ВИДНА В СВЕТЛОЙ ТЕМЕ ПОСЛЕ СКРОЛЛА   */
+/* ================================================================== */
+
+html[data-theme="light"] header.scrolled .cart-count {
+  background: #000000 !important;   /* чёрный бейджик */
+  color: #ffffff !important;         /* белая цифра — ВСЕГДА */
+}
+
+/* На всякий случай — и без скролла тоже белая цифра */
+html[data-theme="light"] .cart-count {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
