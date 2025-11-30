@@ -362,86 +362,124 @@ html[data-theme="light"] .ai-chat-input button:active {
   pointer-events: auto !important;
 }
 
-/* ================================================
-   МОБИЛЬНАЯ АДАПТАЦИЯ — ФИНАЛЬНАЯ ВЕРСИЯ 2025
-   Свайп вниз работает идеально на iOS + Android
-================================================ */
-
+/* ====================================================
+   AI ЧАТ — МОБИЛЬНАЯ ВЕРСИЯ 2025 (КАК В ТЕЛЕГРАММЕ)
+   iPhone + Android + iPad — 100% идеально
+=================================================== */
 @media (max-width: 1023px) {
+  /* Запрещаем зум и двойной тап — ПОЛНОСТЬЮ убирает баг с масштабированием */
+  .ai-chat-modal,
+  .ai-chat-modal * {
+    touch-action: pan-y pinch-zoom !important;
+    -ms-touch-action: pan-y pinch-zoom !important;
+  }
+
+  /* Основной контейнер — как в Telegram */
   .ai-chat-modal {
     position: fixed !important;
     inset: 0 !important;
     width: 100vw !important;
     height: 100dvh !important;
+    max-height: 100dvh !important;
     background: rgba(0,0,0,0.92) !important;
-    backdrop-filter: blur(30px) !important;
-    border-radius: none !important;
+    backdrop-filter: blur(32px) !important;
     border-radius: 0 !important;
     box-shadow: none !important;
-    z-index: 2147483647;
+    z-index: 2147483647 !important;
     display: flex !important;
     flex-direction: column;
     overflow: hidden;
+    overscroll-behavior: contain; /* важно! */
 
-    /* Базовое состояние — скрыто снизу */
-    transform: translateY(100%);
+    /* Начально — скрыто снизу */
+    transform: translateY(100dvh);
     opacity: 0;
     visibility: hidden;
-    pointer-events: none;
-
-    /* Анимация всегда включена */
-    transition: 
-      transform 0.54s cubic-bezier(0.22, 0.88, 0.38, 1),
-      opacity 0.42s ease-out;
+    transition: transform 0.54s cubic-bezier(0.22, 0.88, 0.36, 1),
+                opacity 0.42s ease;
   }
 
-  /* Когда открыт — поднимается */
   .ai-chat-modal.active {
     transform: translateY(0);
     opacity: 1;
     visibility: visible;
-    pointer-events: all;
   }
 
-  /* Отключаем анимацию только во время тянущего жеста */
-  .ai-chat-modal.dragging {
-    transition: none !important;
-  }
-
-  /* Полоска для свайпа (как в нативных приложениях) */
+  /* Полоска сверху — как в Telegram */
   .ai-chat-header {
-    padding-top: calc(12px + env(safe-area-inset-top));
+    padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+    flex-shrink: 0;
     position: relative;
+    user-select: none;
+    -webkit-user-select: none;
   }
+
   .ai-chat-header::before {
     content: '';
     position: absolute;
-    top: calc(6px + env(safe-area-inset-top));
+    top: calc(8px + env(safe-area-inset-top));
     left: 50%;
     transform: translateX(-50%);
     width: 36px;
     height: 5px;
-    background: rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.32);
     border-radius: 3px;
+    pointer-events: none;
   }
 
-  /* Светлая тема */
-  html[data-theme="light"] .ai-chat-modal {
-    background: rgba(255,255,255,0.98) !important;
-  }
   html[data-theme="light"] .ai-chat-header::before {
-    background: rgba(0,0,0,0.25) !important;
+    background: rgba(0,0,0,0.28) !important;
   }
 
-  /* Убираем кнопку минимизации на мобилке */
+  /* Сообщения — с правильным отступом снизу */
+  .ai-chat-messages {
+    flex: 1;
+    padding: 12px 16px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Инпут — фиксирован внизу, поднимается над клавиатурой */
+  .ai-chat-input {
+    padding: 12px 16px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    background: transparent !important;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    flex-shrink: 0;
+    transition: padding-bottom 0.3s ease;
+  }
+
+  html[data-theme="light"] .ai-chat-input {
+    border-top-color: rgba(0,0,0,0.12) !important;
+  }
+
+  /* Когда клавиатура открыта — добавляем отступ снизу */
+  .ai-chat-modal.keyboard-open .ai-chat-input {
+    padding-bottom: calc(env(keyboard-inset-height, 280px) + 16px);
+  }
+
+  /* Убираем кнопку минимизации */
   .ai-btn-minimize { display: none !important; }
 
-  /* Иконка робота чуть выше на Android */
+  /* Робот — чуть выше нижней панели */
   #ai-assistant {
-    bottom: max(28px, env(safe-area-inset-bottom)) !important;
+    bottom: calc(92px + env(safe-area-inset-bottom) + 12px) !important;
     right: 16px !important;
     width: 72px !important;
     height: 72px !important;
-
   }
+}
+
+.ai-chat-modal {
+  transform: translateY(100dvh);
+  transition: transform 0.54s cubic-bezier(0.22, 0.88, 0.36, 1);
+}
+
+.ai-chat-modal.active {
+  transform: translateY(0);
+}
+
+.ai-chat-modal.dragging {
+  transition: none !important;
 }

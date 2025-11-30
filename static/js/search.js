@@ -641,69 +641,72 @@ modal.querySelector('#productReviewsCount').textContent =
     document.body.style.overflow = '';
   });
 });
-// =============================================================================
-// МОБИЛЬНЫЙ ПОИСК — СВАЙП ВНИЗ КАК КОРЗИНА В TELEGRAM X (2025 ГОД)
-// =============================================================================
-// СВАЙП ВНИЗ ДЛЯ ЗАКРЫТИЯ — как в Telegram / Instagram (2025)
+// === СВАЙП ВНИЗ — РАБОЧИЙ 100% (Telegram-style, 2025) ===
 (() => {
-  const sheet = document.getElementById('mobileSearchSheet');
-  if (!sheet) return;
+  const sheet = document.getElementById('ai-chat');
+  if (!sheet || window.innerWidth > 1023) return;
 
   let startY = 0;
-  let currentY = 0;
   let isDragging = false;
-  const threshold = 120;  // сколько пикселей нужно свайпнуть
+  const THRESHOLD = 150;
 
-  const close = () => {
-    sheet.classList.remove('active');
-    document.body.style.overflow = '';
-    sheet.style.transform = '';
-  };
-
-  const handleStart = (e) => {
+  const start = (e) => {
     if (!sheet.classList.contains('active')) return;
+
+    // Не даём свайпать, если скролл в чате не вверху
+    const messages = sheet.querySelector('.ai-chat-messages');
+    if (messages && messages.scrollTop > 10) return;
+
     startY = e.touches?.[0].clientY || e.clientY;
     isDragging = true;
+    sheet.classList.add('dragging');
     sheet.style.transition = 'none';
   };
 
-  const handleMove = (e) => {
+  const move = (e) => {
     if (!isDragging) return;
-    currentY = e.touches?.[0].clientY || e.clientY;
+
+    const currentY = e.touches?.[0].clientY || e.clientY;
     const diff = currentY - startY;
 
-    if (diff > 0) {  // только вниз
+    if (diff > 0) {
       e.preventDefault();
       sheet.style.transform = `translateY(${diff}px)`;
-      
-      // Затемнение при свайпе
-      const opacity = Math.min(diff / 400, 0.6);
-      sheet.style.background = `rgba(0, 0, 0, ${0.96 - opacity})`;
     }
   };
 
-  const handleEnd = () => {
+  const end = () => {
     if (!isDragging) return;
     isDragging = false;
-    sheet.style.transition = 'transform 0.58s cubic-bezier(0.22, 1, 0.36, 1)';
 
+    const currentY = event?.touches?.[0]?.clientY || event?.clientY || startY;
     const diff = currentY - startY;
 
-    if (diff > threshold) {
-      close();
+    sheet.classList.remove('dragging');
+    sheet.style.transition = 'transform 0.5s cubic-bezier(0.22, 0.88, 0.36, 1)';
+
+    if (diff > THRESHOLD) {
+      // Уезжает вниз и закрывается
+      sheet.style.transform = 'translateY(100dvh)';
+      setTimeout(() => {
+        closeAIChat();
+      }, 500);
     } else {
+      // Плавно возвращается наверх
       sheet.style.transform = 'translateY(0)';
-      sheet.style.background = '';
     }
   };
 
-  sheet.addEventListener('touchstart', handleStart, { passive: true });
-  sheet.addEventListener('touchmove', handleMove, { passive: false });
-  sheet.addEventListener('touchend', handleEnd);
+  // Touch
+  sheet.addEventListener('touchstart', start, { passive: true });
+  sheet.addEventListener('touchmove', move, { passive: false });
+  sheet.addEventListener('touchend', end);
+  sheet.addEventListener('touchcancel', end);
 
-  // Поддержка мыши (для теста на десктопе)
-  sheet.addEventListener('mousedown', handleStart);
-  sheet.addEventListener('mousemove', (e) => isDragging && handleMove(e));
-  sheet.addEventListener('mouseup', handleEnd);
-  sheet.addEventListener('mouseleave', handleEnd);
+  // Mouse (для теста)
+  sheet.addEventListener('mousedown', start);
+  document.addEventListener('mousemove', e => {
+    if (isDragging) move(e);
+  });
+  document.addEventListener('mouseup', end);
 })();

@@ -160,135 +160,134 @@ async function sendAIMessage(text) {
 document.getElementById('ai-assistant')?.addEventListener('click', openAIChat);
 setTimeout(showGreeting, 3000);
 
-// =============================================================
-// АВТО-ПОДЪЁМ СТРОКИ ЧАТА НАД КЛАВИАТУРОЙ + АВТОФОКУС (2025)
-// =============================================================
-// =============================================================
-// ПОДЪЁМ ЧАТА НАД КЛАВИАТУРОЙ — РАБОТАЕТ ВЕЗДЕ (iOS 16–18, Android 12–15, 2025)
-// =============================================================
-(() => {
-  const chat = document.getElementById('ai-chat');
-  const input = chat?.querySelector('.ai-chat-input input');
-  if (!chat || !input) return;
-
-  let keyboardHeight = 0;
-
-  const updatePadding = () => {
-    if (keyboardHeight > 60) {
-      chat.classList.add('keyboard-open');
-      chat.style.paddingBottom = `${keyboardHeight + 20}px`; // +20px отступ от клавиатуры
-    } else {
-      chat.classList.remove('keyboard-open');
-      chat.style.paddingBottom = '';
-    }
-  };
-
-  // Самый надёжный способ — visualViewport (работает на 99% устройств 2024–2025)
-  const handleViewportChange = () => {
-    if (!window.visualViewport) return;
-    const vh = window.visualViewport.height;
-    const diff = window.innerHeight - vh;
-    keyboardHeight = diff > 0 ? diff : 0;
-    updatePadding();
-  };
-
-  // Резервный вариант для старых браузеров
-  let lastHeight = window.innerHeight;
-  const handleResize = () => {
-    const current = window.innerHeight;
-    if (Math.abs(current - lastHeight) > 100) {
-      keyboardHeight = lastHeight > current ? lastHeight - current : 0;
-      updatePadding();
-    }
-    lastHeight = current;
-  };
-
-  // При фокусе — сразу поднимаем (iOS клавиатура появляется с задержкой)
-  input.addEventListener('focus', () => {
-    chat.classList.add('keyboard-open');
-    setTimeout(handleViewportChange, 100);
-    setTimeout(handleViewportChange, 400);
-  });
-
-  input.addEventListener('blur', () => {
-    setTimeout(() => {
-      if (document.activeElement !== input) {
-        keyboardHeight = 0;
-        updatePadding();
-      }
-    }, 150);
-  });
-
-  // Слушаем всё, что может изменить высоту
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', handleViewportChange);
-    window.visualViewport.addEventListener('scroll', handleViewportChange);
-  }
-  window.addEventListener('resize', handleResize);
-  window.addEventListener('orientationchange', () => setTimeout(handleViewportChange, 300));
-
-  // Автофокус при открытии чата
-  new MutationObserver(() => {
-    if (chat.classList.contains('show')) {
-      setTimeout(() => input.focus(), 450);
-    }
-  }).observe(chat, { attributes: true, attributeFilter: ['class'] });
-
-})();
-// AI ЧАТ — СВАЙП ВНИЗ ДЛЯ ЗАКРЫТИЯ — ФИНАЛЬНЫЙ, АБСОЛЮТНО РАБОЧИЙ 2025
+// === СВАЙП ВНИЗ — ФИНАЛЬНЫЙ РАБОЧИЙ 2025 (Telegram-style) ===
 (() => {
   const sheet = document.getElementById('ai-chat');
   if (!sheet || window.innerWidth > 1023) return;
 
   let startY = 0;
-  let currentY = 0;
   let isDragging = false;
-  const THRESHOLD = 130; // идеально под палец
+  const THRESHOLD = 160;        // чуть больше — чтобы случайно не закрывалось
+  const VELOCITY_THRESHOLD = 0.5; // скорость для инерции
 
-  const handleStart = (e) => {
+  let lastY = 0;
+  let velocity = 0;
+  let animationFrame;
+
+  const start = (e) => {
     if (!sheet.classList.contains('active')) return;
+    if (sheet.querySelector('.ai-chat-messages')?.scrollTop > 10) return;
 
-    const messages = sheet.querySelector('.ai-chat-messages');
-    if (messages && messages.scrollTop > 8) return;
-
-    startY = e.touches?.[0].clientY || e.clientY;
+    startY = lastY = e.touches?.[0].clientY || e.clientY;
     isDragging = true;
+    velocity = 0;
+
     sheet.classList.add('dragging');
+    sheet.style.transition = 'none';
+
+    cancelAnimationFrame(animationFrame);
   };
 
-  const handleMove = (e) => {
+  const move = (e) => {
     if (!isDragging) return;
 
-    currentY = e.touches?.[0].clientY || e.clientY;
-    const diff = currentY - startY;
+    const currentY = e.touches?.[0].clientY || e.clientY;
+    const diff = currentY - lastY;
+    velocity = diff;
 
-    if (diff > 0) {
+    const translate = currentY - startY;
+    if (translate > 0) {
       e.preventDefault();
-      sheet.style.transform = `translateY(${diff}px)`;
+      sheet.style.transform = `translateY(${translate}px)`;
     }
+
+    lastY = currentY;
   };
 
-  const handleEnd = () => {
+  const end = () => {
     if (!isDragging) return;
     isDragging = false;
 
-    const diff = currentY - startY;
+    const traveled = lastY - startY;
+    const fastEnough = Math.abs(velocity) > VELOCITY_THRESHOLD * 100;
 
     sheet.classList.remove('dragging');
+    sheet.style.transition = 'transform 0.42s cubic-bezier(0.22, 0.88, 0.36, 1)';
 
-    if (diff > THRESHOLD) {
-      closeAIChat();        // шторка уезжает вниз + класс .active снимается
+    // Закрываем, если прошёл порог ИЛИ быстро дёрнули
+    if (traveled > THRESHOLD || (traveled > 80 && fastEnough)) {
+      sheet.style.transform = `translateY(100dvh)`;
+      setTimeout(closeAIChat, 100); // чтобы анимация доиграла
     } else {
-      sheet.style.transform = '';  // плавно возвращается наверх
+      // Плавно возвращаем наверх (учитываем клавиатуру!)
+      const keyboardOffset = window.visualViewport?.offsetTop || 0;
+      sheet.style.transform = `translateY(${keyboardOffset}px)`;
     }
   };
 
-  sheet.addEventListener('touchstart', handleStart, { passive: true });
-  sheet.addEventListener('touchmove',  handleMove,  { passive: false });
-  sheet.addEventListener('touchend',   handleEnd);
+  // Touch
+  sheet.addEventListener('touchstart', start, { passive: true });
+  sheet.addEventListener('touchmove', move, { passive: false });
+  sheet.addEventListener('touchend', end);
+  sheet.addEventListener('touchcancel', end);
 
-  // для теста на десктопе мышкой
-  sheet.addEventListener('mousedown', handleStart);
-  document.addEventListener('mousemove', e => isDragging && handleMove(e));
-  document.addEventListener('mouseup', handleEnd);
+  // Mouse (для теста на десктопе)
+  sheet.addEventListener('mousedown', start);
+  document.addEventListener('mousemove', e => isDragging && move(e));
+  document.addEventListener('mouseup', end);
+})();
+
+// === ПОДЪЁМ ЧАТА НАД КЛАВИАТУРОЙ — КАК В ТЕЛЕГРАММЕ (2025, работает везде) ===
+(() => {
+  const chat = document.getElementById('ai-chat');
+  const input = chat?.querySelector('#ai-input');
+  if (!chat || !input || window.innerWidth > 1023) return;
+
+  let isKeyboardOpen = false;
+
+  const updateKeyboardOffset = () => {
+    if (!window.visualViewport) return;
+
+    const viewportHeight = window.visualViewport.height;
+    const fullHeight = window.innerHeight;
+    const keyboardHeight = fullHeight - viewportHeight;
+
+    // Если клавиатура открыта (более 100px — защита от случайных изменений)
+    if (keyboardHeight > 100) {
+      isKeyboardOpen = true;
+      const offset = window.visualViewport.offsetTop;
+      chat.style.transform = `translateY(${offset}px)`;
+      chat.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
+    } else if (isKeyboardOpen) {
+      // Клавиатура закрылась — возвращаем в исходное положение
+      isKeyboardOpen = false;
+      if (chat.classList.contains('active')) {
+        chat.style.transform = 'translateY(0)';
+      }
+    }
+  };
+
+  // Основные события
+  window.visualViewport.addEventListener('resize', updateKeyboardOffset);
+  window.visualViewport.addEventListener('scroll', updateKeyboardOffset);
+
+  // Фокус на инпут — сразу поднимаем (iOS иногда задерживает resize)
+  input.addEventListener('focus', () => {
+    setTimeout(updateKeyboardOffset, 100);
+    setTimeout(updateKeyboardOffset, 300);
+    setTimeout(updateKeyboardOffset, 600);
+  });
+
+  // При закрытии клавиатуры — плавно опускаем
+  input.addEventListener('blur', () => {
+    setTimeout(updateKeyboardOffset, 150);
+  });
+
+  // Автофокус при открытии чата
+  const observer = new MutationObserver(() => {
+    if (chat.classList.contains('active')) {
+      setTimeout(() => input.focus(), 500);
+    }
+  });
+  observer.observe(chat, { attributes: true, attributeFilter: ['class'] });
 })();
