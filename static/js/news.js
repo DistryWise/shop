@@ -292,14 +292,7 @@ window.scrollToNews = () => {
   document.querySelector('.news-feed')?.scrollIntoView({ behavior: 'smooth' });
 };
 
-// === КУРСОР ===
-const cursor = document.querySelector('.custom-cursor');
-if (cursor) {
-  document.addEventListener('mousemove', e => {
-    cursor.style.left = e.clientX + 'px';
-    cursor.style.top = e.clientY + 'px';
-  });
-}
+
 
 // === КНОПКА ВВЕРХ ===
 const backToTop = document.querySelector('.back-to-top');
@@ -488,3 +481,173 @@ async function loadNews() {
   // После загрузки новостей — инициализируем фильтры
   initNewsFilters();
 }
+
+
+// АБСОЛЮТНЫЙ ЯДЕРНЫЙ ФИКС — РАБОТАЕТ ДАЖЕ ЕСЛИ ВСЁ СЛОМАНО
+(() => {
+  const oldOpen = window.openProductModal;
+  if (!oldOpen) return;
+
+  window.openProductModal = async (id, type = 'product') => {
+    // Принудительно правильные роуты
+    const realType = type === 'service' || type === 'services' ? 'services' : 'goods';
+    const url = `/api/${realType}/${id}`;
+    
+    console.log('ОТКРЫВАЮ КАРТОЧКУ →', url);
+    
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        // Перезапускаем старую функцию, но с правильными данными
+        document.querySelector('#productTitle').textContent = data.title || 'Товар';
+        document.querySelector('#productPrice').textContent = data.price_str || 'Цена по запросу';
+        document.querySelector('#productImg').src = (data.image_urls?.[0] || data.image_url || '/static/assets/no-image.png') + '?v=' + Date.now();
+        document.querySelector('.product-modal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        return;
+      }
+    } catch(e) {}
+    
+    // Если не сработало — пускаем старую функцию (на случай если она уже исправлена)
+    oldOpen(id, type);
+  };
+})();
+
+// УНИВЕРСАЛЬНЫЙ АНТИСПАМ 2025 — РАБОТАЕТ НА ВСЕХ КНОПКАХ "В КОРЗИНУ" И ИЗМЕНЕНИЯ КОЛИЧЕСТВА
+// Защищает от спама: + / – / удалить / любые onclick="addToCart(...)" / кнопки с классами
+const GlobalAddToCartProtection = (() => {
+  const STORAGE_KEY = 'cart_flood_protection_2025';
+  const COOLDOWN_MS = 20000;    // 20 сек блок после спама
+  const MAX_CLICKS = 9;         // сколько быстрых кликов разрешено
+
+  let clickCount = 0;
+  let resetTimer = null;
+  let blockedUntil = 0;
+
+  // Загружаем состояние
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const data = JSON.parse(saved);
+      blockedUntil = data.blockedUntil || 0;
+    }
+  } catch (e) {}
+
+  const block = () => {
+    blockedUntil = Date.now() + COOLDOWN_MS;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ blockedUntil }));
+
+    // Красивый красный алерт с таймером
+    const alert = document.createElement('div');
+    alert.id = 'global-cart-flood-alert';
+    alert.innerHTML = `
+      <i class="fas fa-hand-paper"></i>
+      <div>
+        <strong>Слишком быстро!</strong><br>
+        <small>Подождите <span class="timer">20</span> сек</small>
+      </div>
+    `;
+    Object.assign(alert.style, {
+      position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
+      background: 'linear-gradient(135deg,#ff453a,#ff2d55)', color: 'white',
+      padding: '16px 32px', borderRadius: '26px', fontSize: '1.15rem',
+      fontWeight: '600', boxShadow: '0 20px 50px rgba(255,45,85,0.5)',
+      backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', gap: '14px',
+      zIndex: '999999', animation: 'slideDown 0.5s ease'
+    });
+    document.body.appendChild(alert);
+
+    let seconds = 20;
+    const timerSpan = alert.querySelector('.timer');
+    const interval = setInterval(() => {
+      seconds--;
+      timerSpan.textContent = seconds;
+      if (seconds <= 0) {
+        clearInterval(interval);
+        alert.remove();
+      }
+    }, 1000);
+
+    setTimeout(() => alert.remove(), COOLDOWN_MS + 1000);
+  };
+
+  return {
+    check() {
+      const now = Date.now();
+      if (blockedUntil > now) return false;
+
+      clickCount++;
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => { clickCount = 0; }, 10000);
+
+      if (clickCount > MAX_CLICKS) {
+        block();
+        clickCount = 0;
+        return false;
+      }
+      return true;
+    }
+  };
+})();
+
+// УНИВЕРСАЛЬНЫЙ ПЕРЕХВАТЧИК — ЛОВИТ ВСЁ
+document.addEventListener('click', function(e) {
+  const target = e.target.closest(
+    'button, .add-to-cart-btn, .buy-btn, .apple-qty-btn, .apple-remove-btn, ' +
+    '.quantity-btn, .clear-cart-btn, [onclick*="addToCart("]'
+  );
+
+  if (!target) return;
+
+  // Проверяем, это действие с корзиной?
+  const onclick = target.getAttribute('onclick') || '';
+  const isCartAction = 
+    onclick.includes('addToCart(') ||
+    target.classList.contains('apple-qty-btn') ||
+    target.classList.contains('apple-remove-btn') ||
+    target.classList.contains('quantity-btn') ||
+    target.classList.contains('clear-cart-btn') ||
+    target.classList.contains('add-to-cart-btn') ||
+    target.classList.contains('buy-btn');
+
+  if (isCartAction && !GlobalAddToCartProtection.check()) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    e.stopPropagation();
+    return false;
+  }
+}, true); // true = capture phase → срабатывает раньше всех остальных обработчиков
+
+// Анимация алерта
+document.head.insertAdjacentHTML('beforeend', `
+
+`);
+
+
+  window.addEventListener('scroll', () => {
+    document.querySelector('main')?.classList.toggle('scrolled', window.scrollY > 100);
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // Блокируем скролл
+    document.body.style.overflow = 'hidden';
+
+    // Через 1.8 сек — добавляем класс hidden
+    setTimeout(() => {
+      const loader = document.getElementById('loader');  // ← ИСПРАВЛЕНО
+      if (loader) {
+        loader.classList.add('hidden');
+
+        // Через 0.7 сек — убираем из DOM
+        setTimeout(() => {
+          loader.remove();
+          document.body.style.overflow = '';
+          document.body.classList.add('loaded');
+        }, 100);
+      }
+    }, 1600);
+  });
+
+
+  

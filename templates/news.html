@@ -1,16 +1,14 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html data-theme="light" lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Новости — Piligrim</title>
 
-  <!-- Шрифты -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap" rel="stylesheet">
 
-  <!-- Стили -->
   <link rel="stylesheet" href="/static/css/search.css">
   <link rel="stylesheet" href="/static/css/auth.css">
   <link rel="stylesheet" href="/static/css/cart.css">
@@ -18,333 +16,54 @@
   <link rel="stylesheet" href="/static/css/news.css">
   <link rel="stylesheet" href="/static/css/contacts.css">
 
-  <style>
-    /* === LOADER — СТАРЫЙ СТИЛЬ === */
-    .loader {
-      position: fixed; inset: 0; z-index: 9999; background: var(--bg);
-      display: flex; align-items: center; justify-content: center;
-      opacity: 1; pointer-events: none;
-    }
-    .loader::before {
-      content: ''; width: 110px; height: 110px;
-      border: 2px solid rgba(255,255,255,0.08);
-      border-top-color: #fff; border-radius: 50%;
-      animation: spin 1.8s linear infinite;
-      box-shadow: 0 0 60px rgba(255,255,255,0.18);
-    }
-    .loader::after {
-      content: 'PILIGRIM'; position: absolute; font-size: 1.2rem;
-      letter-spacing: 12px; font-weight: 100; color: #fff;
-      opacity: 0; animation: fadeIn 1.4s ease 0.8s forwards;
-    }
-    .loader.hidden { opacity: 0; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes fadeIn { to { opacity: 1; } }
-  </style>
+<style>
+@keyframes slideDown {
+  from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+#global-cart-flood-alert i { font-size: 1.8rem; }
 
- <style>
-  /* ==================== ФИЛЬТРЫ — ТОЧНО КАК scroll-trigger ==================== */
-  .news-filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-    justify-content: center;
-    margin: 2.8rem 0 2rem;
-    padding: 0 1rem;
-  }
-
-  .filter-btn {
-    padding: 0.85rem 2rem;
-    background: transparent !important;
-    border: 1.5px solid var(--border);
-    border-radius: 50px;
-    color: var(--text);
-    font-size: 0.98rem;
-    font-weight: 500;
-    letter-spacing: 1.2px;
-    cursor: pointer;
-    transition: var(--transition);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .filter-btn:hover {
-    border-color: var(--text);
-    background: var(--hover) !important;
-    transform: translateY(-2px);
-  }
-
-  /* АКТИВНАЯ КНОПКА — ЧИСТАЯ ИНВЕРСИЯ, КАК У ОСНОВНЫХ КНОПОК */
-  .filter-btn.active {
-    background: var(--text) !important;   /* белый фон в тёмной → чёрный в светлой */
-    color: var(--bg) !important;          /* чёрный текст в тёмной → белый в светлой */
-    border-color: var(--text) !important;
-    font-weight: 700;
-    box-shadow: 0 8px 28px rgba(0,0,0,0.28);
-  }
-
-  .filter-btn.active:hover {
-    box-shadow: 0 12px 38px rgba(0,0,0,0.38);
-    transform: translateY(-3px);
-  }
-
-  /* ==================== ГАЛЕРЕЯ В МОДАЛКЕ — БЕЗ ЗЕЛЁНОГО ==================== */
-  .thumb.active,
-  .thumb:hover {
-    border-color: var(--text) !important;
-    opacity: 1;
-    transform: scale(1.09);
-    box-shadow: 0 0 30px rgba(0,0,0,0.45);
-  }
-
-  [data-theme="light"] .thumb.active,
-  [data-theme="light"] .thumb:hover {
-    box-shadow: 0 0 30px rgba(0,0,0,0.28);
-  }
-
-  /* Дата — в акценте сайта (красный #ff6b6b) */
-  .news-modal-date {
-    color: var(--accent);
-    font-weight: 600;
-    letter-spacing: 2.2px;
-  }
-
-  @media (max-width: 768px) {
-    .filter-btn {
-      padding: 0.75rem 1.7rem;
-      font-size: 0.94rem;
-    }
-  }
 </style>
 <style>
-/* ================================================= */
-/* ФИНАЛЬНАЯ ПРЕМИУМ-МОДАЛКА НОВОСТЕЙ — 2025 ГОД     */
-/* СКРОЛЛ + КАРУСЕЛЬ + КРЕСТИК — ВСЁ РАБОТАЕТ 100%   */
-/* ================================================= */
-
-.final-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  background: #000;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.9s cubic-bezier(0.23, 1, 0.32, 1);
-  pointer-events: none;
-
-}
-.final-modal.active {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
+/* ФИКС РАСТЯГИВАНИЯ ТЕКСТА В БОКОВОЙ ШТОРКЕ — РАБОТАЕТ НА ВСЕХ iPhone 2025 */
+body.sidebar-open {
+  position: fixed !important;
+  width: 100% !important;
+  height: 100dvh !important;
+  overflow: hidden !important;
 }
 
-/* Главный скроллируемый контейнер */
-.final-container {
-  position: absolute;
-  inset: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  height: 100dvh;
-  overscroll-behavior: contain;
+.mobile-sidebar * {
+  vertical-align: baseline !important;
+  line-height: normal !important;
 }
 
-/* Герой — пропускает скролл, но блокирует всё внутри, кроме нужного */
-.final-hero {
-  position: fixed;
-  inset: 0;
-  z-index: 10;
-  transition: transform 1s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.9s ease;
-  pointer-events: none !important;        /* Скролл проходит сквозь */
+.mobile-sidebar i {
+  line-height: 1 !important;
+  vertical-align: middle !important;
 }
-.final-hero * {
-  pointer-events: none;                   /* Всё внутри героя — не кликабельно */
-}
-.final-hero.scrolled {
-  transform: translateY(-100%);
-  opacity: 0;
-}
-
-/* ВОЗВРАЩАЕМ КЛИКАБЕЛЬНОСТЬ ТОЛЬКО НУЖНЫМ ЭЛЕМЕНТАМ */
-.final-dots,
-.final-dot,
-.final-close {
-  pointer-events: auto !important;
-  z-index: 20;
-}
-.final-close { z-index: 99999; }
-
-/* Карусель */
-.final-carousel {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  transition: transform 0.9s ease;
-}
-.final-slide {
-  min-width: 100%;
-  height: 100%;
-  background: center/cover no-repeat;
-}
-
-/* Текст поверх картинки */
-.final-overlay-text {
-  position: absolute;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-  color: #fff;
-  z-index: 12;
-  width: 90%;
-  max-width: 1100px;
-  pointer-events: none;
-}
-.final-date {
-  font: 600 15px/1 system-ui;
-  letter-spacing: 5px;
-  text-transform: uppercase;
-  opacity: 0.9;
-  margin-bottom: 18px;
-}
-.final-title {
-  font: 700 72px/1.02 system-ui, sans-serif;
-  margin: 0;
-  text-shadow: 0 4px 40px rgba(0,0,0,0.7);
-}
-
-/* Подсказка "Пролистай вниз" */
-.final-hint {
-  margin-top: 70px;
-  font: 500 19px system-ui;
-  opacity: 0;
-  animation: hint 3s infinite;
-}
-.final-hint span { display: block; margin-bottom: 16px; }
-.final-arrow {
-  width: 38px;
-  height: 38px;
-  fill: #fff;
-  animation: bounce 2s infinite;
-}
-@keyframes hint { 0%,100% { opacity: 0; } 50% { opacity: 0.85; } }
-@keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(14px); } }
-
-/* Точки навигации */
-.final-dots {
-  position: absolute;
-  bottom: 42px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 16px;
-}
-.final-dot {
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.45);
-  transition: all 0.4s ease;
-  cursor: pointer;
-}
-.final-dot.active {
-  background: #fff;
-  transform: scale(1.6);
-  box-shadow: 0 0 20px rgba(255,255,255,0.6);
-}
-
-/* Контент под героем */
-.final-content {
-  position: relative;
-  margin-top: 100dvh;
-  padding: 160px 10vw 180px;
-  background: #000;
-  min-height: 100vh;
-  opacity: 0;
-  transform: translateY(60px);
-  transition: opacity 1s ease, transform 1s ease;
-}
-.final-content.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.final-inner { max-width: 860px; margin: 0 auto; text-align: center; }
-.final-lead { font: 500 26px/1.75 system-ui; color: #e8e8e8; margin: 0 0 70px; }
-.final-body { font: 19px/2 system-ui; color: #d8d8d8; text-align: left; max-width: 760px; margin: 0 auto; }
-
-/* Светлая тема */
-html[data-theme="light"] .final-content { background: #fafafa; }
-html[data-theme="light"] .final-lead { color: #111; }
-html[data-theme="light"] .final-body { color: #222; }
-
-/* Крестик закрытия */
-.final-close {
-  position: fixed;
-  top: 28px;
-  right: 28px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.14);
-  border: 1.8px solid rgba(255,255,255,0.25);
-  backdrop-filter: blur(24px);
-  color: #fff;
-  cursor: pointer;
-  transition: all 0.45s cubic-bezier(0.23,1,0.32,1);
-  display: grid;
-  place-items: center;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-}
-.final-close:hover {
-  background: rgba(255,255,255,0.3);
-  border-color: rgba(255,255,255,0.5);
-  transform: scale(1.12) rotate(90deg);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-}
-.final-close svg { width: 24px; height: 24px; }
-html[data-theme="light"] .final-close {
-  background: rgba(0,0,0,0.1);
-  border-color: rgba(0,0,0,0.2);
-  color: #000;
-}
-html[data-theme="light"] .final-close:hover {
-  background: rgba(0,0,0,0.18);
-}
-
-/* Адаптив */
-@media (max-width: 1024px) {
-  .final-title { font-size: 62px; }
-}
-@media (max-width: 768px) {
-  .final-title { font-size: 48px; }
-  .final-date { font-size: 14px; letter-spacing: 4px; }
-  .final-overlay-text { bottom: 80px; }
-  .final-content { padding: 140px 6vw 140px; }
-  .final-lead { font-size: 23px; }
-  .final-close { top: 20px; right: 20px; width: 52px; height: 52px; }
-}
-</style>>
+</style>
 </head>
 <body>
 
-  <div class="custom-cursor"></div>
+<div class="loader" id="loader"></div>
 
-    <!-- ПРЕЛОАДЕР — 1-в-1 ИЗ SERVICES.HTML -->
-    <div class="loader" id="loader"></div>  
-  <!-- ХЕДЕР -->
-  <header>
-    <a href="/" class="logo"><img src="/static/assets/logo.png" alt="Piligrim" class="logo-img"></a>
-    <nav>
-      <a href="/" class="nav-link">Главная</a>
-      <a href="/goods" class="nav-link">Товары</a>
-      <a href="/services" class="nav-link">Услуги</a>
-      <a href="/news" class="nav-link active">Новости</a>
-      <a href="/about_company" class="nav-link">О компании</a>
-      <a href="/contacts" class="nav-link">Контакты</a>
-    </nav>
+<!-- ДЕСКТОПНЫЙ ХЕДЕР -->
+<header class="main-header desktop-only">
+  <a href="/" class="logo">
+    <img src="/static/assets/logo.png" alt="Piligrim" class="logo-img">
+  </a>
+
+  <nav class="desktop-nav">
+    <a href="/" class="nav-link">Главная</a>
+    <a href="/goods" class="nav-link">Товары</a>
+    <a href="/services" class="nav-link">Услуги</a>
+    <a href="/news" class="nav-link active">Новости</a>
+    <a href="/about_company" class="nav-link">О компании</a>
+    <a href="/contacts" class="nav-link">Контакты</a>
+  </nav>
+
+  <div class="header-right">
     <div class="header-icons">
       <div class="search-wrapper">
         <div class="search-container">
@@ -354,16 +73,19 @@ html[data-theme="light"] .final-close:hover {
         </div>
         <div id="autocompleteList" class="autocomplete-list"></div>
       </div>
+
       <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
-      
-    <div style="position: relative;">
-      <button class="icon-btn" id="cartBtn">
-        <i class="fas fa-shopping-bag"></i>
-        <span class="cart-count" id="cartCount">0</span>
-      </button>
-      <div id="miniCartDropdown" style="display: none;">
+
+      <div class="cart-wrapper">
+        <button class="icon-btn" id="cartBtn">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <div id="miniCartDropdown" class="mini-cart-dropdown">
           <div class="mini-cart-header"><div class="mini-cart-title">Корзина</div></div>
-          <div class="mini-cart-items" id="miniCartItems"><div class="mini-cart-empty">Корзина пуста</div></div>
+          <div class="mini-cart-items" id="miniCartItems">
+            <div class="mini-cart-empty">Корзина пуста</div>
+          </div>
           <div class="mini-cart-footer">
             <div class="mini-cart-total" id="miniCartTotal">Итого: 0.00 ₽</div>
             <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
@@ -373,20 +95,150 @@ html[data-theme="light"] .final-close:hover {
 
       <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
     </div>
-  </header>
-
-  <!-- ТУМБЛЕР ТЕМЫ -->
-  <div class="theme-toggle-hanging">
-    <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
-    <label for="theme-toggle" class="theme-toggle-label">
-      <div class="rope top"></div>
-      <div class="bulb">
-        <div class="bulb-light"></div>
-        <div class="bulb-glow"></div>
-      </div>
-      <div class="rope bottom"></div>
-    </label>
   </div>
+</header>
+
+<!-- МОБИЛЬНАЯ НИЖНЯЯ ПАНЕЛЬ -->
+<nav class="mobile-bottom-bar">
+  <button class="bottom-bar-btn" id="mobileSearchBtn" data-label="Поиск"><i class="fas fa-search"></i></button>
+  <button class="bottom-bar-btn" id="mobileAuthBtn" data-label="Вход"><i class="fas fa-user"></i></button>
+  <button class="bottom-bar-btn active" id="openSidebarMenu" data-label="Меню">
+  <i class="fas fa-bars"></i>
+
+</button>
+  <button class="bottom-bar-btn" id="mobileCartBtn" data-label="Корзина">
+    <i class="fas fa-shopping-bag"></i>
+    <span class="cart-count" id="mobileCartCount">0</span>
+  </button>
+  <button class="bottom-bar-btn" id="feedbackBtnMobile" data-label="Поддержка"><i class="fas fa-envelope"></i></button>
+</nav>
+
+<!-- БОКОВОЕ МОБИЛЬНОЕ МЕНЮ -->
+<div class="mobile-sidebar" id="mobileSidebar">
+  <div class="sidebar-top">
+    <button class="sidebar-close" id="closeSidebar" aria-label="Закрыть меню">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <img src="/static/assets/logo.png" alt="Piligrim" class="sidebar-logo-big">
+  </div>
+
+  <nav class="sidebar-nav-modern">
+    <div class="nav-divider top"></div>
+    <a href="/" class="sidebar-link-modern">Главная</a>
+    <a href="/goods" class="sidebar-link-modern">Товары</a>
+    <a href="/services" class="sidebar-link-modern">Услуги</a>
+    <a href="/news" class="sidebar-link-modern active">Новости</a>
+    <a href="/about_company" class="sidebar-link-modern">О компании</a>
+    <a href="/contacts" class="sidebar-link-modern">Контакты</a>
+    <div class="nav-divider bottom"></div>
+  </nav>
+
+  <div class="sidebar-bottom-theme">
+    <div class="sidebar-theme-toggle">
+      <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+      <label for="theme-toggle" class="theme-toggle-label">
+        <i class="fas fa-moon"></i>
+        <i class="fas fa-sun"></i>
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- ПОИСК ДЛЯ ПЛАНШЕТОВ -->
+<div class="tablet-search-full" id="tabletSearchSheet">
+  <div class="tablet-search-backdrop"></div>
+  <div class="tablet-search-header-full">
+    <button class="tablet-search-back" id="closeTabletSearch"><i class="fas fa-arrow-left"></i></button>
+    <div class="tablet-search-input-wrapper-full">
+      <i class="fas fa-search"></i>
+      <input type="text" id="tabletSearchInput" placeholder="Поиск по каталогу..." autocomplete="off">
+      <button class="tablet-search-clear" id="tabletSearchClear">×</button>
+    </div>
+  </div>
+  <div class="tablet-search-empty" id="tabletEmptyState"><i class="fas fa-search"></i><p>Начните вводить запрос...</p></div>
+  <div id="tabletAutocompleteList" class="tablet-autocomplete-list-full"></div>
+</div>
+
+<!-- МОБИЛЬНЫЙ ПОИСК СВЕРХУ -->
+<div class="mobile-search-sheet" id="mobileSearchSheet">
+  <div class="mobile-search-header">
+    <div class="sheet-handle"></div>
+    <button class="mobile-search-back" id="closeMobileSearchTop">←</button>
+    <div class="mobile-search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input type="text" class="mobile-search-input" id="mobileSearchInput" placeholder="Поиск по каталогу..." autocomplete="off">
+      <button class="mobile-search-clear" id="mobileSearchClear">×</button>
+    </div>
+  </div>
+  <div class="mobile-search-results-content" id="mobileSearchResults">
+    <div class="search-empty-state" id="mobileEmptyState">
+      <div class="empty-icon"><i class="fas fa-search"></i></div>
+      <div class="empty-title">Введите название товара</div>
+      <div class="empty-subtitle">Например: iPhone 16, кроссовки Nike, кофеварка</div>
+    </div>
+    <div id="mobileAutocompleteList" class="mobile-autocomplete-list"></div>
+  </div>
+</div>
+
+<!-- МОБИЛЬНАЯ КОРЗИНА -->
+<div class="mobile-cart-sheet" id="mobileCartSheet">
+  <div class="sheet-backdrop" id="mobileCartBackdrop"></div>
+  <div class="sheet-container">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="cart-header-icon">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="cart-count" id="mobileCartHeaderCount">0</span>
+      </div>
+      <h3>Корзина</h3>
+      <button class="sheet-close-btn" id="mobileCloseCart">×</button>
+    </div>
+    <div class="sheet-items" id="mobileMiniCartItems">
+      <div style="padding:3rem 1.5rem;text-align:center;color:#888;">
+        <i class="fas fa-shopping-bag" style="font-size:3rem;margin-bottom:1rem;opacity:0.3;"></i>
+        <p>Корзина пуста</p>
+      </div>
+    </div>
+    <div class="sheet-total">Итого: <strong id="mobileMiniCartTotal">0 ₽</strong></div>
+    <div class="sheet-footer">
+      <button class="checkout-btn-full" id="mobileGoToCartBtn">Перейти к оформлению</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОБИЛЬНАЯ ОБРАТНАЯ СВЯЗЬ -->
+<div class="mobile-feedback-sheet" id="mobileFeedbackSheet">
+  <div class="sheet-header">
+    <button class="sheet-back-btn" id="closeMobileFeedback"><i class="fas fa-chevron-left"></i></button>
+    <div class="sheet-title-wrapper">
+      <i class="fas fa-envelope-open-text"></i>
+      <h2>Обратная связь</h2>
+    </div>
+  </div>
+  <div class="sheet-handle"></div>
+  <form class="contact-form sheet-form" novalidate id="contactFormMobile">
+    <div class="sheet-field">
+      <label>Ваше имя</label>
+      <input type="text" name="name" placeholder="Ваше имя..." required autocomplete="name" />
+    </div>
+    <div class="sheet-field phone-field-wrapper">
+      <label>Телефон <span class="required">*</span></label>
+      <input type="tel" class="phone-input" name="phone" placeholder="+7 (___) ___-__-__" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+    </div>
+    <div class="sheet-field">
+      <label>Email <span class="required">*</span></label>
+      <input type="email" name="email" placeholder="your@email.com" required autocomplete="email" />
+    </div>
+    <div class="sheet-field">
+      <label>Сообщение <span class="required">*</span></label>
+      <textarea name="message" placeholder="Опишите ваш вопрос или предложение..." rows="4" required></textarea>
+    </div>
+    <button type="submit" class="sheet-submit-btn" id="submitBtnMobile">
+      <span class="btn-text">Отправить заявку</span>
+      <span class="btn-loading"><i class="fas fa-spinner fa-spin"></i></span>
+    </button>
+  </form>
+</div>
 
 <!-- МОДАЛКА АВТОРИЗАЦИИ -->
 <div id="authModal" class="auth-modal">
@@ -394,7 +246,6 @@ html[data-theme="light"] .final-close:hover {
     <button class="close-modal" id="closeAuthModal">×</button>
     <h2 class="auth-title">Вход по номеру телефона</h2>
 
-    <!-- ШАГ 1 — ВВОД НОМЕРА -->
     <div id="stepPhone" class="auth-step">
       <div class="country-selector">
         <div class="selected-country" id="selectedCountry">
@@ -408,27 +259,22 @@ html[data-theme="light"] .final-close:hover {
           <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
         </div>
       </div>
+      <input type="tel" id="phoneInput" placeholder="(999) 999 99 99" class="auth-input">
 
-      <input type="tel" id="phoneInput" placeholder="___ ___ ___" maxlength="12" class="auth-input">
-
-      <!-- ОБЯЗАТЕЛЬНОЕ СОГЛАСИЕ (добавлено, но не ломает ничего) -->
       <label class="checkbox-label required">
         <input type="checkbox" id="privacyCheck">
         <span class="custom-checkbox"></span>
-        Я согласен с <a href="/privacy" target="_blank" class="privacy-link">политикой конфиденциальности</a>
+        Согласен с <a href="/policy" target="_blank">политикой конфиденциальности</a>
       </label>
-
-      <!-- АВТОМАТИЧЕСКАЯ ПОДПИСКА (по желанию) -->
       <label class="checkbox-label">
         <input type="checkbox" id="subscribeCheck" checked>
         <span class="custom-checkbox"></span>
-        Подписаться на SMS и email рассылку
+        Получать SMS с акциями
       </label>
 
       <button id="sendCodeBtn" class="auth-btn" disabled>Получить код</button>
     </div>
 
-    <!-- ШАГ 2 — ВВОД КОДА (как было) -->
     <div id="stepCode" class="auth-step" style="display:none;">
       <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
       <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
@@ -436,7 +282,6 @@ html[data-theme="light"] .final-close:hover {
       <button id="resendCode" class="auth-link">Отправить повторно</button>
     </div>
 
-    <!-- ШАГ 3 — УСПЕШНЫЙ ВХОД (ПОЛНОСТЬЮ СОХРАНЁН, КАК БЫЛ У ТЕБЯ) -->
     <div id="stepSuccess" class="auth-step" style="display:none;">
       <i class="fas fa-check-circle success-icon"></i>
       <h3>Добро пожаловать!</h3>
@@ -446,57 +291,52 @@ html[data-theme="light"] .final-close:hover {
   </div>
 </div>
 
-  <!-- ОБРАТНАЯ СВЯЗЬ -->
-  <div class="custom-alert" id="feedbackModal">
-    <div class="alert-content">
-      <button class="alert-close" id="closeFeedback">×</button>
-      <div class="alert-icon"><i class="fas fa-envelope-open-text"></i></div>
-      <div class="alert-text">
-        <strong>Обратная связь</strong>
-        <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
-      </div>
-      <form class="contact-form" novalidate id="contactForm" autocomplete="off">
-        <input type="text" class="name-input" placeholder="Ваше ФИО" name="name" required />
-        <div class="phone-field-wrapper">
-            <input type="tel" placeholder="+7 (___) ___-__-__" name="phone" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
-        </div>
-        <input type="email" placeholder="Email" name="email" required />
-        <textarea placeholder="Ваше сообщение" name="message" required></textarea>
-        <button type="submit" id="submitBtn" class="alert-login-btn">
-            <span class="btn-text">Отправить сообщение</span>
-            <span class="btn-cooldown" style="display:none;">Подождите... <span class="timer">30</span>с</span>
-        </button>
-      </form>
-    </div>
-  </div>
+<!-- AI-АССИСТЕНТ -->
+<div id="ai-assistant">
+  <svg viewBox="0 0 100 100" class="ai-robot" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f5d78a"/>
+        <stop offset="100%" stop-color="#d4af37"/>
+      </linearGradient>
+      <linearGradient id="suitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#2d2d2d"/>
+        <stop offset="100%" stop-color="#1a1a1a"/>
+      </linearGradient>
+    </defs>
 
+    <circle cx="50" cy="35" r="18" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+    <circle cx="44" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="56" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="45.5" cy="31" r="1.8" fill="#fff"/>
+    <circle cx="57.5" cy="31" r="1.8" fill="#fff"/>
+    <circle cx="46" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+    <circle cx="58" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+    <path d="M30 52 L28 98 L72 98 L70 52 Q62 58 50 58 Q38 58 30 52 Z" fill="url(#suitGrad)" stroke="#000" stroke-width="2"/>
+    <path d="M50 52 L42 64 L42 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+    <path d="M50 52 L58 64 L58 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+    <path d="M50 58 L46 72 L50 78 L54 72 Z" fill="#8b1e1e"/>
+    <polygon points="46,72 50,78 54,72" fill="#5c1212"/>
+    <circle cx="50" cy="70" r="2.5" fill="#333"/>
+    <circle cx="50" cy="78" r="2.5" fill="#333"/>
+    <circle cx="50" cy="86" r="2.5" fill="#333"/>
+    <rect x="24" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+    <rect x="64" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+    <g transform="translate(12,68)">
+      <rect x="0" y="0" width="28" height="36" rx="4" fill="#fff" stroke="#111" stroke-width="2"/>
+      <rect x="2" y="2" width="24" height="30" rx="2" fill="#f0f0f0"/>
+      <text x="14" y="11" font-family="Arial, sans-serif" font-size="5.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+      <line x1="4" y1="15" x2="24" y2="15" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="19" x2="24" y2="19" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="23" x2="22" y2="23" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="27" x2="20" y2="27" stroke="#333" stroke-width="0.8"/>
+    </g>
+    <path d="M42 24 Q46 20 50 24" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.6"/>
+  </svg>
+</div>
 
-
-  <!-- AI-АССИСТЕНТ -->
-  <div id="ai-assistant">
-    <svg viewBox="0 0 100 100" class="ai-robot" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#f5d78a"/>
-          <stop offset="100%" stop-color="#d4af37"/>
-        </linearGradient>
-      </defs>
-      <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
-      <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
-      <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
-      <circle cx="39" cy="40" r="2.5" fill="#fff"/>
-      <circle cx="63" cy="40" r="2.5" fill="#fff"/>
-      <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <g transform="translate(8, 62)">
-        <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
-        <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
-      </g>
-      <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
-    </svg>
-  </div>
-
-  <!-- AI ЧАТ МОДАЛЬНЫЙ -->
-<div id="ai-chat" class="ai-chat-modal" style="display: none;">
+<!-- AI ЧАТ -->
+<div id="ai-chat" class="ai-chat-modal">
   <div class="ai-chat-header">
     <div class="ai-chat-title">
       <svg width="32" height="32" viewBox="0 0 100 100" style="margin-right:10px;">
@@ -507,96 +347,94 @@ html[data-theme="light"] .final-close:hover {
         <circle cx="39" cy="40" r="2.5" fill="#fff"/>
         <circle cx="63" cy="40" r="2.5" fill="#fff"/>
         <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-        <g transform="translate(8, 62)">
+        <g transform="translate(8,62)">
           <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
           <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
         </g>
-        <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
       </svg>
       <span>Юрист AI</span>
     </div>
     <div class="ai-header-buttons">
-      <button class="ai-btn-minimize" onclick="toggleAIChatSize()" title="На весь экран">
+      <button class="ai-btn-minimize" onclick="toggleAIChatSize()">
         <i class="fas fa-expand-arrows-alt"></i>
       </button>
-      <button class="ai-btn-close" onclick="closeAIChat()" title="Закрыть">
+      <button class="ai-btn-close" onclick="closeAIChat()">
         <i class="fas fa-times"></i>
       </button>
     </div>
   </div>
   <div class="ai-chat-body">
-    <div class="ai-chat-messages">
-      <div class="ai-message bot">
-        <p>Привет! Я — ваш юридический AI-ассистент. Задайте любой вопрос по Конституции, законам или правам.</p>
-      </div>
-    </div>
+    <div class="ai-chat-messages"></div>
     <div class="ai-chat-input">
-      <input type="text" id="ai-input" placeholder="Задайте юридический вопрос..." 
+      <input type="text" id="ai-input" placeholder="Задайте юридический вопрос..."
              onkeypress="if(event.key==='Enter' && this.value.trim()) { sendAIMessage(this.value); this.value=''; }">
-      <button onclick="const inp = document.getElementById('ai-input'); if(inp.value.trim()) { sendAIMessage(inp.value); inp.value=''; }">
+      <button onclick="const inp=document.getElementById('ai-input'); if(inp.value.trim()) { sendAIMessage(inp.value); inp.value=''; }">
         <i class="fas fa-paper-plane"></i>
       </button>
     </div>
   </div>
 </div>
 
-    <!-- ОСНОВНОЙ КОНТЕНТ -->
-  <main>
-    <div class="news-section">
-      <div class="news-intro">
-        <h2 class="news-title">Новости</h2>
-        <p class="news-subtitle">Узнавайте, как искусственный интеллект перестраивает дизайн и бизнес. Реальные кейсы, технологические инсайты и тренды цифровой элиты — в наших новостях.</p>
-        <button class="scroll-trigger" onclick="scrollToNews()">
-          <span>Скролл к новостям</span>
-          <i class="fas fa-chevron-down animated-arrow"></i>
-        </button>
-                <!-- ФИЛЬТРЫ ПО КАТЕГОРИЯМ — ДИНАМИЧЕСКИЕ -->
-        <div class="news-filters" id="newsFilters">
-          <button class="filter-btn active" data-category="all">Все новости</button>
-          <!-- Остальные категории подгрузятся из БД -->
-        </div>
-      </div>
-      <div class="news-feed" id="newsFeed">
-        <!-- Новости будут вставлены через JS -->
+<!-- ТУМБЛЕР ТЕМЫ - ЛАМПОЧКА -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
+
+<!-- ОСНОВНОЙ КОНТЕНТ НОВОСТЕЙ -->
+<main>
+  <div class="news-section">
+    <div class="news-intro">
+      <h2 class="news-title">Новости</h2>
+      <p class="news-subtitle">Узнавайте, как искусственный интеллект перестраивает дизайн и бизнес. Реальные кейсы, технологические инсайты и тренды цифровой элиты — в наших новостях.</p>
+      <button class="scroll-trigger" onclick="scrollToNews()">
+        <span>Скролл к новостям</span>
+        <i class="fas fa-chevron-down animated-arrow"></i>
+      </button>
+
+      <div class="news-filters" id="newsFilters">
+        <button class="filter-btn active" data-category="all">Все новости</button>
+        <!-- категории подгружаются из JS -->
       </div>
     </div>
-    
-  </main>
 
-  
+    <div class="news-feed" id="newsFeed">
+      <!-- сюда вставляются карточки новостей через JS -->
+    </div>
+  </div>
+</main>
 
-<!-- ФИНАЛЬНАЯ ПРЕМИУМ-МОДАЛКА НОВОСТЕЙ 2025 -->
+<!-- ПРЕМИУМ МОДАЛКА ДЛЯ НОВОСТИ -->
 <div id="finalNewsModal" class="final-modal">
   <div class="final-backdrop"></div>
-
   <div class="final-container">
-    <!-- КРАСИВЫЙ КРЕСТИК — СОВРЕМЕННЫЙ ДИЗАЙН -->
-<button class="final-close" onclick="closeFinalModal()" aria-label="Закрыть">
-  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-    <path d="M6 6L22 22M6 22L22 6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
-  </svg>
-</button>
+    <button class="final-close" onclick="closeFinalModal()" aria-label="Закрыть">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M6 6L22 22M6 22L22 6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+      </svg>
+    </button>
 
-    <!-- ВЕРХ: ПОЛНОЭКРАННАЯ КАРУСЕЛЬ С ЗАГОЛОВКОМ -->
     <div class="final-hero" id="finalHero">
       <div class="final-carousel" id="finalCarousel"></div>
-
-      <!-- Заголовок и дата поверх картинки -->
       <div class="final-overlay-text">
         <time class="final-date" id="finalDate"></time>
         <h1 class="final-title" id="finalTitle"></h1>
-        <div class="final-hint">
-          <span>Пролистай вниз</span>
+        <div class="final-hint"><span>Пролистай вниз</span>
           <svg class="final-arrow" viewBox="0 0 32 32">
             <path d="M16 22 L10 14 L12.5 11.5 L16 15 L19.5 11.5 L22 14 Z"/>
           </svg>
         </div>
       </div>
-
       <div class="final-dots" id="finalDots"></div>
     </div>
 
-    <!-- НИЗ: ТЕКСТ (появляется после скролла) -->
     <div class="final-content" id="finalContent">
       <div class="final-inner">
         <p class="final-lead" id="finalLead"></p>
@@ -605,37 +443,50 @@ html[data-theme="light"] .final-close:hover {
     </div>
   </div>
 </div>
+<!-- ДЕСКТОПНАЯ МОДАЛКА ОБРАТНОЙ СВЯЗИ (та самая, что была в contacts.html) -->
+<div class="custom-alert" id="feedbackModal">
+  <div class="alert-content">
+    <button class="alert-close" id="closeFeedback">×</button>
 
-  <a href="#" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
-  <!-- Скрипты -->
-  <script src="/static/js/search.js" defer></script>
-  <script src="/static/js/auth.js" defer></script>
-  <script src="/static/js/cart.js" defer></script>
-  <script src="/static/js/feedback.js" defer></script>
-  <script src="/static/js/ai.js" defer></script>
-  <script src="/static/js/news.js" defer></script>
+    <div class="alert-icon">
+      <i class="fas fa-envelope-open-text"></i>
+    </div>
 
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // Блокируем скролл
-    document.body.style.overflow = 'hidden';
+    <div class="alert-text">
+      <strong>Обратная связь</strong>
+      <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
+    </div>
 
-    // Через 1.8 сек — добавляем класс hidden
-    setTimeout(() => {
-      const loader = document.getElementById('loader');  // ← ИСПРАВЛЕНО
-      if (loader) {
-        loader.classList.add('hidden');
+    <form class="contact-form" novalidate id="contactForm">
+      <input type="text" placeholder="Ваше имя" name="name" required />
+      
+      <div class="phone-field-wrapper">
+        <input type="tel" placeholder="+7 (___) ___-__-__" name="phone" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+      </div>
+      
+      <input type="email" placeholder="Email" name="email" required />
+      <textarea placeholder="Ваше сообщение" name="message" required></textarea>
 
-        // Через 0.7 сек — убираем из DOM
-        setTimeout(() => {
-          loader.remove();
-          document.body.style.overflow = '';
-          document.body.classList.add('loaded');
-        }, 100);
-      }
-    }, 1600);
-  });
-</script>
+      <button type="submit" id="submitBtn" class="alert-login-btn">
+        <span class="btn-text">Отправить сообщение</span>
+        <span class="btn-cooldown">Отправка... <span class="timer">30</span>с</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- МОБИЛЬНАЯ ШТОРКА ФИДБЕКА С ПОЛЕМ ИМЕНИ В ХЕДЕРЕ (как было в contacts.html) -->
+<div class="mobile-feedback-top" id="mobileFeedbackTop" style="display:none;">
+  <div class="mobile-feedback-header">
+    <button class="mobile-feedback-back" id="closeMobileFeedbackTop">←</button>
+    <div class="mobile-feedback-input-wrapper">
+      <i class="fas fa-envelope"></i>
+      <input type="text" class="mobile-feedback-input" id="mobileFeedbackInput" placeholder="Ваше имя..." autocomplete="off">
+    </div>
+  </div>
+</div>
+<a href="#" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
+
 <!-- УНИВЕРСАЛЬНАЯ КАРТОЧКА ТОВАРА/УСЛУГИ — ФИНАЛ 2025 -->
 <div class="product-modal" id="productModal">
   <div class="product-content">
@@ -651,154 +502,248 @@ html[data-theme="light"] .final-close:hover {
   </div>
 </div>
 
-<script>
-// АБСОЛЮТНЫЙ ЯДЕРНЫЙ ФИКС — РАБОТАЕТ ДАЖЕ ЕСЛИ ВСЁ СЛОМАНО
-(() => {
-  const oldOpen = window.openProductModal;
-  if (!oldOpen) return;
 
-  window.openProductModal = async (id, type = 'product') => {
-    // Принудительно правильные роуты
-    const realType = type === 'service' || type === 'services' ? 'services' : 'goods';
-    const url = `/api/${realType}/${id}`;
-    
-    console.log('ОТКРЫВАЮ КАРТОЧКУ →', url);
-    
-    try {
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        // Перезапускаем старую функцию, но с правильными данными
-        document.querySelector('#productTitle').textContent = data.title || 'Товар';
-        document.querySelector('#productPrice').textContent = data.price_str || 'Цена по запросу';
-        document.querySelector('#productImg').src = (data.image_urls?.[0] || data.image_url || '/static/assets/no-image.png') + '?v=' + Date.now();
-        document.querySelector('.product-modal').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        return;
-      }
-    } catch(e) {}
-    
-    // Если не сработало — пускаем старую функцию (на случай если она уже исправлена)
-    oldOpen(id, type);
-  };
-})();
-</script>
-<script>
-// УНИВЕРСАЛЬНЫЙ АНТИСПАМ 2025 — РАБОТАЕТ НА ВСЕХ КНОПКАХ "В КОРЗИНУ" И ИЗМЕНЕНИЯ КОЛИЧЕСТВА
-// Защищает от спама: + / – / удалить / любые onclick="addToCart(...)" / кнопки с классами
-const GlobalAddToCartProtection = (() => {
-  const STORAGE_KEY = 'cart_flood_protection_2025';
-  const COOLDOWN_MS = 20000;    // 20 сек блок после спама
-  const MAX_CLICKS = 9;         // сколько быстрых кликов разрешено
+<script src="/static/js/search.js" defer></script>
+<script src="/static/js/auth.js" defer></script>
+<script src="/static/js/cart.js" defer></script>
+<script src="/static/js/feedback.js" defer></script>
+<script src="/static/js/ai.js"></script>
+<script src="/static/js/news.js" defer></script>
 
-  let clickCount = 0;
-  let resetTimer = null;
-  let blockedUntil = 0;
-
-  // Загружаем состояние
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const data = JSON.parse(saved);
-      blockedUntil = data.blockedUntil || 0;
-    }
-  } catch (e) {}
-
-  const block = () => {
-    blockedUntil = Date.now() + COOLDOWN_MS;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ blockedUntil }));
-
-    // Красивый красный алерт с таймером
-    const alert = document.createElement('div');
-    alert.id = 'global-cart-flood-alert';
-    alert.innerHTML = `
-      <i class="fas fa-hand-paper"></i>
-      <div>
-        <strong>Слишком быстро!</strong><br>
-        <small>Подождите <span class="timer">20</span> сек</small>
-      </div>
-    `;
-    Object.assign(alert.style, {
-      position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
-      background: 'linear-gradient(135deg,#ff453a,#ff2d55)', color: 'white',
-      padding: '16px 32px', borderRadius: '26px', fontSize: '1.15rem',
-      fontWeight: '600', boxShadow: '0 20px 50px rgba(255,45,85,0.5)',
-      backdropFilter: 'blur(20px)', display: 'flex', alignItems: 'center', gap: '14px',
-      zIndex: '999999', animation: 'slideDown 0.5s ease'
-    });
-    document.body.appendChild(alert);
-
-    let seconds = 20;
-    const timerSpan = alert.querySelector('.timer');
-    const interval = setInterval(() => {
-      seconds--;
-      timerSpan.textContent = seconds;
-      if (seconds <= 0) {
-        clearInterval(interval);
-        alert.remove();
-      }
-    }, 1000);
-
-    setTimeout(() => alert.remove(), COOLDOWN_MS + 1000);
-  };
-
-  return {
-    check() {
-      const now = Date.now();
-      if (blockedUntil > now) return false;
-
-      clickCount++;
-      clearTimeout(resetTimer);
-      resetTimer = setTimeout(() => { clickCount = 0; }, 10000);
-
-      if (clickCount > MAX_CLICKS) {
-        block();
-        clickCount = 0;
-        return false;
-      }
-      return true;
-    }
-  };
-})();
-
-// УНИВЕРСАЛЬНЫЙ ПЕРЕХВАТЧИК — ЛОВИТ ВСЁ
-document.addEventListener('click', function(e) {
-  const target = e.target.closest(
-    'button, .add-to-cart-btn, .buy-btn, .apple-qty-btn, .apple-remove-btn, ' +
-    '.quantity-btn, .clear-cart-btn, [onclick*="addToCart("]'
-  );
-
-  if (!target) return;
-
-  // Проверяем, это действие с корзиной?
-  const onclick = target.getAttribute('onclick') || '';
-  const isCartAction = 
-    onclick.includes('addToCart(') ||
-    target.classList.contains('apple-qty-btn') ||
-    target.classList.contains('apple-remove-btn') ||
-    target.classList.contains('quantity-btn') ||
-    target.classList.contains('clear-cart-btn') ||
-    target.classList.contains('add-to-cart-btn') ||
-    target.classList.contains('buy-btn');
-
-  if (isCartAction && !GlobalAddToCartProtection.check()) {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    e.stopPropagation();
-    return false;
+<script defer>
+// =================== contacts-mini.js — только то, что нужно для news.html ===================
+document.addEventListener("DOMContentLoaded", () => {
+  // === ПРЕЛОАДЕР ===
+  const loader = document.getElementById('loader');
+  if (loader) {
+    setTimeout(() => {
+      loader.style.opacity = '0';
+      setTimeout(() => loader.remove(), 600);
+    }, 400);
   }
-}, true); // true = capture phase → срабатывает раньше всех остальных обработчиков
 
-// Анимация алерта
-document.head.insertAdjacentHTML('beforeend', `
-<style>
-@keyframes slideDown {
-  from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
-  to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+  // === BACK TO TOP ===
+  const backIoTop = document.querySelector('.back-to-top');
+  if (backIoTop) {
+    window.addEventListener('scroll', () => {
+      backIoTop.classList.toggle('visible', window.scrollY > 600);
+    });
+    backIoTop.addEventListener('click', e => {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  // === ТЕМА (безопасно, даже если два toggle) ===
+  const applyTheme = () => {
+    const saved = localStorage.getItem('theme');
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    const theme = saved || (prefersLight ? 'light' : 'dark');
+    document.documentElement.setAttribute('data-theme', theme);
+
+    document.querySelectorAll('#theme-toggle, #theme-toggle-hanging').forEach(el => {
+      if (el) el.checked = (theme === 'light');
+    });
+  };
+  applyTheme();
+
+  document.addEventListener('change', e => {
+    if (e.target.matches('#theme-toggle, #theme-toggle-hanging')) {
+      const isLight = e.target.checked;
+      document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+  });
+
+  // === МОБИЛЬНЫЙ САЙДБАР (свайп влево) — ИСПРАВЛЕННАЯ ВЕРСИЯ БЕЗ ОШИБОК ===
+  const sidebar = document.getElementById('mobileSidebar');
+  if (sidebar) {
+    let startX = 0, isDragging = false;
+    const threshold = 80;
+
+    const close = () => {
+      sidebar.classList.remove('active');
+      document.body.classList.remove('sidebar-open');
+    };
+
+    const handleStart = e => {
+      if (!sidebar.classList.contains('active')) return;
+      startX = e.touches?.[0].clientX || e.clientX;
+      isDragging = true;
+      sidebar.style.transition = 'none';
+    };
+
+    const handleMove = e => {
+      if (!isDragging) return;
+      const x = e.touches?.[0].clientX || e.clientX;
+      const diff = x - startX;
+      if (diff < 0) {
+        e.preventDefault();
+        sidebar.style.transform = `translateX(${diff}px)`;
+      }
+    };
+
+    const handleEnd = () => {
+      if (!isDragging) return;
+      isDragging = false;
+      const diff = (event?.changedTouches?.[0]?.clientX || event?.clientX || startX) - startX;
+      if (diff < -threshold) {
+        sidebar.style.transition = 'transform 0.4s ease';
+        sidebar.style.transform = 'translateX(-100%)';
+        setTimeout(() => {
+          close();
+          sidebar.style.transition = '';
+          sidebar.style.transform = '';
+        }, 400);
+      } else {
+        sidebar.style.transition = 'transform 0.3s ease';
+        sidebar.style.transform = 'translateX(0)';
+        setTimeout(() => sidebar.style.transition = '', 300);
+      }
+    };
+
+    // Открытие
+    document.getElementById('openSidebarMenu')?.addEventListener('click', () => {
+      sidebar.classList.add('active');
+      document.body.classList.add('sidebar-open');
+    });
+
+    document.getElementById('closeSidebar')?.addEventListener('click', close);
+
+    // Свайп + клик вне
+    document.addEventListener('touchstart', handleStart, { passive: true });
+    document.addEventListener('touchmove', handleMove, { passive: false });
+    document.addEventListener('touchend', handleEnd);
+
+    document.addEventListener('click', e => {
+      if (sidebar.classList.contains('active') && 
+          !e.target.closest('#mobileSidebar') && 
+          !e.target.closest('#openSidebarMenu')) close();
+    });
+  }
+
+  // === МОБИЛЬНАЯ ОБРАТНАЯ СВЯЗЬ — свайп вниз (исправлено) ===
+  const feedbackSheet = document.getElementById('mobileFeedbackSheet');
+  if (feedbackSheet) {
+    let startY = 0, dragging = false;
+    const threshold = 120;
+
+    const close = () => {
+      feedbackSheet.classList.remove('active');
+      document.body.style.overflow = '';
+    };
+
+    feedbackSheet.addEventListener('touchstart', e => {
+      if (!feedbackSheet.classList.contains('active')) return;
+      startY = e.touches[0].clientY;
+      dragging = true;
+      feedbackSheet.style.transition = 'none';
+    }, { passive: true });
+
+    feedbackSheet.addEventListener('touchmove', e => {
+      if (!dragging) return;
+      const y = e.touches[0].clientY;
+      const diff = y - startY;
+      if (diff > 0) {
+        e.preventDefault();
+        feedbackSheet.style.transform = `translateY(${diff}px)`;
+      }
+    }, { passive: false });
+
+    feedbackSheet.addEventListener('touchend', () => {
+      if (!dragging) return;
+      dragging = false;
+      const diff = (event?.changedTouches?.[0]?.clientY || startY) - startY;
+      if (diff > threshold) {
+        feedbackSheet.style.transition = 'transform 0.4s ease';
+        feedbackSheet.style.transform = 'translateY(100%)';
+        setTimeout(() => {
+          close();
+          feedbackSheet.style.transition = '';
+          feedbackSheet.style.transform = '';
+        }, 400);
+      } else {
+        feedbackSheet.style.transition = 'transform 0.3s ease';
+        feedbackSheet.style.transform = 'translateY(0)';
+        setTimeout(() => feedbackSheet.style.transition = '', 300);
+      }
+    });
+
+    // Кнопки закрытия
+    document.querySelectorAll('#closeMobileFeedback, .sheet-back-btn').forEach(btn => {
+      btn.addEventListener('click', close);
+    });
+  }
+});
+// === МОБИЛЬНЫЙ САЙДБАР — РАБОЧАЯ ВЕРСИЯ 2025 (с классом .open) ===
+const sidebar = document.getElementById('mobileSidebar');
+if (sidebar) {
+  let startX = 0, isDragging = false;
+  const threshold = 80;
+
+  const close = () => {
+    sidebar.classList.remove('open');        // ← .open!
+    document.body.classList.remove('sidebar-open');
+  };
+
+  const handleStart = e => {
+    if (!sidebar.classList.contains('open')) return;
+    startX = e.touches?.[0].clientX || e.clientX;
+    isDragging = true;
+    sidebar.style.transition = 'none';
+  };
+
+  const handleMove = e => {
+    if (!isDragging) return;
+    const x = e.touches?.[0].clientX || e.clientX;
+    const diff = x - startX;
+    if (diff < 0) {
+      e.preventDefault();
+      sidebar.style.transform = `translateX(${diff}px)`;
+    }
+  };
+
+  const handleEnd = e => {
+    if (!isDragging) return;
+    isDragging = false;
+    const currentX = e.changedTouches?.[0]?.clientX || e.clientX || startX;
+    const diff = currentX - startX;
+
+    if (diff < -threshold) {
+      sidebar.style.transition = 'transform 0.44s cubic-bezier(0.22, 1, 0.36, 1)';
+      sidebar.style.transform = 'translateX(-100%)';
+      setTimeout(() => {
+        close();
+        sidebar.style.transition = '';
+        sidebar.style.transform = '';
+      }, 450);
+    } else {
+      sidebar.style.transition = 'transform 0.38s cubic-bezier(0.2, 0.9, 0.3, 1)';
+      sidebar.style.transform = 'translateX(0)';
+      setTimeout(() => sidebar.style.transition = '', 380);
+    }
+  };
+
+  document.getElementById('openSidebarMenu')?.addEventListener('click', () => {
+    sidebar.classList.add('open');           // ← .open!
+    document.body.classList.add('sidebar-open');
+  });
+
+  document.getElementById('closeSidebar')?.addEventListener('click', close);
+
+  document.addEventListener('touchstart', handleStart, { passive: true });
+  document.addEventListener('touchmove', handleMove, { passive: false });
+  document.addEventListener('touchend', handleEnd);
+
+  document.addEventListener('click', e => {
+    if (sidebar.classList.contains('open') && 
+        !e.target.closest('#mobileSidebar') && 
+        !e.target.closest('#openSidebarMenu')) {
+      close();
+    }
+  });
 }
-#global-cart-flood-alert i { font-size: 1.8rem; }
-</style>
-`);
 </script>
+
 </body>
 </html>

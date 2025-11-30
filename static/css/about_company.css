@@ -979,4 +979,18 @@ html[data-theme="light"] .cart-count {
   background: #000000 !important;
   color: #ffffff !important;
 }
-
+/* Стили кнопки обратной связи применяются только для экранов больше 1024px */
+@media screen and (min-width: 1025px) {
+  html[data-theme="light"] button[class*="feedback"],
+  html[data-theme="light"] #feedbackFloatingBtn,
+  html[data-theme="light"] .floating-feedback-btn,
+  html[data-theme="light"] .feedback-btn,
+  html[data-theme="light"] button[id*="feedback"],
+  html[data-theme="light"] #feedbackBtn {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1.2px solid rgba(0,0,0,0.18) !important;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.16) !important;
+    opacity: 1 !important;
+  }
+}
