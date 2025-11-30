@@ -238,66 +238,86 @@ setTimeout(showGreeting, 3000);
 })();
 
 // === ПОДЪЁМ ЧАТА НАД КЛАВИАТУРОЙ — КАК В ТЕЛЕГРАММЕ (2025, работает везде) ===
-// === ПОДЪЁМ ЧАТА НАД КЛАВИАТУРОЙ — РАБОТАЕТ НА ВСЕХ ТЕЛЕФОНАХ 2025 ГОДА (iOS + Android) ===
+// === УНИВЕРСАЛЬНЫЙ ПОДЪЁМ ЧАТА НАД КЛАВИАТУРОЙ — РАБОТАЕТ НА ЛЮБОМ ТЕЛЕФОНЕ 2025 ГОДА ===
 (() => {
   const chat = document.getElementById('ai-chat');
   const input = chat?.querySelector('#ai-input');
   if (!chat || !input || window.innerWidth > 1023) return;
 
-  let keyboardHeight = 0;
-  let isDragging = false; // чтобы не конфликтовать со свайпом
+  let isDragging = false;
+  let initialViewportHeight = window.visualViewport?.height || window.innerHeight;
 
   const updatePosition = () => {
-    if (isDragging) return; // не трогаем во время свайпа
+    if (isDragging) return;
 
-    if (!window.visualViewport) {
-      // Резервный вариант для старых браузеров
-      const diff = window.innerHeight - window.visualViewport?.height || 0;
-      keyboardHeight = diff > 100 ? diff : 0;
+    // Текущая высота видимой области
+    const currentViewportHeight = window.visualViewport?.height || window.innerHeight;
+    const diff = initialViewportHeight - currentViewportHeight;
+
+    // Клавиатура считается открытой, если экран уменьшился минимум на 100px
+    if (diff > 100) {
+      // Самая главная хитрость 2025 года:
+      // На iPhone используем именно diff (не offsetTop!)
+      // На Android тоже diff даёт точную высоту клавиатуры
+      chat.style.transform = `translateY(-${diff}px)`;
+      chat.style.transition = 'transform 0.34s cubic-bezier(0.2, 0.85, 0.2, 1)';
     } else {
-      keyboardHeight = window.innerHeight - window.visualViewport.height;
-    }
-
-    if (keyboardHeight > 100) {
-      // Клавиатура открыта — поднимаем чат
-      chat.style.transform = `translateY(-${keyboardHeight}px)`;
-      chat.style.transition = 'transform 0.3s cubic-bezier(0.3, 0.8, 0.2, 1)';
-    } else if (!chat.classList.contains('dragging')) {
-      // Клавиатура закрыта — возвращаем в 0
-      chat.style.transform = 'translateY(0)';
+      // Клавиатура закрыта
+      if (chat.classList.contains('active') && !chat.classList.contains('dragging')) {
+        chat.style.transform = 'translateY(0)';
+      }
     }
   };
 
-  // Основные события
+  // Запоминаем высоту экрана при открытии чата (до появления клавиатуры)
+  const saveInitialHeight = () => {
+    initialViewportHeight = window.visualViewport?.height || window.innerHeight;
+  };
+
+  // События
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', updatePosition);
-    window.visualViewport.addEventListener('scroll', updatePosition);
+    window.visualViewport.addEventListener('resize', () => {
+      updatePosition();
+      // На некоторых телефонах resize срабатывает с задержкой — дублируем
+      setTimeout(updatePosition, 100);
+    });
   } else {
     window.addEventListener('resize', updatePosition);
   }
 
-  // Фокус — поднимаем сразу (важно для iOS!)
+  // При фокусе — сразу сохраняем начальную высоту и поднимаем
   input.addEventListener('focus', () => {
-    setTimeout(updatePosition, 100);
-    setTimeout(updatePosition, 300);
-    setTimeout(updatePosition, 600);
+    saveInitialHeight();
+    setTimeout(updatePosition, 50);
+    setTimeout(updatePosition, 250);
+    setTimeout(updatePosition, 500);
   });
 
-  // При закрытии клавиатуры — опускаем
+  // При закрытии клавиатуры — плавно опускаем
   input.addEventListener('blur', () => {
     setTimeout(updatePosition, 150);
   });
 
-  // Отслеживаем свайп — чтобы не мешал клавиатуре
-  chat.addEventListener('touchstart', () => { isDragging = true; }, { passive: true });
+  // Отслеживаем свайп вниз (чтобы не конфликтовал с клавиатурой)
+  chat.addEventListener('touchstart', () => isDragging = true, { passive: true });
   chat.addEventListener('touchend', () => {
-    setTimeout(() => { isDragging = false; updatePosition(); }, 300);
+    setTimeout(() => {
+      isDragging = false;
+      updatePosition();
+    }, 250);
+  });
+  chat.addEventListener('touchcancel', () => {
+    setTimeout(() => {
+      isDragging = false;
+      updatePosition();
+    }, 250);
   });
 
-  // Автофокус при открытии
-  new MutationObserver(() => {
+  // Автофокус при открытии чата
+  new MutationObserver((mutations) => {
     if (chat.classList.contains('active')) {
-      setTimeout(() => input.focus(), 500);
+      saveInitialHeight();
+      setTimeout(() => input.focus(), 450);
     }
   }).observe(chat, { attributes: true, attributeFilter: ['class'] });
 })();

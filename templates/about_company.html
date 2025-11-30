@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="dark">
+<html lang="ru" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -22,39 +22,7 @@
   <link rel="stylesheet" href="/static/css/feedback.css"> 
   
 
-<style>
-/* ДЕСКТОП ≥1025px — БЕЛАЯ КНОПКА ОБРАТНОЙ СВЯЗИ С КРАСИВЫМ ХОВЕРОМ */
-@media screen and (min-width: 1025px) {
-  html[data-theme="light"] * 
-  html[data-theme="light"] #feedbackFloatingBtn,
-  html[data-theme="light"] [class*="feedback"] > div:first-child,
-  html[data-theme="light"] .feedback-btn,
-  html[data-theme="light"] [id*="feedback"] {
-    background: #ffffff !important;
-    background-color: #ffffff !important;
-    box-shadow: 0 12px 36px rgba(0,0,0,0.16) !important;
 
-  }
-}
-
-  /* ЭФФЕКТ ПРИ НАВЕДЕНИИ — поднятие + усиленная тень */
-  html[data-theme="light"] #feedbackFloatingBtn:hover,
-  html[data-theme="light"] .feedback-btn:hover,
-  html[data-theme="light"] [class*="feedback"] button:hover,
-  html[data-theme="light"] [id*="feedback"]:hover {
-    background: #ffffff !important;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.24) !important;
-    transform: translateY(-6px) scale(1.08) !important;
-  }
-
-  /* Если иконка внутри отдельного элемента — делаем её чёрной и без фона */
-  html[data-theme="light"] #feedbackFloatingBtn *,
-  html[data-theme="light"] [id*="feedback"] * {
-    background: transparent !important;
-    color: #5c5c5c !important;
-  }
-
-</style>
 
 </head>
 <body>
@@ -341,48 +309,82 @@
 </div>
 
 <section class="about-section">
-  <div class="image-wrapper">
-    <div class="image" 
-         style="background-image: url('/static/assets/about_company/mission.png');">
-    </div>
+  <div class="image-wrapper" style="position:relative; overflow:hidden;">
+    <!-- Тёмная версия (по умолчанию видима) -->
+    <img 
+      src="/static/assets/about_company/history_light.png"
+      alt="История компании (тёмная)"
+      class="theme-switch-image theme-dark-img"
+      style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; opacity:1; transition:opacity 0.38s ease;">
+    
+    <!-- Светлая версия (изначально скрыта) -->
+    <img 
+      src="/static/assets/about_company/history.png"
+      alt="История компании (светлая)"
+      class="theme-switch-image theme-light-img"
+      style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity 0.38s ease;">
   </div>
+
   <div class="content">
     <div class="section-title">НАША МИССИЯ</div>
-    <p>
+<p>
       Делаем цифровые продукты для бизнеса, которые продают сами себя.<br>
       Сайты, AI-юристы, закрытые платформы, автоматизация — всё, что превращает клиентов в постоянных и увеличивает ваш чек.
     </p>
   </div>
 </section>
 
-  <section class="about-section">
-    <div class="image-wrapper">
-      <div class="image" 
-      style="background-image: url('/static/assets/about_company/approach.png');">
-    </div>
-    </div>
-    <div class="content">
-      <div class="section-title">НАШ ПОДХОД</div>
-      <p class="section-text">
+<section class="about-section">
+  <div class="image-wrapper" style="position:relative; overflow:hidden;">
+    <!-- Тёмная версия (по умолчанию видима) -->
+    <img 
+      src="/static/assets/about_company/history_light.png"
+      alt="История компании (тёмная)"
+      class="theme-switch-image theme-dark-img"
+      style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; opacity:1; transition:opacity 0.38s ease;">
+    
+    <!-- Светлая версия (изначально скрыта) -->
+    <img 
+      src="/static/assets/about_company/history.png"
+      alt="История компании (светлая)"
+      class="theme-switch-image theme-light-img"
+      style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity 0.38s ease;">
+  </div>
+
+  <div class="content">
+    <div class="section-title">НАШ ПОДХОД</div>
+<p class="section-text">
         От стратегии до реализации — мы контролируем каждый этап. Используем только проверенные технологии, 
         которые масштабируются и выдерживают нагрузки будущего. Никаких компромиссов в коде, дизайне или безопасности.
       </p>
-    </div>
-  </section>
+  </div>
+</section>
 
-  <section class="about-section">
-    <div class="image-wrapper">
-      <div class="image" style="background-image: url('/static/assets/about_company/history.png');">
-      </div>
-    </div>
-    <div class="content">
-      <div class="section-title">О Piligrim</div>
-<p class="section-text">
-  Каждый продукт создаётся с нуля под конкретные задачи бизнеса.  
+<section class="about-section">
+  <div class="image-wrapper" style="position:relative; overflow:hidden;">
+    <!-- Тёмная версия (по умолчанию видима) -->
+    <img 
+      src="/static/assets/about_company/history_light.png"
+      alt="История компании (тёмная)"
+      class="theme-switch-image theme-dark-img"
+      style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; opacity:1; transition:opacity 0.38s ease;">
+    
+    <!-- Светлая версия (изначально скрыта) -->
+    <img 
+      src="/static/assets/about_company/history.png"
+      alt="История компании (светлая)"
+      class="theme-switch-image theme-light-img"
+      style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; opacity:0; transition:opacity 0.38s ease;">
+  </div>
+
+  <div class="content">
+    <div class="section-title">О Piligrim</div>
+    <p class="section-text">
+  Каждый продукт создаётся с нуля под конкретные задачи бизнеса.
   Только актуальные технологии, чистый код, премиальный дизайн и гарантия результата с первого месяца использования.
 </p>
-    </div>
-  </section>
+  </div>
+</section>
 
 <section class="about-section">
   <div class="image-wrapper" style="position:relative; overflow:hidden;">
@@ -476,40 +478,62 @@
 
 
 
-  <div id="authModal" class="auth-modal">
-    <div class="auth-modal-content">
-      <button class="close-modal" id="closeAuthModal">×</button>
-      <h2 class="auth-title">Вход по номеру телефона</h2>
-      <div id="stepPhone" class="auth-step">
-        <div class="country-selector">
-          <div class="selected-country" id="selectedCountry">
-            <span class="flag">RU</span>
-            <span class="code">+7</span>
-            <i class="fas fa-chevron-down"></i>
-          </div>
-          <div class="country-dropdown" id="countryDropdown">
-            <div class="country-item" data-code="+7" data-flag="RU">Россия +7</div>
-            <div class="country-item" data-code="+1" data-flag="US">USA +1</div>
-            <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
-          </div>
+<div id="authModal" class="auth-modal">
+  <div class="auth-modal-content">
+    <button class="close-modal" id="closeAuthModal">×</button>
+    <h2 class="auth-title">Вход по номеру телефона</h2>
+
+    <!-- ШАГ 1 — ВВОД НОМЕРА -->
+    <div id="stepPhone" class="auth-step">
+      <div class="country-selector">
+        <div class="selected-country" id="selectedCountry">
+          <span class="flag">RU</span>
+          <span class="code">+7</span>
+          <i class="fas fa-chevron-down"></i>
         </div>
-        <input type="tel" id="phoneInput" placeholder="___ ___ ___" maxlength="12" class="auth-input">
-        <button id="sendCodeBtn" class="auth-btn">Получить код</button>
+        <div class="country-dropdown" id="countryDropdown">
+          <div class="country-item" data-code="+7" data-flag="RU">Россия +7</div>
+          <div class="country-item" data-code="+1" data-flag="US">USA +1</div>
+          <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
+        </div>
       </div>
-      <div id="stepCode" class="auth-step" style="display:none;">
-        <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
-        <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
-        <button id="verifyCodeBtn" class="auth-btn">Войти</button>
-        <button id="resendCode" class="auth-link">Отправить повторно</button>
-      </div>
-      <div id="stepSuccess" class="auth-step" style="display:none;">
-        <i class="fas fa-check-circle success-icon"></i>
-        <h3>Добро пожаловать!</h3>
-        <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
-        <button id="closeSuccess" class="auth-btn">Продолжить</button>
-      </div>
+
+      <input type="tel" id="phoneInput" placeholder="(999) 999 99 99" class="auth-input">
+
+      <!-- Обязательное согласие -->
+      <label class="checkbox-label required">
+        <input type="checkbox" id="privacyCheck">
+        <span class="custom-checkbox"></span>
+        Согласен с <a href="/policy" target="_blank" class="privacy-link">политикой конфиденциальности</a>
+      </label>
+
+      <!-- Автоматическая подписка на рассылку -->
+      <label class="checkbox-label">
+        <input type="checkbox" id="subscribeCheck" checked>
+        <span class="custom-checkbox"></span>
+        Получать SMS с акциями и уведомлениями
+      </label>
+
+      <button id="sendCodeBtn" class="auth-btn" disabled>Получить код</button>
+    </div>
+
+    <!-- ШАГ 2 — ВВОД КОДА -->
+    <div id="stepCode" class="auth-step" style="display:none;">
+      <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
+      <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
+      <button id="verifyCodeBtn" class="auth-btn">Войти</button>
+      <button id="resendCode" class="auth-link">Отправить повторно</button>
+    </div>
+
+    <!-- ШАГ 3 — УСПЕШНЫЙ ВХОД -->
+    <div id="stepSuccess" class="auth-step" style="display:none;">
+      <i class="fas fa-check-circle success-icon"></i>
+      <h3>Добро пожаловать!</h3>
+      <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
+      <button id="closeSuccess" class="auth-btn">Продолжить</button>
     </div>
   </div>
+</div>
 
   <div class="product-modal" id="productModal">
     <div class="product-content">
