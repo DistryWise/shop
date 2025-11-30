@@ -459,39 +459,379 @@ html[data-theme="light"] header:not(.scrolled) div {
    ✅ Вылезающая кнопка ОФОРМИТЬ
 =========================================== */
 
+/* static/css/cart.css */
+
+
+
+
+/* КНОПКА "ОФОРМИТЬ" — БЕЛАЯ С ПОДСВЕТКОЙ */
+/* ====================== ТЁМНАЯ ТЕМА — КНОПКА "ОФОРМИТЬ" ====================== */
+/* Основной стиль — НЕ чисто белая, а тёмная с ярким градиентом/свечением */
+.go-to-cart-btn {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    color: #ffffff;
+    border: 2px solid #444;
+    padding: 0.6rem 1.2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    z-index: 1;
+}
+
+/* Эффект свечения при наведении — красивый, а не просто белый */
+.go-to-cart-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, #000000, #000000);
+    border-radius: 10px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: -1;
+}
+
+.go-to-cart-btn:hover::before {
+    opacity: 1;
+}
+
+.go-to-cart-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    border-color: #000000;
+}
+
+.go-to-cart-btn:active {
+    transform: translateY(-1px);
+}
+
+/* ====================== СВЕТЛАЯ ТЕМА — КОРЗИНА ====================== */
+[data-theme="light"] .cart-modal {
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .cart-modal-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .cart-modal-title {
+    color: #000;
+}
+
+[data-theme="light"] .cart-modal-close {
+    color: #666;
+}
+
+[data-theme="light"] .cart-modal-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+    color: #000;
+}
+
+[data-theme="light"] .mini-cart-items {
+    scrollbar-color: rgba(0,0,0,0.3) transparent;
+}
+
+[data-theme="light"] .mini-cart-item {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .mini-cart-info h4 {
+    color: #000;
+}
+
+[data-theme="light"] .mini-cart-price {
+    color: #16a34a; /* чуть потемнее зелёного, чтобы на белом было видно */
+}
+
+[data-theme="light"] .quantity-btn {
+    background: rgba(0, 0, 0, 0.07);
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    color: #000;
+}
+
+[data-theme="light"] .quantity-btn:hover {
+    background: rgba(0, 0, 0, 0.14);
+}
+
+[data-theme="light"] .clear-cart-btn {
+    background: rgba(255, 107, 107, 0.12);
+    color: #e03e3e;
+}
+
+[data-theme="light"] .clear-cart-btn:hover {
+    background: rgba(255, 107, 107, 0.22);
+}
+
+[data-theme="light"] .cart-modal-footer {
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .mini-cart-total {
+    color: #000 !important;
+    text-shadow: none;
+}
+
+/* Кнопка "Оформить" в светлой теме — чёрная на белом фоне */
+[data-theme="light"] .go-to-cart-btn {
+    background: #000000;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="light"] .go-to-cart-btn:hover {
+    background: #1a1a1a;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .go-to-cart-btn::before {
+    background: #1a1a1a;
+}
+
+/* Бейджик количества товаров — теперь красный, чтобы был виден на светлом фоне */
+[data-theme="light"] .cart-count {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+/* УСИЛИВАЕМ ДВЕ СУЩЕСТВУЮЩИЕ ПОЛОСКИ В МИНИ-КОРЗИНЕ */
+#miniCartDropdown .mini-cart-header {
+  border-bottom: 1px solid rgba(255,255,255,0.18) !important;
+  padding-bottom: 1rem;
+}
+
+#miniCartDropdown .mini-cart-footer {
+  border-top: 1px solid rgba(255,255,255,0.18) !important;
+  padding-top: 1rem;
+}
+
+/* Светлая тема — чёрные чёткие полоски */
+html[data-theme="light"] #miniCartDropdown .mini-cart-header {
+  border-bottom-color: rgba(15,15,15,0.22) !important;
+}
+
+html[data-theme="light"] #miniCartDropdown .mini-cart-footer {
+  border-top-color: rgba(15,15,15,0.22) !important;
+}
+
+/* 1. КНОПКА КОРЗИНЫ — БЕЛАЯ С ЧЁРНОЙ ИКОНКОЙ И ЧЁРНОЙ РАМКОЙ ДО СКРОЛЛА */
+[data-theme="light"] header:not(.scrolled) #cartBtn,
+[data-theme="light"] header:not(.scrolled) .cart-btn,
+[data-theme="light"] header:not(.scrolled) [id*="cart"][class*="btn"],
+[data-theme="light"] header:not(.scrolled) [class*="cart-btn"] {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1.8px solid rgba(0, 0, 0, 0.25) !important;
+  backdrop-filter: blur(16px) !important;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.22) !important;
+}
+
+/* Иконка корзины — ЧЁРНАЯ */
+[data-theme="light"] header:not(.scrolled) #cartBtn i,
+[data-theme="light"] header:not(.scrolled) #cartBtn svg,
+[data-theme="light"] header:not(.scrolled) #cartBtn svg * {
+  color: #000000 !important;
+  fill: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* При ховере — чуть ярче, рамка чуть темнее */
+[data-theme="light"] header:not(.scrolled) #cartBtn:hover {
+  background: #ffffff !important;
+  border: 2px solid rgba(0, 0, 0, 0.35) !important;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.28) !important;
+  transform: translateY(-4px) !important;
+}
+
+/* Бейджик количества — красный, как в светлой теме после скролла */
+[data-theme="light"] header:not(.scrolled) .cart-count {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+/* ────── ФИНАЛЬНЫЙ УБОЙНЫЙ ФИКС: КОРЗИНА ДО СКРОЛЛА — ЧЁРНЫЙ ТЕКСТ НА БЕЛОМ (СВЕТЛАЯ ТЕМА) ────── */
+html[data-theme="light"] header:not(.scrolled) ~ body .cart-modal,
+html[data-theme="light"] header:not(.scrolled) ~ body .cart-modal *,
+html[data-theme="light"] header:not(.scrolled) .cart-modal,
+html[data-theme="light"] header:not(.scrolled) .cart-modal * {
+  color: #000000 !important;
+  background: rgba(255,255,255,0.98) !important;
+  border-color: rgba(0,0,0,0.18) !important;
+  fill: #000000 !important;
+}
+
+/* Конкретные элементы — на всякий случай с максимальной специфичностью */
+html[data-theme="light"] header:not(.scrolled) .cart-modal-title,
+html[data-theme="light"] header:not(.scrolled) .mini-cart-info h4,
+html[data-theme="light"] header:not(.scrolled) .mini-cart-total,
+html[data-theme="light"] header:not(.scrolled) .quantity-btn,
+html[data-theme="light"] header:not(.scrolled) .cart-modal-close,
+html[data-theme="light"] header:not(.scrolled) .clear-cart-btn {
+  color: #000000 !important;
+}
+
+/* Цена остаётся зелёной */
+html[data-theme="light"] header:not(.scrolled) .mini-cart-price {
+  color: #16a34a !important;
+}
+
+/* Итого — жирный чёрный */
+html[data-theme="light"] header:not(.scrolled) .mini-cart-total {
+  color: #000000 !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+
+/* Кнопка "Оформить" — чёрная с белым текстом */
+html[data-theme="light"] header:not(.scrolled) .go-to-cart-btn {
+  background: #000 !important;
+  color: #fff !important;
+}
+
+/* Крестик закрытия */
+html[data-theme="light"] header:not(.scrolled) .cart-modal-close {
+  color: #444 !important;
+}
+html[data-theme="light"] header:not(.scrolled) .cart-modal-close:hover {
+  background: rgba(0,0,0,0.12) !important;
+  color: #000 !important;
+}
+
+/* ────── ФИНАЛЬНОЕ РЕШЕНИЕ: ДО СКРОЛЛА В СВЕТЛОЙ ТЕМЕ — ВСЁ ЧЁРНОЕ ────── */
+html[data-theme="light"] header:not(.scrolled) ~ .cart-modal,
+html[data-theme="light"] header:not(.scrolled) ~ * .cart-modal,
+html[data-theme="light"] header:not(.scrolled) ~ * ~ * .cart-modal,
+html[data-theme="light"] header:not(.scrolled) .cart-modal,
+body[data-theme="light"] .cart-modal {
+    background: rgba(255,255,255,0.96) !important;
+    border: 1px solid rgba(0,0,0,0.12) !important;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.15) !important;
+    color: #000 !important;
+}
+
+/* Всё внутри — чёрный текст (включая "Корзина", "Корзина пуста" и любой другой текст) */
+html[data-theme="light"] header:not(.scrolled) ~ .cart-modal *,
+html[data-theme="light"] header:not(.scrolled) ~ * .cart-modal *,
+html[data-theme="light"] header:not(.scrolled) .cart-modal *,
+body[data-theme="light"] .cart-modal * {
+    color: #000 !important;
+    fill: #000 !important;
+    stroke: #000 !important;
+}
+
+/* Специально заголовок и сообщение о пустой корзине (на всякий случай) */
+html[data-theme="light"] header:not(.scrolled) .cart-modal-title,
+html[data-theme="light"] header:not(.scrolled) .cart-empty,
+html[data-theme="light"] header:not(.scrolled) .empty-cart-message,
+html[data-theme="light"] header:not(.scrolled) p,
+html[data-theme="light"] header:not(.scrolled) div {
+    color: #000 !important;
+    font-weight: 600 !important;
+}
+
+/* ============================================
+   МОБИЛЬНАЯ КОРЗИНА 2025 — ЧЕРНО-БЕЛАЯ
+   ✅ ШТОРКА ДО ВЕРХА ЭКРАНА
+   ✅ Только черный/белый
+   ✅ Вылезающая кнопка ОФОРМИТЬ
+=========================================== */
+
+/* ===================================================== */
+/* МОБИЛЬНАЯ КОРЗИНА — ТОЛЬКО НА МОБИЛКЕ! НИКАКИХ БАГОВ НА ДЕСКТОПЕ */
+/* Полностью убираем артефакты в светлой теме                   */
+/* ===================================================== */
+
 #mobileCartSheet {
   position: fixed;
   inset: 0;
-  z-index: 9998;
+  z-index: -9999;                    /* Скрываем полностью, когда не нужна */
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.4s ease, visibility 0s 0.4s;
-  font-family: 'Inter', system-ui, sans-serif;
-  contain: layout style paint;
+  transition: none;
+  contain: strict;
 }
 
-#mobileCartSheet.active {
-  visibility: visible !important;
-  opacity: 1 !important;
-  pointer-events: all !important;
-  transition: opacity 0.4s ease, visibility 0s 0s;
+/* Активируется ТОЛЬКО на мобильных (≤1024px) */
+/* Активируется ТОЛЬКО на мобильных (≤1024px) */
+@media (max-width: 1024px) {
+  #mobileCartSheet {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    visibility: visible;
+    opacity: 0;
+    pointer-events: none;           /* ← по умолчанию не ловит клики */
+    transition: opacity 0.4s ease;
+    /* только opacity анимируем */
+  }
+
+  /* Только бэкдроп и шторка ловят клики — НЕ весь #mobileCartSheet! */
+  #mobileCartSheet.active {
+    opacity: 1;
+    pointer-events: none;           /* ← ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ */
+  }
+
+  /* Только эти два элемента должны ловить клики */
+  #mobileCartSheet.active #mobileCartBackdrop,
+  #mobileCartSheet.active .sheet-container {
+    pointer-events: all !important;
+  }
+
+  /* Бэкдроп */
+  #mobileCartBackdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: all;            /* ← клик по затемнению закрывает корзину */
+  }
+
+  #mobileCartSheet.active #mobileCartBackdrop {
+    opacity: 1;
+  }
+
+  /* Шторка */
+  #mobileCartSheet .sheet-container {
+    position: absolute;
+    inset: 0;
+    background: #000;
+    transform: translateY(100%);
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: all;
+  }
+
+  #mobileCartSheet.active .sheet-container {
+    transform: translateY(0);
+  }
+
+  html[data-theme="light"] #mobileCartSheet .sheet-container {
+    background: #fff !important;
+  }
 }
 
-/* === БЭКДРОП === */
-#mobileCartBackdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: auto !important;
-}
-
-#mobileCartSheet.active #mobileCartBackdrop {
-  opacity: 1;
+/* НА ДЕСКТОПЕ — ПОЛНОЕ УБИЙСТВО МОБИЛЬНОЙ КОРЗИНЫ */
+@media (min-width: 1025px) {
+  #mobileCartSheet,
+  #mobileCartSheet * {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+  }
 }
 
 /* 🔥 ШТОРКА ДО ВЕРХА ЭКРАНА 🔥 */
@@ -523,30 +863,26 @@ html[data-theme="light"] header:not(.scrolled) div {
 
 /* Сама шторка — без backdrop-filter и без box-shadow */
 #mobileCartSheet .sheet-container {
-  position: absolute;                  /* ← меняем с fixed на absolute */
+  position: absolute;
   inset: 0;
-  background: rgb(15, 15, 15);         /* ← полностью непрозрачный */
+  background: rgb(15, 15, 15);
   transform: translateY(100%);
   transition: transform 0.42s cubic-bezier(0.22, 0.88, 0.38, 1);
   will-change: transform;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  border-radius: 28px 28px 0 0 !important;   /* ← СКРУГЛЁННЫЕ УГЛЫ */
+  overflow: hidden !important;              /* ← ОБЯЗАТЕЛЬНО! режет контент по радиусу */
 }
 
 #mobileCartSheet.active .sheet-container {
   transform: translateY(0);
 }
 
-/* Если всё-таки хочешь блюр — делаем его только на шторке, но без бага */
-#mobileCartSheet .sheet-container::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  pointer-events: none;
-  z-index: -1;
+/* ФИНАЛЬНЫЙ ФИКС СВЕТЛОЙ ТЕМЫ — ЧИСТЫЙ БЕЛЫЙ + СКРУГЛЕНИЕ */
+html[data-theme="light"] #mobileCartSheet .sheet-container {
+  background: #ffffff !important;
+  border-radius: 28px 28px 0 0 !important;
 }
 /* === БЕЗ РУЧКИ (полноэкранная) === */
 #mobileCartSheet .sheet-handle {
@@ -981,3 +1317,132 @@ html[data-theme="light"] .cart-toast {
   border-color: rgba(0, 0, 0, 0.15) !important;
 }
 
+
+
+/* === СВЕТЛАЯ ТЕМА — ЧЕРНО-БЕЛАЯ ✅ === */
+html[data-theme="light"] #mobileCartSheet .sheet-container,
+html[data-theme="light"] #mobileCartSheet .sheet-header,
+html[data-theme="light"] #mobileCartSheet .sheet-total {
+  background: #fff !important;
+  border-bottom-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html[data-theme="light"] #mobileCartSheet .sheet-cart-item {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html[data-theme="light"] #mobileCartSheet .sheet-cart-item:hover {
+  background: rgba(0, 0, 0, 0.06) !important;
+}
+
+html[data-theme="light"] #mobileCartSheet .sheet-close-btn,
+html[data-theme="light"] #mobileCartSheet .quantity-btn,
+html[data-theme="light"] #mobileCartSheet .clear-cart-btn {
+  background: rgba(0, 0, 0, 0.08) !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+  color: #000 !important;
+}
+
+html[data-theme="light"] #mobileCartSheet .sheet-cart-title,
+html[data-theme="light"] #mobileCartSheet .sheet-cart-price,
+html[data-theme="light"] #mobileCartSheet h3,
+html[data-theme="light"] #mobileCartSheet .sheet-total strong,
+html[data-theme="light"] #mobileCartSheet .sheet-quantity-controls span {
+  color: #000 !important;
+}
+
+html[data-theme="light"] #mobileCartSheet .checkout-btn-full {
+  background: #fff !important;
+  border-color: #000 !important;
+  color: #000 !important;
+  box-shadow: 
+    0 16px 60px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(0, 0, 0, 0.1) !important;
+}
+
+html[data-theme="light"] #mobileCartSheet .sheet-footer {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-top-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+/* === АДАПТАЦИЯ === */
+@media (max-width: 480px) {
+  #mobileCartSheet .sheet-header,
+  #mobileCartSheet .sheet-items,
+  #mobileCartSheet .sheet-footer {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  
+  #mobileCartSheet .sheet-cart-item {
+    padding: 18px;
+  }
+  
+  #mobileCartSheet .sheet-cart-img {
+    width: 64px;
+    height: 64px;
+  }
+  
+  #mobileCartSheet .sheet-footer {
+    padding-bottom: 36px !important;
+    bottom: -8px !important;
+  }
+  
+  #mobileCartSheet.active .sheet-footer {
+    bottom: 12px !important;
+  }
+}
+
+/* === АНИМАЦИИ === */
+@keyframes cartItemSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === BODY === */
+body.cart-open {
+  overflow: hidden !important;
+}
+
+/* === ТОСТ — ЧЕРНО-БЕЛЫЙ === */
+.cart-toast {
+  position: fixed;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(20px);
+  color: #fff;
+  padding: 16px 28px;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 600;
+  z-index: 10001;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  max-width: 90vw;
+  text-align: center;
+}
+
+.cart-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+html[data-theme="light"] .cart-toast {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #000 !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+html[data-theme="light"] #mobileCartBackdrop {
+  background: transparent !important;
+}

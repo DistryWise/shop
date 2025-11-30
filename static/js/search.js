@@ -8,8 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
     // ==================== МОБИЛЬНЫЙ ПОИСК — ШТОРКА СВЕРХУ ====================
   const mobileSearchBtn     = document.getElementById('mobileSearchBtn');
-  const mobileSearchTop     = document.getElementById('mobileSearchTop');
-  const mobileSearchResults = document.getElementById('mobileSearchResults');
+  const mobileSearchSheet   = document.getElementById('mobileSearchSheet');  
   const mobileSearchInput   = document.getElementById('mobileSearchInput');
   const mobileAutocomplete  = document.getElementById('mobileAutocompleteList');
   const mobileEmptyState    = document.getElementById('mobileEmptyState');
@@ -21,11 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabletClearBtn        = document.getElementById('tabletSearchClear');
   const closeTabletSearchBtn  = document.getElementById('closeTabletSearch');
 
-  if (mobileSearchBtn && mobileSearchTop) {
+  if (mobileSearchBtn && mobileSearchSheet) {
     // Открытие шторки
     mobileSearchBtn.addEventListener('click', () => {
-      mobileSearchTop.classList.add('active');
-      mobileSearchResults.style.display = 'block';
+      mobileSearchSheet.classList.add('active');
       document.body.style.overflow = 'hidden';
       setTimeout(() => mobileSearchInput?.focus(), 400);
       mobileEmptyState.style.display = 'block';
@@ -33,12 +31,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Закрытие по стрелке назад
-    document.getElementById('closeMobileSearchTop')?.addEventListener('click', () => {
-      mobileSearchTop.classList.remove('active');
+    document.getElementById('closemobileSearchSheet')?.addEventListener('click', () => {
+      mobileSearchSheet.classList.remove('active');
       mobileSearchInput.value = '';
       mobileClearBtn.style.opacity = '0';
       document.body.style.overflow = '';
-      setTimeout(() => mobileSearchResults.style.display = 'none', 600);
     });
 
     // Очистка поля
@@ -57,22 +54,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Закрытие по клику вне и Esc
     document.addEventListener('click', e => {
-      if (mobileSearchTop.classList.contains('active') &&
-          !e.target.closest('#mobileSearchTop') &&
+      if (mobileSearchSheet.classList.contains('active') &&
+          !e.target.closest('#mobileSearchSheet') &&
           !e.target.closest('#mobileSearchBtn')) {
-        mobileSearchTop.classList.remove('active');
+        mobileSearchSheet.classList.remove('active');
         mobileSearchInput.value = '';
         mobileClearBtn.style.opacity = '0';
         document.body.style.overflow = '';
-        setTimeout(() => mobileSearchResults.style.display = 'none', 600);
       }
     });
 
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && mobileSearchTop.classList.contains('active')) {
-        mobileSearchTop.classList.remove('active');
+      if (e.key === 'Escape' && mobileSearchSheet.classList.contains('active')) {
+        mobileSearchSheet.classList.remove('active');
         document.body.style.overflow = '';
-        setTimeout(() => mobileSearchResults.style.display = 'none', 600);
       }
     });
   }
@@ -131,7 +126,7 @@ document.addEventListener('click', (e) => {
 
   // МОБИЛКА ≤1024px — шторка сверху
   if (width <= 1024) {
-    mobileSearchTop.classList.add('active');
+    mobileSearchSheet.classList.add('active');
     mobileSearchResults.style.display = 'block';
     document.body.style.overflow = 'hidden';
     mobileEmptyState.style.display = 'block';
@@ -649,99 +644,66 @@ modal.querySelector('#productReviewsCount').textContent =
 // =============================================================================
 // МОБИЛЬНЫЙ ПОИСК — СВАЙП ВНИЗ КАК КОРЗИНА В TELEGRAM X (2025 ГОД)
 // =============================================================================
+// СВАЙП ВНИЗ ДЛЯ ЗАКРЫТИЯ — как в Telegram / Instagram (2025)
 (() => {
-  const wrapper = document.getElementById('mobileSearchWrapper');
-  const header  = document.getElementById('mobileSearchTop');
-  const results = document.getElementById('mobileSearchResults');
-  const input   = document.getElementById('mobileSearchInput');
-
-  if (!wrapper) return;
+  const sheet = document.getElementById('mobileSearchSheet');
+  if (!sheet) return;
 
   let startY = 0;
+  let currentY = 0;
   let isDragging = false;
-  const threshold = 100;
-
-  const open = () => {
-    wrapper.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    setTimeout(() => input?.focus(), 400);
-  };
+  const threshold = 120;  // сколько пикселей нужно свайпнуть
 
   const close = () => {
-    wrapper.style.transition = 'transform 0.52s cubic-bezier(0.22, 1, 0.36, 1)';
-    wrapper.style.transform = 'translateY(-100%)';
-
-    setTimeout(() => {
-      wrapper.classList.remove('active');
-      document.body.style.overflow = '';
-      wrapper.style.transition = '';
-      wrapper.style.transform = '';
-      // Очистка при закрытии
-      if (input) input.value = '';
-      document.getElementById('mobileSearchClear')?.style.setProperty('opacity', '0');
-      document.getElementById('mobileEmptyState').style.display = 'block';
-      document.getElementById('mobileAutocompleteList').innerHTML = '';
-    }, 520);
+    sheet.classList.remove('active');
+    document.body.style.overflow = '';
+    sheet.style.transform = '';
   };
 
-  // Открытие по клику на лупу (твой существующий код уже работает — оставляем)
-  // Если нужно — просто вызывай open() вместо кучи classList.add
-
-  // СВАЙП ВНИЗ
-  const handleStart = e => {
-    if (!wrapper.classList.contains('active')) return;
-    const y = e.touches?.[0].clientY || e.clientY;
-    if (y > 140) return; // только с верхней части
-
-    startY = y;
+  const handleStart = (e) => {
+    if (!sheet.classList.contains('active')) return;
+    startY = e.touches?.[0].clientY || e.clientY;
     isDragging = true;
-    wrapper.style.transition = 'none';
+    sheet.style.transition = 'none';
   };
 
-  const handleMove = e => {
+  const handleMove = (e) => {
     if (!isDragging) return;
-    const diff = (e.touches?.[0].clientY || e.clientY) - startY;
-    if (diff > 0) {
+    currentY = e.touches?.[0].clientY || e.clientY;
+    const diff = currentY - startY;
+
+    if (diff > 0) {  // только вниз
       e.preventDefault();
-      wrapper.style.transform = `translateY(${diff}px)`;
-      // Плавное затемнение при свайпе
-      const opacity = Math.min(diff / 300, 0.65);
-      wrapper.style.setProperty('--backdrop-opacity', opacity);
-      wrapper.querySelector('::before')?.style.setProperty('opacity', opacity);
+      sheet.style.transform = `translateY(${diff}px)`;
+      
+      // Затемнение при свайпе
+      const opacity = Math.min(diff / 400, 0.6);
+      sheet.style.background = `rgba(0, 0, 0, ${0.96 - opacity})`;
     }
   };
 
   const handleEnd = () => {
     if (!isDragging) return;
     isDragging = false;
-    const diff = (event?.changedTouches?.[0]?.clientY || event?.clientY || startY) - startY;
+    sheet.style.transition = 'transform 0.58s cubic-bezier(0.22, 1, 0.36, 1)';
+
+    const diff = currentY - startY;
 
     if (diff > threshold) {
       close();
     } else {
-      wrapper.style.transition = 'transform 0.42s cubic-bezier(0.2, 0.9, 0.3, 1)';
-      wrapper.style.transform = 'translateY(0)';
-      setTimeout(() => wrapper.style.transition = '', 420);
+      sheet.style.transform = 'translateY(0)';
+      sheet.style.background = '';
     }
   };
 
-  document.addEventListener('touchstart', handleStart, { passive: true });
-  document.addEventListener('touchmove', handleMove, { passive: false });
-  document.addEventListener('touchend', handleEnd);
-  document.addEventListener('mousedown', handleStart);
-  document.addEventListener('mousemove', e => isDragging && handleMove(e));
-  document.addEventListener('mouseup', handleEnd);
+  sheet.addEventListener('touchstart', handleStart, { passive: true });
+  sheet.addEventListener('touchmove', handleMove, { passive: false });
+  sheet.addEventListener('touchend', handleEnd);
 
-  // Кнопка ← и Esc
-  document.getElementById('closeMobileSearchTop')?.addEventListener('click', close);
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && wrapper.classList.contains('active')) close();
-  });
-
-  // Вместо всех твоих старых open/close — теперь просто:
-  window.openMobileSearch = open;
-  window.closeMobileSearch = close;
-
-  // Если у тебя где-то был mobileSearchBtn.addEventListener('click', ...) — замени на:
-  // mobileSearchBtn?.addEventListener('click', open);
+  // Поддержка мыши (для теста на десктопе)
+  sheet.addEventListener('mousedown', handleStart);
+  sheet.addEventListener('mousemove', (e) => isDragging && handleMove(e));
+  sheet.addEventListener('mouseup', handleEnd);
+  sheet.addEventListener('mouseleave', handleEnd);
 })();

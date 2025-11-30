@@ -15,14 +15,10 @@
   <link rel="stylesheet" href="/static/css/ai.css">
   <link rel="stylesheet" href="/static/css/contacts.css">
 
-  
-
-
-
 </head>
 <body>
 
-  <div class="custom-cursor"></div>
+
 
 <!-- ВЕРХНИЙ ХЕДЕР — ТОЛЬКО НА ДЕСКТОПЕ -->
 <header class="main-header desktop-only">
@@ -163,29 +159,46 @@
   <div id="tabletAutocompleteList" class="tablet-autocomplete-list-full"></div>
 </div>
 <!-- НОВЫЙ МОБИЛЬНЫЙ ПОИСК — СВЕРХУ, КАК В WILDBERRIES 2025 -->
-<div class="mobile-search-top" id="mobileSearchTop">
+
+<div class="mobile-search-sheet" id="mobileSearchSheet">
+  <!-- Хедер с ручкой и строкой поиска -->
   <div class="mobile-search-header">
+    <!-- Ручка сверху (как в iOS) -->
+    <div class="sheet-handle"></div>
+
+    <!-- Кнопка назад + строка поиска -->
     <button class="mobile-search-back" id="closeMobileSearchTop">←</button>
     <div class="mobile-search-input-wrapper">
       <i class="fas fa-search"></i>
-      <input type="text" class="mobile-search-input" id="mobileSearchInput" placeholder="Поиск по каталогу..." autocomplete="off">
+      <input 
+        type="text" 
+        class="mobile-search-input" 
+        id="mobileSearchInput" 
+        placeholder="Поиск по каталогу..." 
+        autocomplete="off"
+      >
       <button class="mobile-search-clear" id="mobileSearchClear">×</button>
     </div>
   </div>
-</div>
 
+  <!-- Контент: либо пустое состояние, либо результаты -->
+  <div class="mobile-search-results-content" id="mobileSearchResults">
+    
+    <!-- ПУСТОЕ СОСТОЯНИЕ — "Введите название товара" -->
+    <div class="search-empty-state" id="mobileEmptyState">
+      <div class="empty-icon">
+        <i class="fas fa-search"></i>
+      </div>
+      <div class="empty-title">Введите название товара</div>
+      <div class="empty-subtitle">
+        Например: iPhone 16, кроссовки Nike, кофеварка
+      </div>
+    </div>
 
-<!-- МОБИЛЬНЫЙ ПОИСК — РЕЗУЛЬТАТЫ (ФИНАЛЬНАЯ ВЕРСИЯ) -->
-<div class="mobile-search-results" id="mobileSearchResults">
-  
-  <!-- Пустое состояние — показывается, когда ничего не введено -->
-  <div class="search-empty-state" id="mobileEmptyState">
-    <i class="fas fa-search"></i>
-    <p>Начните вводить запрос...</p>
+    <!-- Сюда будут вставляться результаты поиска -->
+    <div id="mobileAutocompleteList" class="mobile-autocomplete-list"></div>
   </div>
-
-  <!-- Сюда будет вставляться автокомплит (товары, услуги, + в корзину) -->
-  <div id="mobileAutocompleteList" class="mobile-autocomplete-list"></div>
+</div>
   
 </div>
   <!-- МОДАЛКА ОБРАТНОЙ СВЯЗИ -->

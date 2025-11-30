@@ -3833,3 +3833,74 @@ body.sidebar-open::before {
 }
 #global-cart-flood-alert i { font-size: 1.8rem; }
 
+/* 🔥 ВЕРХНИЙ БЛОК - СУПЕР ЖЁСТКИЙ СДВИГ ВЛЕВО - ВЕРХ contacts.css 🔥 */
+@media (max-width: 767px) {
+  /* === ВЕРХНИЙ БЛОК - МАКСИМАЛЬНЫЙ СДВИГ ВЛЕВО === */
+  .contacts-wrapper {
+    width: 100vw !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 2rem 8% 2rem 1.5% !important; /* ← ЛЕВЫЙ 1.5% ПРАВЫЙ 8% */
+    grid-template-columns: 1fr !important;
+    gap: 3rem !important;
+    justify-items: center !important;
+    align-items: center !important;
+    /* 🔥 ЖЁСТКИЙ СДВИГ ВЛЕВО 🔥 */
+    position: relative !important;
+    left: -6% !important;
+    transform: translateX(-5%) !important;
+  }
+
+  /* === НИЖНИЙ БЛОК - НЕ ТРОГАЕМ === */
+  .requisites-wrapper {
+    width: 100vw !important;
+    max-width: 100% !important;
+    margin: 12rem 0 0 0 !important;
+    padding: 0 5% !important;
+    left: 0 !important;
+    transform: none !important;
+    display: block !important;
+  }
+
+  .requisites-grid {
+    width: 100% !important;
+    max-width: 520px !important;
+    margin: 0 auto !important;
+    grid-template-columns: 1fr !important;
+    gap: 2.5rem !important;
+    padding: 2rem 0 !important;
+  }
+}
+
+/* 🔥 iPhone SE - МАКСИМАЛЬНЫЙ СДВИГ === */
+@media (max-width: 375px) {
+  .contacts-wrapper {
+    padding: 2rem 9% 2rem 1% !important; /* ← ЛЕВЫЙ 1% ПРАВЫЙ 9% */
+    left: -8% !important;
+    transform: translateX(-7%) !important;
+  }
+}
+
+/* 🔥 КРИТИЧЕСКАЯ ИСПРАВЛЕНИЕ — РАЗБЛОКИРОВКА СКРОЛЛА */
+#mobileFeedbackSheet.dragging,
+#mobileFeedbackSheet.active {
+  overscroll-behavior: contain; /* ← ЭТО ОСНОВНОЕ ИСПРАВЛЕНИЕ! */
+  touch-action: none; /* блокируем стандартный скролл */
+}
+
+#mobileFeedbackSheet.dragging {
+  transition: none !important;
+}
+
+/* Принудительная разблокировка после анимации */
+#mobileFeedbackSheet:not(.active) {
+  touch-action: auto !important;
+  overscroll-behavior: auto !important;
+}
+
+/* Глобальная разблокировка */
+body:not(.sidebar-open):not([style*="overflow: hidden"]) {
+  overscroll-behavior: auto;
+  touch-action: auto;
+}
+

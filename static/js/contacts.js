@@ -185,63 +185,123 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 // === ОТПРАВКА ОБРАТНОЙ СВЯЗИ — РАБОЧАЯ ВЕРСИЯ 28.11.2025 ===
-contactForm?.addEventListener('submit', async e => {
-  e.preventDefault();
-  contactForm.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+// === УНИВЕРСАЛЬНАЯ ОТПРАВКА ДЛЯ ВСЕХ ФОРМ ОБРАТНОЙ СВЯЗИ (2025) ===
+document.querySelectorAll('#contactForm, #contactFormMobile, form[action*="feedback"], form#mobile-contact-form').forEach(form => {
+  if (!form || form.dataset.processed) return;
+  form.dataset.processed = 'true'; // защита от дублирования
 
-  // КРИТИЧЕСКАЯ ПРОВЕРКА: авторизован ли?
-  if (!isAuthenticated()) {
-    // 1. Закрываем форму обратной связи
-    feedbackModal.classList.remove('show');
-    
-    // 2. Показываем алерт "Нужно войти"
-    const authAlert = document.getElementById('authAlert');
-    if (authAlert) {
-      authAlert.classList.add('show');
-      document.body.style.overflow = 'hidden'; // остаётся скрытым
-    }
-    
-    return;
-  }
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    e.stopPropagation();
 
-  // ← дальше всё как было, только чуть чище
-  const name = contactForm.querySelector('input[type="text"], .name-input')?.value.trim() || '';
-  const phone = phoneInput?.value.replace(/\D/g, '') || '';
-  const email = contactForm.querySelector('input[type="email"]')?.value.trim() || '';
-  const message = contactForm.querySelector('textarea')?.value.trim() || '';
+    // Убираем старые ошибки
+    form.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
 
-  if (!name || name.length < 2) return showFieldError(contactForm.querySelector('input[type="text"], .name-input'), 'Укажите имя');
-  if (phone.length !== 11) return showFieldError(phoneInput, 'Неверный номер');
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showFieldError(contactForm.querySelector('input[type="email"]'), 'Неверный email');
-  if (!message || message.length < 10) return showFieldError(contactForm.querySelector('textarea'), 'Сообщение слишком короткое');
-
-  submitBtn.disabled = true;
-  btnText && (btnText.textContent = 'Отправка...');
-
-  try {
-    const res = await fetch('/api/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, phone, email, message })
-    });
-    const data = await res.json();
-
-    if (res.ok && data.success) {
-      showCustomAlert('Спасибо! Мы свяжемся с вами в ближайшее время', false, true);
-      feedbackModal.classList.remove('show');
+    // ПРОВЕРКА АВТОРИЗАЦИИ — ТОЛЬКО ТУТ, ОДИН РАЗ!
+    if (!isAuthenticated()) {
+      // Закрываем все модалки
+      document.getElementById('feedbackModal')?.classList.remove('show');
+      document.getElementById('mobileFeedbackSheet')?.classList.remove('active');
       document.body.style.overflow = '';
-      contactForm.reset();
-      editPhoneBtn.style.display = 'none';
-    } else {
-      throw new Error(data.error || 'Ошибка отправки');
-    }
-  } catch (err) {
-    showCustomAlert('Ошибка отправки. Попробуйте позже', true);
-    submitBtn.disabled = false;
-    btnText && (btnText.textContent = 'Отправить сообщение');
-  }
-});
 
+      // Показываем алерт
+      const authAlert = document.getElementById('authAlert');
+      if (authAlert) {
+        authAlert.classList.add('show');
+        document.body.style.overflow = 'hidden';
+      }
+      return;
+    }
+
+    // Собираем данные
+    const nameInput = form.querySelector('input[name="name"], .name-input, input[type="text"]');
+    const phoneInput = form.querySelector('input[type="tel"]');
+    const emailInput = form.querySelector('input[type="email"]');
+    const messageInput = form.querySelector('textarea');
+
+    const name = nameInput?.value.trim() || '';
+    const phone = phoneInput?.value.replace(/\D/g, '') || '';
+    const email = emailInput?.value.trim() || '';
+    const message = messageInput?.value.trim() || '';
+
+    // Валидация
+        // Валидация — теперь email ОБЯЗАТЕЛЕН и подсвечивается как все поля
+    if (!name || name.length < 2) {
+      nameInput?.focus();
+      nameInput?.classList.add('error');
+      nameInput?.closest('.sheet-field, .field-wrapper')?.classList.add('error');
+      return showCustomAlert('Укажите имя', true);
+    }
+
+    if (phone.length !== 11) {
+      phoneInput?.focus();
+      phoneInput?.classList.add('error');
+      phoneInput?.closest('.sheet-field, .field-wrapper')?.classList.add('error');
+      return showCustomAlert('Неверный номер телефона', true);
+    }
+
+    // ←←←←←←←←←←←←←←←← ВОТ ЭТО ГЛАВНОЕ ИСПРАВЛЕНИЕ ←←←←←←←←←←←←←←←←
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      emailInput?.focus();
+      emailInput?.classList.add('error');
+      emailInput?.closest('.sheet-field, .field-wrapper')?.classList.add('error');
+      return showCustomAlert('Введите корректный email', true);
+    }
+    // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
+    if (!message || message.length < 10) {
+      messageInput?.focus();
+      messageInput?.classList.add('error');
+      messageInput?.closest('.sheet-field, .field-wrapper')?.classList.add('error');
+      return showCustomAlert('Сообщение слишком короткое', true);
+    }
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const oldText = submitBtn?.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Отправка...';
+
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, email, message })
+      });
+
+      const data = await res.json();
+
+           if (res.ok && data.success) {
+        showCustomAlert('Спасибо! Мы свяжемся с вами в ближайшее время', false, true);
+
+        // САМОЕ ПРОСТОЕ И РАБОЧЕЕ РЕШЕНИЕ 2025 ГОДА
+                // УНИВЕРСАЛЬНОЕ ЗАКРЫТИЕ ЛЮБОЙ МОДАЛКИ ОБРАТНОЙ СВЯЗИ — РАБОТАЕТ ВЕЗДЕ (2025)
+        document.getElementById('feedbackModal')?.classList.remove('show');
+        
+        const mobileSheet = document.getElementById('mobileFeedbackSheet');
+        if (mobileSheet) {
+          if (typeof closeSheet === 'function') {
+            closeSheet();
+          } else {
+            // Ручное закрытие на ПК (если closeSheet не существует)
+            mobileSheet.classList.remove('active');
+          }
+        }
+
+        // ВОССТАНАВЛИВАЕМ СКРОЛЛ — САМОЕ ВАЖНОЕ!
+        document.body.style.overflow = '';
+        form.reset();
+      
+      } else {
+        throw new Error(data.error || 'Ошибка сервера');
+      }
+    } catch (err) {
+
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = oldText || 'Отправить';
+    }
+  });
+});
 
 // === РАССЫЛКА — УМНАЯ ПОДПИСКА (ФИНАЛЬНАЯ ВЕРСИЯ — ПРИВЯЗКА К ТЕЛЕФОНУ) ===
 const newsletterForm = document.getElementById('newsletterForm');
@@ -567,6 +627,7 @@ const GlobalAddToCartProtection = (() => {
 
 // УНИВЕРСАЛЬНЫЙ ПЕРЕХВАТЧИК — ЛОВИТ ВСЁ
 document.addEventListener('click', function(e) {
+  
   const target = e.target.closest(
     'button, .add-to-cart-btn, .buy-btn, .apple-qty-btn, .apple-remove-btn, ' +
     '.quantity-btn, .clear-cart-btn, [onclick*="addToCart("]'
@@ -755,68 +816,69 @@ if (window.matchMedia("(max-width: 1024px)").matches) {
 // =============================================================================
 // МОБИЛЬНАЯ ОБРАТНАЯ СВЯЗЬ — СВАЙП ВНИЗ — 120 FPS, КАК В КОРЗИНЕ (2025)
 // =============================================================================
+// =============================================================================
+// МОБИЛЬНАЯ ОБРАТНАЯ СВЯЗЬ — СВАЙП ВНИЗ — ИСПРАВЛЕННАЯ ВЕРСИЯ (2025)
+// =============================================================================
 (() => {
   const sheet = document.getElementById('mobileFeedbackSheet');
   if (!sheet) return;
 
   let startY = 0;
-  let currentY = 0;
   let isDragging = false;
   const threshold = 140;
 
   const openSheet = () => {
     sheet.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden'; // ← БЛОКИРУЕМ
   };
 
   const closeSheet = () => {
+    // 🔥 ЖЁСТКОЕ ЗАКРЫТИЕ — ГАРАНТИРОВАННО!
+    sheet.classList.remove('active');
+    document.body.style.overflow = ''; // ← РАЗБЛОКИРОВЫВАЕМ!
+    document.body.classList.remove('sheet-open');
+    
     sheet.style.transition = 'transform 0.42s cubic-bezier(0.22, 0.88, 0.38, 1)';
     sheet.style.transform = 'translateY(100%)';
+    
     setTimeout(() => {
-      sheet.classList.remove('active');
-      document.body.style.overflow = '';
       sheet.style.transition = '';
       sheet.style.transform = '';
     }, 420);
   };
 
-  // Открытие (кнопка в хедере или bottom bar)
-  document.getElementById('feedbackBtnMobile')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    openSheet();
-  });
-
-  // Крестик
-  document.getElementById('closeMobileFeedback')?.addEventListener('click', closeSheet);
-
-  // === САМЫЙ ПЛАВНЫЙ СВАЙП 2025 ГОДА ===
+  // 🔥 СВАЙП ТОЛЬКО НА САМОЙ ШТОРКЕ!
   const handleStart = (e) => {
     if (!sheet.classList.contains('active')) return;
+    
+    // ✅ ПРОВЕРЯЕМ — СВАЙП ТОЛЬКО ПО ШТОРКЕ!
+    if (!e.target.closest('#mobileFeedbackSheet')) return;
+    
     startY = e.touches?.[0].clientY || e.clientY;
-    currentY = startY;
     isDragging = true;
-    sheet.style.transition = 'none'; // ← мгновенная реакция
+    sheet.style.transition = 'none';
   };
 
   const handleMove = (e) => {
-    if (!isDragging) return;
+    if (!isDragging || !sheet.classList.contains('active')) return;
+    
     const y = e.touches?.[0].clientY || e.clientY;
     const diff = y - startY;
-
+    
     if (diff > 0) {
       e.preventDefault();
-      sheet.style.transform = `translateY(${diff}px)`; // ← ИСПРАВЛЕНО: без двойного px!
+      sheet.style.transform = `translateY(${diff}px)`;
     }
   };
 
-  const handleEnd = () => {
+  const handleEnd = (e) => {
     if (!isDragging) return;
     isDragging = false;
 
-    const diff = (event.changedTouches?.[0]?.clientY || currentY) - startY;
+    const diff = (e.changedTouches?.[0]?.clientY || startY) - startY;
 
     if (diff > threshold) {
-      closeSheet();
+      closeSheet(); // ← ЗАКРЫВАЕМ И РАЗБЛОКИРОВЫВАЕМ!
     } else {
       sheet.style.transition = 'transform 0.34s cubic-bezier(0.2, 0.8, 0.4, 1)';
       sheet.style.transform = 'translateY(0)';
@@ -824,19 +886,14 @@ if (window.matchMedia("(max-width: 1024px)").matches) {
     }
   };
 
-  // Вешаем на document — чтобы палец не терялся!
-  document.addEventListener('touchstart', handleStart, { passive: true });
-  document.addEventListener('touchmove', handleMove, { passive: false });
-  document.addEventListener('touchend', handleEnd);
+  // ✅ ВЕШАЕМ ТОЛЬКО НА ШТОРКУ!
+  sheet.addEventListener('touchstart', handleStart, { passive: true });
+  sheet.addEventListener('touchmove', handleMove, { passive: false });
+  sheet.addEventListener('touchend', handleEnd);
 
-  // Поддержка мыши (для теста на десктопе)
-  document.addEventListener('mousedown', handleStart);
-  document.addEventListener('mousemove', handleMove);
-  document.addEventListener('mouseup', handleEnd);
-
-  // Закрытие по бекдропу (если есть)
-  sheet.addEventListener('click', (e) => {
-    if (e.target === sheet) closeSheet();
+  // Кнопки закрытия
+  document.querySelectorAll('#closeMobileFeedback, .sheet-back-btn, .mobile-feedback-back').forEach(btn => {
+    btn.addEventListener('click', closeSheet);
   });
 
   // Esc

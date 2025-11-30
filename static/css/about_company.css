@@ -969,25 +969,39 @@ header .logo-img {
 /* ===================================================== */
 
 @media screen and (max-width: 1024px) {
-
-  /* Прижимаем футер к низу, если контента мало */
+  /* Оборачиваем только основной контент и футер в flex */
+  body > main {
+    flex: 1 0 auto;
+  }
+  
+  /* Создаём flex-контейнер только для main + footer */
   body {
     display: flex;
     flex-direction: column;
     min-height: 100dvh;
   }
 
-  main {
-    flex: 1 0 auto;
+  /* НО! Все шторки и фиксированные элементы — выводим из flex-потока */
+  #mobileFeedbackSheet,
+  #mobileFeedbackTop,
+  #mobileCartSheet,
+  #mobileSearchSheet,
+  #tabletSearchSheet,
+  #mobileSidebar,
+  #ai-assistant,
+  #ai-chat,
+  .theme-toggle-hanging,
+  .back-to-top,
+  #feedbackModal,
+  #authModal,
+  #authAlert,
+  #productModal,
+  .custom-alert {
+    position: fixed !important;
+    z-index: 99999 !important;
+    flex-shrink: 0 !important;
   }
-
-  footer {
-    flex-shrink: 0;
-    padding: 7vh 5% 6vh !important;
-    text-align: center !important;           /* только на мобилках */
-    border-top: none !important;
-    position: relative;
-  }
+}
 
   /* Полоска на всю ширину (красивая, с плавным затуханием) */
   footer::after {
@@ -1050,7 +1064,7 @@ header .logo-img {
     letter-spacing: 0.24em;
     opacity: 0.7;
   }
-}
+
 
 /* iPhone SE */
 @media (max-width: 420px) {

@@ -16,173 +16,256 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ✅ УНИВЕРСАЛЬНАЯ ФУНКЦИЯ ДЛЯ ЛЮБОЙ ФОРМЫ
-  const initForm = (form) => {
-    if (!form) return;
+// === УНИВЕРСАЛЬНАЯ ФУНКЦИЯ ДЛЯ ЛЮБОЙ ФОРМЫ (ИСПРАВЛЕННАЯ) ===
+const initForm = (form) => {
+  if (!form) return;
+  
 
-    const phoneWrapper = form.querySelector('.phone-field-wrapper');
-    const phoneInput = phoneWrapper?.querySelector('input[type="tel"]');
-    const nameInput = form.querySelector('.name-input');
+  const phoneWrapper = form.querySelector('.phone-field-wrapper');
+  const phoneInput = phoneWrapper?.querySelector('input[type="tel"]');
+  const nameInput = form.querySelector('input[name="name"], .name-input');
+  const emailInput = form.querySelector('input[type="email"]');
+  const messageInput = form.querySelector('textarea[name="message"]');
+  const submitBtn = form.querySelector('button[type="submit"]');
+
+  if (!submitBtn || !nameInput || !emailInput || !messageInput || !phoneInput) {
+    console.warn('Не все поля найдены в форме:', form.id);
+    return;
+  }
+
+  // Сохраняем оригинальный текст кнопки
+  if (!submitBtn.dataset.originalText) {
+    submitBtn.dataset.originalText = submitBtn.querySelector('.btn-text')?.textContent || 
+                                     submitBtn.textContent.trim() || 
+                                     'Отправить';
+  }
+
+  // === ГЛОБАЛЬНЫЙ ФЛАГ КУЛДАУНА (ОДИН НА ВСЕ ФОРМЫ!) ===
+  let canSend = true;
+  const COOLDOWN = 30;
+
+  const startCooldown = () => {
+    if (!canSend) return;
+    canSend = false;
+
+    let seconds = COOLDOWN;
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = '0.6';
+    submitBtn.style.cursor = 'not-allowed';
+
+    const updateButton = () => {
+      if (seconds <= 0) {
+        canSend = true;
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '';
+        submitBtn.style.cursor = '';
+
+        // Восстанавливаем текст (для обеих версий кнопок)
+        const btnText = submitBtn.querySelector('.btn-text') || submitBtn;
+        btnText.textContent = submitBtn.dataset.originalText;
+
+        const cooldownSpan = submitBtn.querySelector('.btn-cooldown, .timer');
+        if (cooldownSpan) cooldownSpan.style.display = 'none';
+
+        return;
+      }
+
+      const cooldownSpan = submitBtn.querySelector('.btn-cooldown') || 
+                          submitBtn.querySelector('.timer') || 
+                          submitBtn;
+
+      if (cooldownSpan) {
+        cooldownSpan.style.display = 'inline';
+        cooldownSpan.textContent = `${seconds}с`;
+      } else {
+        submitBtn.textContent = `Отправить (${seconds})`;
+      }
+
+      seconds--;
+      setTimeout(updateButton, 1000);
+    };
+
+    updateButton();
+  };
+
+  // === АВТОЗАПОЛНЕНИЕ ТЕЛЕФОНА ===
+    // === АВТОЗАПОЛНЕНИЕ ТЕЛЕФОНА — СТРОГОЕ, НЕЛЬЗЯ РЕДАКТИРОВАТЬ, КАК В contacts.js ===
+  const fillPhone = () => {
+    const raw = localStorage.getItem('phone') || sessionStorage.getItem('phone');
     
-    if (!phoneWrapper || !phoneInput || !nameInput) {
-      console.warn('❌ Не все поля формы найдены:', form.id);
+    // Удаляем старые кнопки "изменить", если вдруг были
+    phoneWrapper.querySelectorAll('.edit-phone-btn').forEach(b => b.remove());
+
+    if (!raw) {
+      phoneInput.value = '+7 (';
+      phoneInput.readOnly = false;
       return;
     }
 
+    // Чистим и форматируем номер
+    let clean = raw.replace(/\D/g, '');
+    if (clean.length !== 11) clean = '7' + '0'.repeat(10); // на всякий случай
+    if (clean.startsWith('8')) clean = '7' + clean.slice(1);
+
+    const formatted = `+7 (${clean.slice(1,4)}) ${clean.slice(4,7)}-${clean.slice(7,9)}-${clean.slice(9)}`;
+    phoneInput.value = formatted;
+
+    // Делаем поле полностью нередактируемым
+    phoneInput.readOnly = true;
+    phoneInput.disabled = true;                    // ← важно! полностью блокируем ввод
+    phoneInput.style.pointerEvents = 'none';
+    phoneInput.style.userSelect = 'none';
+    phoneInput.style.background = 'rgba(255,255,255,0.08)';
+    phoneInput.style.color = '#fff';
+    phoneInput.style.opacity = '0.9';
+
+    // Добавляем красивую кнопку "изменить" (по желанию — можно убрать)
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.textContent = 'изменить';
+    editBtn.className = 'edit-phone-btn';
+    editBtn.style.cssText = `
+      position:absolute;right:12px;top:50%;transform:translateY(-50%);
+      background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.3);
+      color:#fff;padding:6px 12px;border-radius:8px;font-size:0.8rem;
+      backdrop-filter:blur(10px);cursor:pointer;z-index:10;
+    `;
+    editBtn.onclick = () => {
+      phoneInput.disabled = false;
+      phoneInput.readOnly = false;
+      phoneInput.style.pointerEvents = 'auto';
+      phoneInput.style.userSelect = 'text';
+      phoneInput.style.background = '';
+      phoneInput.style.opacity = '';
+      phoneInput.value = '+7 (';
+      phoneInput.focus();
+      editBtn.remove();
+    };
+
     phoneWrapper.style.position = 'relative';
-
-    // ✅ АВТОЗАПОЛНЕНИЕ ТЕЛЕФОНА
-    const fillPhone = () => {
-      const phone = localStorage.getItem('phone') || sessionStorage.getItem('phone');
-      document.querySelectorAll('.edit-phone-btn').forEach(b => b.remove());
-
-      if (!phone) {
-        phoneInput.value = '';
-        phoneInput.readOnly = false;
-        phoneInput.style.pointerEvents = 'auto';
-        phoneInput.style.userSelect = 'text';
-        phoneInput.style.cursor = 'text';
-        return;
-      }
-
-      const clean = phone.replace(/\D/g, '');
-      phoneInput.value = clean.replace(/(\d)(\d{3})(\d{3})(\d{2})(\d{2})/, '+7 ($2) $3-$4-$5');
-      
-      phoneInput.readOnly = true;
-      phoneInput.style.pointerEvents = 'none';
-      phoneInput.style.userSelect = 'none';
-      phoneInput.style.cursor = 'default';
-
-      const editBtn = document.createElement('button');
-      editBtn.type = 'button';
-      editBtn.className = 'edit-phone-btn';
-      editBtn.textContent = 'изменить';
-      editBtn.style.cssText = `
-        position:absolute;right:12px;top:50%;transform:translateY(-50%);
-        background:rgba(255,255,255,0.16);border:1.2px solid rgba(255,255,255,0.28);
-        color:#fff;padding:8px 15px;border-radius:10px;font-size:0.85rem;
-        font-weight:500;cursor:pointer;backdrop-filter:blur(14px);z-index:10;
-      `;
-
-      editBtn.onclick = () => {
-        phoneInput.readOnly = false;
-        phoneInput.style.pointerEvents = 'auto';
-        phoneInput.style.userSelect = 'text';
-        phoneInput.style.cursor = 'text';
-        phoneInput.focus();
-        phoneInput.select();
-        phoneInput.value = '+7';
-        editBtn.remove();
-      };
-
-      phoneWrapper.appendChild(editBtn);
-    };
-
-    // ✅ МАСКА ТЕЛЕФОНА
-    phoneInput.addEventListener('input', () => {
-      let v = phoneInput.value.replace(/\D/g, '').slice(0, 11);
-      if (v && !v.startsWith('7')) v = '7' + v.slice(0,10);
-      if (v.length === 11) v = v.slice(1);
-      if (v) phoneInput.value = '+7 (' + v.slice(0,3) + ') ' + v.slice(3,6) + '-' + v.slice(6,8) + '-' + v.slice(8);
-    });
-
-    // ✅ КУЛДАУН И ОТПРАВКА
-    const COOLDOWN_SECONDS = 30;
-    let canSendMessage = true;
-
-    const startClientCooldown = () => {
-      canSendMessage = false;
-      const submitBtn = form.querySelector('button[type="submit"]');
-      if (!submitBtn) return;
-
-      let secondsLeft = COOLDOWN_SECONDS;
-      submitBtn.disabled = true;
-      submitBtn.style.opacity = '0.6';
-      submitBtn.style.cursor = 'not-allowed';
-
-      const tick = () => {
-        if (secondsLeft <= 0) {
-          canSendMessage = true;
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = submitBtn.dataset.originalText || 'Отправить';
-          submitBtn.style.opacity = '';
-          submitBtn.style.cursor = '';
-          return;
-        }
-        submitBtn.innerHTML = `Отправить (${secondsLeft})`;
-        secondsLeft--;
-        setTimeout(tick, 1000);
-      };
-      submitBtn.innerHTML = `Отправить (${secondsLeft})`;
-      tick();
-    };
-
-    // ✅ ОТПРАВКА ФОРМЫ
-    form.onsubmit = async (e) => {
-      e.preventDefault();
-
-      if (!canSendMessage) {
-        showError('Подождите окончания таймера!');
-        return;
-      }
-
-      if (!isAuth()) {
-        authAlert.classList.add('show');
-        document.body.style.overflow = 'hidden';
-        return;
-      }
-
-      const name = nameInput.value.trim();
-      const email = form.querySelector('input[type="email"]')?.value.trim() || '';
-      const msg = form.querySelector('textarea')?.value.trim();
-      const phoneValue = phoneInput.value.replace(/\D/g, '');
-
-      if (!name) return nameInput.focus(), showError('Укажите ФИО');
-      if (!email || !/@/.test(email)) return form.querySelector('input[type="email"]')?.focus(), showError('Неверный email');
-      if (!msg) return form.querySelector('textarea')?.focus(), showError('Напишите сообщение');
-      if (phoneValue.length !== 11) return phoneInput.focus(), showError('Номер телефона неполный');
-
-      const submitBtn = form.querySelector('button[type="submit"]');
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = 'Отправка...';
-
-      try {
-        const res = await fetch('/api/feedback', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name, email, message: msg,
-            phone: '+7' + phoneValue.slice(1),
-            sent_at_msk: new Date(Date.now() + 3*60*60*1000).toISOString().slice(0,19).replace('T', ' ')
-          })
-        });
-
-        const data = await res.json().catch(() => ({}));
-
-        if (res.ok && data.success) {
-          startClientCooldown();
-          showSuccess();
-          setTimeout(() => form.reset(), 150);
-          setTimeout(() => fillPhone(), 200);
-        } else if (res.status === 429) {
-          startClientCooldown();
-          showError('Слишком много сообщений. Подождите 30 секунд.');
-        } else {
-          showError(data.error || 'Ошибка сервера');
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = 'Отправить';
-        }
-      } catch (err) {
-        showError('Нет интернета');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'Отправить';
-      }
-    };
-
-    // ✅ ИНИЦИАЛИЗАЦИЯ
-    fillPhone();
-    return { phoneInput, nameInput };
+    phoneWrapper.appendChild(editBtn);
   };
 
+  // === МАСКА ТЕЛЕФОНА (остаётся без изменений) ===
+  phoneInput.addEventListener('input', () => {
+    let v = phoneInput.value.replace(/\D/g, '').slice(0, 11);
+    if (v && !v.startsWith('7')) v = '7' + v.slice(0,10);
+    if (v.length === 11) v = v.slice(1);
+    if (v.length >= 10) {
+      phoneInput.value = '+7 (' + v.slice(0,3) + ') ' + v.slice(3,6) + '-' + v.slice(6,8) + '-' + v.slice(8,10);
+    } else if (v.length >= 7) {
+      phoneInput.value = '+7 (' + v.slice(0,3) + ') ' + v.slice(3,6) + '-' + v.slice(6);
+    } else if (v.length >= 4) {
+      phoneInput.value = '+7 (' + v.slice(0,3) + ') ' + v.slice(3);
+    } else if (v.length > 0) {
+      phoneInput.value = '+7 (' + v.slice(0,3);
+    }
+  });
+
+  // === ОТПРАВКА ФОРМЫ (УСИЛЕННАЯ ВАЛИДАЦИЯ + РЕАЛЬНЫЙ КУЛДАУН) ===
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+
+    if (!canSend) {
+      showError('Подождите окончания таймера!');
+      return;
+    }
+
+    if (!isAuth()) {
+      authAlert?.classList.add('show');
+      document.body.style.overflow = 'hidden';
+      return;
+    }
+
+    // Строгая валидация
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const message = messageInput.value.trim();
+    const phoneRaw = phoneInput.value.replace(/\D/g, '');
+
+    if (!name || name.length < 2) {
+      nameInput.focus();
+
+      return;
+    }
+
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      emailInput.focus();
+
+      return;
+    }
+
+    if (!message || message.length < 5) {
+      messageInput.focus();
+
+      return;
+    }
+
+    if (phoneRaw.length !== 11) {
+      phoneInput.focus();
+
+      return;
+    }
+
+    // Блокируем кнопку сразу
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = 'Отправка...';
+
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          email,
+          message,
+          phone: '+7' + phoneRaw.slice(1),
+          sent_at_msk: new Date(Date.now() + 3*60*60*1000).toISOString().slice(0,19).replace('T', ' ')
+        })
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+    if (res.ok && data.success) {
+  showSuccess('Сообщение отправлено!');
+  form.reset();
+  fillPhone();
+  startCooldown();
+  
+  // 🔥 ЖЁСТКОЕ ЗАКРЫТИЕ ШТОРКИ (ПРИНУДИТЕЛЬНО)!
+  const mobileFeedbackTop = document.getElementById('mobileFeedbackTop');
+  const mobileFeedbackSheet = document.getElementById('mobileFeedbackSheet');
+  
+  // 1. СНАЧАЛА убираем классы
+  mobileFeedbackTop?.classList.remove('active');
+  mobileFeedbackSheet?.classList.remove('active');
+  document.body.classList.remove('sheet-open');
+  
+  // 2. ПОСЛЕ 100мс — ПРИНУДИТЕЛЬНО скрываем
+  setTimeout(() => {
+    mobileFeedbackTop.style.display = 'none';
+    mobileFeedbackSheet.style.display = 'none';
+    mobileFeedbackTop.style.transform = '';
+    mobileFeedbackSheet.style.transform = '';
+    document.body.style.overflow = '';
+  }, 100);
+} else if (res.status === 429) {
+        startCooldown();
+        showError('Слишком много сообщений. Подождите 30 секунд.');
+      } else {
+        throw new Error(data.error || 'Неизвестная ошибка');
+      }
+    } catch (err) {
+      console.error(err);
+
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = submitBtn.dataset.originalText;
+    }
+  };
+
+  fillPhone();
+  return { fillPhone };
+};
   // ✅ ИНИЦИАЛИЗИРУЕМ ОБЕ ФОРМЫ!
   const desktopFormData = initForm(desktopForm);
   const mobileFormData = initForm(mobileForm);
@@ -265,3 +348,4 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+

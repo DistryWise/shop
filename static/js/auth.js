@@ -4,6 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentUser = null;  // ← ЭТО ВНЕ DOMContentLoaded!
   let isSubmitting = false;
 
+let wrongCodeAttempts = 0;        // ← СЧЁТЧИК НЕВЕРНЫХ ПОПЫТОК
+const MAX_WRONG_ATTEMPTS = 5;     // ← После скольких попыток блокируем
+let isCodeBlocked = false;        // ← Флаг блокировки
+
   const modal = $('authModal');
   const closeModal = $('closeAuthModal');
 
@@ -53,6 +57,36 @@ phoneInput.addEventListener('keydown', function (e) {
 });
   
   const codeInput = $('codeInput');
+
+// Делаем поле ввода ПИН-кода идеальным для телефона
+codeInput.setAttribute('inputmode', 'numeric');     // Главное — только цифры!
+codeInput.setAttribute('pattern', '[0-9]*');        // iOS — открывает цифры сразу
+codeInput.setAttribute('type', 'tel');              // Android — тоже цифры + лучше UX
+codeInput.setAttribute('autocomplete', 'one-time-code'); // iOS: подхват SMS
+codeInput.setAttribute('maxlength', '4');
+codeInput.style.fontSize = '2rem';                  // iOS не открывает буквы при маленьком шрифте
+codeInput.style.textAlign = 'center';
+codeInput.style.letterSpacing = '0.5rem';
+codeInput.style.caretColor = 'transparent';        // Скрываем курсор (опционально — красивее)
+
+// Фокус — открываем клавиатуру с цифрами
+codeInput.addEventListener('focus', () => {
+  codeInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+
+// Блокируем всё, кроме цифр (на всякий случай)
+codeInput.addEventListener('input', function () {
+  this.value = this.value.replace(/\D/g, '').slice(0, 4);
+  handleCodeInput(); // твоя функция из кода выше
+});
+
+// Запрещаем вставку букв (paste)
+codeInput.addEventListener('paste', (e) => {
+  const paste = (e.clipboardData || window.clipboardData).getData('text');
+  if (!/^\d+$/.test(paste)) {
+    e.preventDefault();
+  }
+});
   const verifyCodeBtn = $('verifyCodeBtn');
   const sendCodeBtn = $('sendCodeBtn');
 
@@ -81,109 +115,181 @@ phoneInput.addEventListener('input', updateSendBtnState);
 updateSendBtnState();
 
 
-  verifyCodeBtn.onclick = async () => {
-    if (isSubmitting) return;
-    isSubmitting = true;
+verifyCodeBtn.onclick = async () => {
+  if (isSubmitting || isCodeBlocked) return;
+  isSubmitting = true;
 
-    const code = codeInput.value.trim();
-    if (!code || code.length < 4) {
-      codeInput.style.borderColor = '#ff6b6b';
-      codeInput.classList.add('shake');
-      showToast('Введите код', '', true);
-      isSubmitting = false;
-      return;
-    }
+  const code = codeInput.value.trim();
 
-    verifyCodeBtn.disabled = true;
-    verifyCodeBtn.textContent = 'Проверка...';
+  if (!code || code.length < 4) {
+    codeInput.style.borderColor = '#ff6b6b';
+    codeInput.classList.add('shake');
+    showToast('Введите код', '', true);
+    isSubmitting = false;
+    return;
+  }
 
-    const fullPhone = selectedCountry.querySelector('.code').textContent + phoneInput.value.replace(/\D/g, '');
+  verifyCodeBtn.disabled = true;
+  verifyCodeBtn.textContent = 'Проверка...';
 
-    try {
-      const res = await fetch('/api/verify_code', {
+  const fullPhone = selectedCountry.querySelector('.code').textContent + phoneInput.value.replace(/\D/g, '');
+
+  try {
+    const res = await fetch('/api/verify_code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone: fullPhone,
+        code: code,
+        cart: JSON.parse(localStorage.getItem('clientCart') || '[]')
+      })
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      // УСПЕШНЫЙ ВХОД — сбрасываем счётчик
+      wrongCodeAttempts = 0;
+      isCodeBlocked = false;
+
+      const cleanPhone = phoneInput.value.replace(/\D/g, '');
+
+      const subscribeCheck = document.getElementById('subscribeCheck');
+      const smsConsentGiven = subscribeCheck ? subscribeCheck.checked : false;
+
+      await fetch('/api/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phone: fullPhone,
-          code: code,
-          cart: JSON.parse(localStorage.getItem('clientCart') || '[]')
+          phone: '7' + cleanPhone,
+          sms_consent: smsConsentGiven ? 1 : 0
         })
       });
 
-      const data = await res.json();
+      // ... весь твой код успешного входа (остаётся без изменений)
+      localStorage.setItem('phone', cleanPhone);
+      sessionStorage.setItem('phone', cleanPhone);
+      sessionStorage.setItem('user_id', data.user.id);
+      sessionStorage.setItem('is_admin', data.user.is_admin ? '1' : '0');
 
-      if (res.ok && data.success) {
-      const cleanPhone = phoneInput.value.replace(/\D/g, ''); // это всегда 10 цифр после +7
+      currentUser = { phone: cleanPhone, id: data.user.id };
 
-              // ИСПРАВЛЕННЫЙ БЛОК — РАБОТАЕТ НА 100%
-              const subscribeCheck = document.getElementById('subscribeCheck');
-              const smsConsentGiven = subscribeCheck ? subscribeCheck.checked : false;
+      window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new CustomEvent('authChanged', { detail: { authenticated: true, phone: cleanPhone, userId: data.user.id } }));
 
-              await fetch('/api/subscribe', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  phone: '7' + cleanPhone,
-                  sms_consent: smsConsentGiven ? 1 : 0
-                })
-              });
+      welcomePhone.innerHTML = `
+        <div style="font-size:1.4rem; font-weight:700; margin-top:6px;">
+          +7 (${cleanPhone.slice(0,3)}) ${cleanPhone.slice(3,6)}-${cleanPhone.slice(6,8)}-${cleanPhone.slice(8)}
+        </div>
+      `;
 
-        localStorage.setItem('phone', cleanPhone);
-        sessionStorage.setItem('phone', cleanPhone);
-        sessionStorage.setItem('user_id', data.user.id);
-        sessionStorage.setItem('is_admin', data.user.is_admin ? '1' : '0');
+      stepCode.style.display = 'none';
+      stepSuccess.style.display = 'block';
+      stepSuccess.style.animation = 'none';
+      requestAnimationFrame(() => stepSuccess.style.animation = '');
 
-        currentUser = { phone: cleanPhone, id: data.user.id };
+      showToast('Добро пожаловать!', 'Вы успешно вошли');
 
-        window.dispatchEvent(new Event('storage'));
-        window.dispatchEvent(new CustomEvent('authChanged', { detail: { authenticated: true, phone: cleanPhone, userId: data.user.id } }));
+      if (typeof mergeClientCart === 'function') await mergeClientCart();
+      if (typeof loadCart === 'function') await loadCart();
 
-        welcomePhone.innerHTML = `
-          <div style="font-size:1.4rem; font-weight:700; margin-top:6px;">
-            +7 (${cleanPhone.slice(0,3)}) ${cleanPhone.slice(3,6)}-${cleanPhone.slice(6,8)}-${cleanPhone.slice(8)}
+      localStorage.removeItem(SAVED_PHONE_KEY);
+      updateAuthBtn();
+      setTimeout(closeModalFunc, 1800);
+
+      if (document.getElementById('subsBody')) {
+        setTimeout(() => loadSubscribers?.(), 2200);
+      }
+
+    } else {
+      // НЕВЕРНЫЙ КОД
+      wrongCodeAttempts++;
+
+      codeInput.value = '';
+      codeInput.focus();
+      codeInput.style.borderColor = '#ff6b6b';
+      codeInput.classList.add('shake');
+
+      if (wrongCodeAttempts >= MAX_WRONG_ATTEMPTS) {
+        // БЛОКИРУЕМ ПОПЫТКИ
+        isCodeBlocked = true;
+
+        showToast('Слишком много попыток', 'Вернитесь назад', true);
+
+        // Красивый алерт как при выходе
+        const blockAlert = document.createElement('div');
+        blockAlert.style.cssText = `
+          position:fixed;inset:0;background:rgba(0,0,0,0.94);backdrop-filter:blur(28px);
+          display:flex;align-items:center;justify-content:center;z-index:99999;opacity:0;
+          transition:opacity .5s ease;
+        `;
+        blockAlert.innerHTML = `
+          <div style="background:rgba(20,20,25,0.98);border:1.5px solid rgba(255,100,100,0.3);border-radius:28px;
+                      padding:2.2rem 2.6rem;text-align:center;max-width:90vw;box-shadow:0 30px 80px rgba(0,0,0,0.8);">
+            <div style="font-size:4.5rem;margin-bottom:1rem;">Locked</div>
+            <h3 style="margin:0 0 1rem;font-size:1.7rem;color:#ff6b6b;">Слишком много попыток</h3>
+            <p style="color:#ccc;margin:0 0 1.8rem;line-height:1.5;">
+              Вы ввели неверный код 5 раз.<br>Для безопасности — возвращаемся к вводу номера.
+            </p>
+            <button id="backToPhoneBtn" style="background:#ff4444;color:#fff;border:none;padding:1rem 2.4rem;
+                 border-radius:20px;font-weight:700;font-size:1.1rem;cursor:pointer;min-width:180px;">
+              Вернуться к номеру
+            </button>
           </div>
         `;
+        document.body.appendChild(blockAlert);
+        setTimeout(() => blockAlert.style.opacity = '1', 10);
 
-        stepCode.style.display = 'none';
-        stepSuccess.style.display = 'block';
-        stepSuccess.style.animation = 'none';
-        requestAnimationFrame(() => stepSuccess.style.animation = '');
+        blockAlert.querySelector('#backToPhoneBtn').onclick = () => {
+          // Возврат на шаг телефона
+          localStorage.removeItem(SAVED_PHONE_KEY);
+          stepCode.style.display = 'none';
+          stepPhone.style.display = 'block';
+          stepSuccess.style.display = 'none';
+          phoneInput.value = '';
+          phoneInput.focus();
+          changePhoneBtn.remove();
 
-        showToast('Добро пожаловать!', 'Вы успешно вошли');
+          // Сброс состояния
+          wrongCodeAttempts = 0;
+          isCodeBlocked = false;
+          resendTimerActive = false;
+          resendCode.textContent = 'Отправить код заново';
+          resendCode.style.pointerEvents = 'none';
+          resendCode.style.opacity = '0.6';
 
-        if (typeof mergeClientCart === 'function') await mergeClientCart();
-        if (typeof loadCart === 'function') await loadCart();
+          blockAlert.remove();
+        };
 
-        localStorage.removeItem(SAVED_PHONE_KEY);
-        updateAuthBtn();
-        
-        setTimeout(closeModalFunc, 1800);
-
-        if (document.getElementById('subsBody')) {
-          setTimeout(() => loadSubscribers?.(), 2200);
-      }
-
+        // Автозакрытие алерта через 8 секунд + возврат
+        setTimeout(() => {
+          if (document.body.contains(blockAlert)) {
+            blockAlert.querySelector('#backToPhoneBtn')?.click();
+          }
+        }, 8000);
 
       } else {
-        codeInput.value = '';
-        codeInput.focus();
-        codeInput.style.borderColor = '#ff6b6b';
-        codeInput.classList.add('shake');
-        showToast('Неверный код', 'Попробуйте ещё раз', true);
-
-        verifyCodeBtn.disabled = true;
-        verifyCodeBtn.style.opacity = '0.5';
-        verifyCodeBtn.style.cursor = 'not-allowed';
-        verifyCodeBtn.textContent = 'Войти';
+        const left = MAX_WRONG_ATTEMPTS - wrongCodeAttempts;
+        showToast('Неверный код', `Осталось попыток: ${left}`, true);
       }
-    } catch {
-      showToast('Ошибка сервера', 'Попробуйте позже', true);
-      codeInput.classList.add('shake');
-    } finally {
-      isSubmitting = false;
-    }
-  };
 
+      verifyCodeBtn.disabled = true;
+      verifyCodeBtn.style.opacity = '0.5';
+      verifyCodeBtn.style.cursor = 'not-allowed';
+      verifyCodeBtn.textContent = 'Войти';
+    }
+  } catch (err) {
+    showToast('Ошибка сервера', 'Попробуйте позже', true);
+    codeInput.classList.add('shake');
+  } finally {
+    isSubmitting = false;
+    if (!isCodeBlocked) {
+      verifyCodeBtn.disabled = codeInput.value.length !== 4;
+      verifyCodeBtn.style.opacity = codeInput.value.length === 4 ? '1' : '0.5';
+      verifyCodeBtn.style.cursor = codeInput.value.length === 4 ? 'pointer' : 'not-allowed';
+    }
+  }
+};
 const handleCodeInput = () => {
   let value = codeInput.value.replace(/\D/g, '').slice(0, 4);
   codeInput.value = value;
@@ -427,16 +533,37 @@ authBtnFresh.innerHTML = `
     }
   });
 const updateMobileAuthBtn = () => {
+  const mobileAuthBtn = document.getElementById('mobileAuthBtn');
   if (!mobileAuthBtn) return;
-  
+
+  // Полностью очищаем кнопку — 100% надёжно
+  mobileAuthBtn.innerHTML = '';
+
   if (currentUser) {
     const emojis = ['😊','😎','😍','🤩','😇','😋','🤔','😴','🥳','🤗','🤪','😏','🐱','🐶','🦊','🐼','🦁','🐸','🐵','🤖','👻','🎃','💩','🦄','😀','😂','🤣','🤠','🤡','👽','🥷','🦸','🧙','🕵️'];
     const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-    mobileAuthBtn.innerHTML = `<div class="live-emoji">${randomEmoji}</div>`;
+
+    const emojiSpan = document.createElement('div');
+    emojiSpan.className = 'live-emoji';
+    emojiSpan.textContent = randomEmoji;
+    mobileAuthBtn.appendChild(emojiSpan);
+
     mobileAuthBtn.classList.add('logged-in');
+    mobileAuthBtn.setAttribute('data-label', 'Выход');
+
+    // Анимация появления эмодзи
+    requestAnimationFrame(() => {
+      emojiSpan.style.animation = 'none';
+      requestAnimationFrame(() => emojiSpan.style.animation = '');
+    });
+
   } else {
-    mobileAuthBtn.innerHTML = `<i class="fas fa-user"></i>`;
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-user';
+    mobileAuthBtn.appendChild(icon);
+
     mobileAuthBtn.classList.remove('logged-in');
+    mobileAuthBtn.setAttribute('data-label', 'Вход');
   }
 };
 
@@ -501,20 +628,23 @@ const updateMobileAuthBtn = () => {
 
   // Проверка сессии при загрузке
   const checkSession = async () => {
-    try {
-      const res = await fetch('/api/session');
-      const data = await res.json();
-      if (data.logged_in) {
-        currentUser = { phone: data.phone };
-        sessionStorage.setItem('user_id', data.user_id);
-        sessionStorage.setItem('phone', data.phone);
-        sessionStorage.setItem('is_admin', data.is_admin);
-        
-        updateAuthBtn();
-        updateMobileAuthBtn();
-      }
-    } catch {}
-  };
+  try {
+    const res = await fetch('/api/session');
+    const data = await res.json();
+    if (data.logged_in) {
+      currentUser = { phone: data.phone };
+      sessionStorage.setItem('user_id', data.user_id);
+      sessionStorage.setItem('phone', data.phone);
+      sessionStorage.setItem('is_admin', data.is_admin || '0');
+
+      updateAuthBtn();
+      updateMobileAuthBtn();        // ← сразу
+      ensureMobileAuthBtnUpdated(); // ← и через страховку
+    }
+  } catch (err) {
+    console.error('Session check failed:', err);
+  }
+};
   window.checkSession = checkSession;
   checkSession();
 
@@ -593,28 +723,59 @@ const updateMobileAuthBtn = () => {
   });
 
 const logout = async () => {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
   const alertBox = document.createElement('div');
   alertBox.style.cssText = `
-    position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(28px);
-    display:flex;align-items:center;justify-content:center;z-index:99999;opacity:0;
-    transition:opacity .4s ease;
+    position:fixed;inset:0;
+    background:${isLight ? 'rgba(250,250,250,0.96)' : 'rgba(0,0,0,0.92)'};
+    backdrop-filter:blur(28px);
+    display:flex;align-items:center;justify-content:center;
+    z-index:99999;opacity:0;transition:opacity .45s ease;
   `;
+
   alertBox.innerHTML = `
-    <div style="background:rgba(15,15,15,0.98);border:1.5px solid rgba(255,255,255,0.15);border-radius:28px;
-                padding:2rem 2.5rem;text-align:center;max-width:90vw;box-shadow:0 30px 80px rgba(0,0,0,0.7);">
-      <i class="fas fa-sign-out-alt" style="font-size:3rem;color:#ff6b6b;margin-bottom:1rem;display:block;"></i>
-      <h3 style="margin:0 0 1rem;font-size:1.6rem;color:#fff;">Выйти из аккаунта?</h3>
-      <p style="color:#aaa;margin-bottom:1.5rem;">Вы будете разлогинены</p>
-      <div style="display:flex;gap:1rem;justify-content:center;">
-        <button id="confirmLogout" style="background:#ff6b6b;color:#fff;border:none;padding:.8rem 1.8rem;border-radius:16px;font-weight:600;cursor:pointer;">
-          Выйти
-        </button>
-        <button id="cancelLogout" style="background:rgba(255,255,255,0.1);color:#fff;border:1.5px solid rgba(255,255,255,0.2);padding:.8rem 1.8rem;border-radius:16px;font-weight:600;cursor:pointer;">
-          Отмена
-        </button>
+    <div style="
+      background:${isLight ? '#ffffff' : 'rgba(15,15,15,0.98)'};
+      border:${isLight ? '1.8px solid rgba(0,0,0,0.16)' : '1.5px solid rgba(255,255,255,0.15)'};
+      border-radius:28px;padding:2.2rem 2.6rem;text-align:center;max-width:90vw;
+      box-shadow:${isLight 
+        ? '0 40px 100px rgba(0,0,0,0.18), 0 20px 60px rgba(0,0,0,0.12)' 
+        : '0 30px 80px rgba(0,0,0,0.7)'};
+    ">
+      <i class="fas fa-sign-out-alt" style="
+        font-size:3.2rem;color:#ff6b6b;margin-bottom:1rem;display:block;
+      "></i>
+      
+      <h3 style="
+        margin:0 0 1rem;font-size:1.7rem;font-weight:700;
+        color:${isLight ? '#000000' : '#ffffff'};
+      ">Выйти из аккаунта?</h3>
+      
+      <p style="
+        color:${isLight ? '#444444' : '#aaaaaa'};
+        margin-bottom:2rem;line-height:1.5;font-size:1.02rem;
+      ">Вы будете разлогинены со всех устройств</p>
+      
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+        <button id="confirmLogout" style="
+          background:#ff3b30;color:#fff;border:none;
+          padding:0.9rem 2rem;border-radius:18px;font-weight:600;
+          font-size:1.05rem;cursor:pointer;min-width:130px;
+          box-shadow:0 10px 30px rgba(255,59,48,0.35);
+        ">Выйти</button>
+        
+        <button id="cancelLogout" style="
+          background:${isLight ? 'rgba(0,0,0,0.09)' : 'rgba(255,255,255,0.12)'};
+          color:${isLight ? '#000000' : '#ffffff'};
+          border:${isLight ? '1.7px solid rgba(0,0,0,0.22)' : '1.5px solid rgba(255,255,255,0.22)'};
+          padding:0.9rem 2rem;border-radius:18px;font-weight:600;
+          font-size:1.05rem;cursor:pointer;min-width:130px;
+        ">Отмена</button>
       </div>
     </div>
   `;
+
   document.body.appendChild(alertBox);
   setTimeout(() => alertBox.style.opacity = '1', 10);
 
@@ -624,29 +785,25 @@ const logout = async () => {
         await fetch('/api/logout', { method: 'POST' });
       } catch (e) {}
 
-      // ГЛАВНОЕ: чистим ВСЁ, что может «запомнить» старый вход
-      localStorage.removeItem(SAVED_PHONE_KEY);   // ← было только здесь, теперь надёжно
+      localStorage.removeItem(SAVED_PHONE_KEY);
       localStorage.removeItem('phone');
       sessionStorage.clear();
       localStorage.removeItem('clientCart');
 
-      // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
-      // ЭТО САМАЯ ВАЖНАЯ СТРОКА — БЕЗ НЕЁ НИЧЕГО НЕ РАБОТАЕТ!
       document.dispatchEvent(new CustomEvent('userLoggedOut'));
-      // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
-
       currentUser = null;
 
-      // Сразу возвращаем модалку авторизации в начальное состояние
+      // Сброс модалки авторизации
       const modal = $('authModal');
+      if (modal) modal.classList.remove('show');
+      document.body.style.overflow = '';
+      
       const stepPhone = $('stepPhone');
       const stepCode = $('stepCode');
       const stepSuccess = $('stepSuccess');
       const phoneInput = $('phoneInput');
       const codeInput = $('codeInput');
 
-      if (modal) modal.classList.remove('show');
-      if (document.body.style.overflow === 'hidden') document.body.style.overflow = '';
       if (stepPhone) stepPhone.style.display = 'block';
       if (stepCode) stepCode.style.display = 'none';
       if (stepSuccess) stepSuccess.style.display = 'none';
@@ -665,22 +822,18 @@ const logout = async () => {
       resolve();
     };
 
-    alertBox.querySelector('#cancelLogout').onclick = () => {
+    const closeAndResolve = () => {
       alertBox.remove();
       resolve();
     };
 
-    alertBox.onclick = (e) => {
-      if (e.target === alertBox) {
-        alertBox.remove();
-        resolve();
-      }
-    };
+    alertBox.querySelector('#cancelLogout').onclick = closeAndResolve;
+    alertBox.onclick = (e) => e.target === alertBox && closeAndResolve();
   });
 };
 
-  // САМАЯ ГЛАВНАЯ СТРОКА — ДЕЛАЕТ logout ДОСТУПНЫМ ИЗ updateAuthBtn
-  window.logout = logout;
+// Делаем доступным глобально
+window.logout = logout;
 
   // Инициализация кнопки при старте
   updateAuthBtn();
@@ -706,5 +859,34 @@ const logout = async () => {
     });
   }
 });
+
+// === ГАРАНТИРОВАННОЕ обновление мобильной кнопки авторизации ===
+const ensureMobileAuthBtnUpdated = () => {
+  const btn = document.getElementById('mobileAuthBtn');
+  if (btn) {
+    updateMobileAuthBtn();
+    return;
+  }
+
+  // Если кнопки ещё нет — ждём её появления (максимум 5 секунд)
+  let attempts = 0;
+  const interval = setInterval(() => {
+    const btn = document.getElementById('mobileAuthBtn');
+    if (btn || attempts > 50) {  // 50 × 100мс = 5 сек
+      clearInterval(interval);
+      if (btn) updateMobileAuthBtn();
+    }
+    attempts++;
+  }, 100);
+};
+
+// Запускаем сразу + через 300мс + через 1с — на все случаи жизни
+ensureMobileAuthBtnUpdated();
+setTimeout(ensureMobileAuthBtnUpdated, 300);
+setTimeout(ensureMobileAuthBtnUpdated, 1000);
+
+// Также обновляем при любом изменении авторизации
+window.addEventListener('authChanged', ensureMobileAuthBtnUpdated);
+window.addEventListener('storage', () => setTimeout(ensureMobileAuthBtnUpdated, 100));
 
 

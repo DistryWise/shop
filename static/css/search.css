@@ -757,218 +757,241 @@ html[data-theme="light"] .product-modal::-webkit-scrollbar {
 /* МОБИЛЬНЫЙ ПОИСК — ШТОРКА СВЕРХУ (iPhone SE + все мобильные) */
 /* Стиль Apple 2025 — чистый, плавный, с карточками */
 /* ===================================================== */
+/* ===================================================== */
+/* МОБИЛЬНЫЙ ПОИСК — ЕДИНАЯ ШТОРКА 2025 (Apple Style) */
+/* Работает с <div class="mobile-search-sheet" id="mobileSearchSheet"> */
+/* ===================================================== */
 
-.mobile-search-top {
+.mobile-search-sheet {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: var(--bg-primary, #fff);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0,0,0,0.08);
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.96);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
   transform: translateY(-100%);
-  transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
-  z-index: 9998;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  opacity: 0;
+  visibility: hidden;
+  overscroll-behavior: contain;
 }
 
-.mobile-search-top.active {
+.mobile-search-sheet.active {
   transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
 }
 
+/* Хедер */
 .mobile-search-header {
+  flex-shrink: 0;
+  padding: 12px 16px 8px;
+  padding-top: calc(12px + env(safe-area-inset-top));
   display: flex;
   align-items: center;
-  padding: 12px 10px 10px;
-  gap: 10px;
-  height: 56px;
-  box-sizing: border-box;
+  gap: 12px;
 }
 
 .mobile-search-back {
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #007aff;
+  width: 44px; height: 44px;
+  background: rgba(255,255,255,0.12);
+  border: none; border-radius: 50%;
+  color: #0a84ff;
+  font-size: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  transition: background 0.2s;
+  transition: all 0.2s;
 }
 
 .mobile-search-back:active {
-  background: rgba(0,122,255,0.15);
+  background: rgba(255,255,255,0.25);
+  transform: scale(0.94);
 }
 
 .mobile-search-input-wrapper {
   flex: 1;
-  position: relative;
-  background: rgba(118,118,128,0.12);
-  border-radius: 12px;
-  height: 40px;
+  height: 44px;
+  background: rgba(255,255,255,0.14);
+  border-radius: 14px;
   display: flex;
   align-items: center;
-  padding: 0 12px;
-  gap: 8px;
-  font-size: 17px;
-  backdrop-filter: blur(10px);
+  padding: 0 14px;
+  gap: 10px;
+  backdrop-filter: blur(12px);
 }
 
-.mobile-search-input-wrapper i {
-  color: #8e8e93;
-  font-size: 18px;
-  flex-shrink: 0;
-}
+.mobile-search-input-wrapper i { color: #8e8e93; font-size: 19px; }
 
-.mobile-search-input {
+#mobileSearchInput {
   flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
+  background: none; border: none; outline: none;
+  color: #fff;
   font-size: 17px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  color: var(--text-primary, #000);
+  font-weight: 500;
+  font-family: -apple-system, 'SF Pro Text', sans-serif;
 }
 
-.mobile-search-input::placeholder {
-  color: #8e8e93;
-}
+#mobileSearchInput::placeholder { color: #8e8e93; }
 
 .mobile-search-clear {
-  width: 32px;
-  height: 32px;
-  background: rgba(0,0,0,0.2);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  font-size: 16px;
-  opacity: 0;
-  transition: opacity 0.25s;
+  width: 34px; height: 34px;
+  background: rgba(255,255,255,0.22);
+  color: #fff;
+  border: none; border-radius: 50%;
+  font-size: 16px; font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
 }
 
-/* ===================================================== */
-/* РЕЗУЛЬТАТЫ ПОИСКА — ПОЛНОЭКРАННЫЕ, ПОД ШАПОЧКОЙ */
-/* ===================================================== */
+#mobileSearchInput:not(:placeholder-shown) ~ .mobile-search-clear,
+.mobile-search-clear.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
 
-.mobile-search-results {
-  position: fixed;
-  top: 56px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--bg-primary, #fff);
+.mobile-search-clear:active { background: rgba(255,255,255,0.35); }
 
+/* Контент */
+.mobile-search-results-content {
+  flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  display: none;
-  z-index: 9997;
-  padding-bottom: 100px; /* место под нижний бар */
+  padding: 12px 16px 120px;
 }
 
 /* Пустое состояние */
-.search-empty-state {
+#mobileEmptyState {
   text-align: center;
-  padding-top: 120px;
+  padding-top: 140px;
   color: #8e8e93;
-  font-size: 17px;
+  font-size: 18px;
+  font-weight: 500;
 }
 
-.search-empty-state i {
-  font-size: 48px;
-  margin-bottom: 16px;
-  opacity: 0.4;
+#mobileEmptyState i {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.35;
+  display: block;
 }
 
-/* Список автокомплита */
+/* Список результатов */
 .mobile-autocomplete-list {
-  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.autocomplete-item {
+.mobile-autocomplete-list .autocomplete-item {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
-  gap: 14px;
-  transition: background 0.2s;
-  position: relative;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 18px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(12px);
 }
 
-.autocomplete-item:active {
-  background: rgba(0,0,0,0.06);
+.mobile-autocomplete-list .autocomplete-item:active {
+  background: rgba(255,255,255,0.18);
+  transform: scale(0.98);
 }
 
-.autocomplete-item img {
-  width: 72px;
-  height: 72px;
-  border-radius: 16px;
+.mobile-autocomplete-list .autocomplete-item img {
+  width: 80px; height: 80px;
+  border-radius: 18px;
   object-fit: cover;
-  background: #f2f2f7;
+  background: #1c1c1e;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-.item-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.item-title {
+.mobile-autocomplete-list .item-title {
   font-size: 17px;
-  font-weight: 500;
-  color: var(--text-primary, #000);
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-bottom: 2px;
 }
 
-.item-title strong {
-  font-weight: 600;
-  color: #007aff;
-}
+.mobile-autocomplete-list .item-title strong { color: #0a84ff; }
 
-.item-type {
+.mobile-autocomplete-list .item-type {
   font-size: 13px;
   color: #8e8e93;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
 }
 
-.autocomplete-item small {
-  font-size: 17px;
-  font-weight: 600;
-  color: var(--text-primary, #000);
-  white-space: nowrap;
+.mobile-autocomplete-list .autocomplete-item small {
+  font-size: 19px;
+  font-weight: 700;
+  color: #fff;
+  margin-left: auto;
 }
 
-.autocomplete-add {
-  width: 36px;
-  height: 36px;
-  background: #007aff;
+/* Кнопка + — ИСПРАВЛЕНО! */
+.mobile-autocomplete-list .autocomplete-add {
+  width: 42px; height: 42px;
+  background: #0a84ff;
   color: white;
   border-radius: 50%;
+  font-size: 20px;
+  font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(0,122,255,0.3);
-  transition: all 0.2s;
+  box-shadow: 0 6px 20px rgba(10,132,255,0.4);
+  transition: all 0.25s ease;
 }
 
-.autocomplete-add:active {
-  transform: scale(0.92);
-  background: #0066cc;
+.mobile-autocomplete-list .autocomplete-add:active {
+  transform: scale(0.9);
+  background: #0077ed;
 }
 
+/* СВЕТЛАЯ ТЕМА — 100% Apple */
+html[data-theme="light"] .mobile-search-sheet {
+  background: rgba(255,255,255,0.96);
+}
+
+html[data-theme="light"] .mobile-search-input-wrapper {
+  background: rgba(118,118,128,0.18);
+}
+
+html[data-theme="light"] #mobileSearchInput,
+html[data-theme="light"] .mobile-autocomplete-list .item-title,
+html[data-theme="light"] .mobile-autocomplete-list .autocomplete-item small {
+  color: #000 !important;
+}
+
+html[data-theme="light"] .mobile-autocomplete-list .item-title strong { color: #007aff; }
+
+html[data-theme="light"] .mobile-search-back,
+html[data-theme="light"] .mobile-search-clear {
+  background: rgba(0,0,0,0.1);
+  color: #007aff;
+}
+
+html[data-theme="light"] .mobile-autocomplete-list .autocomplete-item {
+  background: rgba(255,255,255,0.75);
+}
+
+html[data-theme="light"] .mobile-autocomplete-list .autocomplete-item:active {
+  background: rgba(255,255,255,0.95);
+}
+
+html[data-theme="light"] #mobileEmptyState { color: #666; }
 /* ===================================================== */
 /* НИЖНИЙ БАР — ВСЕГДА ПОВЕРХ ШТОРКИ */
 /* ===================================================== */
@@ -1069,121 +1092,165 @@ html[data-theme="dark"] .autocomplete-item:active {
 /* Чёрная в тёмной теме, белая в светлой — как в нативных приложениях */
 /* ===================================================== */
 
-.mobile-search-top,
-.mobile-search-results {
-  background: #000 !important;                    /* по умолчанию тёмная */
-  backdrop-filter: none !important;                /* УБИРАЕМ размытие полностью */
-  -webkit-backdrop-filter: none !important;
-  transition: background 0.35s ease;
-}
-
-/* Светлая тема — чисто белый фон */
-html[data-theme="light"] .mobile-search-top,
-html[data-theme="light"] .mobile-search-results {
-  background: #fff !important;
-}
-
-/* Дополнительно: убираем полупрозрачность у всех детей, если где-то переопределена */
-.mobile-search-top *,
-.mobile-search-results * {
-  background: transparent !important;
-}
-
-/* Нижний бар оставляем с размытием (он должен быть "стеклянным", как у Apple) */
-.mobile-bottom-bar {
-  background: rgba(28,28,30,0.92) !important;      /* тёмная */
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-}
-
-html[data-theme="light"] .mobile-bottom-bar {
-  background: rgba(255,255,255,0.92) !important;
-}
-
-/* Убираем старый border, он больше не нужен */
-.mobile-search-top,
-.mobile-search-results,
-.mobile-bottom-bar {
-  border: none !important;
-}
-
-/* Плавный переход при смене темы (если юзер переключает тему с открытым поиском) */
-@media (prefers-color-scheme: dark),
-html[data-theme="dark"] {
-  .mobile-search-top,
-  .mobile-search-results {
-    background: #000 !important;
-  }
-}
-
-@media (prefers-color-scheme: light),
-html[data-theme="light"] {
-  .mobile-search-top,
-  .mobile-search-results {
-    background: #fff !important;
-  }
-}
-
 /* ===================================================== */
-/* МОБИЛЬНЫЙ ПОИСК — ЧИТАЕМЫЙ ТЕКСТ В ТЕМНОЙ ТЕМЕ */
+/* МОБИЛЬНЫЙ ПОИСК — ФИНАЛЬНАЯ ВЕРСИЯ ДЛЯ iPhone SE и ВСЕХ ЭКРАНОВ */
+/* Крестик есть ✓   Центровка идеальная ✓   Адаптация 100% ✓     */
 /* ===================================================== */
 
-/* Тёмная тема — белый текст в строке поиска */
-html[data-theme="dark"] .mobile-search-input,
-html[data-theme="dark"] .mobile-search-input::placeholder {
-  color: #ffffff !important;
+.mobile-search-sheet {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.58s cubic-bezier(0.22, 1, 0.36, 1);
+  overscroll-behavior: contain;
 }
 
-/* Если где-то остался серый placeholder — делаем его тоже белым и чуть прозрачным */
-html[data-theme="dark"] .mobile-search-input::placeholder {
-  color: rgba(255, 255, 255, 0.65) !important;
+.mobile-search-sheet.active { transform: translateY(0); }
+
+html[data-theme="light"] .mobile-search-sheet { background: #fff !important; }
+
+/* Ручка сверху */
+.sheet-handle {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 4px;
+  background: rgba(255,255,255,0.45);
+  border-radius: 2px;
+  z-index: 10;
+}
+html[data-theme="light"] .sheet-handle { background: rgba(0,0,0,0.35); }
+
+/* Хедер */
+.mobile-search-header {
+  position: relative;
+  flex-shrink: 0;
+  padding: 16px 12px 10px;
+  padding-top: calc(16px + env(safe-area-inset-top));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Кнопка ← */
+.mobile-search-back {
+  width: 40px;
+  height: 40px;
+  font-size: 21px;
+  background: rgba(255,255,255,0.12);
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  flex-shrink: 0;
+}
+html[data-theme="light"] .mobile-search-back { background: rgba(0,0,0,0.1); color: #000; }
+
+/* Строка ввода */
+.mobile-search-input-wrapper {
+  flex: 1;
+  height: 42px;
+  background: rgba(255,255,255,0.14);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 8px;
+  position: relative;
+}
+html[data-theme="light"] .mobile-search-input-wrapper { background: rgba(0,0,0,0.08); }
+
+.mobile-search-input-wrapper i { color: #888; font-size: 18px; }
+
+#mobileSearchInput {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 16px !important;
+  font-weight: 500;
+}
+html[data-theme="light"] #mobileSearchInput { color: #000 !important; }
+#mobileSearchInput::placeholder { color: #888; }
+
+/* КРЕСТИК ОЧИСТКИ — ВЕРНУЛСЯ И РАБОТАЕТ! */
+.mobile-search-clear {
+  width: 32px;
+  height: 32px;
+  background: rgba(255,255,255,0.22);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: bold;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+html[data-theme="light"] .mobile-search-clear { background: rgba(0,0,0,0.18); color: #000; }
+
+/* Показываем крестик, когда есть текст */
+#mobileSearchInput:not(:placeholder-shown) ~ .mobile-search-clear,
+.mobile-search-clear.visible {
   opacity: 1;
+  pointer-events: auto;
 }
 
-/* Иконка лупы и крестик — тоже белые */
-html[data-theme="dark"] .mobile-search-input-wrapper i,
-html[data-theme="dark"] .mobile-search-clear {
-  color: #ffffff !important;
+/* ПУСТОЕ СОСТОЯНИЕ — ИДЕАЛЬНАЯ ЦЕНТРОВКА */
+#mobileEmptyState {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
 
-/* Фон крестика очистки — тёмно-серый, чтобы был виден */
-html[data-theme="dark"] .mobile-search-clear {
-  background: rgba(255, 255, 255, 0.25) !important;
+.empty-content {
+  text-align: center;
+  width: 100%;
 }
 
-html[data-theme="dark"] .mobile-search-clear:hover,
-html[data-theme="dark"] .mobile-search-clear:active {
-  background: rgba(255, 255, 255, 0.4) !important;
+.empty-icon i {
+  font-size: 68px;
+  opacity: 0.25;
+  color: #bbb;
+  margin-bottom: 28px;
+  display: block;
 }
+html[data-theme="light"] .empty-icon i { color: #ccc; }
 
-/* Результаты поиска — текст тоже должен быть белым */
-html[data-theme="dark"] .item-title,
-html[data-theme="dark"] .item-type,
-html[data-theme="dark"] .autocomplete-item small,
-html[data-theme="dark"] .search-empty-state {
-  color: #ffffff !important;
+.empty-title {
+  font-size: 19px;
+  font-weight: 600;
+  color: #ddd;
+  margin: 0 0 10px 0;
 }
+html[data-theme="light"] .empty-title { color: #111 !important; }
 
-html[data-theme="dark"] .item-type {
-  color: #999999 !important;
+.empty-subtitle {
+  font-size: 14px;
+  color: #999;
+  line-height: 1.45;
+  max-width: 260px;
+  margin: 0 auto;
 }
+html[data-theme="light"] .empty-subtitle { color: #666 !important; }
 
-html[data-theme="dark"] .search-empty-state {
-  color: #888888 !important;
+/* Адаптация под iPhone SE и меньше */
+@media (max-width: 380px) {
+  .empty-icon i { font-size: 60px; margin-bottom: 24px; }
+  .empty-title { font-size: 18px; }
+  .empty-subtitle { font-size: 13.5px; max-width: 240px; }
 }
-
-/* Светлая тема — чёрный текст (на всякий случай, чтобы не сломалось) */
-html[data-theme="light"] .mobile-search-input,
-html[data-theme="light"] .mobile-search-input::placeholder,
-html[data-theme="light"] .item-title,
-html[data-theme="light"] small {
-  color: #000000 !important;
-}
-
-html[data-theme="light"] .mobile-search-input::placeholder {
-  color: #8e8e93 !important;
-}
-
 /* ПОЛНОЭКРАННАЯ ШТОРКА СВЕРХУ — НОУТБУКИ 1025–1887px */
 .tablet-search-full {
   position: fixed;

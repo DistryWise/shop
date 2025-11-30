@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="/static/css/cart.css">
   <link rel="stylesheet" href="/static/css/ai.css">
   <link rel="stylesheet" href="/static/css/contacts.css"> 
+  <link rel="stylesheet" href="/static/css/feedback.css"> 
   
 
 <style>
@@ -50,7 +51,7 @@
   html[data-theme="light"] #feedbackFloatingBtn *,
   html[data-theme="light"] [id*="feedback"] * {
     background: transparent !important;
-    color: #111111 !important;
+    color: #5c5c5c !important;
   }
 
 </style>
@@ -153,25 +154,44 @@
   <div id="tabletAutocompleteList" class="tablet-autocomplete-list-full"></div>
 </div>
 
-<!-- МОБИЛЬНЫЙ ПОИСК СВЕРХУ (2025 стиль) -->
-<div class="mobile-search-top" id="mobileSearchTop">
+<div class="mobile-search-sheet" id="mobileSearchSheet">
+  <!-- Хедер с ручкой и строкой поиска -->
   <div class="mobile-search-header">
+    <!-- Ручка сверху (как в iOS) -->
+    <div class="sheet-handle"></div>
+
+    <!-- Кнопка назад + строка поиска -->
     <button class="mobile-search-back" id="closeMobileSearchTop">←</button>
     <div class="mobile-search-input-wrapper">
       <i class="fas fa-search"></i>
-      <input type="text" class="mobile-search-input" id="mobileSearchInput" placeholder="Поиск по каталогу..." autocomplete="off">
+      <input 
+        type="text" 
+        class="mobile-search-input" 
+        id="mobileSearchInput" 
+        placeholder="Поиск по каталогу..." 
+        autocomplete="off"
+      >
       <button class="mobile-search-clear" id="mobileSearchClear">×</button>
     </div>
   </div>
-</div>
 
-<!-- РЕЗУЛЬТАТЫ МОБИЛЬНОГО ПОИСКА -->
-<div class="mobile-search-results" id="mobileSearchResults">
-  <div class="search-empty-state" id="mobileEmptyState">
-    <i class="fas fa-search"></i>
-    <p>Начните вводить запрос...</p>
+  <!-- Контент: либо пустое состояние, либо результаты -->
+  <div class="mobile-search-results-content" id="mobileSearchResults">
+    
+    <!-- ПУСТОЕ СОСТОЯНИЕ — "Введите название товара" -->
+    <div class="search-empty-state" id="mobileEmptyState">
+      <div class="empty-icon">
+        <i class="fas fa-search"></i>
+      </div>
+      <div class="empty-title">Введите название товара</div>
+      <div class="empty-subtitle">
+        Например: iPhone 16, кроссовки Nike, кофеварка
+      </div>
+    </div>
+
+    <!-- Сюда будут вставляться результаты поиска -->
+    <div id="mobileAutocompleteList" class="mobile-autocomplete-list"></div>
   </div>
-  <div id="mobileAutocompleteList" class="mobile-autocomplete-list"></div>
 </div>
 
 <!-- МОБИЛЬНАЯ ШТОРКА КОРЗИНЫ -->
@@ -218,7 +238,10 @@
   </div>
 </div>
 <!-- МОБИЛЬНАЯ ШТОРКА ОБРАТНОЙ СВЯЗИ (2025 стиль) -->
-<div class="mobile-feedback-sheet" id="mobileFeedbackSheet">
+<!-- МОБИЛЬНАЯ ШТОРКА ОБРАТНОЙ СВЯЗИ (2025 стиль) -->
+<div class="mobile-feedback-sheet" id="mobileFeedbackSheet" style="display:none;">
+  <div id="mobileFeedbackTop" style="display:none;"></div>
+
   <div class="sheet-header">
     <button class="sheet-back-btn" id="closeMobileFeedback">
       <i class="fas fa-chevron-left"></i>
@@ -229,6 +252,7 @@
     </div>
   </div>
   <div class="sheet-handle"></div>
+  
   <form class="contact-form sheet-form" novalidate id="contactFormMobile">
     <div class="sheet-field">
       <label>Ваше имя</label>
@@ -348,7 +372,8 @@
 
   <section class="about-section">
     <div class="image-wrapper">
-      <div class="image" style="background-image: url('/static/assets/about_company/history.png');"></div>
+      <div class="image" style="background-image: url('/static/assets/about_company/history.png');">
+      </div>
     </div>
     <div class="content">
       <div class="section-title">О Piligrim</div>
@@ -449,32 +474,7 @@
     </div>
   </footer>
 
-  <!-- МОДАЛКИ — БЕЗ ИЗМЕНЕНИЙ -->
-  <div class="custom-alert" id="feedbackModal">
-    <div class="alert-content">
-      <button class="alert-close" id="closeFeedback">×</button>
-      <div class="alert-icon">
-        <i class="fas fa-envelope-open-text"></i>
-      </div>
-      <div class="alert-text">
-        <strong>Обратная связь</strong>
-        <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
-      </div>
-      <form class="contact-form" novalidate id="contactForm">
-        <input type="text" placeholder="Ваше имя" name="name" required />
-        <div class="phone-field-wrapper">
-          <input type="tel" placeholder="+7 (___) ___-__-__" name="phone" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
-          <button type="button" class="edit-phone-btn" style="display:none;">Изменить</button>
-        </div>
-        <input type="email" placeholder="Email" name="email" required />
-        <textarea placeholder="Ваше сообщение" name="message" required></textarea>
-        <button type="submit" id="submitBtn" class="alert-login-btn">
-          <span class="btn-text">Отправить сообщение</span>
-          <span class="btn-cooldown">Отправка... <span class="timer">30</span>с</span>
-        </button>
-      </form>
-    </div>
-  </div>
+
 
   <div id="authModal" class="auth-modal">
     <div class="auth-modal-content">
@@ -539,73 +539,111 @@
     </div>
   </div>
 
-  <!-- AI-ПОМОЩНИК — ДОБАВЛЕН -->
-  <div id="ai-assistant">
-    <svg viewBox="0 0 100 100" class="ai-robot" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#f5d78a"/>
-          <stop offset="100%" stop-color="#d4af37"/>
-        </linearGradient>
-      </defs>
-      <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
-      <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
-      <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
-      <circle cx="39" cy="40" r="2.5" fill="#fff"/>
-      <circle cx="63" cy="40" r="2.5" fill="#fff"/>
-      <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <g transform="translate(8, 62)">
-        <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
-        <rect x="3" y="3" width="24" height="32" rx="1" fill="#f8f8f8"/>
-        <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
-        <line x1="5" y1="17" x2="25" y2="17" stroke="#000" stroke-width="0.9"/>
-        <line x1="5" y1="21" x2="25" y2="21" stroke="#000" stroke-width="0.9"/>
-        <line x1="5" y1="25" x2="23" y2="25" stroke="#000" stroke-width="0.9"/>
-        <line x1="5" y1="29" x2="21" y2="29" stroke="#000" stroke-width="0.9"/>
-      </g>
-      <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
-    </svg>
-  </div>
+<!-- === AI АССИСТЕНТ — ИКОНКА И МОДАЛКА (из zaza.html, не в ai.css) === -->
+<div id="ai-assistant">
+  <svg viewBox="0 0 100 100" class="ai-robot" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f5d78a"/>
+        <stop offset="100%" stop-color="#d4af37"/>
+      </linearGradient>
+      <linearGradient id="suitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#2d2d2d"/>
+        <stop offset="100%" stop-color="#1a1a1a"/>
+      </linearGradient>
+    </defs>
 
-  <div id="ai-chat" class="ai-chat-modal">
-    <div class="ai-chat-header">
-      <div class="ai-chat-title">
-        <svg width="32" height="32" viewBox="0 0 100 100" style="margin-right:10px;">
-          <use href="#goldGrad"/>
-          <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
-          <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
-          <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
-          <circle cx="39" cy="40" r="2.5" fill="#fff"/>
-          <circle cx="63" cy="40" r="2.5" fill="#fff"/>
-          <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-          <g transform="translate(8, 62)">
-            <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
-            <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
-          </g>
-          <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
-        </svg>
-        <span>Юрист AI</span>
-      </div>
-      <div class="ai-header-buttons">
-        <button class="ai-btn-minimize" onclick="toggleAIChatSize()" title="На весь экран">
-          <i class="fas fa-expand-arrows-alt"></i>
-        </button>
-        <button class="ai-btn-close" onclick="closeAIChat()" title="Закрыть">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
+    <!-- Голова робота (золотая) -->
+    <circle cx="50" cy="35" r="18" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+
+    <!-- Глаза -->
+    <circle cx="44" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="56" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="45.5" cy="31" r="1.8" fill="#fff"/>
+    <circle cx="57.5" cy="31" r="1.8" fill="#fff"/>
+
+    <!-- Светящиеся акценты в глазах -->
+    <circle cx="46" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+    <circle cx="58" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+
+    <!-- Туловище — пиджак -->
+    <path d="M30 52 L28 98 L72 98 L70 52 
+             Q62 58 50 58 Q38 58 30 52 Z" 
+          fill="url(#suitGrad)" stroke="#000" stroke-width="2"/>
+
+    <!-- Лацканы пиджака -->
+    <path d="M50 52 L42 64 L42 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+    <path d="M50 52 L58 64 L58 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+
+    <!-- Галстук -->
+    <path d="M50 58 L46 72 L50 78 L54 72 Z" fill="#8b1e1e"/>
+    <polygon points="46,72 50,78 54,72" fill="#5c1212"/>
+
+    <!-- Пуговицы пиджака -->
+    <circle cx="50" cy="70" r="2.5" fill="#333"/>
+    <circle cx="50" cy="78" r="2.5" fill="#333"/>
+    <circle cx="50" cy="86" r="2.5" fill="#333"/>
+
+    <!-- Руки -->
+    <rect x="24" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+    <rect x="64" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+
+    <!-- Планшет с Конституцией в левой руке -->
+    <g transform="translate(12, 68)">
+      <rect x="0" y="0" width="28" height="36" rx="4" fill="#fff" stroke="#111" stroke-width="2"/>
+      <rect x="2" y="2" width="24" height="30" rx="2" fill="#f0f0f0"/>
+      <text x="14" y="11" font-family="Arial, sans-serif" font-size="5.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+      <line x1="4" y1="15" x2="24" y2="15" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="19" x2="24" y2="19" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="23" x2="22" y2="23" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="27" x2="20" y2="27" stroke="#333" stroke-width="0.8"/>
+    </g>
+
+    <!-- Блеск на голове -->
+    <path d="M42 24 Q46 20 50 24" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.6"/>
+  </svg>
+</div>
+
+<!-- === AI ЧАТ МОДАЛЬНЫЙ (ТОТ ЖЕ СТИЛЬ) === -->
+<div id="ai-chat" class="ai-chat-modal">
+  <div class="ai-chat-header">
+    <div class="ai-chat-title">
+      <svg width="32" height="32" viewBox="0 0 100 100" style="margin-right:10px;">
+        <use href="#goldGrad"/>
+        <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+        <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="39" cy="40" r="2.5" fill="#fff"/>
+        <circle cx="63" cy="40" r="2.5" fill="#fff"/>
+        <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <g transform="translate(8, 62)">
+          <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
+          <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+        </g>
+        <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
+      </svg>
+      <span>Юрист AI</span>
     </div>
-    <div class="ai-chat-body">
-      <div class="ai-chat-messages"></div>
-      <div class="ai-chat-input">
-        <input type="text" id="ai-input" placeholder="Задайте юридический вопрос..." 
-               onkeypress="if(event.key==='Enter' && this.value.trim()) { sendAIMessage(this.value); this.value=''; }">
-        <button onclick="const inp = document.getElementById('ai-input'); if(inp.value.trim()) { sendAIMessage(inp.value); inp.value=''; }" title="Отправить">
-          <i class="fas fa-paper-plane"></i>
-        </button>
-      </div>
+    <div class="ai-header-buttons">
+      <button class="ai-btn-minimize" onclick="toggleAIChatSize()" title="На весь экран">
+        <i class="fas fa-expand-arrows-alt"></i>
+      </button>
+      <button class="ai-btn-close" onclick="closeAIChat()" title="Закрыть">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
   </div>
+  <div class="ai-chat-body">
+    <div class="ai-chat-messages"></div>
+    <div class="ai-chat-input">
+      <input type="text" id="ai-input" placeholder="Задайте юридический вопрос..." 
+             onkeypress="if(event.key==='Enter' && this.value.trim()) { sendAIMessage(this.value); this.value=''; }">
+      <button onclick="const inp = document.getElementById('ai-input'); if(inp.value.trim()) { sendAIMessage(inp.value); inp.value=''; }" title="Отправить">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>
 <!-- ТУМБЛЕР ТЕМЫ — ВИСЯЩАЯ ЛАМПОЧКА -->
 <div class="theme-toggle-hanging">
   <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
@@ -618,6 +656,30 @@
     <div class="rope bottom"></div>
   </label>
 </div>
+
+<!-- ОБЯЗАТЕЛЬНО ДОБАВЬ ЭТОТ БЛОК — ДАЖЕ ЕСЛИ ОН НЕ ИСПОЛЬЗУЕТСЯ НА ДЕСКТОПЕ! -->
+<div class="custom-alert" id="feedbackModal">
+  <div class="alert-content">
+    <button class="alert-close">×</button>
+    <div class="alert-icon"><i class="fas fa-envelope-open-text"></i></div>
+    <div class="alert-text">
+      <strong>Обратная связь</strong>
+      <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
+    </div>
+    <form class="contact-form" novalidate>
+      <input type="text" placeholder="Ваше имя" name="name" required />
+      <div class="phone-field-wrapper">
+        <input type="tel" placeholder="+7 (___) ___-__-__" name="phone" required />
+      </div>
+      <input type="email" placeholder="Email" name="email" required />
+      <textarea placeholder="Ваше сообщение" name="message" required></textarea>
+      <button type="submit" class="alert-login-btn">
+        <span class="btn-text">Отправить</span>
+      </button>
+    </form>
+  </div>
+</div>
+
   <a href="#" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
   <!-- СКРИПТЫ -->
   <script src="/static/js/search.js"></script>
