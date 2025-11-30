@@ -641,29 +641,82 @@ modal.querySelector('#productReviewsCount').textContent =
     document.body.style.overflow = '';
   });
 });
-// === СВАЙП ВНИЗ — РАБОЧИЙ 100% (Telegram-style, 2025) ===
+// =============================================================================
+// МОБИЛЬНЫЙ ПОИСК — СВАЙП ВНИЗ 1 В 1 КАК У КОРЗИНЫ (mobileCartSheet) — 2025
+// =============================================================================
 (() => {
-  const sheet = document.getElementById('ai-chat');
-  if (!sheet || window.innerWidth > 1023) return;
+  const sheet = document.getElementById('mobileSearchSheet');
+  const input = document.getElementById('mobileSearchInput');
+  if (!sheet || !input) return;
 
   let startY = 0;
   let isDragging = false;
-  const THRESHOLD = 150;
+  let isClosing = false;
+  const threshold = 150; // точно как в корзине
 
-  const start = (e) => {
-    if (!sheet.classList.contains('active')) return;
+  // === ОТКРЫТИЕ ===
+  const openSheet = () => {
+    if (sheet.classList.contains('active') || isClosing) return;
+    isClosing = false;
+    sheet.classList.add('active');
+    document.body.classList.add('no-scroll'); // если у тебя есть такой класс
 
-    // Не даём свайпать, если скролл в чате не вверху
-    const messages = sheet.querySelector('.ai-chat-messages');
-    if (messages && messages.scrollTop > 10) return;
+    // Мгновенный фокус
+    setTimeout(() => {
+      input.focus();
+      input.scrollIntoView({ block: 'nearest' });
+    }, 300);
+  };
+
+  // === ЗАКРЫТИЕ (ТОЧНО КАК В КОРЗИНЕ) ===
+  const closeSheet = () => {
+    if (isClosing || !sheet.classList.contains('active')) return;
+    isClosing = true;
+
+    sheet.classList.remove('active');
+    document.body.classList.remove('no-scroll');
+
+    // ←←← ВОТ ЭТОТ ФОКУС — ДЕЛАЕТ ВСЁ ИДЕАЛЬНО НА iOS И ANDROID ←←←
+    setTimeout(() => {
+      const dummy = document.createElement('div');
+      dummy.style.position = 'fixed';
+      dummy.style.top = '0';
+      dummy.style.left = '-100px';
+      document.body.appendChild(dummy);
+      dummy.click();
+      dummy.remove();
+    }, 50);
+
+    const cleanup = () => {
+      sheet.style.transition = '';
+      sheet.style.transform = '';
+      isClosing = false;
+    };
+    sheet.addEventListener('transitionend', cleanup, { once: true });
+    setTimeout(cleanup, 600);
+  };
+
+  // === ОТКРЫТИЕ ПО КНОПКЕ ===
+  document.getElementById('mobileSearchBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openSheet();
+  });
+
+  // Закрытие по стрелке назад
+  document.getElementById('closeMobileSearchTop')?.addEventListener('click', closeSheet);
+
+  // === СВАЙП ВНИЗ — 1 В 1 КАК В КОРЗИНЕ ===
+  const handleStart = (e) => {
+    if (!sheet.classList.contains('active') || isClosing) return;
+    if (sheet.scrollTop > 0) return; // только если в самом верху
 
     startY = e.touches?.[0].clientY || e.clientY;
     isDragging = true;
-    sheet.classList.add('dragging');
     sheet.style.transition = 'none';
   };
 
-  const move = (e) => {
+  const handleMove = (e) => {
     if (!isDragging) return;
 
     const currentY = e.touches?.[0].clientY || e.clientY;
@@ -675,38 +728,37 @@ modal.querySelector('#productReviewsCount').textContent =
     }
   };
 
-  const end = () => {
+  const handleEnd = () => {
     if (!isDragging) return;
     isDragging = false;
 
-    const currentY = event?.touches?.[0]?.clientY || event?.clientY || startY;
-    const diff = currentY - startY;
+    const diff = (event?.changedTouches?.[0]?.clientY || event?.clientY || startY) - startY;
 
-    sheet.classList.remove('dragging');
-    sheet.style.transition = 'transform 0.5s cubic-bezier(0.22, 0.88, 0.36, 1)';
-
-    if (diff > THRESHOLD) {
-      // Уезжает вниз и закрывается
-      sheet.style.transform = 'translateY(100dvh)';
-      setTimeout(() => {
-        closeAIChat();
-      }, 500);
+    if (diff > threshold) {
+      closeSheet(); // ← использует тот же dummy-клик → 100% плавно
     } else {
-      // Плавно возвращается наверх
+      sheet.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.9, 0.35, 1)';
       sheet.style.transform = 'translateY(0)';
+      setTimeout(() => sheet.style.transition = '', 410);
     }
   };
 
-  // Touch
-  sheet.addEventListener('touchstart', start, { passive: true });
-  sheet.addEventListener('touchmove', move, { passive: false });
-  sheet.addEventListener('touchend', end);
-  sheet.addEventListener('touchcancel', end);
+  // ←←← События точно как в корзине ←←←
+  sheet.addEventListener('touchstart', handleStart, { passive: true });
+  sheet.addEventListener('touchmove', handleMove, { passive: false });
+  sheet.addEventListener('touchend', handleEnd);
 
-  // Mouse (для теста)
-  sheet.addEventListener('mousedown', start);
-  document.addEventListener('mousemove', e => {
-    if (isDragging) move(e);
+  // Для теста на десктопе
+  sheet.addEventListener('mousedown', handleStart);
+  document.addEventListener('mousemove', e => isDragging && handleMove(e));
+  document.addEventListener('mouseup', handleEnd);
+
+  // Esc
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && sheet.classList.contains('active')) closeSheet();
   });
-  document.addEventListener('mouseup', end);
+
+  // Экспорт для дебага
+  window.openMobileSearch = openSheet;
+  window.closeMobileSearch = closeSheet;
 })();

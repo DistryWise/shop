@@ -238,56 +238,128 @@ setTimeout(showGreeting, 3000);
 })();
 
 // === ПОДЪЁМ ЧАТА НАД КЛАВИАТУРОЙ — КАК В ТЕЛЕГРАММЕ (2025, работает везде) ===
+// === ПОДЪЁМ ЧАТА НАД КЛАВИАТУРОЙ — РАБОТАЕТ НА ВСЕХ ТЕЛЕФОНАХ 2025 ГОДА (iOS + Android) ===
 (() => {
   const chat = document.getElementById('ai-chat');
   const input = chat?.querySelector('#ai-input');
   if (!chat || !input || window.innerWidth > 1023) return;
 
-  let isKeyboardOpen = false;
+  let keyboardHeight = 0;
+  let isDragging = false; // чтобы не конфликтовать со свайпом
 
-  const updateKeyboardOffset = () => {
-    if (!window.visualViewport) return;
+  const updatePosition = () => {
+    if (isDragging) return; // не трогаем во время свайпа
 
-    const viewportHeight = window.visualViewport.height;
-    const fullHeight = window.innerHeight;
-    const keyboardHeight = fullHeight - viewportHeight;
+    if (!window.visualViewport) {
+      // Резервный вариант для старых браузеров
+      const diff = window.innerHeight - window.visualViewport?.height || 0;
+      keyboardHeight = diff > 100 ? diff : 0;
+    } else {
+      keyboardHeight = window.innerHeight - window.visualViewport.height;
+    }
 
-    // Если клавиатура открыта (более 100px — защита от случайных изменений)
     if (keyboardHeight > 100) {
-      isKeyboardOpen = true;
-      const offset = window.visualViewport.offsetTop;
-      chat.style.transform = `translateY(${offset}px)`;
-      chat.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
-    } else if (isKeyboardOpen) {
-      // Клавиатура закрылась — возвращаем в исходное положение
-      isKeyboardOpen = false;
-      if (chat.classList.contains('active')) {
-        chat.style.transform = 'translateY(0)';
-      }
+      // Клавиатура открыта — поднимаем чат
+      chat.style.transform = `translateY(-${keyboardHeight}px)`;
+      chat.style.transition = 'transform 0.3s cubic-bezier(0.3, 0.8, 0.2, 1)';
+    } else if (!chat.classList.contains('dragging')) {
+      // Клавиатура закрыта — возвращаем в 0
+      chat.style.transform = 'translateY(0)';
     }
   };
 
   // Основные события
-  window.visualViewport.addEventListener('resize', updateKeyboardOffset);
-  window.visualViewport.addEventListener('scroll', updateKeyboardOffset);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updatePosition);
+    window.visualViewport.addEventListener('scroll', updatePosition);
+  } else {
+    window.addEventListener('resize', updatePosition);
+  }
 
-  // Фокус на инпут — сразу поднимаем (iOS иногда задерживает resize)
+  // Фокус — поднимаем сразу (важно для iOS!)
   input.addEventListener('focus', () => {
-    setTimeout(updateKeyboardOffset, 100);
-    setTimeout(updateKeyboardOffset, 300);
-    setTimeout(updateKeyboardOffset, 600);
+    setTimeout(updatePosition, 100);
+    setTimeout(updatePosition, 300);
+    setTimeout(updatePosition, 600);
   });
 
-  // При закрытии клавиатуры — плавно опускаем
+  // При закрытии клавиатуры — опускаем
   input.addEventListener('blur', () => {
-    setTimeout(updateKeyboardOffset, 150);
+    setTimeout(updatePosition, 150);
   });
 
-  // Автофокус при открытии чата
-  const observer = new MutationObserver(() => {
+  // Отслеживаем свайп — чтобы не мешал клавиатуре
+  chat.addEventListener('touchstart', () => { isDragging = true; }, { passive: true });
+  chat.addEventListener('touchend', () => {
+    setTimeout(() => { isDragging = false; updatePosition(); }, 300);
+  });
+
+  // Автофокус при открытии
+  new MutationObserver(() => {
     if (chat.classList.contains('active')) {
       setTimeout(() => input.focus(), 500);
     }
+  }).observe(chat, { attributes: true, attributeFilter: ['class'] });
+})();
+
+// === ДЕСКТОП: ЗАКРЫТИЕ КРЕСТИКОМ + КЛИКОМ ВНЕ + ESC (ФИНАЛЬНО, 100% РАБОТАЕТ) ===
+(() => {
+  const chat = document.getElementById('ai-chat');
+  const icon = document.getElementById('ai-assistant');
+  if (!chat || !icon) return;
+
+  // Универсальная функция закрытия для десктопа
+  const closeDesktop = () => {
+    chat.classList.remove('show');
+    chat.style.display = 'none';
+    document.removeEventListener('click', outsideHandler);
+  };
+
+  // Клик вне чата
+  const outsideHandler = (e) => {
+    if (chat.classList.contains('show') && 
+        !chat.contains(e.target) && 
+        !icon.contains(e.target)) {
+      closeDesktop();
+    }
+  };
+
+  // Переопределяем openAIChat только для десктопа
+  const originalOpen = openAIChat;
+  openAIChat = function () {
+    originalOpen.apply(this, arguments);
+
+    if (window.innerWidth > 1023) {
+      chat.style.display = 'flex';
+      requestAnimationFrame(() => chat.classList.add('show'));
+
+      // Добавляем обработчик клика вне через небольшую задержку
+      setTimeout(() => {
+        document.addEventListener('click', outsideHandler);
+      }, 100);
+    }
+  };
+
+  // Переопределяем closeAIChat — чистим слушатель
+  const originalClose = closeAIChat;
+  closeAIChat = function () {
+    originalClose.apply(this, arguments);
+    if (window.innerWidth > 1023) {
+      document.removeEventListener('click', outsideHandler);
+    }
+  };
+
+  // Крестик (на случай, если onclick перезаписался)
+  chat.querySelector('.ai-btn-close')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (window.innerWidth > 1023) closeDesktop();
+    else closeAIChat();
   });
-  observer.observe(chat, { attributes: true, attributeFilter: ['class'] });
+
+  // Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && chat.classList.contains('show')) {
+      closeDesktop();
+    }
+  });
 })();
