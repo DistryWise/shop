@@ -172,7 +172,7 @@
       <button id="sendCodeBtn" class="auth-btn" disabled>Получить код</button>
     </div>
 
-    <!-- ШАГ 2 — ВВОД КОДА -->
+        <!-- ШАГ 2 — ВВОД КОДА -->
     <div id="stepCode" class="auth-step" style="display:none;">
       <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
       <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
@@ -190,6 +190,13 @@
     </div>
   </div>
 </div>
+
+   <div id="stepSuccess" class="success-step" style="display:none;">
+    <i class="fas fa-check-circle success-icon"></i>
+    <h3 class="success-title">Добро пожаловать!</h3>
+    <p class="success-subtitle">Вы успешно вошли как <span id="welcomePhone"></span></p>
+    <div class="success-emoji">party-popper</div>
+    </div>
     <!-- === РАБОЧАЯ APPLE КАРТОЧКА БЕЗ ЗАГЛУШЕК === -->
     <div class="product-modal" id="productModal">
       <div class="product-content">
@@ -1533,130 +1540,88 @@ window.addEventListener('orientationchange', () => setTimeout(setVH, 100));
 </script>
 
 <script>
-  // Мобильное боковое меню — работает на всех страницах
-  document.getElementById('openSidebarMenu')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    document.getElementById('mobileSidebar').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  });
-
-  document.getElementById('closeSidebar')?.addEventListener('click', () => {
-    document.getElementById('mobileSidebar').classList.remove('open');
-    document.body.style.overflow = '';
-  });
-
-  // Опционально: закрытие по клику вне шторки
-  document.getElementById('mobileSidebar')?.addEventListener('click', (e) => {
-    if (e.target === e.currentTarget) {
-      document.getElementById('mobileSidebar').classList.remove('open');
-      document.body.style.overflow = '';
-    }
-  });
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  // Ждём, пока шаг с кодом станет видимым
-
-  const observer = new MutationObserver(() => {
-    const stepCode = document.getElementById('stepCode');
-    if (!stepCode || stepCode.style.display === 'none') return;
-
-    // Если кнопка уже есть — выходим
-    if (document.querySelector('#stepCode .change-phone-btn')) {
-      observer.disconnect();
-      return;
-    }
-
-    // Создаём и вставляем кнопку
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = 'Изменить номер';
-    btn.className = 'auth-link change-phone-btn';
-    btn.style.cssText = 'margin-top: 16px; font-size: 0.95rem; opacity: 0.9;';
-    
-    btn.onclick = () => {
-      document.getElementById('stepCode').style.display = 'none';
-      document.getElementById('stepPhone').style.display = 'block';
-      document.getElementById('phoneInput').focus();
-      document.getElementById('codeInput').value = '';
-    };
-
-    // Вставляем после кнопки "Войти"
-    const verifyBtn = document.getElementById('verifyCodeBtn');
-    if (verifyBtn) {
-      verifyBtn.parentNode.insertBefore(btn, verifyBtn.nextSibling);
-      verifyBtn.parentNode.insertBefore(document.createElement('br'), verifyBtn.nextSibling);
-    } else {
-      stepCode.appendChild(btn);
-    }
-
-    observer.disconnect(); // больше не следим
-  });
-
-  // Следим за изменением стилей (когда шаг кода открывается)
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['style']
-  });
-
-  // На всякий случай проверим и через 2 секунды
-  setTimeout(() => observer.takeRecords && observer.disconnect(), 4000);
-});
-</script>
-
-<script>
-// МОБИЛЬНАЯ ШТОРКА — СВАЙП ВЛЕВО ДЛЯ ЗАКРЫТИЯ (работает на 100% в 2025)
-document.addEventListener('DOMContentLoaded', () => {
+// === МОБИЛЬНЫЙ САЙДБАР — РАБОЧАЯ ВЕРСИЯ 2025 из news.html (100% работает везде!) ===
+document.addEventListener("DOMContentLoaded", () => {
   const sidebar = document.getElementById('mobileSidebar');
   if (!sidebar) return;
 
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let isSwiping = false;
+  let startX = 0;
+  let isDragging = false;
+  const threshold = 80;
 
-  sidebar.addEventListener('touchstart', e => {
-    if (e.target.closest('a, button, input, textarea')) return; // не мешать кликам
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    isSwiping = true;
-  }, { passive: true });
+  const close = () => {
+    sidebar.classList.remove('open');
+    document.body.classList.remove('sidebar-open');
+    document.body.style.overflow = '';
+  };
 
-  sidebar.addEventListener('touchmove', e => {
-    if (!isSwiping) return;
+  const handleStart = (e) => {
+    if (!sidebar.classList.contains('open')) return;
+    startX = e.touches?.[0].clientX || e.clientX;
+    isDragging = true;
+    sidebar.style.transition = 'none';
+  };
 
-    const currentX = e.touches[0].clientX;
-    const diffX = currentX - touchStartX;
-    const diffY = Math.abs(e.touches[0].clientY - touchStartY);
+  const handleMove = (e) => {
+    if (!isDragging) return;
+    const currentX = e.touches?.[0].clientX || e.clientX;
+    const diff = currentX - startX;
 
-    // Если тянет влево и это не вертикальный скролл
-    if (diffX < 0 && Math.abs(diffX) > diffY && Math.abs(diffX) > 30) {
-      sidebar.style.transform = `translateX(${diffX}px)`;
-      sidebar.style.transition = 'none';
+    if (diff < 0) { // только влево
+      e.preventDefault();
+      sidebar.style.transform = `translateX(${diff}px)`;
     }
-  }, { passive: true });
+  };
 
-  sidebar.addEventListener('touchend', () => {
-    if (!isSwiping) return;
-    isSwiping = false;
+  const handleEnd = (e) => {
+    if (!isDragging) return;
+    isDragging = false;
 
-    const currentTransform = sidebar.style.transform;
-    const currentX = currentTransform ? parseInt(currentTransform.match(/-?\d+/)?.[0] || '0') : 0;
+    const currentX = e.changedTouches?.[0]?.clientX || e.clientX || startX;
+    const diff = currentX - startX;
 
-    // Если оттянул больше чем на 100px — закрываем
-    if (currentX < -100) {
-      sidebar.classList.remove('open');
-      document.body.style.overflow = '';
+    if (diff < -threshold) {
+      sidebar.style.transition = 'transform 0.44s cubic-bezier(0.22, 1, 0.36, 1)';
+      sidebar.style.transform = 'translateX(-100%)';
+      setTimeout(() => {
+        close();
+        sidebar.style.transition = '';
+        sidebar.style.transform = '';
+      }, 450);
+    } else {
+      sidebar.style.transition = 'transform 0.38s cubic-bezier(0.2, 0.9, 0.3, 1)';
+      sidebar.style.transform = 'translateX(0)';
+      setTimeout(() => {
+        sidebar.style.transition = '';
+      }, 380);
     }
+  };
 
-    // Возвращаем на место
-    sidebar.style.transform = '';
-    sidebar.style.transition = '';
+  // Открытие
+  document.getElementById('openSidebarMenu')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    sidebar.classList.add('open');
+    document.body.classList.add('sidebar-open');
+    document.body.style.overflow = 'hidden';
+  });
+
+  // Закрытие по кнопке
+  document.getElementById('closeSidebar')?.addEventListener('click', close);
+
+  // Свайп + клик вне
+  document.addEventListener('touchstart', handleStart, { passive: true });
+  document.addEventListener('touchmove', handleMove, { passive: false });
+  document.addEventListener('touchend', handleEnd);
+
+  // Клик вне шторки
+  document.addEventListener('click', (e) => {
+    if (sidebar.classList.contains('open') &&
+        !e.target.closest('#mobileSidebar') &&
+        !e.target.closest('#openSidebarMenu')) {
+      close();
+    }
   });
 });
 </script>
-
 </body>
 </html>

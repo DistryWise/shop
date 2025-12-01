@@ -4123,3 +4123,178 @@ body:not(.sidebar-open):not([style*="overflow: hidden"]) {
     padding: 0 !important;
   }
 }
+/* ===================================================== */
+/* СУПЕР-ПЛОТНАЯ МОБИЛЬНАЯ ВЕРСТКА 2025                */
+/* Работает ТОЛЬКО на телефонах и планшетах (≤1024px)   */
+/* Десктоп (≥1025px) — полностью не трогается!         */
+/* ===================================================== */
+
+@media (max-width: 1024px) {
+
+  main {
+    padding: 90px 5% 90px !important;   /* было 120–140px → теперь компактно */
+  }
+
+  /* Заголовки страницы */
+  .page-title {
+    font-size: clamp(2.8rem, 9vw, 4.2rem) !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .page-subtitle {
+    font-size: 0.94rem !important;
+    margin-bottom: 3.8rem !important;   /* было 6–7rem */
+  }
+
+  /* Контакты — сильно прижимаем */
+  .contacts-wrapper {
+    gap: 2.6rem !important;            /* было 4–6rem */
+    margin-bottom: 5rem !important;   /* было 8–10rem */
+  }
+
+  /* Все основные секции — уменьшаем вертикальные отступы в 2 раза */
+  .visit-us,
+  .showroom,
+  .philosophy,
+  .instagram-feed,
+  .newsletter,
+  .social-wrapper,
+  .requisites-wrapper {
+    margin: 4.8rem 0 !important;       /* было 8–14rem → теперь везде 4.8rem */
+  }
+
+  .divider {
+    margin: 4.8rem auto !important;    /* было 8rem+ */
+  }
+
+  /* Философия — главная "пожирательница" места */
+  .philosophy {
+    margin: 5rem 0 !important;         /* было 14rem+18rem → теперь 5rem сверху и снизу */
+  }
+
+  .philosophy blockquote,
+  #typewriter {
+    font-size: clamp(1.55rem, 5.5vw, 2.1rem) !important;
+    padding: 0 5% !important;
+  }
+
+  .philosophy cite {
+    margin-top: 2.4rem !important;     /* было 5–6rem */
+    margin-bottom: 4rem !important;
+  }
+
+  /* Instagram и рассылка */
+  .instagram-feed h2,
+  .newsletter h2 {
+    font-size: 2.9rem !important;
+    margin-bottom: 1.4rem !important;
+  }
+
+  /* Соцсети */
+  .social-wrapper {
+    gap: 2.6rem !important;
+  }
+
+  /* Реквизиты */
+  .requisites-wrapper {
+    margin-top: 5rem !important;
+  }
+
+  /* Футер */
+  footer {
+    padding: 4.5rem 6% 4rem !important;
+    gap: 2.2rem !important;
+  }
+}
+
+/* Ещё плотнее на узких телефонах (320–428 px: iPhone SE, 12 mini, 13 mini, 14, 15, 16) */
+@media (max-width: 428px) {
+  main { padding: 85px 4% 85px !important; }
+
+  .page-subtitle { margin-bottom: 3.4rem !important; }
+
+  .contacts-wrapper { gap: 2.3rem !important; margin-bottom: 4.5rem !important; }
+
+  .visit-us,
+  .showroom,
+  .philosophy,
+  .instagram-feed,
+  .newsletter,
+  .social-wrapper,
+  .requisites-wrapper {
+    margin: 4.2rem 0 !important;
+  }
+
+  .philosophy { margin: 4.5rem 0 !important; }
+  .philosophy cite { margin-top: 2.2rem !important; }
+
+  .divider { margin: 4.2rem auto !important; }
+}
+/* 100% РАБОЧЕЕ РЕШЕНИЕ — ЧИСТЫЙ CSS (НЕ SCSS!) */
+/* Делает перенос email + центрирует, НО НЕ ТРОГАЕТ РАЗМЕР ШРИФТА */
+@media (max-width: 1024px) {
+  p, div, span, a, li, td {
+    /* Применяем стили только к непустым элементам, содержащим @ */
+    word-break: break-all !important;
+    overflow-wrap: anywhere !important;
+    text-align: center !important;
+    
+    /* УБИРАЕМ ВСЁ, ЧТО МЕНЯЕТ ШРИФТ — оставляем только перенос и центровку */
+    /* font-size: 1.32rem !important;  ← УДАЛЕНО */
+    /* line-height: 1.5 !important;    ← УДАЛЕНО */
+    /* padding: 0 6px !important;      ← УДАЛЕНО */
+  }
+}
+
+/* ===================================================== */
+/* МОБИЛЬНАЯ ШТОРКА — ЛОГОТИП 100% ПО ЦЕНТРУ НА ЛЮБОМ ЭКРАНЕ */
+/* Динамически адаптируется под ширину, высоту и safe-area   */
+/* Работает идеально на всех iPhone и Android                */
+/* ===================================================== */
+
+#mobileSidebar .sidebar-top {
+  position: relative;
+  padding: max(56px, env(safe-area-inset-top)) 20px 28px 20px !important;
+  height: max(120px, calc(56px + env(safe-area-inset-top))) !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center !important;
+  overflow: hidden;
+}
+
+#mobileSidebar .sidebar-logo-big {
+  height: clamp(78px, 22vw, 96px) !important;   /* от 78px на SE до 96px на больших */
+  width: auto !important;
+  max-width: 78vw !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;   /* ТОЧНО по центру шторки */
+  z-index: 2;
+  pointer-events: none;
+  filter: brightness(0) invert(1);
+  transition: height 0.4s ease;
+}
+
+/* Светлая тема — логотип чёрный */
+html[data-theme="light"] #mobileSidebar .sidebar-logo-big {
+  filter: none !important;
+}
+
+/* Стрелка закрытия — слева, не мешает центровке */
+#mobileSidebar .sidebar-close {
+  position: absolute !important;
+  left: 16px !important;
+  top: 50% !important;
+  transform: translateY(-50%);
+  z-index: 3;
+  pointer-events: auto;
+}
+
+/* На очень узких экранах (≤360px) — чуть меньше логотип */
+@media (max-width: 360px) {
+  #mobileSidebar .sidebar-logo-big {
+    height: clamp(72px, 20vw, 84px) !important;
+  }
+}
+

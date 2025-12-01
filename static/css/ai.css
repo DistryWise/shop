@@ -483,3 +483,36 @@ html[data-theme="light"] .ai-chat-input button:active {
 .ai-chat-modal.dragging {
   transition: none !important;
 }
+
+/* === КРИТИЧЕСКИ ВАЖНО: ПОДЪЁМ СТРОКИ ВВОДА НАД КЛАВИАТУРОЙ === */
+@media (max-width: 1023px) {
+  .ai-chat-input {
+    position: fixed !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: calc(100% - 2rem) !important;
+    max-width: 480px !important;
+    box-sizing: border-box !important;
+    z-index: 9999 !important;
+    background: var(--bg, rgba(0,0,0,0.92)) !important;
+    border-top: 1px solid rgba(255,255,255,0.1) !important;
+    padding: 12px 16px !important;
+    padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
+    transition: bottom 0.32s cubic-bezier(0.22, 0.88, 0.36, 1) !important;
+  }
+
+  html[data-theme="light"] .ai-chat-input {
+    background: rgba(255,255,255,0.98) !important;
+    border-top-color: rgba(0,0,0,0.12) !important;
+  }
+
+  /* Когда клавиатура открыта — поднимаем строку ввода */
+  .ai-chat-modal.keyboard-open .ai-chat-input {
+    bottom: env(keyboard-inset-height, 280px) !important; /* магия 2025 */
+  }
+
+  /* По умолчанию — прижата к низу экрана */
+  .ai-chat-input {
+    bottom: 0 !important;
+  }
+}

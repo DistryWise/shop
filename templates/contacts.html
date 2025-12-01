@@ -7,7 +7,14 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-
+<meta http-equiv="Content-Security-Policy" content="
+  default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: blob:;
+  script-src * 'self' 'unsafe-inline' 'unsafe-eval' https://api-maps.yandex.ru https://unpkg.com;
+  style-src * 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com;
+  img-src * 'self' data: https:;
+  frame-src * data: https://yandex.ru https://www.google.com;
+  connect-src * 'self' https:;
+">
 
   <link rel="stylesheet" href="/static/css/search.css">
   <link rel="stylesheet" href="/static/css/auth.css">
@@ -94,13 +101,13 @@
   <span class="cart-count" id="mobileCartCount">0</span> <!-- отдельный счётчик для мобилки, если хочешь -->
 </button>
 
-  <button class="bottom-bar-btn" id="feedbackBtn" data-label="Поддержка">
+<button class="bottom-bar-btn" id="feedbackBtnMobile" data-label="Поддержка">
   <i class="fas fa-envelope"></i>
 </button>
 </nav>
 
-<!-- ШТОРКА СЛЕВА — ТОЛЬКО НАВИГАЦИЯ + ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ -->
-<!-- НОВАЯ МОБИЛЬНАЯ ШТОРКА — APPLE 2025 STYLE -->
+
+<!-- НОВАЯ МОБИЛЬНАЯ ШТОРКА -->
 <div class="mobile-sidebar" id="mobileSidebar">
 
   <!-- ВЕРХ: большой логотип + кнопка закрытия слева -->
@@ -479,6 +486,7 @@
     <div class="visit-us"><h2>VISIT US</h2><p>Мы всегда рады видеть вас в нашем магазине. Подпишитесь,чтобы быть в курсе новых событий.</p></div>
     <div class="divider"></div>
     <div class="showroom"><h2>SHOWROOM</h2><p>Приходите в любое время<br>Калининград, ул. Балашовская,4</p></div>
+    
     <div class="philosophy"><blockquote><span class="typewriter" id="typewriter"></span></blockquote><cite>PILIGRIM MANIFESTO</cite></div>
 <div class="instagram-feed">
   <h2>TELEGRAM</h2>

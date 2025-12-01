@@ -237,89 +237,103 @@ setTimeout(showGreeting, 3000);
   document.addEventListener('mouseup', end);
 })();
 
-// === ПОДЪЁМ ЧАТА НАД КЛАВИАТУРОЙ — КАК В ТЕЛЕГРАММЕ (2025, работает везде) ===
-// === УНИВЕРСАЛЬНЫЙ ПОДЪЁМ ЧАТА НАД КЛАВИАТУРОЙ — РАБОТАЕТ НА ЛЮБОМ ТЕЛЕФОНЕ 2025 ГОДА ===
 (() => {
   const chat = document.getElementById('ai-chat');
+  const inputWrapper = chat?.querySelector('.ai-chat-input');
   const input = chat?.querySelector('#ai-input');
-  if (!chat || !input || window.innerWidth > 1023) return;
+  if (!chat || !inputWrapper || !input) return;
 
-  let isDragging = false;
-  let initialViewportHeight = window.visualViewport?.height || window.innerHeight;
-
-  const updatePosition = () => {
-    if (isDragging) return;
-
-    // Текущая высота видимой области
-    const currentViewportHeight = window.visualViewport?.height || window.innerHeight;
-    const diff = initialViewportHeight - currentViewportHeight;
-
-    // Клавиатура считается открытой, если экран уменьшился минимум на 100px
-    if (diff > 100) {
-      // Самая главная хитрость 2025 года:
-      // На iPhone используем именно diff (не offsetTop!)
-      // На Android тоже diff даёт точную высоту клавиатуры
-      chat.style.transform = `translateY(-${diff}px)`;
-      chat.style.transition = 'transform 0.34s cubic-bezier(0.2, 0.85, 0.2, 1)';
+  // 1. Добавляем класс keyboard-open (нужен для CSS с env(keyboard-inset-height))
+  const updateKeyboardClass = () => {
+    const diff = (window.visualViewport?.height || window.innerHeight) - 
+                 (window.visualViewport?.height || window.innerHeight);
+    if (diff > 120) {
+      chat.classList.add('keyboard-open');
     } else {
-      // Клавиатура закрыта
-      if (chat.classList.contains('active') && !chat.classList.contains('dragging')) {
-        chat.style.transform = 'translateY(0)';
-      }
+      chat.classList.remove('keyboard-open');
     }
   };
 
-  // Запоминаем высоту экрана при открытии чата (до появления клавиатуры)
-  const saveInitialHeight = () => {
-    initialViewportHeight = window.visualViewport?.height || window.innerHeight;
-  };
-
-  // События
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', () => {
-      updatePosition();
-      // На некоторых телефонах resize срабатывает с задержкой — дублируем
-      setTimeout(updatePosition, 100);
-    });
-  } else {
-    window.addEventListener('resize', updatePosition);
+    window.visualViewport.addEventListener('resize', updateKeyboardClass);
   }
 
-  // При фокусе — сразу сохраняем начальную высоту и поднимаем
-  input.addEventListener('focus', () => {
-    saveInitialHeight();
-    setTimeout(updatePosition, 50);
-    setTimeout(updatePosition, 250);
-    setTimeout(updatePosition, 500);
-  });
+  // 2. Убираем баг с залипанием клавиатуры на iOS при быстром закрытии
+  const originalClose = closeAIChat;
+  closeAIChat = function() {
+    originalClose();
+    input.blur(); // ← критичная строчка
+    setTimeout(() => input.blur(), 100); // двойная страховка
+  };
 
-  // При закрытии клавиатуры — плавно опускаем
-  input.addEventListener('blur', () => {
-    setTimeout(updatePosition, 150);
-  });
+  // 3. Фиксим баг с белой полосой снизу при открытой клавиатуре
+  const fixBottomGap = () => {
+    if (!chat.classList.contains('active')) return;
+    const hasKeyboard = chat.classList.contains('keyboard-open');
+    chat.style.paddingBottom = hasKeyboard ? `${window.visualViewport?.offsetTop || 0}px` : '';
+  };
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', fixBottomGap);
+  }
 
-  // Отслеживаем свайп вниз (чтобы не конфликтовал с клавиатурой)
-  chat.addEventListener('touchstart', () => isDragging = true, { passive: true });
-  chat.addEventListener('touchend', () => {
-    setTimeout(() => {
-      isDragging = false;
-      updatePosition();
-    }, 250);
-  });
-  chat.addEventListener('touchcancel', () => {
-    setTimeout(() => {
-      isDragging = false;
-      updatePosition();
-    }, 250);
-  });
-
-  // Автофокус при открытии чата
-  new MutationObserver((mutations) => {
-    if (chat.classList.contains('active')) {
-      saveInitialHeight();
-      setTimeout(() => input.focus(), 450);
+  // 4. Авто-фокус + прокрутка вниз при открытии (особенно после возврата из фона)
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && chat.classList.contains('active')) {
+      setTimeout(() => {
+        input.focus();
+        const messages = chat.querySelector('.ai-chat-messages');
+        if (messages) messages.scrollTop = messages.scrollHeight;
+      }, 300);
     }
-  }).observe(chat, { attributes: true, attributeFilter: ['class'] });
+  });
+
+  // 5. Запрещаем масштабирование страницы при двойном тапе (iOS Safari)
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) {
+      e.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, { passive: false });
+
+  // 6. Убираем выделение текста при долгом тапе в чате
+  chat.style.userSelect = 'none';
+  chat.style.webkitUserSelect = 'none';
+  chat.querySelector('.ai-chat-messages').style.userSelect = 'text'; // только сообщения можно выделять
+
+  // 7. Добавляем вибрацию при отправке сообщения (только на мобильных)
+  const sendBtn = inputWrapper.querySelector('button');
+  if (sendBtn && 'vibrate' in navigator) {
+    sendBtn.addEventListener('click', () => navigator.vibrate?.(30));
+  }
+
+  // 8. Плавная подсветка кнопки отправки при наборе текста
+  input.addEventListener('input', () => {
+    if (input.value.trim()) {
+      sendBtn.style.transform = 'scale(1.08)';
+      sendBtn.style.boxShadow = '0 0 20px rgba(212,175,55,0.6)';
+    } else {
+      sendBtn.style.transform = '';
+      sendBtn.style.boxShadow = '';
+    }
+  });
+
+  // 9. Поддержка отправки по Enter (но не по Shift+Enter)
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendBtn.click();
+    }
+  });
+
+  // 10. Авто-ресайз textarea (если вдруг захочешь многострочный ввод)
+  input.style.height = 'auto';
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  });
+
 })();
 
 // === ДЕСКТОП: ЗАКРЫТИЕ КРЕСТИКОМ + КЛИКОМ ВНЕ + ESC (ФИНАЛЬНО, 100% РАБОТАЕТ) ===

@@ -417,15 +417,39 @@ const handleCodeInput = () => {
   const SAVED_PHONE_KEY = 'auth_pending_phone';
 
   // Переход на шаг ввода кода
+    // Переход на шаг ввода кода — ИСПРАВЛЕННАЯ ВЕРСИЯ 2025
   const goToCodeStep = (fullPhone) => {
     maskedPhone.textContent = fullPhone.replace(/(\d{3})(\d{3})(\d{2})(\d{2})/, '$1 *** ** $4');
     stepPhone.style.display = 'none';
     stepCode.style.display = 'block';
+    codeInput.value = '';
     codeInput.focus();
 
-    if (!document.querySelector('.change-phone-btn')) {
-      stepCode.appendChild(changePhoneBtn);
-    }
+    // ←←← ИСПРАВЛЕНИЕ №1: УДАЛЯЕМ ВСЕ СТАРЫЕ КНОПКИ
+    document.querySelectorAll('.change-phone-btn').forEach(btn => btn.remove());
+
+    // ←←← ИСПРАВЛЕНИЕ №2: СОЗДАЁМ СВЕЖУЮ КНОПКУ КАЖДЫЙ РАЗ
+    const newBtn = document.createElement('button');
+    newBtn.textContent = 'Изменить номер';
+    newBtn.className = 'change-phone-btn';
+    newBtn.style.cssText = `
+      background:transparent;color:#888;font-size:0.95rem;margin-top:12px;
+      border:none;cursor:pointer;text-decoration:underline;
+    `;
+    newBtn.onclick = () => {
+      localStorage.removeItem(SAVED_PHONE_KEY);
+      stepCode.style.display = 'none';
+      stepPhone.style.display = 'block';
+      phoneInput.value = '';
+      phoneInput.focus();
+      document.querySelectorAll('.change-phone-btn').forEach(b => b.remove());
+      resendTimerActive = false;
+      resendCode.textContent = 'Отправить код заново';
+      resendCode.style.pointerEvents = 'none';
+      resendCode.style.opacity = '0.6';
+    };
+
+    stepCode.appendChild(newBtn); // добавляем новую кнопку
     startResendTimer();
   };
 
