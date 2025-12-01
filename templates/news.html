@@ -59,21 +59,20 @@
       <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
 
       <div class="cart-wrapper">
-        <button class="icon-btn" id="cartBtn">
-          <i class="fas fa-shopping-bag"></i>
-          <span class="cart-count" id="cartCount">0</span>
-        </button>
-        <div id="miniCartDropdown" class="mini-cart-dropdown">
-          <div class="mini-cart-header"><div class="mini-cart-title">Корзина</div></div>
-          <div class="mini-cart-items" id="miniCartItems">
-            <div class="mini-cart-empty">Корзина пуста</div>
-          </div>
-          <div class="mini-cart-footer">
-            <div class="mini-cart-total" id="miniCartTotal">Итого: 0.00 ₽</div>
-            <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
-          </div>
-        </div>
-      </div>
+  <button class="icon-btn" id="cartBtn">
+    <i class="fas fa-shopping-bag"></i>
+    <span class="cart-count" id="cartCount">0</span>
+  </button><div id="miniCartDropdown" class="mini-cart-dropdown">
+    <div class="mini-cart-header"><div class="mini-cart-title">Корзина</div></div>
+    <div class="mini-cart-items" id="miniCartItems">
+      <div class="mini-cart-empty">Корзина пуста</div>
+    </div>
+    <div class="mini-cart-footer">
+      <div class="mini-cart-total" id="miniCartTotal">Итого: 0.00 ₽</div>
+      <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
+    </div>
+  </div>
+</div>
 
       <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
     </div>
@@ -221,7 +220,20 @@
     </button>
   </form>
 </div>
-
+<!-- ВСТАВЬ ЭТО НА ВСЕ СТРАНИЦЫ (или в общий шаблон) -->
+<div class="custom-alert" id="authAlert">
+  <div class="alert-content">
+    <button class="alert-close">×</button>
+    <div class="alert-icon">
+      <i class="fas fa-user-lock"></i>
+    </div>
+    <div class="alert-text">
+      <strong>Авторизуйтесь</strong>
+      <span>Для отправки сообщения нужно войти в аккаунт</span>
+    </div>
+    <button class="alert-login-btn" id="authBtnFeedback">Войти</button>
+  </div>
+</div>
 <!-- МОДАЛКА АВТОРИЗАЦИИ -->
 <div id="authModal" class="auth-modal">
   <div class="auth-modal-content">
@@ -425,37 +437,39 @@
     </div>
   </div>
 </div>
-<!-- ДЕСКТОПНАЯ МОДАЛКА ОБРАТНОЙ СВЯЗИ (та самая, что была в contacts.html) -->
-<div class="custom-alert" id="feedbackModal">
-  <div class="alert-content">
-    <button class="alert-close" id="closeFeedback">×</button>
 
-    <div class="alert-icon">
-      <i class="fas fa-envelope-open-text"></i>
-    </div>
+  <!-- МОДАЛКА ОБРАТНОЙ СВЯЗИ -->
+  <div class="custom-alert" id="feedbackModal">
+    <div class="alert-content">
+      <button class="alert-close" id="closeFeedback">×</button>
 
-    <div class="alert-text">
-      <strong>Обратная связь</strong>
-      <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
-    </div>
-
-    <form class="contact-form" novalidate id="contactForm">
-      <input type="text" placeholder="Ваше имя" name="name" required />
-      
-      <div class="phone-field-wrapper">
-        <input type="tel" placeholder="+7 (___) ___-__-__" name="phone" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+      <div class="alert-icon">
+        <i class="fas fa-envelope-open-text"></i>
       </div>
-      
-      <input type="email" placeholder="Email" name="email" required />
-      <textarea placeholder="Ваше сообщение" name="message" required></textarea>
 
-      <button type="submit" id="submitBtn" class="alert-login-btn">
-        <span class="btn-text">Отправить сообщение</span>
-        <span class="btn-cooldown">Отправка... <span class="timer">30</span>с</span>
-      </button>
-    </form>
+      <div class="alert-text">
+        <strong>Обратная связь</strong>
+        <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
+      </div>
+
+      <form class="contact-form" novalidate id="contactForm">
+        <input type="text" placeholder="Ваше имя" name="name" required />
+        
+        <div class="phone-field-wrapper">
+          <input type="tel" placeholder="+7 (___) ___-__-__" name="phone" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+          <button type="button" class="edit-phone-btn" style="display:none;">Изменить</button>
+        </div>
+        
+        <input type="email" placeholder="Email" name="email" required />
+        <textarea placeholder="Ваше сообщение" name="message" required></textarea>
+
+        <button type="submit" id="submitBtn" class="alert-login-btn">
+          <span class="btn-text">Отправить сообщение</span>
+          <span class="btn-cooldown">Отправка... <span class="timer">30</span>с</span>
+        </button>
+      </form>
+    </div>
   </div>
-</div>
 
 <!-- МОБИЛЬНАЯ ШТОРКА ФИДБЕКА С ПОЛЕМ ИМЕНИ В ХЕДЕРЕ (как было в contacts.html) -->
 <div class="mobile-feedback-top" id="mobileFeedbackTop" style="display:none;">
@@ -506,6 +520,7 @@
 <script src="/static/js/feedback.js" defer></script>
 <script src="/static/js/ai.js"></script>
 <script src="/static/js/news.js" defer></script>
+
 
 <script defer>
 // =================== contacts-mini.js — только то, что нужно для news.html ===================
@@ -742,5 +757,177 @@ if (sidebar) {
 }
 </script>
 
+<script>
+// === МИНИ-КОРЗИНА — РАБОЧАЯ ВЕРСИЯ ИЗ contacts.js (2025) ===
+document.addEventListener("DOMContentLoaded", () => {
+  const cartBtn = document.getElementById('cartBtn');
+  const miniCart = document.getElementById('miniCartDropdown');
+  if (!cartBtn || !miniCart) return;
+
+  const cartWrapper = cartBtn.closest('.cart-wrapper');
+  let hoverTimeout;
+
+  const openCart = () => {
+    clearTimeout(hoverTimeout);
+    miniCart.classList.add('show');
+    if (typeof updateCart === 'function') updateCart();
+  };
+
+  const closeCart = () => {
+    hoverTimeout = setTimeout(() => {
+      if (!miniCart.matches(':hover') && !cartBtn.matches(':hover')) {
+        miniCart.classList.remove('show');
+      }
+    }, 300);
+  };
+
+  // Hover (только на десктопе)
+  if (window.innerWidth > 860) {
+    cartBtn.addEventListener('mouseenter', openCart);
+    cartWrapper.addEventListener('mouseleave', closeCart);
+    miniCart.addEventListener('mouseenter', () => clearTimeout(hoverTimeout));
+  }
+
+  // Клик (для мобильных + если hover не сработал)
+  cartBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    miniCart.classList.toggle('show');
+    if (miniCart.classList.contains('show') && typeof updateCart === 'function') updateCart();
+  });
+
+  // Закрытие по клику вне
+  document.addEventListener('click', (e) => {
+    if (!cartWrapper.contains(e.target)) {
+      miniCart.classList.remove('show');
+    }
+  });
+
+  // Перейти в корзину
+  document.getElementById('goToCartBtn')?.addEventListener('click', () => {
+    location.href = '/bin';
+  });
+});
+</script>
+<script defer>
+// === ОБРАТНАЯ СВЯЗЬ — ПОЛНАЯ БЛОКИРОВКА БЕЗ АВТОРИЗАЦИИ (ПК + МОБИЛКА) ===
+document.addEventListener("DOMContentLoaded", () => {
+
+  const isAuthenticated = () => !!(sessionStorage.getItem('phone') || localStorage.getItem('phone'));
+
+  // Тост-алерт (один раз)
+  if (!window.showCustomAlert) {
+    window.showCustomAlert = (text, isError = true) => {
+      document.querySelectorAll('.toast-alert').forEach(t => t.remove());
+      const toast = document.createElement('div');
+      toast.className = `toast-alert ${isError ? 'error' : ''}`;
+      toast.innerHTML = `
+        <div class="alert-text">
+          <strong>${isError ? 'Ошибка' : 'Успех'}</strong>
+          <span>${text}</span>
+        </div>
+        <button class="alert-close">×</button>
+      `;
+      document.body.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.add('show'));
+      toast.querySelector('.alert-close').onclick = () => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 500);
+      };
+      setTimeout(() => toast.isConnected && toast.classList.remove('show') && setTimeout(() => toast.remove(), 500), 5000);
+    };
+  }
+
+  // === УДАЛЯЕМ ВСЕ СТАРЫЕ ОБРАБОТЧИКИ НА КНОПКАХ ===
+  ['#feedbackBtn', '#feedbackBtnMobile'].forEach(selector => {
+    document.querySelectorAll(selector).forEach(btn => {
+      const newBtn = btn.cloneNode(true);
+      btn.replaceWith(newBtn);
+    });
+  });
+
+  // === ДЕСКТОПНАЯ КНОПКА (ПК) ===
+  document.getElementById('feedbackBtn')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
+    if (!isAuthenticated()) {
+      showCustomAlert('Войдите в аккаунт', true);
+      return;
+    }
+
+    // ТОЛЬКО если это ПК — открываем десктопную модалку
+    if (window.innerWidth > 1024) {
+      const modal = document.getElementById('feedbackModal');
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+
+      // Подставляем телефон
+      const phone = sessionStorage.getItem('phone') || localStorage.getItem('phone');
+      if (phone) {
+        const clean = phone.replace(/\D/g, '');
+        const formatted = clean.length === 11 
+          ? `+7 (${clean.slice(1,4)}) ${clean.slice(4,7)}-${clean.slice(7,9)}-${clean.slice(9)}`
+          : phone;
+        const input = modal.querySelector('input[type="tel"]');
+        if (input) input.value = formatted;
+        const editBtn = modal.querySelector('.edit-phone-btn');
+        if (editBtn) editBtn.style.display = 'block';
+      }
+    }
+  });
+
+  // === МОБИЛЬНАЯ КНОПКА ===
+  document.getElementById('feedbackBtnMobile')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
+    if (!isAuthenticated()) {
+      showCustomAlert('Войдите в аккаунт', true);
+      return;
+    }
+
+    // ТОЛЬКО если это мобилка — открываем шторку
+    if (window.innerWidth <= 1024) {
+      const sheet = document.getElementById('mobileFeedbackSheet');
+      sheet.classList.add('active');
+      document.body.style.overflow = 'hidden';
+
+      const phone = sessionStorage.getItem('phone') || localStorage.getItem('phone');
+      if (phone) {
+        const clean = phone.replace(/\D/g, '');
+        const formatted = clean.length === 11 
+          ? `+7 (${clean.slice(1,4)}) ${clean.slice(4,7)}-${clean.slice(7,9)}-${clean.slice(9)}`
+          : phone;
+        const input = sheet.querySelector('input[type="tel"]');
+        if (input) input.value = formatted;
+      }
+    }
+  });
+
+  // === ЗАКРЫТИЕ МОДАЛОК (чтобы не было конфликтов) ===
+  document.getElementById('closeFeedback')?.addEventListener('click', () => {
+    document.getElementById('feedbackModal').classList.remove('show');
+    document.body.style.overflow = '';
+  });
+
+  document.getElementById('feedbackModal')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('feedbackModal')) {
+      document.getElementById('feedbackModal').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+  });
+
+  // Мобильная шторка — закрытие
+  document.querySelectorAll('#closeMobileFeedback, .sheet-back-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('mobileFeedbackSheet').classList.remove('active');
+      document.body.style.overflow = '';
+    });
+  });
+});
+</script>
 </body>
 </html>

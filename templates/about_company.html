@@ -767,5 +767,29 @@ function handleSwipe() {
   if (touchEndX > touchStartX + 50) prevFullSlide();   // вправо → предыдущий
 }
 </script>
+
+<script>
+  // Мобильное боковое меню — работает на всех страницах
+  document.getElementById('openSidebarMenu')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('mobileSidebar').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  });
+
+  document.getElementById('closeSidebar')?.addEventListener('click', () => {
+    document.getElementById('mobileSidebar').classList.remove('open');
+    document.body.style.overflow = '';
+  });
+
+  // Опционально: закрытие по клику вне шторки
+  document.getElementById('mobileSidebar')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) {
+      document.getElementById('mobileSidebar').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  });
+</script>
+
+
 </body>
 </html>

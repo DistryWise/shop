@@ -15,10 +15,135 @@
   <link rel="stylesheet" href="/static/css/cart.css">
   <link rel="stylesheet" href="/static/css/contacts.css">
   <link rel="stylesheet" href="/static/css/ai.css">
-  <link rel="stylesheet" href="/static/css/index.css">
+
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" />
 
+<style>
+  /* ===================== КОНТАКТЫ — ТОЧНО КАК ТЫ ХОЧЕШЬ ===================== */
+#contact {
+  position: relative;
+  min-height: 100vh;
+  padding: 12vh 5% 10vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  overflow: hidden;
+}
 
+.contact-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Форма — всегда по центру */
+.form-wrapper {
+  max-width: 680px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
+}
+
+/* ===================== ЛЕВЫЕ ГРАФФИТИ ===================== */
+/* Первый — сильно выше и левее */
+.graffiti-left-wrapper {
+  position: absolute;
+  left: 50%;
+  top: 15%;
+  transform: translate(-180%, -50%);
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* Второй — чуть ниже и ближе к центру */
+.graffiti-right-wrapper {
+  position: absolute;
+  left: 50%;
+  top: 55%;
+  transform: translate(-140%, -50%);
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* ===================== СТРЕЛКА СПРАВА ===================== */
+.simple-arrow-wrapper {
+  position: absolute;
+  right: 8%;
+  top: 50%;
+  width: 420px;
+  max-width: 38vw;
+  transform: translateY(-50%) rotate(-115deg); /* смотрит влево-вниз на форму */
+  pointer-events: none;
+  opacity: 0;
+  animation: arrowAppear 1.6s ease-out 1s forwards;
+  z-index: 8;
+}
+
+.simple-arrow-png {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 20px 40px rgba(255,255,255,0.7));
+  transform: rotate(10deg); /* лёгкий наклон для живости */
+}
+
+/* Анимация появления стрелки */
+@keyframes arrowAppear {
+  to { opacity: 1; }
+}
+
+/* Граффити текст */
+.graffiti-text {
+  font-family: 'Shadows Into Light', cursive;
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  color: #fff;
+  text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+  line-height: 1.35;
+  max-width: 420px;
+  opacity: 0;
+  animation: textAppear 1.2s ease-out forwards;
+}
+
+.graffiti-left .graffiti-text   { animation-delay: 0.4s; }
+.graffiti-right .graffiti-text  { animation-delay: 0.8s; }
+
+@keyframes textAppear {
+  to { opacity: 1; }
+}
+
+/* =============================================== */
+/* АДАПТИВ — всё красиво убирается на маленьких экранах */
+/* =============================================== */
+@media (max-width: 1280px) {
+  .graffiti-left-wrapper  { transform: translate(-160%, -50%); }
+  .graffiti-right-wrapper { transform: translate(-130%, -50%); }
+  .simple-arrow-wrapper   { width: 360px; right: 5%; }
+}
+
+@media (max-width: 1024px) {
+  .graffiti-left-wrapper,
+  .graffiti-right-wrapper,
+  .simple-arrow-wrapper {
+    display: none; /* на планшетах и ниже — чисто и красиво */
+  }
+}
+
+@media (max-width: 768px) {
+  .form-wrapper { padding: 0 1rem; }
+  .contact-form { padding: 2.5rem 2rem; border-radius: 24px; }
+}
+
+/* Светлая тема */
+[data-theme="light"] .graffiti-text {
+  color: #111;
+  text-shadow: 3px 3px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;
+}
+[data-theme="light"] .simple-arrow-png {
+  filter: brightness(0) drop-shadow(0 20px 40px rgba(0,0,0,0.6));
+}
+</style>
 </head>
 <body>
 
@@ -178,6 +303,7 @@
       <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
       <button id="verifyCodeBtn" class="auth-btn">Войти</button>
       <button id="resendCode" class="auth-link">Отправить повторно</button>
+
     </div>
 
     <!-- ШАГ 3 — УСПЕШНЫЙ ВХОД -->
@@ -554,11 +680,11 @@
 </footer>
 
   <script src="/static/js/search.js"></script>
-  <script src="/static/js/auth.js"></script>
-  <script src="/static/js/cart.js"></script>      
-  <script src="/static/js/feedback.js"></script>  
-  <script src="/static/js/ai.js"></script>
+  <script src="/static/js/auth.js" defer></script>
+  <script src="/static/js/cart.js" defer></script>
+  <script src="/static/js/feedback.js"></script>
   <script src="/static/js/contacts.js"></script>
+  <script src="/static/js/ai.js"></script>
 
 
   <script>
@@ -978,9 +1104,7 @@ document.querySelector('.carousel-container')?.addEventListener('touchend', e =>
   loadCarousel();
 });
 </script>
-
-
-  
+ 
 <script>
   // === УЛЬТРА-ФИКС: ОТКРЫТИЕ КАРТОЧКИ ТОВАРА ЛЮБЫМ СПОСОБОМ ===
   document.addEventListener('DOMContentLoaded', () => {
@@ -1025,8 +1149,6 @@ document.querySelector('.carousel-container')?.addEventListener('touchend', e =>
 
   
 </script>
-
-
 
 <script>
 // === ФИНАЛЬНАЯ ВЕРСИЯ 6.0 — ВСЁ РАБОТАЕТ: ОТПРАВКА, АЛЕРТЫ, BACKSPACE, ИЗМЕНИТЬ ===
@@ -1535,6 +1657,80 @@ window.addEventListener('resize', setVH);
 window.addEventListener('orientationchange', () => setTimeout(setVH, 100));
 </script>
 
+<script>
+  // Мобильное боковое меню — работает на всех страницах
+  document.getElementById('openSidebarMenu')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.getElementById('mobileSidebar').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  });
+
+  document.getElementById('closeSidebar')?.addEventListener('click', () => {
+    document.getElementById('mobileSidebar').classList.remove('open');
+    document.body.style.overflow = '';
+  });
+
+  // Опционально: закрытие по клику вне шторки
+  document.getElementById('mobileSidebar')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) {
+      document.getElementById('mobileSidebar').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Ждём, пока шаг с кодом станет видимым
+
+  const observer = new MutationObserver(() => {
+    const stepCode = document.getElementById('stepCode');
+    if (!stepCode || stepCode.style.display === 'none') return;
+
+    // Если кнопка уже есть — выходим
+    if (document.querySelector('#stepCode .change-phone-btn')) {
+      observer.disconnect();
+      return;
+    }
+
+    // Создаём и вставляем кнопку
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = 'Изменить номер';
+    btn.className = 'auth-link change-phone-btn';
+    btn.style.cssText = 'margin-top: 16px; font-size: 0.95rem; opacity: 0.9;';
+    
+    btn.onclick = () => {
+      document.getElementById('stepCode').style.display = 'none';
+      document.getElementById('stepPhone').style.display = 'block';
+      document.getElementById('phoneInput').focus();
+      document.getElementById('codeInput').value = '';
+    };
+
+    // Вставляем после кнопки "Войти"
+    const verifyBtn = document.getElementById('verifyCodeBtn');
+    if (verifyBtn) {
+      verifyBtn.parentNode.insertBefore(btn, verifyBtn.nextSibling);
+      verifyBtn.parentNode.insertBefore(document.createElement('br'), verifyBtn.nextSibling);
+    } else {
+      stepCode.appendChild(btn);
+    }
+
+    observer.disconnect(); // больше не следим
+  });
+
+  // Следим за изменением стилей (когда шаг кода открывается)
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['style']
+  });
+
+  // На всякий случай проверим и через 2 секунды
+  setTimeout(() => observer.takeRecords && observer.disconnect(), 4000);
+});
+</script>
 
 </body>
 </html>

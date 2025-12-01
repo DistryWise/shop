@@ -174,8 +174,33 @@ verifyCodeBtn.onclick = async () => {
 
       currentUser = { phone: cleanPhone, id: data.user.id };
 
-      window.dispatchEvent(new Event('storage'));
-      window.dispatchEvent(new CustomEvent('authChanged', { detail: { authenticated: true, phone: cleanPhone, userId: data.user.id } }));
+      // Сразу после успешного входа — вместо двух dispatchEvent
+const notifyAuthChange = () => {
+  // 1. Принудительно обновляем обе кнопки
+  updateAuthBtn();
+  updateMobileAuthBtn();
+
+  // 2. Кидаем ВСЕ возможные события — один из них точно сработает
+  window.dispatchEvent(new Event('storage'));
+  window.dispatchEvent(new Event('authChanged'));
+  window.dispatchEvent(new CustomEvent('authChanged', { 
+    detail: { authenticated: true, phone: cleanPhone, userId: data.user.id } 
+  }));
+  document.dispatchEvent(new Event('authChanged'));
+
+  // 3. Страховка: через 300мс и 800мс ещё раз дёргаем (особенно для iOS)
+  setTimeout(() => {
+    updateAuthBtn();
+    updateMobileAuthBtn();
+  }, 300);
+  setTimeout(() => {
+    updateAuthBtn();
+    updateMobileAuthBtn();
+  }, 800);
+};
+
+// Вызывай вместо старого кода:
+notifyAuthChange();
 
       welcomePhone.innerHTML = `
         <div style="font-size:1.4rem; font-weight:700; margin-top:6px;">
@@ -889,4 +914,23 @@ setTimeout(ensureMobileAuthBtnUpdated, 1000);
 window.addEventListener('authChanged', ensureMobileAuthBtnUpdated);
 window.addEventListener('storage', () => setTimeout(ensureMobileAuthBtnUpdated, 100));
 
+  // Это сработает даже если JS загрузился позже DOM
+  document.addEventListener('DOMContentLoaded', () => {
+    // Проверяем сессию при каждой загрузке страницы
+    if (typeof checkSession === 'function') {
+      checkSession();
+    }
+
+    // И ещё раз через секунду — на случай, если пользователь вернулся из SMS
+    setTimeout(() => {
+      if (typeof checkSession === 'function') checkSession();
+    }, 1000);
+  });
+
+  // А это — если страница уже загружена, но пользователь вернулся из фона
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && typeof checkSession === 'function') {
+      setTimeout(checkSession, 300);
+    }
+  });
 
