@@ -1,0 +1,318 @@
+/* ===================================================== */
+/*  МОБИЛЬНАЯ КОРЗИНА — Apple × Ozon 2025 (тёмная тема)  */
+/* ===================================================== */
+
+:root {
+  --bg: #000;
+  --card-bg: rgba(28, 28, 30, 0.96);
+  --border: rgba(255, 255, 255, 0.08);
+  --text-primary: #fff;
+  --text-secondary: #aaa;
+  --text-tertiary: #888;
+  --accent: #007aff;            /* Apple Blue */
+  --accent-hover: #0a84ff;
+  --red: #ff453a;
+  --green: #30d158;
+  --separator: rgba(255, 255, 255, 0.06);
+  --backdrop: rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="light"] {
+  --bg: #f5f5f7;
+  ;
+  --card-bg: rgba(255, 255, 255, 0.96);
+  --border: rgba(0, 0, 0, 0.08);
+  --text-primary: #000;
+  --text-secondary: #666;
+  --text-tertiary: #888;
+  --separator: rgba(0, 0, 0, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.mobile-cart-page {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ====================== ШАПКА ====================== */
+.mobile-cart-header {
+  position: sticky;
+  top: 0;
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 100;
+  height: 56px;
+}
+
+.mobile-cart-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.mobile-cart-header .count {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.back-btn,
+.clear-cart-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text-primary);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.back-btn:active,
+.clear-cart-btn:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ====================== СПИСОК ====================== */
+#mobileCartItemsList {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 16px 100px;
+  background: var(--bg);
+}
+
+/* Пустая корзина */
+.empty-cart {
+  text-align: center;
+  padding: 80px 20px 40px;
+  color: var(--text-secondary);
+}
+
+.empty-cart i {
+  font-size: 64px;
+  opacity: 0.3;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.empty-cart .title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 16px;
+  margin-bottom: 8px;
+}
+
+.empty-cart .subtitle {
+  font-size: 15px;
+  opacity: 0.7;
+}
+
+/* Карточка товара */
+.cart-item {
+  background: var(--card-bg);
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  display: flex;
+  gap: 14px;
+  padding: 14px;
+  transition: transform 0.2s;
+}
+
+.cart-item:active {
+  transform: scale(0.98);
+}
+
+.cart-item-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #222;
+}
+
+.cart-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cart-item-title {
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 500;
+  margin: 0 0 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cart-item-price {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cart-item-total {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* Управление количеством — Apple-style */
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 6px 10px;
+  align-self: flex-start;
+}
+
+.quantity-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quantity-btn:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.quantity-btn:disabled {
+  opacity: 0.3;
+}
+
+.quantity-value {
+  font-size: 17px;
+  font-weight: 600;
+  min-width: 28px;
+  text-align: center;
+}
+
+/* Кнопка удаления */
+.remove-item-btn {
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 69, 58, 0.15);
+  border: none;
+  border-radius: 50%;
+  color: var(--red);
+  font-size: 18px;
+  align-self: center;
+}
+
+.remove-item-btn:active {
+  background: var(--red);
+  color: white;
+}
+
+/* ====================== ФУТЕР ====================== */
+.mobile-cart-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--card-bg);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-top: 1px solid var(--border);
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  z-index: 1000;
+}
+
+.total {
+  font-size: 15px;
+}
+
+.total .price {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+
+.checkout-btn {
+  flex: 1;
+  height: 52px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 17px;
+  font-weight: 600;
+  margin-left: 12px;
+}
+
+.checkout-btn:active {
+  background: var(--accent-hover);
+  transform: scale(0.97);
+}
+
+.checkout-btn:disabled {
+  background: #333;
+  opacity: 0.4;
+}
+
+/* Светлая тема */
+[data-theme="light"] .mobile-cart-header,
+[data-theme="light"] .mobile-cart-footer,
+[data-theme="light"] .cart-item {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+[data-theme="light"] .quantity-control {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Анимация появления карточек */
+.cart-item {
+  animation: fadeUp 0.4s ease backwards;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+}
+
+/* Плавная прокрутка */
+html {
+  scroll-behavior: smooth;
+}

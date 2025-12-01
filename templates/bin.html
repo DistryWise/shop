@@ -1,22 +1,24 @@
 <!DOCTYPE html>
-<html lang="ru" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+
   <title>Корзина — Piligrim</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
   <!-- Твои основные стили -->
-  <link rel="stylesheet" href="/static/css/contacts.css">
   <link rel="stylesheet" href="/static/css/search.css">
   <link rel="stylesheet" href="/static/css/auth.css">
   <link rel="stylesheet" href="/static/css/cart.css">
-  <link rel="stylesheet" href="/static/css/feedback.css">
   <link rel="stylesheet" href="/static/css/ai.css">
+  <link rel="stylesheet" href="/static/css/contacts.css">
   <link rel="stylesheet" href="/static/css/bins.css">
 
+
+  
   <style>
 @keyframes slideDown {
   from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
@@ -56,22 +58,35 @@
 
         <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
 
-        <div class="cart-wrapper">
-          <button class="icon-btn" id="cartBtn">
-            <i class="fas fa-shopping-bag"></i>
-            <span class="cart-count" id="cartCount">0</span>
-          </button>
-          <div id="miniCartDropdown" class="mini-cart-dropdown">
-            <div class="mini-cart-header"><div class="mini-cart-title">Корзина</div></div>
-            <div class="mini-cart-items" id="miniCartItems">
-              <div class="mini-cart-empty">Корзина пуста</div>
-            </div>
-            <div class="mini-cart-footer">
-              <div class="mini-cart-total" id="miniCartTotal">Итого: 0.00 ₽</div>
-              <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
-            </div>
-          </div>
-        </div>
+       <div class="cart-wrapper" id="desktopCartWrapper">
+  <button class="icon-btn" id="cartBtn">
+    <i class="fas fa-shopping-bag"></i>
+    <span class="cart-count" id="cartCount">0</span>
+  </button>
+
+  <!-- Мини-корзина — 100% рабочая версия 2025 -->
+  <div class="mini-cart-dropdown" id="miniCartDropdown">
+    <div class="mini-cart-header">
+      <div class="mini-cart-title">Корзина</div>
+      <button class="mini-cart-close" id="closeMiniCart">×</button>
+    </div>
+
+    <div class="mini-cart-items" id="miniCartItems">
+      <div class="mini-cart-empty-state">
+        <i class="fas fa-shopping-bag"></i>
+        <p>Корзина пуста</p>
+      </div>
+    </div>
+
+    <div class="mini-cart-footer">
+      <div class="mini-cart-summary">
+        <span>Итого:</span>
+        <strong id="miniCartTotal">0 ₽</strong>
+      </div>
+      <button class="mini-cart-checkout" id="goToCartBtn">Перейти в корзину</button>
+    </div>
+  </div>
+</div>
 
         <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
       </div>
@@ -88,18 +103,18 @@
       <i class="fas fa-user"></i>
     </button>
 
-    <button class="bottom-bar-btn" id="openSidebarMenu" data-label="Меню">
-      <i class="fas fa-home"></i>
+    <button class="bottom-bar-btn active" id="openSidebarMenu" data-label="Меню">
+      <i class="fas fa-bars"></i>
     </button>
 
-    <button class="bottom-bar-btn active" id="mobileCartBtn" data-label="Корзина">
+    <button class="bottom-bar-btn" id="mobileCartBtn" data-label="Корзина">
       <i class="fas fa-shopping-bag"></i>
       <span class="cart-count" id="mobileCartCount">0</span>
     </button>
 
-    <button class="bottom-bar-btn" id="feedbackBtnMobile" data-label="Поддержка">
-      <i class="fas fa-envelope"></i>
-    </button>
+    <button class="bottom-bar-btn" id="feedbackBtn" data-label="Поддержка">
+  <i class="fas fa-envelope"></i>
+</button>
   </nav>
 
   <!-- МОБИЛЬНОЕ МЕНЮ — ШТОРКА СЛЕВА -->
@@ -155,25 +170,45 @@
     <div id="tabletAutocompleteList" class="tablet-autocomplete-list-full"></div>
   </div>
 
-  <!-- МОБИЛЬНЫЙ ПОИСК СВЕРХУ (Wildberries 2025 стиль) -->
-  <div class="mobile-search-top" id="mobileSearchTop">
-    <div class="mobile-search-header">
-      <button class="mobile-search-back" id="closeMobileSearchTop">←</button>
-      <div class="mobile-search-input-wrapper">
-        <i class="fas fa-search"></i>
-        <input type="text" class="mobile-search-input" id="mobileSearchInput" placeholder="Поиск по каталогу..." autocomplete="off">
-        <button class="mobile-search-clear" id="mobileSearchClear">×</button>
-      </div>
+<!-- НОВЫЙ МОБИЛЬНЫЙ ПОИСК — СВЕРХУ, КАК В WILDBERRIES 2025 -->
+<div class="mobile-search-sheet" id="mobileSearchSheet">
+  <div class="mobile-search-header">
+    <div class="sheet-handle"></div>
+    
+    <button class="mobile-search-back" id="closeMobileSearchTop">←</button>
+    
+    <div class="mobile-search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input 
+        type="text" 
+        class="mobile-search-input" 
+        id="mobileSearchInput" 
+        placeholder="Поиск по каталогу..." 
+        autocomplete="off"
+      >
+      <button class="mobile-search-clear" id="mobileSearchClear">×</button>
     </div>
   </div>
 
-  <div class="mobile-search-results" id="mobileSearchResults">
+
+  <!-- Результаты поиска -->
+  <div class="mobile-search-results-content" id="mobileSearchResults">
+    
+    <!-- КРАСИВОЕ ПУСТОЕ СОСТОЯНИЕ — ЭТО ТО САМОЕ, ЧЕГО ТЕБЕ НЕ ХВАТАЛО -->
     <div class="search-empty-state" id="mobileEmptyState">
-      <i class="fas fa-search"></i>
-      <p>Начните вводить запрос...</p>
+      <div class="empty-icon">
+        <i class="fas fa-search"></i>
+      </div>
+      <div class="empty-title">Введите название товара</div>
+      <div class="empty-subtitle">
+        Например: iPhone 16, кроссовки Nike, кофеварка
+      </div>
     </div>
+
+    <!-- Сюда вставляются результаты автокомплита -->
     <div id="mobileAutocompleteList" class="mobile-autocomplete-list"></div>
   </div>
+</div>
 
   <!-- МОБИЛЬНАЯ КОРЗИНА — SHEET -->
   <div class="mobile-cart-sheet" id="mobileCartSheet">
@@ -470,16 +505,6 @@
     </form>
   </div>
 </div>
-  <!-- СКРИПТЫ -->
-   <script src="/static/js/cart.js" defer></script>
-  <script src="/static/js/search.js"></script>
-  <script src="/static/js/auth.js"></script>     
-  <script src="/static/js/feedback.js"></script>
-  <script src="/static/js/contacts.js" defer></script>
-  <script src="/static/js/ai.js"></script>
-  <script src="/static/js/bin.js"></script>
-  <script src="/static/js/statuschain.js" defer></script>
-
 
 <!-- САМАЯ КРАСИВАЯ ЧЁРНО-БЕЛАЯ МОДАЛКА 2025 ГОДА -->
 <div id="checkoutModal" class="modal" style="display:none;">
@@ -1228,7 +1253,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-
 <script>
 // === ЛОВИМ СОБЫТИЯ ИЗ statuschain.js И МГНОВЕННО ОБНОВЛЯЕМ МОДАЛКУ ===
 document.addEventListener('orderStatusChanged', (e) => {
@@ -1251,9 +1275,6 @@ document.addEventListener('orderStatusChanged', () => {
     }
 });
 </script>
-
-
-
 
 <script>
 // ОКОНЧАТЕЛЬНЫЙ НЕПРОБИВАЕМЫЙ КУЛДАУН НА ОТМЕНУ ЗАКАЗОВ — РАБОТАЕТ НА 1000% (2025)
@@ -1408,9 +1429,6 @@ document.head.insertAdjacentHTML('beforeend', `
 `);
 </script>
 
-
-
-
 <!-- ГЛОБАЛЬНЫЕ ФУНКЦИИ ОТКРЫТИЯ/ЗАКРЫТИЯ КАРТОЧКИ ТОВАРА (работают везде) -->
 <script>
 // УНИВЕРСАЛЬНЫЕ ФУНКЦИИ — РАБСОЛЮТНО ВСЕ СТРАНИЦЫ РАБОТАЮТ С НИМИ
@@ -1474,6 +1492,34 @@ document.addEventListener('DOMContentLoaded', () => {
   sidebarToggle.addEventListener('change', () => applyTheme(sidebarToggle.checked));
 });
 </script>
+
+
+<script>
+document.addEventListener('cartUpdated', (e) => {
+  const items = e?.detail?.items || [];
+  document.body.classList.toggle('has-cart-items', items.length > 0);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const check = () => {
+    const hasItems = document.querySelectorAll('#cartItemsList .apple-cart-item').length > 0;
+    document.body.classList.toggle('has-cart-items', hasItems);
+  };
+  check();
+  setTimeout(check, 800);
+});
+</script>
+
+  <!-- СКРИПТЫ -->
+   <script src="/static/js/cart.js" defer></script>
+  <script src="/static/js/search.js"></script>
+  <script src="/static/js/auth.js"></script>     
+  <script src="/static/js/feedback.js"></script>
+  <script src="/static/js/contacts.js" defer></script>
+  <script src="/static/js/ai.js"></script>
+  <script src="/static/js/bin.js"></script>
+  <script src="/static/js/statuschain.js" defer></script>
+
 
 </body>
 </html>

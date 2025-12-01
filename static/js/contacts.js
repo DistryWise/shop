@@ -901,3 +901,49 @@ if (window.matchMedia("(max-width: 1024px)").matches) {
     if (e.key === 'Escape' && sheet.classList.contains('active')) closeSheet();
   });
 })();
+
+
+// === УМНАЯ ТЕМА 2025 — САМЫЙ ЛУЧШИЙ ВАРИАНТ (100% РАБОТАЕТ) ===
+(() => {
+  const html = document.documentElement;
+  const toggles = [
+    document.getElementById('theme-toggle'),
+    document.getElementById('theme-toggle-sidebar')
+  ];
+
+  // Применяем тему (и синхронизируем все тумблеры)
+  const applyTheme = (theme) => {
+    html.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+
+    const isLight = theme === 'light';
+    toggles.forEach(t => t && (t.checked = isLight));
+  };
+
+  // 1. Сначала — сохранённая в localStorage
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light' || saved === 'dark') {
+    applyTheme(saved);
+    return; // всё, дальше не идём
+  }
+
+  // 2. Если ничего не сохранено — слушаем системную тему
+  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    applyTheme('dark');
+  } else {
+    applyTheme('light');
+  }
+
+  // 3. Живое отслеживание изменения системной темы (если пользователь сменил в ОС)
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if (localStorage.getItem('theme')) return; // если пользователь уже выбрал вручную — не трогаем
+    applyTheme(e.matches ? 'dark' : 'light');
+  });
+
+  // 4. Переключение по клику (работает на всех тумблерах)
+  toggles.forEach(toggle => {
+    toggle?.addEventListener('change', () => {
+      applyTheme(toggle.checked ? 'light' : 'dark');
+    });
+  });
+})();

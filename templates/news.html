@@ -24,25 +24,7 @@
 #global-cart-flood-alert i { font-size: 1.8rem; }
 
 </style>
-<style>
-/* ФИКС РАСТЯГИВАНИЯ ТЕКСТА В БОКОВОЙ ШТОРКЕ — РАБОТАЕТ НА ВСЕХ iPhone 2025 */
-body.sidebar-open {
-  position: fixed !important;
-  width: 100% !important;
-  height: 100dvh !important;
-  overflow: hidden !important;
-}
 
-.mobile-sidebar * {
-  vertical-align: baseline !important;
-  line-height: normal !important;
-}
-
-.mobile-sidebar i {
-  line-height: 1 !important;
-  vertical-align: middle !important;
-}
-</style>
 </head>
 <body>
 
@@ -502,6 +484,21 @@ body.sidebar-open {
   </div>
 </div>
 
+<footer>
+  <div class="footer-left">
+    © 2025 Piligrim. Все права защищены.
+  </div>
+  
+  <div class="footer-center">
+    <img src="/static/assets/logo.png" alt="Piligrim">
+  </div>
+  
+  <div class="footer-right">
+    <a href="/privacy">Политика конфиденциальности</a>
+    <a href="/terms">Условия использования</a>
+    <a href="/delivery">Доставка и оплата</a>
+  </div>
+</footer>
 
 <script src="/static/js/search.js" defer></script>
 <script src="/static/js/auth.js" defer></script>

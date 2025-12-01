@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  
   <title>Piligrim — Premium Elegance</title>
 
   <!-- Google Fonts -->
@@ -13,7 +13,6 @@
   <link rel="stylesheet" href="/static/css/search.css">
   <link rel="stylesheet" href="/static/css/auth.css">
   <link rel="stylesheet" href="/static/css/cart.css">
-  <link rel="stylesheet" href="/static/css/feedback.css">
   <link rel="stylesheet" href="/static/css/contacts.css">
   <link rel="stylesheet" href="/static/css/ai.css">
   <link rel="stylesheet" href="/static/css/index.css">
@@ -24,22 +23,24 @@
 <body>
 
   <!-- ХЕДЕР -->
-  <header>
-    <a href="/" class="logo">
-      <img src="/static/assets/logo.png" alt="ZAZA" class="logo-img">
+<!-- ДЕСКТОПНЫЙ ХЕДЕР — теперь 100% как на contacts.html -->
+<header class="main-header desktop-only">
+  <a href="/" class="logo">
+    <img src="/static/assets/logo.png" alt="Piligrim" class="logo-img">
+  </a>
 
-    </a>
+  <nav class="desktop-nav">
+    <a href="#landing" class="nav-link active">Главная</a>
+    <a href="/goods" class="nav-link">Товары</a>
+    <a href="/services" class="nav-link">Услуги</a>
+    <a href="/news" class="nav-link">Новости</a>
+    <a href="/about_company" class="nav-link">О компании</a>
+    <a href="/contacts" class="nav-link">Контакты</a>
+  </nav>
 
-    <nav>
-      <a href="#landing" class="nav-link active">Главная</a>
-      <a href="/goods" class="nav-link">Товары</a>
-      <a href="/services" class="nav-link">Услуги</a>
-      <a href="/news" class="nav-link">Новости</a>
-      <a href="/about_company" class="nav-link">О компании</a>
-      <a href="/contacts" class="nav-link">Контакты</a>
-    </nav>
-
+  <div class="header-right">
     <div class="header-icons">
+      <!-- Поиск — оставляем твой, он идентичен -->
       <div class="search-wrapper">
         <div class="search-container">
           <div class="search-icon"><i class="fas fa-search"></i></div>
@@ -48,43 +49,89 @@
         </div>
         <div id="autocompleteList" class="autocomplete-list"></div>
       </div>
+
+      <!-- Вход -->
       <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
-      
-      <div style="position: relative;">
+
+      <!-- Корзина с мини-дропдауном -->
+      <div class="cart-wrapper">
         <button class="icon-btn" id="cartBtn">
           <i class="fas fa-shopping-bag"></i>
           <span class="cart-count" id="cartCount">0</span>
         </button>
-        <div id="miniCartDropdown">
-          <div class="mini-cart-header"><div class="mini-cart-title">Корзина</div></div>
-          <div class="mini-cart-items" id="miniCartItems"><div class="mini-cart-empty">Корзина пуста</div></div>
+
+        <div id="miniCartDropdown" class="mini-cart-dropdown">
+          <div class="mini-cart-header">
+            <div class="mini-cart-title">Корзина</div>
+          </div>
+          <div class="mini-cart-items" id="miniCartItems">
+            <div class="mini-cart-empty">Корзина пуста</div>
+          </div>
           <div class="mini-cart-footer">
-            <div class="mini-cart-total" id="miniCartTotal">Итого: 0.00 ₽</div>
+            <div class="mini-cart-total" id="miniCartTotal">Итого: 0 ₽</div>
             <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
           </div>
         </div>
       </div>
-  <!-- ПИСЬМО -->
-  <button class="icon-btn" onclick="scrollToContact()">
+
+      <!-- Обратная связь — теперь с правильным ID -->
+      <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
+    </div>
+  </div>
+</header>
+<!-- МОБИЛЬНАЯ НИЖНЯЯ ПАНЕЛЬ -->
+<nav class="mobile-bottom-bar">
+  <button class="bottom-bar-btn" id="mobileSearchBtn" data-label="Поиск">
+    <i class="fas fa-search"></i>
+  </button>
+  <button class="bottom-bar-btn" id="mobileAuthBtn" data-label="Вход">
+    <i class="fas fa-user"></i>
+  </button>
+  <button class="bottom-bar-btn active" id="openSidebarMenu" data-label="Меню">
+    <i class="fas fa-bars"></i>
+  </button>
+  <button class="bottom-bar-btn" id="mobileCartBtn" data-label="Корзина">
+    <i class="fas fa-shopping-bag"></i>
+    <span class="cart-count" id="mobileCartCount">0</span>
+  </button>
+  <button class="bottom-bar-btn" id="feedbackBtn" data-label="Поддержка">
     <i class="fas fa-envelope"></i>
   </button>
-</div>
+</nav>
 
-</div>
-  </header>
-  <div class="loader" id="loader"></div>
-<!-- ТУМБЛЕР ТЕМЫ — ВИСЯЩАЯ ЛАМПОЧКА -->
-<div class="theme-toggle-hanging">
-  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
-  <label for="theme-toggle" class="theme-toggle-label">
-    <div class="rope top"></div>
-    <div class="bulb">
-      <div class="bulb-light"></div>
-      <div class="bulb-glow"></div>
+<!-- ЛЕВАЯ МОБИЛЬНАЯ ШТОРКА -->
+<div class="mobile-sidebar" id="mobileSidebar">
+  <div class="sidebar-top">
+    <button class="sidebar-close" id="closeSidebar">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <img src="/static/assets/logo.png" alt="Piligrim" class="sidebar-logo-big">
+  </div>
+
+  <nav class="sidebar-nav-modern">
+    <div class="nav-divider top"></div>
+    <a href="#landing" class="sidebar-link-modern active">Главная</a>
+    <a href="/goods" class="sidebar-link-modern">Товары</a>
+    <a href="/services" class="sidebar-link-modern">Услуги</a>
+    <a href="/news" class="sidebar-link-modern">Новости</a>
+    <a href="/about_company" class="sidebar-link-modern">О компании</a>
+    <a href="/contacts" class="sidebar-link-modern">Контакты</a>
+    <div class="nav-divider bottom"></div>
+  </nav>
+
+  <!-- Тумблер темы в шторке (оставляем только один на странице) -->
+  <div class="sidebar-bottom-theme">
+    <div class="sidebar-theme-toggle">
+      <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+      <label for="theme-toggle" class="theme-toggle-label">
+        <i class="fas fa-moon"></i>
+        <i class="fas fa-sun"></i>
+      </label>
     </div>
-    <div class="rope bottom"></div>
-  </label>
+  </div>
 </div>
+  <div class="loader" id="loader"></div>
+
 <!-- МОДАЛКА АВТОРИЗАЦИИ — ПОЛНОСТЬЮ РАБОЧАЯ ВЕРСИЯ -->
 <div id="authModal" class="auth-modal">
   <div class="auth-modal-content">
@@ -277,94 +324,244 @@
     </div>
   </section>
 
-<!-- === AI АССИСТЕНТ — ЮРИСТ (ИДЕАЛЬНАЯ ШЛЯПА) === -->
-  <div id="ai-assistant">
-    <div class="ai-bubble" style="display:none;"></div>
-    <svg viewBox="0 0 100 100" class="ai-robot" xmlns="http://www.w3.org/2000/svg">
-    <!-- ГРАДИЕНТ ОСТАЁТСЯ -->
+<!-- === AI АССИСТЕНТ — ИКОНКА И МОДАЛКА (из zaza.html, не в ai.css) === -->
+<div id="ai-assistant">
+  <svg viewBox="0 0 100 100" class="ai-robot" xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#f5d78a"/>
         <stop offset="100%" stop-color="#d4af37"/>
-        </linearGradient>
+      </linearGradient>
+      <linearGradient id="suitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#2d2d2d"/>
+        <stop offset="100%" stop-color="#1a1a1a"/>
+      </linearGradient>
     </defs>
 
-    <!-- Тело -->
-    <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+    <!-- Голова робота (золотая) -->
+    <circle cx="50" cy="35" r="18" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
 
-    <!-- Лицо -->
-    <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
-    <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
-    <circle cx="39" cy="40" r="2.5" fill="#fff"/>
-    <circle cx="63" cy="40" r="2.5" fill="#fff"/>
-    <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <!-- Глаза -->
+    <circle cx="44" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="56" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="45.5" cy="31" r="1.8" fill="#fff"/>
+    <circle cx="57.5" cy="31" r="1.8" fill="#fff"/>
 
-    <!-- Конституция в руке -->
-    <g transform="translate(8, 62)">
-        <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
-        <rect x="3" y="3" width="24" height="32" rx="1" fill="#f8f8f8"/>
-        <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
-        <line x1="5" y1="17" x2="25" y2="17" stroke="#000" stroke-width="0.9"/>
-        <line x1="5" y1="21" x2="25" y2="21" stroke="#000" stroke-width="0.9"/>
-        <line x1="5" y1="25" x2="23" y2="25" stroke="#000" stroke-width="0.9"/>
-        <line x1="5" y1="29" x2="21" y2="29" stroke="#000" stroke-width="0.9"/>
+    <!-- Светящиеся акценты в глазах -->
+    <circle cx="46" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+    <circle cx="58" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+
+    <!-- Туловище — пиджак -->
+    <path d="M30 52 L28 98 L72 98 L70 52 
+             Q62 58 50 58 Q38 58 30 52 Z" 
+          fill="url(#suitGrad)" stroke="#000" stroke-width="2"/>
+
+    <!-- Лацканы пиджака -->
+    <path d="M50 52 L42 64 L42 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+    <path d="M50 52 L58 64 L58 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+
+    <!-- Галстук -->
+    <path d="M50 58 L46 72 L50 78 L54 72 Z" fill="#8b1e1e"/>
+    <polygon points="46,72 50,78 54,72" fill="#5c1212"/>
+
+    <!-- Пуговицы пиджака -->
+    <circle cx="50" cy="70" r="2.5" fill="#333"/>
+    <circle cx="50" cy="78" r="2.5" fill="#333"/>
+    <circle cx="50" cy="86" r="2.5" fill="#333"/>
+
+    <!-- Руки -->
+    <rect x="24" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+    <rect x="64" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+
+    <!-- Планшет с Конституцией в левой руке -->
+    <g transform="translate(12, 68)">
+      <rect x="0" y="0" width="28" height="36" rx="4" fill="#fff" stroke="#111" stroke-width="2"/>
+      <rect x="2" y="2" width="24" height="30" rx="2" fill="#f0f0f0"/>
+      <text x="14" y="11" font-family="Arial, sans-serif" font-size="5.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+      <line x1="4" y1="15" x2="24" y2="15" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="19" x2="24" y2="19" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="23" x2="22" y2="23" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="27" x2="20" y2="27" stroke="#333" stroke-width="0.8"/>
     </g>
 
-    <!-- Рука -->
-    <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
-    </svg>
-  </div>
+    <!-- Блеск на голове -->
+    <path d="M42 24 Q46 20 50 24" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.6"/>
+  </svg>
+</div>
 
-  <!-- === AI ЧАТ МОДАЛЬНЫЙ (ТОТ ЖЕ СТИЛЬ) === -->
-  <div id="ai-chat" class="ai-chat-modal">
-    <div class="ai-chat-header">
-      <div class="ai-chat-title">
-        <svg width="32" height="32" viewBox="0 0 100 100" style="margin-right:10px;">
-            <use href="#goldGrad"/>
-            <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
-            <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
-            <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
-            <circle cx="39" cy="40" r="2.5" fill="#fff"/>
-            <circle cx="63" cy="40" r="2.5" fill="#fff"/>
-            <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-
-            <!-- Конституция в руке -->
-            <g transform="translate(8, 62)">
-                <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
-                <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
-            </g>
-            <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
-            </svg>
-        <span>Юрист AI</span>
-      </div>
-      <div class="ai-header-buttons">
-        <button class="ai-btn-minimize" onclick="toggleAIChatSize()" title="На весь экран">
-          <i class="fas fa-expand-arrows-alt"></i>
-        </button>
-        <button class="ai-btn-close" onclick="closeAIChat()" title="Закрыть">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
+<!-- === AI ЧАТ МОДАЛЬНЫЙ (ТОТ ЖЕ СТИЛЬ) === -->
+<div id="ai-chat" class="ai-chat-modal">
+  <div class="ai-chat-header">
+    <div class="ai-chat-title">
+      <svg width="32" height="32" viewBox="0 0 100 100" style="margin-right:10px;">
+        <use href="#goldGrad"/>
+        <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+        <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="39" cy="40" r="2.5" fill="#fff"/>
+        <circle cx="63" cy="40" r="2.5" fill="#fff"/>
+        <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <g transform="translate(8, 62)">
+          <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
+          <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+        </g>
+        <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
+      </svg>
+      <span>Юрист AI</span>
     </div>
-    <div class="ai-chat-body">
-      <div class="ai-chat-messages"></div>
-      <div class="ai-chat-input">
-        <input type="text" id="ai-input" placeholder="Задайте юридический вопрос..." 
-               onkeypress="if(event.key==='Enter' && this.value.trim()) { sendAIMessage(this.value); this.value=''; }">
-        <button onclick="const inp = document.getElementById('ai-input'); if(inp.value.trim()) { sendAIMessage(inp.value); inp.value=''; }" title="Отправить">
-          <i class="fas fa-paper-plane"></i>
-        </button>
-      </div>
+    <div class="ai-header-buttons">
+      <button class="ai-btn-minimize" onclick="toggleAIChatSize()" title="На весь экран">
+        <i class="fas fa-expand-arrows-alt"></i>
+      </button>
+      <button class="ai-btn-close" onclick="closeAIChat()" title="Закрыть">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
   </div>
+  <div class="ai-chat-body">
+    <div class="ai-chat-messages"></div>
+    <div class="ai-chat-input">
+      <input type="text" id="ai-input" placeholder="Задайте юридический вопрос..." 
+             onkeypress="if(event.key==='Enter' && this.value.trim()) { sendAIMessage(this.value); this.value=''; }">
+      <button onclick="const inp = document.getElementById('ai-input'); if(inp.value.trim()) { sendAIMessage(inp.value); inp.value=''; }" title="Отправить">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>
+<!-- АЛЕРТ АВТОРИЗАЦИИ -->
+<div id="authAlert" class="custom-alert">
+  <div class="alert-content">
+    <div class="alert-icon">Warning</div>
+    <div class="alert-text">
+      <strong>Войдите в аккаунт</strong>
+      <span>Чтобы отправить заявку — нужно авторизоваться</span>
+    </div>
+    <button class="alert-close">×</button>
+    <button class="alert-login-btn">Войти</button>
+  </div>
+</div>
+
+<!-- МОБИЛЬНЫЕ ШТОРКИ — 100% как на contacts.html (2025) -->
+<!-- 1. Поиск сверху (как в Wildberries) -->
+<div class="mobile-search-sheet" id="mobileSearchSheet">
+  <div class="sheet-handle"></div>
+  <div class="mobile-search-header">
+    <button class="mobile-search-back" id="closeMobileSearchTop">←</button>
+    <div class="mobile-search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input type="text" class="mobile-search-input" id="mobileSearchInput" placeholder="Поиск по каталогу..." autocomplete="off">
+      <button class="mobile-search-clear" id="mobileSearchClear">×</button>
+    </div>
+  </div>
+  <div class="mobile-search-results-content" id="mobileSearchResults">
+    <div class="search-empty-state" id="mobileEmptyState">
+      <div class="empty-icon"><i class="fas fa-search"></i></div>
+      <div class="empty-title">Введите название товара</div>
+      <div class="empty-subtitle">Например: iPhone 16, кроссовки Nike, кофеварка</div>
+    </div>
+    <div id="mobileAutocompleteList" class="mobile-autocomplete-list"></div>
+  </div>
+</div>
+
+<!-- 2. Корзина снизу (полноценная шторка) -->
+<div class="mobile-cart-sheet" id="mobileCartSheet">
+  <div class="sheet-backdrop" id="mobileCartBackdrop"></div>
+  <div class="sheet-container">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="cart-header-icon">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="cart-count" id="mobileCartHeaderCount">0</span>
+      </div>
+      <h3>Корзина</h3>
+      <button class="sheet-close-btn" id="mobileCloseCart">×</button>
+    </div>
+    <div class="sheet-items" id="mobileMiniCartItems">
+      <div style="padding:3rem 1.5rem;text-align:center;color:#888;">
+        <i class="fas fa-shopping-bag" style="font-size:3rem;margin-bottom:1rem;opacity:0.3;"></i>
+        <p>Корзина пуста</p>
+      </div>
+    </div>
+    <div class="sheet-total">
+      Итого: <strong id="mobileMiniCartTotal">0 ₽</strong>
+    </div>
+    <div class="sheet-footer">
+      <button class="checkout-btn-full" id="mobileGoToCartBtn">Перейти к оформлению</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ПОЛНОЭКРАННЫЙ ПОИСК ДЛЯ НОУТБУКОВ И ПЛАНШЕТОВ (2025 стиль) -->
+<div class="tablet-search-full" id="tabletSearchSheet">
+  <!-- Бэкдроп -->
+  <div class="tablet-search-backdrop"></div>
+
+  <!-- Шапка: стрелка назад + строка поиска -->
+  <div class="tablet-search-header-full">
+    <button class="tablet-search-back" id="closeTabletSearch">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <div class="tablet-search-input-wrapper-full">
+      <i class="fas fa-search"></i>
+      <input 
+        type="text" 
+        id="tabletSearchInput" 
+        placeholder="Поиск по каталогу..." 
+        autocomplete="off"
+      >
+      <button class="tablet-search-clear" id="tabletSearchClear">×</button>
+    </div>
+  </div>
+
+  <!-- Пустое состояние -->
+  <div class="tablet-search-empty" id="tabletEmptyState">
+    <i class="fas fa-search"></i>
+    <p>Начните вводить запрос...</p>
+  </div>
+
+  <!-- Результаты автокомплита -->
+  <div id="tabletAutocompleteList" class="tablet-autocomplete-list-full"></div>
+</div>
+<!-- ТУМБЛЕР ТЕМЫ — ВИСЯЩАЯ ЛАМПОЧКА -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
+
+<footer>
+  <div class="footer-left">
+    © 2025 Piligrim. Все права защищены.
+  </div>
+  
+  <div class="footer-center">
+    <img src="/static/assets/logo.png" alt="Piligrim">
+  </div>
+  
+  <div class="footer-right">
+    <a href="/privacy">Политика конфиденциальности</a>
+    <a href="/terms">Условия использования</a>
+    <a href="/delivery">Доставка и оплата</a>
+  </div>
+</footer>
+
+  <script src="/static/js/search.js"></script>
+  <script src="/static/js/auth.js"></script>
+  <script src="/static/js/cart.js"></script>      
+  <script src="/static/js/feedback.js"></script>  
+  <script src="/static/js/ai.js"></script>
+  <script src="/static/js/contacts.js"></script>
 
 
   <script>
-    const slides = document.querySelectorAll('.slide');
-    const progressBars = document.querySelectorAll('.progress-bar');
-    let currentSlide = 0;
-    let autoPlay;
-    let dbSlides = Array(5).fill().map(() => ({ background: '', elements: [] }));
 
     // === ЭЛИТНЫЙ СКРОЛЛ ===
     let scrollIndex = 0;
@@ -397,84 +594,7 @@
       document.documentElement.style.setProperty('--scale', scale);
     }
 
-let isProgressAnimating = false;  // защита от двойного запуска
 
-const originalShowSlide = window.showSlide || function() {};
-window.showSlide = function(n) {
-  if (isProgressAnimating) return;
-
-  // 1. Снимаем активность
-  slides[currentSlide].classList.remove('active');
-  progressBars[currentSlide].classList.remove('active');
-
-  // 2. Переключаем слайд
-  currentSlide = (n + slides.length) % slides.length;
-  slides[currentSlide].classList.add('active');
-  progressBars[currentSlide].classList.add('active');
-
-  // ГЛАВНОЕ — РЕНДЕРИМ СЛОИ И ХОТСПТЫ
-  renderCurrentSlide();
-
-  // 3. Прогресс-бар на 5 секунд
-  progressBars.forEach((bar, i) => {
-    const fill = bar.querySelector('.progress-fill');
-    fill.style.transition = 'none';
-    fill.style.width = '0%';
-    fill.offsetHeight;
-
-    if (i === currentSlide) {
-      isProgressAnimating = true;
-      fill.style.transition = 'width 5s linear';
-      fill.style.width = '100%';
-
-      const onEnd = () => {
-        fill.removeEventListener('transitionend', onEnd);
-        isProgressAnimating = false;
-        nextSlide();
-      };
-      fill.addEventListener('transitionend', onEnd);
-    }
-  });
-};
-
-function nextSlide() { showSlide(currentSlide + 1); }
-function prevSlide() { showSlide(currentSlide - 1); }
-
-// === УМНАЯ ПАУЗА ПРИ НАВЕДЕНИИ ===
-const container = document.querySelector('.carousel-content');
-
-container.addEventListener('mouseenter', () => {
-  // Замораживаем все прогресс-бары
-  document.querySelectorAll('.progress-fill').forEach(fill => {
-    const currentWidth = getComputedStyle(fill).width;
-    fill.style.transition = 'none';
-    fill.style.width = currentWidth; // фиксируем текущее положение
-  });
-});
-
-container.addEventListener('mouseleave', () => {
-  // Возобновляем только активный прогресс-бар с остатком времени
-  const activeFill = progressBars[currentSlide].querySelector('.progress-fill');
-  const currentPercent = parseFloat(getComputedStyle(activeFill).width) / activeFill.parentElement.offsetWidth * 100;
-
-  // Сбрасываем и запускаем оставшееся время
-  activeFill.style.transition = 'none';
-  activeFill.style.width = currentPercent + '%';
-  activeFill.offsetHeight;
-
-  const remainingTime = 5 * (1 - currentPercent / 100); // в секундах
-
-  isProgressAnimating = true;
-  activeFill.style.transition = `width ${remainingTime}s linear`;
-  activeFill.style.width = '100%';
-
-  const onEnd = () => {
-    activeFill.removeEventListener('transitionend', onEnd);
-    isProgressAnimating = false;
-    nextSlide();
-  };
-  activeFill.addEventListener('transitionend', onEnd);
-});
 
     // === АНИМАЦИЯ ГРАФФИТИ + СТРЕЛКА ===
     function createGraffitiText(element, text, delay = 0) {
@@ -740,6 +860,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // === ПЕРЕКЛЮЧЕНИЕ СЛАЙДОВ ===
+    // === ПЕРЕЗАПУСК АВТОПЛЕЯ ПОСЛЕ ЛЮБОГО ПЕРЕКЛЮЧЕНИЯ (главное исправление) ===
   function showSlide(n) {
     if (isTransitioning) return;
     isTransitioning = true;
@@ -754,6 +875,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderSlide(currentSlide);
     resetProgressBar();
+    startAutoPlay();        // ← вот эта строчка делает автоплей вечным
 
     setTimeout(() => isTransitioning = false, 400);
   }
@@ -761,6 +883,49 @@ document.addEventListener('DOMContentLoaded', () => {
   function nextSlide() { showSlide(currentSlide + 1); }
   function prevSlide() { showSlide(currentSlide - 1); }
 
+  // Стрелки
+  nextBtn?.addEventListener('click', e => { e.stopPropagation(); nextSlide(); });
+  prevBtn?.addEventListener('click', e => { e.stopPropagation(); prevSlide(); });
+
+// ——— СВАЙПЫ НА МОБИЛКЕ (один раз вставить) ———
+// ——— СВАЙПЫ НА МОБИЛКЕ — НОВЫЙ 2025 ВАРИАНТ (работает + скролл вниз!) ———
+let touchStartX = 0;
+let touchStartY = 0;
+
+document.querySelector('.carousel-container')?.addEventListener('touchstart', e => {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+document.querySelector('.carousel-container')?.addEventListener('touchend', e => {
+  if (!touchStartX || !touchStartY) return;
+
+  const touchEndX = e.changedTouches[0].clientX;
+  const touchEndY = e.changedTouches[0].clientY;
+
+  const diffX = touchStartX - touchEndX;
+  const diffY = touchStartY - touchEndY;
+
+  // Главное волшебство: если пользователь тянул больше вниз/вверх — это скролл страницы
+  if (Math.abs(diffY) > Math.abs(diffX) && Math.abs(diffY) > 30) {
+    // Это вертикальный свайп → ничего не делаем, пусть страница скроллится
+    touchStartX = touchStartY = 0;
+    return;
+  }
+
+  // Если же тянул больше влево/вправо — переключаем слайд (твой старый код)
+  if (Math.abs(diffX) > 50) {
+    if (diffX > 0) {
+      nextSlide();    // влево → следующий
+    } else {
+      prevSlide();    // вправо → предыдущий
+    }
+    document.querySelector('.carousel-container').classList.add('swiped');
+  }
+
+  touchStartX = touchStartY = 0;
+}, { passive: true });
+  
   // === ПРОГРЕСС-БАР ===
   function resetProgressBar() {
     progressBars.forEach((bar, i) => {
@@ -814,12 +979,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-  <script src="/static/js/search.js"></script>
-  <script src="/static/js/auth.js" defer></script>
-  <script src="/static/js/cart.js" defer></script>
-
-  <script src="/static/js/ai.js" defer></script>
-  <script src="/static/js/contacts.js" defer></script>
 
   
 <script>
@@ -866,243 +1025,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   
 </script>
-<!-- АЛЕРТ АВТОРИЗАЦИИ -->
-<div id="authAlert" class="custom-alert">
-  <div class="alert-content">
-    <div class="alert-icon">Warning</div>
-    <div class="alert-text">
-      <strong>Войдите в аккаунт</strong>
-      <span>Чтобы отправить заявку — нужно авторизоваться</span>
-    </div>
-    <button class="alert-close">×</button>
-    <button class="alert-login-btn">Войти</button>
-  </div>
-</div>
-<script>
-// === ФИНАЛЬНАЯ ВЕРСИЯ — 100% КАК В РЕДАКТОРЕ (ГАРАНТИРОВАННО РАБОТАЕТ) ===
-const HOME_CAROUSEL_API = "/api/landing/carousel/home";
-let homeSlides = [];
 
-// Загрузка данных с сервера
-async function loadHomeCarousel() {
-  try {
-    const res = await fetch(HOME_CAROUSEL_API);
-    if (!res.ok) throw new Error("API error");
-    const serverSlides = await res.json();
-
-    homeSlides = serverSlides.map(slide => {
-      const layers = (slide.layers || []).map(layer => {
-        const s = layer.style || {};
-        const parsePerc = v => typeof v === 'string' ? parseFloat(v.replace('%', '')) || 0 : 0;
-
-        if (layer.type === 'text') {
-          return {
-            type: 'text',
-            content: layer.content || 'Текст',
-            left: parsePerc(s.left),
-            top: parsePerc(s.top),
-            width: parsePerc(s.width),
-            height: parsePerc(s.height),
-            fontSize: parseInt(s.fontSize) || 48,
-            color: s.color || '#ffffff',
-            fontFamily: s.fontFamily || 'Inter',
-            rotation: s.transform ? parseInt(s.transform.match(/-?\d+/)?.[0] || 0) : 0,
-            animation: s.animation || 'none'
-          };
-        }
-        if (layer.type === 'image') {
-          return {
-            type: 'image',
-            url: layer.url || layer.src || '',
-            left: parsePerc(s.left),
-            top: parsePerc(s.top),
-            width: parsePerc(s.width),
-            height: parsePerc(s.height),
-            rotation: s.transform ? parseInt(s.transform.match(/-?\d+/)?.[0] || 0) : 0
-          };
-        }
-        return null;
-      }).filter(Boolean);
-
-      const hotspots = (slide.hotspots || []).map(h => ({
-        x: parseFloat(h.x) || 0,
-        y: parseFloat(h.y) || 0,
-        w: parseFloat(h.w) || 10,
-        h: parseFloat(h.h) || 10,
-        url: h.url || '#'
-      }));
-
-      return {
-        background: slide.background?.url || '/static/assets/fallback.jpg',
-        layers,
-        hotspots
-      };
-    });
-
-    // Дополняем до 5 слайдов
-    while (homeSlides.length < 5) {
-      homeSlides.push({ background: '/static/assets/fallback.jpg', layers: [], hotspots: [] });
-    }
-
-    // Устанавливаем фоны сразу всем .slide
-    document.querySelectorAll('.slide').forEach((el, i) => {
-      if (homeSlides[i]?.background) {
-        el.style.backgroundImage = `url("${homeSlides[i].background}")`;
-        el.style.backgroundSize = 'cover';
-        el.style.backgroundPosition = 'center';
-        el.style.backgroundRepeat = 'no-repeat';
-      }
-    });
-
-    // Рендерим текущий (первый) слайд
-    renderCurrentSlide();
-    showSlide(0); // принудительно обновляем прогресс-бар
-  } catch (err) {
-    console.error("Карусель не загрузилась:", err);
-    // На случай ошибки — хотя бы fallback фон
-    document.querySelectorAll('.slide').forEach(el => {
-      el.style.backgroundImage = `url("/static/assets/fallback.jpg")`;
-      el.style.backgroundSize = 'cover';
-      el.style.backgroundPosition = 'center';
-    });
-    renderCurrentSlide();
-  }
-}
-
-// Рендер слоёв и хотспотов
-function renderCurrentSlide() {
-  const inner = document.querySelector('.carousel-inner');
-  if (!inner || homeSlides.length === 0) return;
-
-  inner.innerHTML = '';
-  const slide = homeSlides[currentSlide];
-
-  slide.layers.forEach(layer => {
-    const el = document.createElement('div');
-    el.className = 'slide-element';
-    el.style.position = 'absolute';
-    el.style.left = `${layer.left}%`;
-    el.style.top = `${layer.top}%`;
-    el.style.width = `${layer.width}%`;
-    el.style.height = `${layer.height}%`;
-    el.style.transformOrigin = 'center center';
-    el.style.pointerEvents = 'none';
-    el.style.zIndex = '10';
-
-    // Центрирование + поворот
-    const centered = layer.left >= 40 && layer.left <= 60 && layer.top >= 40 && layer.top <= 60;
-    const rotate = layer.rotation ? ` rotate(${layer.rotation}deg)` : '';
-    el.style.transform = centered ? `translate(-50%, -50%)${rotate}` : rotate || 'none';
-
-    if (layer.type === 'text') {
-      el.textContent = layer.content;
-      el.style.fontSize = layer.fontSize + 'px';
-      el.style.color = layer.color;
-      el.style.fontFamily = layer.fontFamily;
-      el.style.fontWeight = '700';
-      el.style.textShadow = '0 4px 30px rgba(0,0,0,0.8)';
-      el.style.textAlign = 'center';
-      el.style.lineHeight = '1.2';
-      el.style.whiteSpace = 'pre-wrap';
-
-      if (layer.animation && layer.animation !== 'none') {
-        el.classList.add('animate__animated', `animate__${layer.animation}`);
-      }
-    }
-
-    if (layer.type === 'image') {
-      const img = document.createElement('img');
-      img.src = layer.url;
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.objectFit = 'contain';
-      img.draggable = false;
-      el.appendChild(img);
-    }
-
-    inner.appendChild(el);
-  });
-
-  // Хотспоты
-  slide.hotspots.forEach(h => {
-    const spot = document.createElement('div');
-    spot.className = 'hotspot';
-    spot.style.position = 'absolute';
-    spot.style.left = h.x + '%';
-    spot.style.top = h.y + '%';
-    spot.style.width = h.w + '%';
-    spot.style.height = h.h + '%';
-    spot.style.cursor = 'pointer';
-    spot.style.zIndex = '20';
-
-    spot.onclick = e => {
-      e.stopPropagation();
-      if (h.url && h.url !== '#') window.open(h.url, '_blank');
-      fetch('/api/landing/click', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ kind: 'home', slide: currentSlide, url: h.url })
-      }).catch(() => {});
-    };
-
-    inner.appendChild(spot);
-  });
-}
-
-// Запуск при загрузке страницы
-document.addEventListener('DOMContentLoaded', () => {
-  loadHomeCarousel();
-
-  // На всякий случай — повторный рендер через секунду (если API медленный)
-  setTimeout(() => {
-    renderCurrentSlide();
-  }, 1500);
-});
-</script>
-  <script>
-const themeToggle = document.getElementById('theme-toggle');
-const html = document.documentElement;
-
-// Автоопределение системной темы + сохранение
-if (localStorage.getItem('theme') === 'light' || 
-   (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: light)').matches)) {
-  html.setAttribute('data-theme', 'light');
-  if (themeToggle) themeToggle.checked = true;
-} else {
-  html.setAttribute('data-theme', 'dark');
-  if (themeToggle) themeToggle.checked = false;
-}
-
-themeToggle?.addEventListener('change', () => {
-  if (themeToggle.checked) {
-    html.setAttribute('data-theme', 'light');
-    localStorage.setItem('theme', 'light');
-  } else {
-    html.setAttribute('data-theme', 'dark');
-    localStorage.setItem('theme', 'dark');
-  }
-});
-  </script>
-
-
-<!-- === КРАСИВОЕ ПРОЗРАЧНОЕ МОДАЛЬНОЕ ОКНО ДЛЯ ФОРМЫ === -->
-<div id="feedbackModal" class="feedback-modal">
-  <div class="feedback-modal-content">
-    <div class="feedback-modal-icon"><i class="fas fa-check-circle"></i></div>
-    <h3 class="feedback-modal-title">Спасибо!</h3>
-    <p class="feedback-modal-text">Мы свяжемся с вами в ближайшее время</p>
-  </div>
-</div>
-
-<div id="feedbackErrorModal" class="feedback-modal error">
-  <div class="feedback-modal-content">
-    <div class="feedback-modal-icon">
-      <i class="fas fa-exclamation-triangle"></i>
-    </div>
-    <h3 class="feedback-modal-title">Ошибка</h3>
-    <p class="feedback-modal-text">Пожалуйста, заполните все поля правильно</p>
-  </div>
-</div>
 
 
 <script>
@@ -1120,17 +1043,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Кнопка "Изменить"
   const changeBtn = document.createElement('button');
-  changeBtn.type = 'button';
-  changeBtn.textContent = 'Изменить';
-  changeBtn.className = 'change-phone-btn';
-  changeBtn.style.cssText = `
-    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-    background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 12px;
-    padding: 7px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; z-index: 10;
-    opacity: 0; pointer-events: none; transition: all 0.32s ease; backdrop-filter: blur(10px);
-  `;
-  phoneWrapper.style.position = 'relative';
-  phoneWrapper.appendChild(changeBtn);
+changeBtn.type = 'button';
+changeBtn.textContent = 'Изменить';
+changeBtn.className = 'change-phone-btn';
+changeBtn.style.cssText = `
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 12px;
+  padding: 7px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; z-index: 10;
+  opacity: 0; pointer-events: none; transition: all 0.32s ease; backdrop-filter: blur(10px);
+
+  /* ← ДОБАВЛЕНО: адаптив + светлая тема (всего 5 строк) */
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  ${document.documentElement.getAttribute('data-theme') === 'light' 
+    ? 'background: rgba(0,0,0,0.1) !important; color: #111 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.18) !important;' 
+    : ''
+  }
+  ${window.innerWidth <= 480 
+    ? 'padding: 9px 16px; font-size: 0.92rem; right: 8px;' 
+    : ''
+  }
+`;
+
+phoneWrapper.style.position = 'relative';
+phoneWrapper.appendChild(changeBtn);
 
   // === ПОЛУЧЕНИЕ НОМЕРА ===
   const getCurrentPhone = () => {
@@ -1502,20 +1438,27 @@ const ADMIN_CHECK_INTERVAL = setInterval(async () => {
       if (!headerIcons) return;
 
       headerIcons.insertAdjacentHTML('beforeend', `
-        <a href="/admin" id="adminHeaderBtn" class="icon-btn admin-glow" title="Админ-панель">
-          <svg viewBox="0 0 100 100" width="28" height="28" style="filter:drop-shadow(0 0 8px #ff00ff)">
-            <defs>
-              <linearGradient id="adminGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#ff00cc"/>
-                <stop offset="100%" stop-color="#ff3399"/>
-              </linearGradient>
-            </defs>
-            <circle cx="50" cy="50" r="44" fill="none" stroke="url(#adminGrad)" stroke-width="8"/>
-            <text x="50" y="68" text-anchor="middle" fill="white" font-size="38" font-weight="900" font-family="Arial Black">A</text>
-          </svg>
-          <span class="admin-pulse"></span>
-        </a>
-      `);
+  <a href="/admin" id="adminHeaderBtn" class="icon-btn admin-glow" title="Админ-панель">
+    <svg viewBox="0 0 100 100" width="28" height="28" class="admin-svg">
+      <defs>
+        <linearGradient id="adminGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ff00cc"/>
+          <stop offset="100%" stop-color="#ff3399"/>
+        </linearGradient>
+      </defs>
+      
+      <!-- Тонкая чёрная рамка (видна только в светлой теме) -->
+      <circle cx="50" cy="50" r="48" fill="none" stroke="#000" stroke-width="1" opacity="0.12"/>
+      
+      <!-- Основной градиентный круг -->
+      <circle cx="50" cy="50" r="44" fill="none" stroke="url(#adminGrad)" stroke-width="8"/>
+      
+      <!-- Буква A -->
+      <text x="50" y="68" text-anchor="middle" fill="white" font-size="38" font-weight="900" font-family="Arial Black">A</text>
+    </svg>
+    <span class="admin-pulse"></span>
+  </a>
+`);
 
       console.log("АДМИН-ИКОНКА В ХЕДЕРЕ АКТИВИРОВАНА — ДОСТУП РАЗРЕШЁН");
 
@@ -1555,5 +1498,43 @@ const ADMIN_CHECK_INTERVAL = setInterval(async () => {
   } catch (e) {}
 }, 1800); // проверяем каждые 1.8 сек — быстрее реагирует
 </script>
+
+<script>
+// Привязываем скролл к ВСЕМ кнопкам с id="feedbackBtn" (и десктоп, и мобильная)
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('#feedbackBtn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Плавный скролл к блоку обратной связи
+      document.querySelector('#contact').scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+
+      // Опционально: можно подсветить форму
+      setTimeout(() => {
+        document.querySelector('.contact-form')?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+      }, 600);
+    });
+  });
+});
+</script>
+<script>
+// Пересчёт 100vh на мобильных (фикс бага с адресной строкой)
+function setVH() {
+  const vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+setVH();
+window.addEventListener('resize', setVH);
+window.addEventListener('orientationchange', () => setTimeout(setVH, 100));
+</script>
+
+
 </body>
 </html>

@@ -511,7 +511,7 @@ def api_carousel_home():
 
 @zaza_editor.route('/carousel/home', methods=['POST'])
 def save_carousel_home():
-    """Сохраняет карусель главной страницы (5 слайдов)"""
+    """Сохраняет карусель главной страницы (5 слайдов) — с сохранением всех картинок на диск!"""
     try:
         data = request.get_json(force=True)
         if not isinstance(data, list) or len(data) != 5:
@@ -525,22 +525,36 @@ def save_carousel_home():
         c.execute('DELETE FROM carousel_layers WHERE carousel_type = ?', ('home',))
 
         for i, slide in enumerate(data):
-            # Фон
-            url = slide.get('background', {}).get('url')
-            if not url or url == 'null':
+            # === ФОН — ГЛАВНОЕ ИСПРАВЛЕНИЕ! ===
+            bg_obj = slide.get('background', {})
+            url = bg_obj.get('url', '')
+
+            # Если пусто — fallback
+            if not url or url in ('null', '', 'undefined'):
                 url = '/static/assets/fallback.jpg'
+            # Если это data:image — сохраняем на диск!
             elif isinstance(url, str) and url.startswith('data:image'):
                 url = save_image_file(url)
+            # Если это внешняя ссылка — оставляем как есть (но лучше не надо)
+            elif url.startswith('http'):
+                url = url  # можно оставить, но лучше загружать на сервер
+            # Если уже нормальная ссылка на наш сервер — ок
+            elif not url.startswith('/static/'):
+                url = '/static/assets/fallback.jpg'
 
+            # Сохраняем фон в таблицу carousel_home
             c.execute('INSERT INTO carousel_home (sort_order, image) VALUES (?, ?)', (i, url))
 
-            # Слои
+            # === ОБЫЧНЫЕ СЛОИ (текст, картинки) ===
             for j, layer in enumerate(slide.get('layers', [])):
                 layer_id = str(layer.get('id', f'home_s{i}_l{j}'))
                 layer_type = layer.get('type', 'text')
 
-                if layer_type == 'image' and layer.get('url', '').startswith('data:image'):
-                    layer['url'] = save_image_file(layer['url'])
+                # Если картинка — тоже сохраняем на диск
+                if layer_type == 'image':
+                    img_url = layer.get('url', '')
+                    if isinstance(img_url, str) and img_url.startswith('data:image'):
+                        layer['url'] = save_image_file(img_url)
 
                 layer_data = json.dumps(layer)
                 c.execute('''
@@ -549,14 +563,18 @@ def save_carousel_home():
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 ''', ('home', i, layer_id, layer_type, layer_data, j, int(layer.get('hidden', False))))
 
-            # Хотспоты
+            # === ХОТСПТЫ (без изменений) ===
             for j, hotspot in enumerate(slide.get('hotspots', [])):
                 layer_id = str(hotspot.get('id', f'home_s{i}_h{j}'))
                 clean = {
-                    'id': layer_id, 'type': 'hotspot',
-                    'x': hotspot.get('x', 0), 'y': hotspot.get('y', 0),
-                    'w': hotspot.get('w', 10), 'h': hotspot.get('h', 10),
-                    'url': hotspot.get('url', ''), 'hidden': hotspot.get('hidden', False)
+                    'id': layer_id,
+                    'type': 'hotspot',
+                    'x': hotspot.get('x', 0),
+                    'y': hotspot.get('y', 0),
+                    'w': hotspot.get('w', 10),
+                    'h': hotspot.get('h', 10),
+                    'url': hotspot.get('url', ''),
+                    'hidden': bool(hotspot.get('hidden', False))
                 }
                 c.execute('''
                     INSERT OR REPLACE INTO carousel_layers 
@@ -566,7 +584,7 @@ def save_carousel_home():
 
         conn.commit()
         conn.close()
-        logger.info("Карусель главной (home) сохранена: 5 слайдов")
+        logger.info("Карусель главной (home) сохранена: 5 слайдов — все картинки на диске!")
         return jsonify({"status": "saved"})
     except Exception as e:
         logger.error(f"HOME CAROUSEL SAVE ERROR: {e}")

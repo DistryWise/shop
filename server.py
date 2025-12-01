@@ -143,8 +143,27 @@ def create_app():
     @app.route('/policy')
     def policy(): return render_template('supports/policy.html')
 
+    from flask import request, render_template, redirect
+    
     @app.route('/bin')
-    def bin(): return render_template('bin.html')
+    def bin():
+        ua = request.headers.get('User-Agent', '').lower()
+        is_mobile = any(x in ua for x in ['mobile', 'android', 'iphone', 'ipad', 'ipod', 'windows phone'])
+
+        # Дополнительно: если передали ширину экрана (можно из JS)
+        width = request.args.get('w')
+        if width and int(width) <= 1024:
+            is_mobile = True
+
+        return redirect('/cart-mobile') if is_mobile else render_template('bin.html')
+
+
+    @app.route('/cart-mobile')
+    def cart_mobile():
+        ua = request.headers.get('User-Agent', '').lower()
+        is_mobile = any(x in ua for x in ['mobile', 'android', 'iphone', 'ipad', 'ipod', 'windows phone'])
+
+        return redirect('/bin') if not is_mobile else render_template('cart-mobile.html')
 
     @app.route('/terms')
     def terms(): return render_template('supports/terms.html')
@@ -152,9 +171,9 @@ def create_app():
     @app.route('/delivery')
     def delivery(): return render_template('/supports/delivery.html')
 
+    @app.route('/mobile-cart')
+    def mobile(): return render_template('/mobile-cart.html')
 
-    @app.route('/svg')
-    def svg(): return render_template('svg.html')
 
     @app.route('/carousel-editor')
     def carousel_editor():

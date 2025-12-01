@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Корзина — Piligrim</title>
+
+  <!-- Шрифты и иконки -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Твои стили -->
+  <link rel="stylesheet" href="/static/css/search.css">
+  <link rel="stylesheet" href="/static/css/auth.css">
+  <link rel="stylesheet" href="/static/css/cart.css">
+  <link rel="stylesheet" href="/static/css/ai.css">
+  <link rel="stylesheet" href="/static/css/contacts.css">
+  <link rel="stylesheet" href="/static/css/bins.css">
+
+  <!-- === ВСЁ В ОДНОМ СТИЛЕ (исправлено) === -->
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --bg-secondary: #1a1a1a;
+      --text-primary: #fff;
+      --text-secondary: #aaa;
+      --accent: #007aff;
+      --border: rgba(255,255,255,0.08);
+      --card-bg: rgba(255,255,255,0.05);
+      --danger: #ff453a;
+    }
+    [data-theme="light"] {
+      --bg: #fff;
+      --bg-secondary: #f5f5f5;
+      --text-primary: #000;
+      --text-secondary: #666;
+      --accent: #007aff;
+      --border: rgba(0,0,0,0.1);
+      --card-bg: rgba(0,0,0,0.04);
+      --danger: #ff3b30;
+    }
+
+    :root {
+      --header-height: 56px;
+      --tab-height: 56px;
+      --bottom-bar-height: 78px;
+      --safe-bottom: env(safe-area-inset-bottom, 20px);
+    }
+
+    * { box-sizing: border-box; }
+    body.mobile-cart-page {
+      margin: 0; padding: 0;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* Скрываем всё десктопное, показываем только мобильное */
+    .desktop-only { display: none !important; }
+    .mobile-only { display: block !important; }
+
+    /* Шапка */
+    .mobile-cart-header {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--header-height);
+      background: var(--bg);
+      backdrop-filter: blur(32px);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 16px; z-index: 1000;
+    }
+    .mobile-cart-header h1 {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      margin: 0; font-size: 1.35rem; font-weight: 700;
+    }
+    .mobile-cart-header .back-btn {
+      background:none; border:none; font-size:1.7rem; color:var(--text-primary); padding:8px; border-radius:12px;
+    }
+
+    /* Вкладки */
+    .cart-tabs {
+      position: sticky; top: var(--header-height);
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      display: flex; height: var(--tab-height); z-index: 999;
+    }
+    .cart-tab {
+      flex:1; display:flex; align-items:center; justify-content:center;
+      font-weight:600; color:var(--text-secondary); font-size:1.05rem;
+    }
+    .cart-tab.active {
+      color: var(--accent);
+      position:relative;
+    }
+    .cart-tab.active::after {
+      content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+      width:80%; height:3px; background:var(--accent); border-radius:2px;
+    }
+
+    /* Контент */
+    .cart-content {
+      padding: calc(var(--header-height) + var(--tab-height)) 16px 120px;
+    }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+
+    /* Пустая корзина */
+    .cart-empty-apple {
+      text-align:center; padding:100px 20px; color:var(--text-secondary);
+    }
+    .cart-empty-apple i { font-size:4.5rem; opacity:0.25; margin-bottom:20px; display:block; }
+
+    /* Товар в корзине */
+    .apple-cart-item {
+      display:flex; gap:16px; padding:20px; background:var(--card-bg);
+      border-radius:18px; margin:12px 0; border:1px solid var(--border);
+    }
+    .apple-cart-item img {
+      width:100px; height:100px; object-fit:cover; border-radius:14px; background:#000;
+    }
+    .apple-cart-item h3 { margin:0 0 8px; font-size:1.1rem; font-weight:600; }
+    .apple-cart-item .qty-controls {
+      display:flex; align-items:center; gap:16px; margin-top:12px;
+    }
+    .apple-cart-item .qty-btn {
+      width:38px; height:38px; border-radius:50%;
+      background: var(--bg-secondary); border:1px solid var(--border);
+      color:var(--text-primary); font-size:1.5rem;
+    }
+
+    /* Нижняя плашка */
+    .mobile-cart-footer {
+      position:fixed; bottom:calc(var(--bottom-bar-height) + var(--safe-bottom));
+      left:0; right:0; background:var(--bg); backdrop-filter:blur(40px);
+      border-top:1px solid var(--border); padding:16px;
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+      z-index:998;
+    }
+    .mobile-cart-footer .price { font-size:1.7rem; font-weight:700; }
+    .mobile-cart-footer .checkout-btn {
+      flex:1; height:56px; background:var(--accent); color:white;
+      border:none; border-radius:18px; font-size:1.15rem; font-weight:600;
+    }
+
+    /* Нижняя навигация */
+    .mobile-bottom-bar {
+      position:fixed; bottom:0; left:0; right:0;
+      height:var(--bottom-bar-height); background:var(--bg);
+      backdrop-filter:blur(32px); border-top:1px solid var(--border);
+      display:flex; padding-bottom:var(--safe-bottom); z-index:1000;
+    }
+    .bottom-bar-btn {
+      flex:1; border:none; background:none; color:var(--text-secondary);
+      font-size:1.6rem; position:relative; padding:10px 0;
+    }
+    .bottom-bar-btn.active { color:var(--accent); }
+    .bottom-bar-btn .cart-count {
+      position:absolute; top:6px; right:16px;
+      background:var(--danger); color:white; font-size:0.7rem; font-weight:700;
+      min-width:18px; height:18px; border-radius:9px;
+      display:flex; align-items:center; justify-content:center;
+    }
+  </style>
+
+  <!-- РЕДИРЕКТ (рабочий) -->
+  <script>
+  (function(){
+    const D = '/bin', M = '/cart-mobile', B = 1024;
+    const check = () => {
+      const mobile = innerWidth <= B;
+      const path = location.pathname;
+      if (mobile && (path === D || path.startsWith(D+'/'))) location.replace(M + location.search + location.hash);
+      if (!mobile && (path === M || path.startsWith(M+'/'))) location.replace(D + location.search + location.hash);
+    };
+    addEventListener('DOMContentLoaded', check);
+    addEventListener('resize', () => setTimeout(check, 100));
+    addEventListener('orientationchange', () => setTimeout(check, 200));
+  })();
+  </script>
+</head>
+<body class="mobile-cart-page">
+
+  <!-- ШАПКА -->
+  <header class="mobile-cart-header">
+    <button onclick="history.back()" class="back-btn">←</button>
+    <h1>Корзина <span class="count" id="mobileCartCountHeader">0</span></h1>
+    <div></div>
+  </header>
+
+  <!-- ВКЛАДКИ -->
+  <div class="cart-tabs">
+    <div class="cart-tab active" data-tab="cart">Корзина</div>
+    <div class="cart-tab" data-tab="orders">Мои заказы</div>
+  </div>
+
+  <!-- КОНТЕНТ -->
+  <div class="cart-content">
+    <div id="tab-cart" class="tab-content active">
+      <div id="mobileCartItemsList">
+        <div class="cart-empty-apple">
+          <i class="fas fa-shopping-bag"></i>
+          <div class="empty-title">Корзина пуста</div>
+          <div class="empty-subtitle">Добавьте товары и они появятся здесь</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-orders" class="tab-content">
+      <div id="ordersList"></div>
+      <div style="text-align:center;padding:80px 20px;color:var(--text-secondary);display:none;" id="emptyActive">
+        <i class="fas fa-truck" style="font-size:3.5rem;opacity:0.3;margin-bottom:16px;"></i>
+        <div style="font-size:1.4rem;">Активных заказов нет</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ПЛАШКА С КНОПКОЙ -->
+  <div class="mobile-cart-footer" id="mobileCartFooter">
+    <div class="total">
+      <div>К оплате</div>
+      <div class="price" id="mobileCartTotal">0 ₽</div>
+    </div>
+    <button class="checkout-btn" id="mobileCheckoutBtn">Оформить заказ</button>
+  </div>
+
+  <!-- НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ — ОБЯЗАТЕЛЬНО ДОБАВЬ КЛАСС mobile-only -->
+  <nav class="mobile-bottom-bar mobile-only">
+    <button class="bottom-bar-btn" id="mobileSearchBtn"><i class="fas fa-search"></i></button>
+    <button class="bottom-bar-btn" id="mobileAuthBtn"><i class="fas fa-user"></i></button>
+    <button class="bottom-bar-btn" id="openSidebarMenu"><i class="fas fa-bars"></i></button>
+    <button class="bottom-bar-btn active" id="mobileCartBtn">
+      <i class="fas fa-shopping-bag"></i>
+      <span class="cart-count" id="mobileCartCount">0</span>
+    </button>
+    <button class="bottom-bar-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
+  </nav>
+
+  <!-- ВСТАВЬ СЮДА ВСЕ СВОИ МОДАЛКИ И ШТОРКИ ИЗ /bin/index.html -->
+  <!-- (от <div class="mobile-sidebar"... до лампочки) -->
+  <!-- Они у тебя уже есть — просто скопируй блоком -->
+
+  <!-- Скрипты -->
+  <script src="/static/js/cart.js" defer></script>
+  <script src="/static/js/search.js"></script>
+  <script src="/static/js/auth.js"></script>
+  <script src="/static/js/feedback.js"></script>
+  <script src="/static/js/contacts.js" defer></script>
+  <script src="/static/js/ai.js"></script>
+  <script src="/static/js/bin.js"></script>
+  <script src="/static/js/statuschain.js" defer></script>
+
+  <!-- Логика вкладок и корзины -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Вкладки
+      document.querySelectorAll('.cart-tab').forEach(tab => {
+        tab.onclick = () => {
+          document.querySelectorAll('.cart-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          tab.classList.add('active');
+          document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+          document.getElementById('mobileCartFooter').style.display = tab.dataset.tab === 'cart' ? 'flex' : 'none';
+        };
+      });
+
+      // Обновление корзины
+      document.addEventListener('cartUpdated', e => {
+        const items = e.detail?.items || [];
+        const count = items.reduce((s,i) => s + i.quantity, 0);
+        const total = items.reduce((s,i) => s + (i.price_cents||0)*i.quantity, 0) / 100;
+
+        document.getElementById('mobileCartCount').textContent = count;
+        document.getElementById('mobileCartCountHeader').textContent = count;
+        document.getElementById('mobileCartTotal').textContent = total.toLocaleString('ru') + ' ₽';
+        document.getElementById('mobileCartFooter').style.display = count > 0 ? 'flex' : 'none';
+
+        const list = document.getElementById('mobileCartItemsList');
+        if (!count) {
+          list.innerHTML = `<div class="cart-empty-apple"><i class="fas fa-shopping-bag"></i><div class="empty-title">Корзина пуста</div></div>`;
+          return;
+        }
+
+        list.innerHTML = items.map(i => `
+          <div class="apple-cart-item">
+            <img src="${i.image_url || '/static/assets/no-image.png'}" alt="">
+            <div style="flex:1">
+              <h3>${i.title}</h3>
+              <div style="color:var(--accent);font-weight:600;">${(i.price_cents/100).toLocaleString('ru')} ₽</div>
+              <div class="qty-controls">
+                <button class="qty-btn" onclick="updateQty(${i.id},'${i.type||'product'}',-1)">−</button>
+                <span>${i.quantity}</span>
+                <button class="qty-btn" onclick="updateQty(${i.id},'${i.type||'product'}',1)">+</button>
+                <button onclick="removeItem(${i.id},'${i.type||'product'}')" style="margin-left:auto;color:var(--danger)">Удалить</button>
+              </div>
+            </div>
+            <div style="font-size:1.4rem;font-weight:700;">${((i.price_cents*i.quantity)/100).toLocaleString('ru')} ₽</div>
+          </div>
+        `).join('');
+      });
+
+      document.getElementById('mobileCheckoutBtn').onclick = () => {
+        document.getElementById('checkoutModal').style.display = 'flex';
+      };
+    });
+
+    // Быстрые функции (на случай если cart.js не экспортирует)
+    window.updateQty = async (id, type, delta) => {
+      await fetch('/api/cart/update', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({[type==='service'?'service_id':'product_id']:id, quantity:delta < 0 ? delta : 'increment'})});
+      if (typeof loadCart === 'function') loadCart();
+    };
+    window.removeItem = async (id, type) => {
+      await fetch('/api/cart/update', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({[type==='service'?'service_id':'product_id']:id, quantity:0})});
+      if (typeof loadCart === 'function') loadCart();
+    };
+  </script>
+</body>
+</html>

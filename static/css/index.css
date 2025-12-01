@@ -1,5 +1,6 @@
 
     :root {
+        --vh: 1vh;
       --white: #ffffff;
       --light: #f8f8f8;
       --gray: #e0e0e0;
@@ -10,7 +11,7 @@
       --shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
       --transition: all 0.35s ease;
     }
-
+#landing, .slide, .carousel-content { height: calc(var(--vh, 1vh) * 100); }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { scroll-behavior: smooth; font-size: 16px; overflow-x: hidden; }
     body { 
@@ -21,67 +22,6 @@
       position: relative;
 
     }
-
-/* === ХЕДЕР — ПОЛНОСТЬЮ ПРОЗРАЧНЫЙ НА СТАРТЕ === */
-header {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  z-index: 1000;
-  padding: 1.8rem 5%;
-  height: 90px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  /* ← ВАЖНО: изначально полностью прозрачный */
-  background: transparent !important;
-  border-bottom: none !important;
-  box-shadow: none !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  transition: all 0.42s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-/* Как только проскроллили — включается тёмный фон как было */
-header.scrolled {
-  background: rgba(0, 0, 0, 0.85) !important;
-  border-bottom: 1px solid var(--border) !important;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.4) !important;
-  padding: 1.2rem 5%;
-  height: 76px;
-}
-
-/* Светлая тема — ПОСЛЕ скролла — ВСЁ В ОДНОМ ПРАВИЛЕ! */
-[data-theme="light"] header.scrolled {
-  background: rgba(255, 255, 255, 0.96) !important;
-  backdrop-filter: blur(28px) !important;
-  -webkit-backdrop-filter: blur(28px) !important;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.22) !important;     /* ← РАМКА ВИДНА */
-  box-shadow: 
-    0 12px 35px rgba(0, 0, 0, 0.18),
-    0 -1px 0 rgba(255, 255, 255, 0.7) inset !important;     /* лёгкая подсветка сверху границы */
-  padding: 1.2rem 5% !important;
-  height: 76px !important;
-}
-
-/* Если хочешь ещё красивее — с лёгкой внутренней подсветкой (как в macOS) */
-[data-theme="light"] header.scrolled {
-  box-shadow: 
-    0 12px 35px rgba(0, 0, 0, 0.18),
-    0 -1px 0 rgba(255, 255, 255, 0.8) inset !important;
-}
-
-/* Небольшая нижняя полоска, чтобы было видно границу хедера на светлых слайдах */
-header:not(.scrolled)::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 5%; right: 5%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  pointer-events: none;
-}
-
-
     /* === КАРУСЕЛЬ === */
     #landing {
       position: relative;
@@ -466,16 +406,54 @@ header:not(.scrolled)::after {
     }
 
     .section-title {
-      font-size: 4rem; color: var(--white); text-align: center; 
-      font-weight: 700; letter-spacing: 1px;
-      margin-top: -10rem;     /* поднять выше */
-      margin-bottom: 1rem;
-    }
+  font-size: clamp(2.8rem, 8vw, 5.5rem);     /* плавно от 45px до 88px */
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-align: center;
+  color: var(--white);
+  margin: 0 auto;
+  padding: 0 1rem;
+  position: relative;
+  z-index: 5;
 
-    .section-title::after {
-      content: ''; display: block; width: 100px; height: 2px; 
-      background: var(--white); margin: 20px auto 0; border-radius: 1px;
-    }
+  /* Убираем жёсткие отрицательные margin — только умные отступы */
+}
+
+/* Динамический отступ сверху — чем шире экран, тем больше места */
+#contact .section-title,
+#faq .section-title {
+  margin-top: clamp(6vh, 12vw, 16vh) !important;     /* от 6vh на мобилке до 16vh на десктопе */
+  margin-bottom: clamp(3rem, 6vw, 5rem);
+}
+
+/* Нижняя полоска под заголовком */
+.section-title::after {
+  content: '';
+  display: block;
+  width: 100px;
+  height: 2px;
+  background: var(--white);
+  margin: 1.8rem auto 0;
+  border-radius: 2px;
+  opacity: 0.8;
+}
+
+/* Светлая тема — чёрная полоска */
+[data-theme="light"] .section-title {
+  color: #111;
+}
+[data-theme="light"] .section-title::after {
+  background: #111;
+}
+
+/* ================================================================= */
+/* ДОПОЛНИТЕЛЬНО: УБИРАЕМ ВСЁ ЖЁСТКОЕ margin-top ИЗ СТАРЫХ МЕДИА!   */
+/* ================================================================= */
+.section-title,
+#contact .section-title,
+#faq .section-title {
+  margin-top: unset !important;
+}
 
     .faq-container { width: 100%; max-width: 880px; display: flex; flex-direction: column; gap: 1.4rem; }
     .faq-item {
@@ -544,22 +522,6 @@ header:not(.scrolled)::after {
     border-color: rgba(255,255,255,0.4);
     }
 
-    .cart-count {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: #dfdedd;
-    color: #000;
-    font-size: 0.7rem;
-    font-weight: 700;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none; /* чтобы не мешал клику */
-    }
 
     .faq-card:hover::before { opacity: 1; }
     
@@ -832,72 +794,6 @@ header:not(.scrolled)::after {
     -1px 1px 0 #fff !important;
 }
 
-/* ====================== ХЕДЕР — ПОЛНАЯ ПОДДЕРЖКА СВЕТЛОЙ ТЕМЫ (ОБА СОСТОБСТОЯНИЯ) ====================== */
-/* ====================== ХЕДЕР — СВЕТЛАЯ ТЕМА — ФИНАЛЬНО РАБОЧАЯ ВЕРСИЯ ====================== */
-[data-theme="light"] header {
-  background: transparent !important;
-  border-bottom: none !important;
-  box-shadow: none !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
-  transition: all 0.45s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-/* ДО СКРОЛЛА — ВСЁ БЕЛОЕ — ИСПРАВЛЕНО: чистый белый для иконок корзины и обратной связи */
-/* ДО СКРОЛЛА — ВСЁ БЕЛОЕ (логотип, текст, иконки) */
-[data-theme="light"] header:not(.scrolled) * {
-  color: #ffffff !important;
-}
-
-/* ГЛАВНОЕ: Делаем иконки корзины и обратной связи ТОЧНО ТАКИМИ ЖЕ ЯРКИМИ, как поиск и вход */
-[data-theme="light"] header:not(.scrolled) .feedback-icon,
-[data-theme="light"] header:not(.scrolled) .cart-icon {
-  color: #ffffff !important;
-}
-
-
-[data-theme="light"] header:not(.scrolled) .feedback-icon path,
-[data-theme="light"] header:not(.scrolled) .cart-icon path,
-[data-theme="light"] header:not(.scrolled) .feedback-icon use,
-[data-theme="light"] header:not(.scrolled) .cart-icon use {
-  fill: #ffffff !important;
-  stroke: #ffffff !important;
-}
-
-
-
-/* Бейдж корзины — яркий, как в тёмной теме */
-[data-theme="light"] header:not(.scrolled) .cart-count {
-  background: #ffffff !important;
-  color: #000000 !important;
-  font-weight: 800;
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.7);
-  border: 1.5px solid #ffffff;
-}
-
-/* Бейдж корзины — красивый полупрозрачный */
-[data-theme="light"] header:not(.scrolled) .cart-count {
-  background: rgba(255,255,255,0.2) !important;
-  color: #fff !important;
-  backdrop-filter: blur(10px);
-}
-
-/* ПОСЛЕ СКРОЛЛА — всё чёрное */
-[data-theme="light"] header.scrolled * {
-  color: #111 !important;
-}
-
-[data-theme="light"] header.scrolled svg,
-[data-theme="light"] header.scrolled img,
-[data-theme="light"] header.scrolled i {
-  fill: #111 !important;
-  filter: none !important;
-}
-
-[data-theme="light"] header.scrolled .cart-count {
-  background: #111 !important;
-  color: #fff !important;
-}
 
 /* Светлая тема — правильные 3D-карточки FAQ */
 [data-theme="light"] .faq-card {
@@ -923,136 +819,6 @@ header:not(.scrolled)::after {
               0 0 60px rgba(0, 0, 0, 0.12) inset !important;
   border-color: rgba(0, 0, 0, 0.35) !important;
 }
-
-.theme-toggle-hanging {
-  position: fixed;
-  top: 90px;           /* под хедером */
-  right: 6%;
-  z-index: 999;
-  pointer-events: auto;
-  transform: translateY(-50%);
-}
-
-/* При скролле хедера — лампочка опускается ниже */
-header.scrolled ~ .theme-toggle-hanging,
-header.scrolled + .theme-toggle-hanging {
-  top: 76px;
-}
-
-.theme-toggle-input { display: none; }
-
-.theme-toggle-label {
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  user-select: none;
-  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-}
-.theme-toggle-label:hover { transform: translateY(-4px); }
-.theme-toggle-label:active { transform: translateY(6px); }
-
-/* Верёвка сверху */
-.rope.top {
-  width: 2px;
-  height: 110px;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.15), rgba(255,255,255,0.4), rgba(255,255,255,0.15));
-  box-shadow: 0 0 8px rgba(255,255,255,0.25);
-  position: relative;
-  transition: all 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-[data-theme="light"] .rope.top {
-  background: linear-gradient(to bottom, rgba(0,0,0,0.08), rgba(0,0,0,0.22), rgba(0,0,0,0.08));
-  box-shadow: 0 0 6px rgba(0,0,0,0.12);
-}
-
-/* Блеск на верёвке */
-.rope.top::before {
-  content: '';
-  position: absolute;
-  top: 0; left: -4px; right: -4px; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  border-radius: 2px;
-  animation: rope-shine 3s infinite ease-in-out;
-}
-[data-theme="light"] .rope.top::before {
-  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.15), transparent);
-}
-@keyframes rope-shine {
-  0%,100% { opacity: 0.2; }
-  50% { opacity: 0.7; }
-}
-
-/* Лампочка */
-.bulb {
-  width: 38px; height: 38px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 28% 28%, #fffbe6, #ffd700);
-  border: 1.5px solid rgba(255,215,0,0.7);
-  position: relative;
-  box-shadow: 0 0 24px rgba(255,215,0,0.5), inset 0 0 12px rgba(255,255,255,0.7), 0 6px 12px rgba(0,0,0,0.3);
-  transition: all 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-.bulb::before {
-  content: ''; position: absolute; inset: 6px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 40%, #fffbe6, #ffed9e);
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
-}
-
-/* Свет внутри лампочки */
-.bulb-light {
-  position: absolute; inset: 9px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,255,150,0.95), rgba(255,235,100,0.7), transparent 70%);
-  opacity: 0;
-  transition: opacity 1s ease;
-}
-.theme-toggle-input:checked + .theme-toggle-label .bulb-light { opacity: 1; }
-
-/* Внешнее свечение */
-.bulb-glow {
-  position: absolute; top: 50%; left: 50%;
-  width: 70px; height: 70px;
-  background: radial-gradient(circle, rgba(255,220,100,0.35), transparent 70%);
-  border-radius: 50%;
-  transform: translate(-50%,-50%);
-  opacity: 0;
-  transition: opacity 1s ease;
-  pointer-events: none;
-}
-.theme-toggle-input:checked + .theme-toggle-label .bulb-glow { opacity: 1; }
-
-/* Нижняя часть верёвки */
-.rope.bottom {
-  width: 2px; height: 22px;
-  background: inherit;
-  margin-top: -3px;
-}
-
-/* Светлая тема — лампочка выключена */
-[data-theme="light"] .bulb {
-  background: radial-gradient(circle at 30% 30%, #f0f0f0, #bbbbbb);
-  border-color: rgba(0,0,0,0.25);
-  box-shadow: 0 0 10px rgba(0,0,0,0.15), inset 0 0 8px rgba(0,0,0,0.1), 0 6px 12px rgba(0,0,0,0.2);
-}
-[data-theme="light"] .bulb::before {
-  background: radial-gradient(circle at 40% 40%, #ffffff, #dddddd);
-}
-[data-theme="light"] .bulb-light,
-[data-theme="light"] .bulb-glow { opacity: 0 !important; }
-
-/* Адаптив */
-@media (max-width: 992px) {
-  .theme-toggle-hanging { right: 5%; }
-}
-@media (max-width: 768px) {
-  .theme-toggle-hanging { right: 20px; top: 80px; }
-  header.scrolled ~ .theme-toggle-hanging { top: 70px; }
-}
-
-    .product-content, .product-title, .product-price, .add-to-cart-btn {
-        font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-    }
 
 
 /* === МОДАЛЬНОЕ ОКНО ПО ЦЕНТРУ === */
@@ -1160,20 +926,7 @@ header.scrolled + .theme-toggle-hanging {
   transform: translateY(-50%) scale(1.05);
 }
 
-/* Необязательно — лёгкая нижняя граница при прозрачном состоянии */
-header:not(.scrolled)::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 5%; right: 5%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
-  pointer-events: none;
-  opacity: 0.6;
-}
 
-[data-theme="light"] header:not(.scrolled)::after {
-  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.15), transparent);
-}
 
 
 .slide-element {
@@ -1314,33 +1067,6 @@ header:not(.scrolled)::after {
   box-shadow: none !important;
 }
 
-
-/* ===================================================== */
-/* 2. ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ (ЛАМПОЧКА) — ВЕРЁВКА ВИДНА ДО СКРОЛЛА В СВЕТЛОЙ ТЕМЕ */
-/* ===================================================== */
-[data-theme="light"] header:not(.scrolled) ~ .theme-toggle-hanging .rope.top,
-[data-theme="light"] header:not(.scrolled) + .theme-toggle-hanging .rope.top {
-  background: linear-gradient(to bottom, 
-    rgba(0,0,0,0.18), 
-    rgba(0,0,0,0.35), 
-    rgba(0,0,0,0.18)
-  ) !important;
-  box-shadow: 
-    0 0 12px rgba(0,0,0,0.25),
-    inset 0 0 4px rgba(255,255,255,0.4) !important;
-}
-
-[data-theme="light"] header:not(.scrolled) ~ .theme-toggle-hanging .rope.top::before,
-[data-theme="light"] header:not(.scrolled) + .theme-toggle-hanging .rope.top::before {
-  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.25), transparent) !important;
-  opacity: 0.6 !important;
-  animation: rope-shine 2.8s infinite ease-in-out !important;
-}
-
-/* Дополнительно — чуть толще и контрастнее */
-[data-theme="light"] .rope.top {
-  width: 3px !important;  /* было 2px — теперь заметнее */
-}
 /* ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ ФОНА КАРУСЕЛИ — БЕЗ ЛЮБОГО ЗУМА */
 /* ФИНАЛЬНЫЙ ФИКС — ФОН КАРУСЕЛИ БЕЗ ЗУМА НАВСЕГДА */
 #landing .slide,
@@ -1357,5 +1083,529 @@ header:not(.scrolled)::after {
 #landing {
   transform: none !important;
   overflow: hidden !important;
+}
+
+/* ============================================================= */
+/* АДАПТИВ 2025 — ОТ 320px (iPhone SE) ДО 4K — БЕЗ КОМПРОМИССОВ */
+/* ============================================================= */
+
+/* 1. БАЗОВЫЕ ПРАВИЛА ДЛЯ МОБИЛЬНЫХ (320–480px) */
+@media (max-width: 480px) {
+  html { font-size: 14px; }
+
+  body { padding-bottom: 80px; } /* место под нижнюю мобильную панель */
+
+  /* Карусель — стрелки и прогресс-бар */
+  .carousel-arrow { width: 36px; height: 36px; }
+  .carousel-arrow i { font-size: 1rem; }
+  .carousel-arrow.prev  { left: 12px; }
+  .carousel-arrow.next  { right: 12px; }
+
+  .carousel-progress {
+    bottom: 16px;
+    gap: 8px;
+  }
+  .progress-bar { width: 40px; height: 2.5px; }
+
+  /* Обратная связь — полный редизайн под мобильные */
+  .contact-wrapper {
+    grid-template-columns: 1fr !important;
+    gap: 2rem;
+    padding: 0 1rem;
+  }
+
+  /* Убираем все граффити и стрелки — они не влезают */
+  .graffiti-left-wrapper,
+  .graffiti-right-wrapper,
+  .form-wrapper,
+  .graffiti-arrow,
+  .simple-arrow-wrapper { display: none !important; }
+
+  .contact-form {
+    padding: 2rem 1.5rem;
+    border-radius: 20px;
+    max-width: 100%;
+  }
+
+  .contact-form input,
+  .contact-form textarea {
+    padding: 1rem 1.2rem;
+    font-size: 16px; /* iOS не будет зумить */
+  }
+
+  .section-title { font-size: 2.4rem; margin-top: -4rem; }
+
+  /* FAQ */
+  .faq-grid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+    padding: 0 1rem;
+  }
+
+  .faq-card {
+    padding: 1.8rem;
+    border-radius: 18px;
+  }
+
+  .faq-card .question { font-size: 1.25rem; }
+}
+
+/* 2. ПЛАНШЕТЫ 481–1024px (iPad, iPad Pro в портрете) */
+@media (min-width: 481px) and (max-width: 1024px) {
+  html { font-size: 15px; }
+
+  .contact-wrapper {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    padding: 0 2rem;
+  }
+
+  /* Граффити и стрелки — прячем, но не все */
+  .graffiti-left-wrapper,
+  .graffiti-right-wrapper,
+  .graffiti-arrow { display: none !important; }
+
+  .form-wrapper {
+    transform: none !important;
+  }
+
+  .simple-arrow-wrapper {
+    display: block;
+    width: 260px;
+    top: 50%;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%) rotate(90deg);
+  }
+
+  .simple-arrow-png {
+    filter: invert(1) drop-shadow(0 0 30px rgba(255,255,255,0.9));
+  }
+
+  .section-title { font-size: 3.2rem; }
+
+  .faq-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.8rem;
+  }
+}
+
+/* 3. НОУТБУКИ 1025–1440px */
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .contact-wrapper {
+    grid-template-columns: minmax(280px, 380px) minmax(480px, 620px) minmax(280px, 380px);
+    gap: 4rem;
+  }
+
+  /* Граффити чуть ближе */
+  .graffiti-left-wrapper  { transform: translateX(-240px) translateY(-200px) scale(0.95); }
+  .graffiti-right-wrapper { transform: translateX(-900px) translateY(140px) scale(0.95); }
+
+  .form-wrapper { transform: translateX(120px) translateY(-30px) scale(1); }
+
+  .simple-arrow-wrapper {
+    width: 380px;
+    right: 80px;
+  }
+}
+
+/* 4. БОЛЬШИЕ ЭКРАНЫ 1441px+ (FullHD, 2K, 4K) */
+@media (min-width: 1441px) {
+  .contact-wrapper {
+    max-width: 1800px;
+    gap: 6rem;
+  }
+
+  .graffiti-left-wrapper  { transform: translateX(-360px) translateY(-320px) scale(1.1); }
+  .graffiti-right-wrapper { transform: translateX(-1280px) translateY(200px) scale(1.1); }
+
+  .simple-arrow-wrapper { width: 480px; right: 120px; }
+}
+
+/* 5. ВЕРТИКАЛЬНЫЕ ТЕЛЕФОНЫ С БОЛЬШИМ ЭКРАНОМ (iPhone 14 Pro Max, Samsung S23 Ultra) */
+@media (max-width: 480px) and (min-height: 800px) {
+  .contact-form { margin-top: 4rem; }
+}
+
+/* 6. ГОРИЗОНТАЛЬНЫЕ ПЛАНШЕТЫ ИЛИ НОУТБУКИ С МАЛЕНЬКОЙ ВЫСОТОЙ */
+@media (max-height: 700px) and (orientation: landscape) {
+  #contact, #faq { padding: 8vh 4%; }
+  .section-title { font-size: 2.8rem; margin-top: -2rem; }
+}
+
+/* 7. ФИКС ДЛЯ iPhone SE 1-го поколения (320px) — ничего не должно ломаться */
+@media (max-width: 340px) {
+  .carousel-arrow { width: 32px; height: 32px; }
+  .carousel-arrow.prev  { left: 8px; }
+  .carousel-arrow.next { right: 8px; }
+  .carousel-progress { bottom: 12px; }
+  .progress-bar { width: 32px; }
+}
+
+/* АДАПТИВ БЕЗ ПОРЧИ ДЕСКТОПА — только улучшает то, что уже идеально */
+@media (max-width: 1700px) {
+  .graffiti-left-wrapper  { transform: translateX(-280px) translateY(-240px) scale(1) !important; }
+  .graffiti-right-wrapper { transform: translateX(-1000px) translateY(160px) scale(1) !important; }
+  .form-wrapper { transform: translateX(160px) translateY(-35px) scale(1.03) !important; }
+  .simple-arrow-wrapper { right: 100px; width: 460px; }
+}
+
+@media (max-width: 1560px) {
+  .graffiti-left-wrapper  { transform: translateX(-240px) translateY(-200px) scale(0.98) !important; }
+  .graffiti-right-wrapper { transform: translateX(-880px) translateY(140px) scale(0.98) !important; }
+  .form-wrapper { transform: translateX(140px) translateY(-30px) scale(1.02) !important; }
+  .simple-arrow-wrapper { right: 80px; width: 420px; }
+}
+
+@media (max-width: 1440px) {
+  .graffiti-left-wrapper  { transform: translateX(-200px) translateY(-160px) scale(0.96) !important; }
+  .graffiti-right-wrapper { transform: translateX(-760px) translateY(120px) scale(0.96) !important; }
+  .form-wrapper { transform: translateX(100px) translateY(-20px) scale(1) !important; }
+  .simple-arrow-wrapper { right: 60px; width: 380px; }
+}
+
+@media (max-width: 1280px) {
+  .graffiti-left-wrapper  { transform: translateX(-160px) translateY(-120px) scale(0.94) !important; }
+  .graffiti-right-wrapper { transform: translateX(-640px) translateY(100px) scale(0.94) !important; }
+  .form-wrapper { transform: translateX(60px) translateY(-10px) !important; }
+}
+
+@media (max-width: 1100px) {
+  .contact-wrapper {
+    grid-template-columns: 1fr minmax(auto, 640px) 1fr !important;
+    gap: 3rem;
+  }
+  .graffiti-left-wrapper,
+  .graffiti-right-wrapper {
+    transform: translateY(-80px) scale(0.9) !important;
+  }
+  .simple-arrow-wrapper { display: none; }
+}
+
+@media (max-width: 1024px) {
+  .contact-wrapper {
+    grid-template-columns: 1fr !important;
+    gap: 2rem;
+    text-align: center;
+  }
+  .graffiti-left-wrapper  { order: -1; transform: none !important; margin-bottom: 1rem; }
+  .graffiti-right-wrapper { order: 1; transform: none !important; margin-top: 1rem; }
+  .form-wrapper { transform: none !important; }
+}
+
+@media (max-width: 768px) {
+  .graffiti-left-wrapper,
+  .graffiti-right-wrapper,
+  .simple-arrow-wrapper,
+  .graffiti-arrow {
+    display: none !important;
+  }
+  .contact-wrapper {
+    grid-template-columns: 1fr;
+    padding: 0 1rem;
+  }
+  .form-wrapper {
+    transform: none !important;
+  }
+  .contact-form {
+    padding: 2.2rem 1.8rem;
+  }
+  .section-title {
+    font-size: 3rem !important;
+    margin-top: -2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .section-title { font-size: 2.6rem !important; }
+  .contact-form input,
+  .contact-form textarea { font-size: 16px; }
+}
+/* ФИКС: ФОРМА НИКОГДА НЕ ДОЛЖНА ИСЧЕЗАТЬ НА МОБИЛЬНЫХ */
+@media (max-width: 480px) {
+  .form-wrapper {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 1rem !important;
+    box-sizing: border-box !important;
+  }
+
+  .contact-form {
+    display: grid !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 2.2rem 1.8rem !important;
+    border-radius: 22px !important;
+  }
+
+  /* На всякий случай — перебиваем все возможные display: none */
+  .contact-form,
+  .contact-form *,
+  .form-wrapper,
+  .form-wrapper * {
+    display: block !important;
+  }
+
+  .contact-form input,
+  .contact-form textarea,
+  .contact-form button {
+    font-size: 16px !important; /* iOS не зумит */
+    width: 100% !important;
+  }
+}
+
+/* Дополнительная страховка для ширины 481–768px (на всякий случай) */
+@media (max-width: 768px) {
+  .form-wrapper {
+    display: block !important;
+  }
+}
+footer {
+  padding: 4rem 5% 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2rem 4rem; /* вертикальный и горизонтальный отступ между блоками */
+  border-top: 1px solid var(--border);
+  font-size: 0.95rem;
+  color: var(--gray);
+  min-height: 140px; /* чтобы не "прыгал" при изменении контента */
+  box-sizing: border-box;
+}
+
+/* Логотип по центру */
+.footer-center {
+  flex: 1 1 200px;
+  display: flex;
+  justify-content: center;
+  order: 2;
+}
+
+.footer-center img {
+  height: 80px;
+  max-width: 100%;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
+  transition: filter 0.3s ease;
+}
+
+[data-theme="light"] .footer-center img {
+  filter: none;
+}
+
+/* Левая часть — копирайт */
+.footer-left {
+  flex: 1 1 300px;
+  order: 1;
+  text-align: left;
+}
+
+/* Правая часть — ссылки */
+.footer-right {
+  flex: 1 1 300px;
+  order: 3;
+  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 1.8rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.8px;
+}
+
+.footer-right a {
+  color: var(--gray);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+
+.footer-right a:hover {
+  color: var(--text);
+}
+
+/* ————————————————————————
+   АДАПТИВНОСТЬ НА ВСЕХ ЭКРАНАХ
+  ———————————————————————— */
+@media (max-width: 992px) {
+  footer {
+    padding: 3.5rem 5% 2rem;
+    gap: 2.5rem 3rem;
+  }
+  
+  .footer-center img {
+    height: 70px;
+  }
+}
+
+@media (max-width: 768px) {
+  footer {
+    flex-direction: column;
+    text-align: center;
+    padding: 3rem 5% 2rem;
+    gap: 2rem;
+  }
+
+  .footer-left,
+  .footer-center,
+  .footer-right {
+    order: unset !important;
+    text-align: center;
+    flex: 1;
+  }
+
+  .footer-right {
+    justify-content: center;
+    gap: 1.4rem;
+    font-size: 0.8rem;
+  }
+
+  .footer-center {
+    order: -1; /* логотип наверх */
+  }
+
+  .footer-center img {
+    height: 65px;
+  }
+}
+
+@media (max-width: 480px) {
+  footer {
+    padding: 2.5rem 5% 1.8rem;
+    font-size: 0.9rem;
+  }
+
+  .footer-right {
+    flex-direction: column;
+    gap: 1rem;
+    font-size: 0.8rem;
+  }
+
+  .footer-center img {
+    height: 60px;
+  }
+}
+
+html[data-theme="light"] header.scrolled .cart-count {
+  background: #000000 !important;   /* чёрный бейджик */
+  color: #ffffff !important;         /* белая цифра — ВСЕГДА */
+}
+
+/* На всякий случай — и без скролла тоже белая цифра */
+html[data-theme="light"] .cart-count {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+/* Стили кнопки обратной связи применяются только для экранов больше 1024px */
+@media screen and (min-width: 1025px) {
+  html[data-theme="light"] button[class*="feedback"],
+  html[data-theme="light"] #feedbackFloatingBtn,
+  html[data-theme="light"] .floating-feedback-btn,
+  html[data-theme="light"] .feedback-btn,
+  html[data-theme="light"] button[id*="feedback"],
+  html[data-theme="light"] #feedbackBtn {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border: 1.2px solid rgba(0,0,0,0.18) !important;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.16) !important;
+    opacity: 1 !important;
+  }
+}
+/* Лёгкая чёрная рамка ТОЛЬКО в светлой теме */
+[data-theme="light"] .admin-svg circle[stroke="#000"] {
+  opacity: 0.18 !important; /* чуть заметнее, но всё ещё элегантно */
+}
+
+/* В тёмной теме — рамка исчезает полностью */
+[data-theme="dark"] .admin-svg circle[stroke="#000"] {
+  opacity: 0;
+}
+
+/* Плавное появление/исчезновение рамки при смене темы */
+.admin-svg circle[stroke="#000"] {
+  transition: opacity 0.4s ease;
+}
+/* ============================================================= */
+/* МОБИЛЬНАЯ КАРУСЕЛЬ — СВАЙПЫ + ПЕРЕМЕЩЕНИЕ ПРОГРЕСС-БАРА    */
+/* Работает от 1026px и ниже                                   */
+/* ============================================================= */
+@media (max-width: 1026px) {
+
+  /* 1. Скрываем стрелки — теперь только свайпы */
+  .carousel-arrow {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.4s ease;
+  }
+
+  /* 2. Прогресс-бар поднимаем выше — больше не перекрывается нижней мобильной панелью */
+  .carousel-progress {
+    bottom: 88px !important;        /* было 24px → теперь над нижним баром */
+    transition: bottom 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* На совсем маленьких экранах (iPhone SE и т.п.) поднимаем ещё выше */
+  @media (max-height: 700px) {
+    .carousel-progress {
+      bottom: 76px !important;
+    }
+  }
+
+  /* 3. Включаем нативные свайпы (touch) */
+  .carousel-container {
+    touch-action: pan-y pinch-zoom;       /* только горизонтальные свайпы */
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Делаем весь слайд "свайпабельным" */
+  #landing,
+  .carousel-content,
+  .carousel-container {
+    cursor: grab;
+  }
+  #landing:active,
+  .carousel-container:active {
+    cursor: grabbing;
+  }
+
+  /* Подсказка пользователю — лёгкая анимация "свайпни" при первом заходе */
+  .carousel-container::after {
+    content: '← →';
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2.4rem;
+    color: rgba(255,255,255,0.45);
+    pointer-events: none;
+    animation: swipeHint 2.8s ease-out 1.5s forwards;
+    z-index: 9;
+  }
+
+  @keyframes swipeHint {
+    0%, 70%   { opacity: 0.6; transform: translateX(-50%) translateY(0); }
+    85%       { opacity: 0.4; transform: translateX(-50%) translateY(-8px); }
+    100%      { opacity: 0;   transform: translateX(-50%) translateY(-16px); }
+  }
+
+  /* Убираем подсказку, если пользователь уже свайпал хоть раз */
+  .carousel-container.swiped::after {
+    display: none !important;
+  }
+}
+
+/* Дополнительно: если хочешь чуть больше места на iPhone с "чёлкой" и нижним баром */
+@media (max-width: 1026px) and (max-height: 850px) {
+  .carousel-progress {
+    bottom: 96px !important;
+  }
 }
 

@@ -1277,4 +1277,3 @@ if (window.matchMedia("(max-width: 1024px)").matches) {
   // При ресайзе/повороте
   window.addEventListener('resize', update);
 }
-
