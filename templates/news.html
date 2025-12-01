@@ -872,40 +872,63 @@ document.addEventListener("DOMContentLoaded", () => {
           : phone;
         const input = modal.querySelector('input[type="tel"]');
         if (input) input.value = formatted;
-        const editBtn = modal.querySelector('.edit-phone-btn');
-        if (editBtn) editBtn.style.display = 'block';
+
       }
     }
   });
 
   // === МОБИЛЬНАЯ КНОПКА ===
-  document.getElementById('feedbackBtnMobile')?.addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
 
-    if (!isAuthenticated()) {
-      showCustomAlert('Войдите в аккаунт', true);
-      return;
-    }
+document.getElementById('feedbackBtnMobile')?.addEventListener('click', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
 
-    // ТОЛЬКО если это мобилка — открываем шторку
-    if (window.innerWidth <= 1024) {
-      const sheet = document.getElementById('mobileFeedbackSheet');
-      sheet.classList.add('active');
-      document.body.style.overflow = 'hidden';
+  if (!isAuthenticated()) {
+    // ←←← ВОТ ТУТ БЫЛ ТОСТ, А ДОЛЖЕН БЫТЬ КРАСИВЫЙ АЛЕРТ
+    const authAlert = document.getElementById('authAlert');
+    authAlert.classList.add('show');
+    document.body.style.overflow = 'hidden';
 
-      const phone = sessionStorage.getItem('phone') || localStorage.getItem('phone');
-      if (phone) {
-        const clean = phone.replace(/\D/g, '');
-        const formatted = clean.length === 11 
-          ? `+7 (${clean.slice(1,4)}) ${clean.slice(4,7)}-${clean.slice(7,9)}-${clean.slice(9)}`
-          : phone;
-        const input = sheet.querySelector('input[type="tel"]');
-        if (input) input.value = formatted;
+    // Кнопка "Войти" в алерте открывает модалку авторизации
+    document.getElementById('authBtnFeedback')?.addEventListener('click', () => {
+      authAlert.classList.remove('show');
+      document.body.style.overflow = '';
+      document.getElementById('authModal').style.display = 'flex';
+    });
+
+    // Закрытие алерта
+    authAlert.querySelector('.alert-close')?.addEventListener('click', () => {
+      authAlert.classList.remove('show');
+      document.body.style.overflow = '';
+    });
+
+    // Клик вне контента — закрыть
+    authAlert.addEventListener('click', (ev) => {
+      if (ev.target === authAlert) {
+        authAlert.classList.remove('show');
+        document.body.style.overflow = '';
       }
-    }
-  });
+    });
+
+    return;
+  }
+
+  // Если авторизован — открываем мобильную шторку обратной связи
+  const sheet = document.getElementById('mobileFeedbackSheet');
+  sheet.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  // Автозаполнение телефона
+  const phone = sessionStorage.getItem('phone') || localStorage.getItem('phone');
+  if (phone) {
+    const clean = phone.replace(/\D/g, '');
+    const formatted = clean.length === 11 
+      ? `+7 (${clean.slice(1,4)}) ${clean.slice(4,7)}-${clean.slice(7,9)}-${clean.slice(9)}`
+      : phone;
+    const input = sheet.querySelector('input[type="tel"]');
+    if (input) input.value = formatted;
+  }
+});
 
   // === ЗАКРЫТИЕ МОДАЛОК (чтобы не было конфликтов) ===
   document.getElementById('closeFeedback')?.addEventListener('click', () => {

@@ -1108,3 +1108,38 @@ html[data-theme="light"] .cart-count {
     opacity: 1 !important;
   }
 }
+/* ══════════════════════════════════════
+   МОБИЛЬНАЯ АДАПТАЦИЯ ХЕРО — УБИРАЕМ ТЯЖЁЛУЮ ТЕНЬ
+   Чтобы фото было видно, а не утопало в черноте
+   ══════════════════════════════════════ */
+@media screen and (max-width: 1024px) {
+
+  /* 1. Полностью убираем старый жёсткий оверлей из background */
+  .hero {
+    background: url('/static/assets/about_company/hero-main.jpg') center / cover no-repeat;
+    /* Если хочешь лёгкую затемнённость — только снизу, а не по всему */
+    background-color: transparent !important;
+  }
+
+  /* 2. Убираем тяжёлый linear-gradient из основного background */
+  .hero::before {
+    background: linear-gradient(to bottom, 
+      transparent 0%, 
+      transparent 30%, 
+      rgba(0,0,0,0.3) 70%, 
+      rgba(0,0,0,0.75) 100%
+    ) !important;
+  }
+
+  /* 3. Если всё равно слишком темно — можно ещё сильнее ослабить */
+  /* Вариант "почти без затемнения" — раскомментируй, если нужно совсем светло */
+  /*
+  .hero::before {
+    background: linear-gradient(to bottom, 
+      transparent 0%, 
+      rgba(0,0,0,0.15) 70%, 
+      rgba(0,0,0,0.5) 100%
+    ) !important;
+  }
+  */
+}

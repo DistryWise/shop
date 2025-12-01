@@ -46,7 +46,7 @@
     .logo-img { height: 120px; filter: brightness(0) invert(1); transition: all .4s; }
     header.scrolled .logo-img { height: 100px; }
 
-    nav { display: flex; gap: 3rem; }
+
     .nav-link {
       font-weight: 400; font-size: 1rem; letter-spacing: 2px; text-transform: uppercase;
       color: #aaa; text-decoration: none; position: relative;
@@ -73,44 +73,7 @@
     }
 
     /* КОРЗИНА */
-    #miniCartDropdown {
-      position: absolute; top: 100%; right: 0; width: 380px; max-height: 70vh;
-      background: rgba(15,15,15,0.98); border: 1.5px solid rgba(255,255,255,0.12);
-      border-radius: 20px; box-shadow: 0 30px 80px rgba(0,0,0,0.6);
-      backdrop-filter: blur(20px); z-index: 9999; overflow: hidden;
-      opacity: 0; visibility: hidden; transform: translateY(-10px);
-      transition: all 0.35s ease; padding: 1.5rem;
-    }
-    #miniCartDropdown.show {
-      opacity: 1; visibility: visible; transform: translateY(8px);
-    }
-    .mini-cart-header {
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;
-      padding-bottom: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    .mini-cart-title {
-      font-size: 1.4rem; font-weight: 300; letter-spacing: 2px;
-    }
-    .mini-cart-items { max-height: 45vh; overflow-y: auto; margin: 1rem 0; }
-    .mini-cart-empty { color: var(--gray); text-align: center; padding: 2rem; font-size: 0.95rem; }
-    .mini-cart-item {
-      display: flex; gap: 1rem; padding: 0.8rem 0; border-bottom: 1px solid rgba(255,255,255,0.06);
-    }
-    .mini-cart-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
-    .mini-cart-item-info { flex: 1; }
-    .mini-cart-item-title { font-size: 0.95rem; margin-bottom: 0.3rem; }
-    .mini-cart-item-price { font-size: 0.9rem; color: var(--gray); }
-    .mini-cart-footer {
-      border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .mini-cart-total { font-size: 1.2rem; font-weight: 500; }
-    .go-to-cart-btn {
-      background: #fff; color: #ffffff; padding: 0.7rem 1.4rem; border: none;
-      border-radius: 10px; font-weight: 600; font-size: 0.9rem; letter-spacing: 1.5px;
-      transition: all .3s;
-    }
-    .go-to-cart-btn:hover { background: #ddd; }
+
 
     main { padding: calc(90px + 15vh) 8% 20vh; display: flex; flex-direction: column; align-items: center; }
 
