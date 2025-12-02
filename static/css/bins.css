@@ -806,6 +806,7 @@
   .summary-item {
     display: flex;
     justify-content: space-between;
+    
     font-size: 1.1rem;
     margin-bottom: 0.8rem;
   }
@@ -893,7 +894,43 @@
     margin-top: 0.4rem;
     letter-spacing: 1px;
   }
+/* Базовый стиль для всех строк */
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;           /* Это главное! */
+  font-size: 1.15rem;
+  margin-bottom: 0.9rem;
+  line-height: 1.4;
+}
 
+/* Строка "К оплате" — самая важная */
+.summary-row.total {
+  align-items: center !important;     /* принудительно по центру */
+  font-size: 1.85rem !important;      /* большой жирный текст */
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  padding-top: 1.4rem;
+  margin-top: 1.2rem;
+  border-top: 1.5px solid rgba(255,255,255,0.18);
+  min-height: 58px;                   /* фиксируем высоту строки */
+}
+
+/* Чтобы "К оплате:" был чуть меньше и не тянул строку вверх */
+.summary-row.total span {
+  font-size: 1.32rem;                 /* меньше, чем сумма */
+  font-weight: 600;
+  opacity: 0.88;
+  margin-right: 1rem;
+}
+
+/* Светлая тема */
+[data-theme="light"] .summary-row.total {
+  border-top-color: rgba(0,0,0,0.14);
+}
+[data-theme="light"] .summary-row.total span {
+  opacity: 0.82;
+}
   .confirm-beauty-btn {
     width: 100%;
     padding: 1.5rem;
@@ -3195,9 +3232,220 @@ html[data-theme="dark"] .progress-label.filled { color: #fff; }
   }
 }
 
+/* === ФИНАЛЬНЫЙ РАБОЧИЙ ВАРИАНТ — ДЛЯ ТЕЛЕФОНОВ ≤1026px === */
+@media (max-width: 1026px) {
+  .mobile-cart-layout {
+    display: flex !important;
+    flex-direction: column;
+    min-height: 100dvh;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    padding-bottom: 140px !important;     /* место под кнопку оформления */
+    box-sizing: border-box;
 
+    /* ←←← ВОТ ЭТО ГЛАВНОЕ — динамический отступ сверху */
+    padding-top: 20px !important;         /* по умолчанию — плашки нет */
+    transition: padding-top 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+  }
 
+  /* Когда есть активные заказы — отодвигаем контент под плашку */
+  body.has-active-orders .mobile-cart-layout {
+    padding-top: 92px !important;         /* 80–85 высота плашки + safe-area + тень */
+  }
+
+  /* Чтобы всё красиво скроллилось */
+  .cart-items-mobile,
+  .cart-empty-apple {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
 /* А если хочешь быть на 1000% уверен — вот так: */
 #floatingOrderBar {
   z-index: 1000 !important;   /* АБСОЛЮТНЫЙ МАКСИМУМ */
+}
+
+/* ===================================================== */
+/*       МОДАЛКА ОТЗЫВОВ — УНИВЕРСАЛЬНАЯ 2025 (ПК + МОБИЛКА)       */
+/* ===================================================== */
+
+#reviewModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.4s ease;
+}
+
+.review-modal-apple {
+  background: #000000;                          /* ЧИСТЫЙ ЧЁРНЫЙ везде */
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 28px;
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 2.4rem 2rem 2rem;
+  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.75);
+  position: relative;
+  animation: modalUp 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.close-modal {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.4rem;
+  background: none;
+  border: none;
+  font-size: 2.2rem;
+  color: #888;
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s;
+}
+.close-modal:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+.review-header-apple h2 {
+  font-size: 1.85rem;
+  font-weight: 800;
+  margin: 0 0 0.6rem;
+  text-align: center;
+  color: #fff;
+}
+
+.review-header-apple p {
+  font-size: 1.22rem;
+  text-align: center;
+  color: #ccc;
+  margin: 0 0 1.8rem;
+  line-height: 1.45;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.review-stars-apple {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.6rem 0 2rem;
+}
+
+.review-stars-apple i {
+  font-size: 2.6rem;         
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #444;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.review-stars-apple i.fas {
+  color: #ffd700;
+  filter: drop-shadow(0 4px 12px rgba(255, 215, 0, 0.5));
+  transform: scale(1.12);
+}
+
+.review-textarea-apple {
+  width: 100%;
+  min-height: 108px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  padding: 1.1rem 1.3rem;
+  color: #fff;
+  font-size: 1.05rem;
+  font-family: inherit;
+  resize: none;
+  margin-bottom: 1.8rem;
+}
+.review-textarea-apple::placeholder { color: #777; }
+
+.review-buttons-apple {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.review-btn-primary,
+.review-btn-secondary {
+  padding: 1.15rem;
+  border-radius: 20px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.review-btn-primary {
+  background: #00ff95;
+  color: #000;
+  border: none;
+  box-shadow: 0 8px 25px rgba(0, 255, 149, 0.4);
+}
+.review-btn-primary:hover { background: #00ffaa; transform: translateY(-2px); }
+
+.review-btn-secondary {
+  background: rgba(255, 255, 255, 0.09);
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.18);
+}
+.review-btn-secondary:hover { background: rgba(255,255,255,0.15); }
+
+/* АДАПТИВ: МОБИЛКА ≤1026px — чуть компактнее и удобнее */
+@media (max-width: 1026px) {
+  #reviewModal { padding: 1rem; }
+  .review-modal-apple {
+    max-width: 94%;
+    padding: 2.2rem 1.8rem 2rem;
+    border-radius: 26px;
+  }
+  .review-header-apple h2 { font-size: 1.75rem; }
+  .review-header-apple p { font-size: 1.18rem; }
+  .review-stars-apple i { font-size: 2.5rem; width: 48px; height: 48px; }
+  .review-textarea-apple { min-height: 100px; font-size: 1.02rem; }
+}
+
+/* СВЕТЛАЯ ТЕМА — полная поддержка */
+[data-theme="light"] #reviewModal {
+  background: rgba(255, 255, 255, 0.92);
+}
+[data-theme="light"] .review-modal-apple {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.1);
+  box-shadow: 0 32px 90px rgba(0,0,0,0.18);
+}
+[data-theme="light"] .review-header-apple h2 { color: #111; }
+[data-theme="light"] .review-header-apple p { color: #555; }
+[data-theme="light"] .review-textarea-apple {
+  background: rgba(0,0,0,0.06);
+  border-color: rgba(0,0,0,0.15);
+  color: #000;
+}
+[data-theme="light"] .review-btn-secondary {
+  background: rgba(0,0,0,0.08);
+  border-color: rgba(0,0,0,0.15);
+  color: #000;
+}
+[data-theme="light"] .close-modal { color: #666; }
+[data-theme="light"] .close-modal:hover { background: rgba(0,0,0,0.1); color: #000; }
+
+/* Анимации */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modalUp {
+  from { transform: translateY(80px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
 }
