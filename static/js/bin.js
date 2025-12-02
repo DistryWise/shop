@@ -2298,3 +2298,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }).observe(modal, { attributes: true, attributeFilter: ['style'] });
 
 })();
+
+document.addEventListener('DOMContentLoaded', () => {
+  const pill = document.getElementById('multiOrderPill');
+  const bar = document.getElementById('floatingOrderBar');
+
+  // Показываем плашку только если есть заказы
+  if (typeof activeOrdersCount !== 'undefined' && activeOrdersCount > 0) {
+    bar.style.opacity = '1';
+    bar.style.visibility = 'visible';
+    bar.style.transform = 'translateX(-50%) translateY(0)';
+    document.getElementById('activeOrdersBadge').textContent = activeOrdersCount;
+  }
+
+  // Вешаем клик через JS — это безопасно на мобилках
+  pill?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openMultiOrderModal();
+  });
+});
