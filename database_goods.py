@@ -1615,9 +1615,8 @@ def register_admin_routes(app):
 
         conn = get_conn(DB_MAIN)
         try:
-            # ← БЕРЁМ display_id вместо user_order_number!
             rows = conn.execute('''
-                SELECT id, status, cancel_reason, display_id
+                SELECT id, status, cancel_reason, display_id, created_at
                 FROM orders 
                 WHERE user_id = ? AND status IN ('completed', 'cancelled')
                 ORDER BY id DESC
@@ -1628,7 +1627,7 @@ def register_admin_routes(app):
                 order_id = r['id']
                 status = r['status']
 
-                # === Товары ===
+                # === Товары и услуги ===
                 items_rows = conn.execute('''
                     SELECT oi.title, oi.quantity, oi.price_cents, oi.item_type, oi.item_id
                     FROM order_items oi
@@ -1642,44 +1641,52 @@ def register_admin_routes(app):
                     price_cents = int(item['price_cents'] or 0)
                     total_cents += price_cents * item['quantity']
 
+                    # === ГЕНЕРАЦИЯ image_url — ГЛАВНОЕ ИСПРАВЛЕНИЕ ===
                     image_url = "/static/assets/no-image.png"
+
                     if item['item_type'] == 'product':
                         prod = conn.execute('SELECT image_filenames FROM products WHERE id = ?', (item['item_id'],)).fetchone()
                         if prod and prod['image_filenames']:
-                            imgs = json.loads(prod['image_filenames'])
-                            if imgs:
-                                image_url = f"/static/uploads/{imgs[0]}"
+                            try:
+                                imgs = json.loads(prod['image_filenames'])
+                                if imgs and isinstance(imgs, list) and imgs:
+                                    image_url = f"/static/uploads/goods/{imgs[0]}"
+                            except:
+                                pass  # если json сломался — оставляем no-image
+
                     elif item['item_type'] == 'service':
                         serv_conn = get_conn(DB_SERVICES)
-                        serv = serv_conn.execute('SELECT image_urls FROM services WHERE id = ?', (item['item_id'],)).fetchone()
-                        serv_conn.close()
-                        if serv and serv['image_urls']:
-                            try:
-                                imgs = json.loads(serv['image_urls'])
-                            except:
-                                imgs = [img.strip() for img in serv['image_urls'].split(',') if img.strip()]
-                            if imgs:
-                                image_url = f"/static/uploads/services/{imgs[0]}"
+                        try:
+                            serv = serv_conn.execute('SELECT image_urls FROM services WHERE id = ?', (item['item_id'],)).fetchone()
+                            if serv and serv['image_urls']:
+                                try:
+                                    imgs = json.loads(serv['image_urls'])
+                                except:
+                                    imgs = [img.strip() for img in serv['image_urls'].split(',') if img.strip()]
+                                if imgs and imgs[0]:
+                                    image_url = f"/static/uploads/services/{imgs[0]}"
+                        finally:
+                            serv_conn.close()
 
+                    # === Добавляем ВСЁ нужное для фронта ===
                     items.append({
                         'title': item['title'],
                         'quantity': item['quantity'],
-                        'price_str': f"{price_cents//100}.{price_cents%100:02d} ₽",
-                        'image_url': image_url
+                        'price_str': f"{price_cents // 100}.{price_cents % 100:02d} ₽",
+                        'item_type': item['item_type'],      # ← обязательно!
+                        'item_id': item['item_id'],          # ← обязательно для "Повторить"
+                        'image_url': image_url               # ← теперь всегда правильный путь
                     })
 
                 total_str = f"{total_cents // 100}.{total_cents % 100:02d} ₽"
-                label = status_map.get(status, ('Неизвестно', '#9ca3af', '#0b0d12'))
 
                 orders.append({
                     'id': order_id,
-                    'display_id': r['display_id'] or f"#{order_id}",   # ← №2025-0001 — это и есть номер!
+                    'display_id': r['display_id'] or f"#{order_id}",
                     'status': status,
-                    'status_label': label[0],
-                    'status_color': label[1],
-                    'status_text_color': label[2],
                     'items': items,
                     'total_str': total_str,
+                    'created_at': r['created_at'],
                     'cancel_reason': r['cancel_reason'] or ''
                 })
 

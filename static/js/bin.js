@@ -160,30 +160,166 @@ toastStyles.textContent = `
 document.head.appendChild(toastStyles);
 
 // Красивая модалка "Лимит достигнут"
+// === КРАСИВАЯ МОДАЛКА "ЛИМИТ ДОСТИГНУТ" — АВТО-ПОДДЕРЖКА СВЕТЛОЙ/ТЁМНОЙ ТЕМЫ ===
 document.body.insertAdjacentHTML('beforeend', `
-<div id="activeOrdersLimitModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); backdrop-filter:blur(28px); z-index:99999; justify-content:center; align-items:center; padding:16px;">
-  <div style="background:rgba(20,20,35,0.98); border-radius:28px; max-width:420px; width:100%; text-align:center; padding:2.5rem 2rem; box-shadow:0 40px 100px rgba(0,0,0,0.8); border:1px solid rgba(255,255,255,0.1);">
-    <div style="width:90px; height:90px; margin:0 auto 1.5rem; background:#ff4444; border-radius:50%; display:flex; align-items:center; justify-content:center;">
-      <i class="fas fa-exclamation-triangle" style="font-size:3rem; color:white;"></i>
+<div id="activeOrdersLimitModal" class="limit-modal-overlay">
+  <div class="limit-modal-content">
+    <div class="limit-modal-icon">
+      <i class="fas fa-exclamation-triangle"></i>
     </div>
-    <h2 style="margin:0 0 1rem; font-size:1.9rem; color:#fff;">Лимит активных заказов</h2>
-    <p style="margin:0 0 2rem; color:#ccc; font-size:1.1rem; line-height:1.5;">
-      У вас уже есть <strong>активные заказа</strong>.<br>
+    <h2 class="limit-modal-title">Лимит активных заказов</h2>
+    <p class="limit-modal-text">
+      У вас уже есть <strong>активные заказы</strong>.<br>
       Дождитесь завершения хотя бы одного, чтобы оформить новый.
     </p>
-    <button onclick="document.getElementById('activeOrdersLimitModal').style.display='none'" 
-            style="background:#00ff95; color:#000; border:none; padding:1rem 2.5rem; border-radius:22px; font-size:1.1rem; font-weight:700; cursor:pointer; width:100%;">
+    <button class="limit-modal-btn-primary" onclick="document.getElementById('activeOrdersLimitModal').style.display='none'">
       Понятно, жду
     </button>
-    <div style="margin-top:1.5rem;">
-      <button onclick="openMultiOrderModal(); document.getElementById('activeOrdersLimitModal').style.display='none'" 
-              style="background:transparent; color:#00ff95; border:none; font-size:1rem; cursor:pointer; text-decoration:underline;">
+    <div class="limit-modal-footer">
+      <button class="limit-modal-link" onclick="openMultiOrderModal(); document.getElementById('activeOrdersLimitModal').style.display='none'">
         Посмотреть текущие заказы →
       </button>
     </div>
   </div>
 </div>
 `);
+
+// === СТИЛИ С ПОДДЕРЖКОЙ ТЁМНОЙ И СВЕТЛОЙ ТЕМЫ ===
+const limitModalStyles = document.createElement('style');
+limitModalStyles.textContent = `
+  #activeOrdersLimitModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    z-index: 99999;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  .limit-modal-content {
+    background: rgba(20, 20, 35, 0.98);
+    border-radius: 28px;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+    padding: 2.5rem 2rem;
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: modalPop 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  .limit-modal-icon {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 1.5rem;
+    background: #ff4444;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .limit-modal-icon i {
+    font-size: 3rem;
+    color: white;
+  }
+
+  .limit-modal-title {
+    margin: 0 0 1rem;
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: #fff;
+  }
+
+  .limit-modal-text {
+    margin: 0 0 2rem;
+    color: #ccc;
+    font-size: 1.1rem;
+    line-height: 1.5;
+  }
+
+  .limit-modal-text strong {
+    color: #fff;
+  }
+
+  .limit-modal-btn-primary {
+    background: #00ff95;
+    color: #000;
+    border: none;
+    padding: 1rem 2.5rem;
+    border-radius: 22px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.3s;
+  }
+
+  .limit-modal-btn-primary:hover {
+    background: #00ffaa;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 255, 149, 0.4);
+  }
+
+  .limit-modal-link {
+    background: transparent;
+    color: #00ff95;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-top: 1.5rem;
+    padding: 0;
+    transition: opacity 0.2s;
+  }
+
+  .limit-modal-link:hover {
+    opacity: 0.8;
+  }
+
+  /* === СВЕТЛАЯ ТЕМА === */
+  html[data-theme="light"] .limit-modal-content {
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.15);
+  }
+
+  html[data-theme="light"] .limit-modal-title {
+    color: #111;
+  }
+
+  html[data-theme="light"] .limit-modal-text {
+    color: #555;
+  }
+
+  html[data-theme="light"] .limit-modal-text strong {
+    color: #000;
+  }
+
+  html[data-theme="light"] .limit-modal-btn-primary {
+    background: #00cc77;
+    color: white;
+  }
+
+  html[data-theme="light"] .limit-modal-btn-primary:hover {
+    background: #00bb66;
+  }
+
+  html[data-theme="light"] .limit-modal-link {
+    color: #00aa66;
+  }
+
+  @keyframes modalPop {
+    from { transform: scale(0.8); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+`;
+document.head.appendChild(limitModalStyles);
 
 // Проверка лимита перед открытием оформления
 async function checkActiveOrdersLimit() {
@@ -450,7 +586,8 @@ elements.confirmOrderBtn?.addEventListener('click', async () => {
   });
 
 // ОТКРЫТИЕ АРХИВА — ОДИН РАЗ + ЗАЩИТА ОТ ДУБЛИРОВАНИЯ
-document.getElementById('openArchiveBtn')?.addEventListener('click', async () => {
+// ОТКРЫТИЕ АРХИВА — РАБОТАЕТ НА ПК И НА МОБИЛЕ С ОДНИМ ID!
+document.querySelectorAll('#openArchiveBtn').forEach(btn => btn.addEventListener('click', async () => {
     // Проверяем сессию быстро и без лишних запросов
     const userId = sessionStorage.getItem('user_id');
     if (!userId) {
@@ -463,13 +600,15 @@ document.getElementById('openArchiveBtn')?.addEventListener('click', async () =>
     const modal = document.getElementById('archiveModal');
     if (modal) {
         modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // важно!
+
         if (allOrders.length === 0) {
             loadOrders(true);
         } else {
             renderOrders();
         }
     }
-});
+}));
 
 // Глобальные переменные (должны быть объявлены снаружи!)
 let allOrders = [];
@@ -487,17 +626,22 @@ async function loadOrders(forceReload = false) {
     const list = document.getElementById('ordersList');
     const loadMoreContainer = document.getElementById('loadMoreContainer');
 
-    // Показываем лоадер только при первой загрузке
     if (currentPage === 1 && allOrders.length === 0) {
         list.innerHTML = '<div style="text-align:center;padding:3rem;color:#aaa;">Загружаем заказы...</div>';
     }
 
     try {
-        const res = await fetch(`/api/user_orders?page=${currentPage}&per=${PER_PAGE}&t=${Date.now()}`, {
+        // ←←←←←←←←←←←←←←← ЭТО КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ ←←←←←←←←←←←←←←←
+        const endpoint = (currentTab === 'all' || currentTab === 'completed')
+    ? '/api/user_archived_orders'
+    : '/api/user_orders';
+        // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
+        const res = await fetch(`${endpoint}?page=${currentPage}&per=${PER_PAGE}&t=${Date.now()}`, {
             cache: 'no-store'
         });
-        if (!res.ok) throw new Error('Server error');
 
+        if (!res.ok) throw new Error('Server error');
         const newOrders = await res.json();
 
         if (forceReload) {
@@ -507,11 +651,8 @@ async function loadOrders(forceReload = false) {
         }
 
         renderOrders();
-
-        // Показать/скрыть "Загрузить ещё"
         loadMoreContainer.style.display = newOrders.length === PER_PAGE ? 'block' : 'none';
 
-        // Обновляем бейдж активных заказов
         const activeCount = allOrders.filter(o => !['completed', 'cancelled'].includes(o.status)).length;
         const badge = document.querySelector('[data-tab="active"] span');
         if (badge) badge.textContent = activeCount || '';
@@ -526,11 +667,13 @@ function renderOrders() {
     const list = document.getElementById('ordersList');
     const search = document.getElementById('orderSearch').value.toLowerCase();
 
-    let filtered = allOrders.filter(order => {
-        if (currentTab === 'active') return !['completed', 'cancelled'].includes(order.status);
-        if (currentTab === 'completed') return ['completed', 'cancelled'].includes(order.status);
-        return true;
-    });
+    let filtered = allOrders;
+
+if (currentTab === 'active') {
+    filtered = allOrders.filter(o => !['completed', 'cancelled'].includes(o.status));
+} else if (currentTab === 'all') {
+    filtered = allOrders.filter(o => ['completed', 'cancelled'].includes(o.status));
+}
 
     if (search) {
         filtered = filtered.filter(order =>
@@ -553,37 +696,39 @@ function renderOrders() {
     if (badge) badge.textContent = activeCount || '';
 
     // === КЭШИРОВАНИЕ КАРТИНОК (чтобы не искать каждый раз) ===
-    const productImages = {};
-    const serviceImages = {};
+     window.productImages = window.productImages || {};
+    window.serviceImages = window.serviceImages || {};
 
     // Заполняем кэш из уже загруженных данных (они у тебя где-то есть в глобале)
-    if (window.allProducts) {
+         if (window.allProducts) {
         window.allProducts.forEach(p => {
-            if (p.image_urls && p.image_urls.length > 0) {
-                productImages[p.id] = p.image_urls[0];
-            }
+            if (p.image_urls?.length > 0) window.productImages[p.id] = p.image_urls[0];
         });
     }
     if (window.allServices) {
         window.allServices.forEach(s => {
-            if (s.image_urls && s.image_urls.length > 0) {
-                serviceImages[s.id] = s.image_urls[0];
-            }
+            if (s.image_urls?.length > 0) window.serviceImages[s.id] = s.image_urls[0];
         });
     }
 
     list.innerHTML = filtered.map(order => {
-        const statusInfo = {
-            pending:    { text: 'Ожидает оплаты',   color: '#ffa726' },
-            processing: { text: 'В обработке',      color: '#00ff95' },
-            shipping:   { text: 'В доставке',       color: '#00bfff' },
-            completed:  { text: 'Завершён',         color: '#4ade80' },
-            cancelled:  { text: 'Отменён',          color: '#ff6b6b' },
-        };
-        const current = statusInfo[order.status] || { text: order.status, color: '#aaa' };
-        const isActive = !['completed', 'cancelled'].includes(order.status);
+        const isCancelled = order.status === 'cancelled';
+        const isCompleted = order.status === 'completed';
 
-        const safeReason = order.cancel_reason
+        // Определяем, какие шаги уже пройдены
+        const steps = [
+            { key: 'pending',    label: 'Принят' },
+            { key: 'confirmed',  label: 'Подтверждён' },
+            { key: 'processing', label: 'В обработке' },
+            { key: 'shipping',   label: 'В доставке' },
+            { key: 'completed',  label: 'Готово' }
+        ];
+
+        // Находим индекс текущего статуса
+        const currentIndex = steps.findIndex(s => s.key === order.status);
+        const filledCount = currentIndex >= 0 ? currentIndex + 1 : 0;
+
+        const safeReason = order.cancel_reason 
             ? String(order.cancel_reason)
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
@@ -592,105 +737,91 @@ function renderOrders() {
             : '';
 
         return `
-            <div class="cart-item archive-item clickable-order" data-order-id="${order.id}">
-                <div style="width:100%;">
-                    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1rem;">
-                        <div>
-                            <h3 style="margin:0;font-size:1.4rem;font-weight:600;">
-                                Заказ ${order.display_id || '№' + order.id}
-                                <span style="color:${current.color};font-size:0.9rem;margin-left:0.8rem;font-weight:500;">
-                                    ${current.text}
-                                </span>
-                            </h3>
-                            <div style="color:#888;font-size:0.9rem;">
-                                ${new Date(order.created_at).toLocaleString('ru-RU')}
-                            </div>
-                        </div>
-                        <div style="text-align:right;font-size:1.6rem;font-weight:700;color:#00ff95;">
-                            ${order.total_str}
-                        </div>
+            <div class="apple-archive-order" data-order-id="${order.id}">
+                <!-- Заголовок -->
+                <div class="archive-order-header">
+                    <div class="archive-order-title">
+                        Заказ ${order.display_id || order.id}
+                        <span class="archive-status-badge">
+                            ${isCompleted ? 'Выполнен' : isCancelled ? 'Отменён' : 'В работе'}
+                        </span>
                     </div>
-
-                    ${isActive ? `
-                    <div class="mini-status-chain" id="archive-chain-${order.id}">
-                        <div class="mini-step ${order.status !== 'pending' ? 'active' : ''}">
-                            <div class="mini-dot"></div><div class="mini-label">Принят</div>
+                    <div class="archive-order-meta">
+                        <div class="archive-order-date">
+                            ${new Date(order.created_at).toLocaleDateString('ru-RU', {
+                                day: 'numeric', month: 'short', year: 'numeric'
+                            })}
                         </div>
-                        <div class="mini-connector ${['shipping','completed'].includes(order.status) ? 'active' : ''}"></div>
-                        <div class="mini-step ${['shipping','completed'].includes(order.status) ? 'active' : ''}">
-                            <div class="mini-dot"></div><div class="mini-label">В обработке</div>
-                        </div>
-                        <div class="mini-connector ${order.status === 'completed' ? 'active' : ''}"></div>
-                        <div class="mini-step ${order.status === 'completed' ? 'active' : ''}">
-                            <div class="mini-dot"></div><div class="mini-label">Готово</div>
-                        </div>
-                    </div>` : ''}
-
-                    ${!isActive ? `
-                    <div style="margin:2rem 0;text-align:center;">
-                        <i class="fas ${order.status === 'completed' ? 'fa-check-circle' : 'fa-times-circle'}"
-                           style="font-size:3.2rem;color:${current.color};opacity:0.9;"></i>
-                    </div>` : ''}
-
-                    <div style="margin-top:1.5rem;display:grid;gap:0.8rem;">
-                        ${order.items.slice(0, 3).map(item => {
-                            let imgSrc = '/static/assets/no-image.png';
-
-                            if (item.item_type === 'product' && productImages[item.item_id]) {
-                                imgSrc = productImages[item.item_id];
-                            } else if (item.item_type === 'service' && serviceImages[item.item_id]) {
-                                imgSrc = serviceImages[item.item_id];
-                            } else if (item.item_type === 'service') {
-                                imgSrc = '/static/assets/service-placeholder.png'; // можно сделать свою заглушку
-                            }
-
-                            return `
-                                <div style="display:flex;align-items:center;gap:1rem;padding:0.8rem;background:rgba(255,255,255,0.05);border-radius:14px;">
-                                    <img src="${imgSrc}" 
-                                         style="width:48px;height:48px;border-radius:10px;object-fit:cover;background:#222;"
-                                         onerror="this.src='/static/assets/no-image.png'">
-                                    <div style="flex:1;">
-                                        <div style="font-weight:600;">${item.title}</div>
-                                        <div style="color:#aaa;font-size:0.9rem;">
-                                            ${item.quantity} × ${item.price_str || (item.price_cents/100).toFixed(2) + ' ₽'}
-                                        </div>
-                                    </div>
-                                    <button onclick="event.stopPropagation();addToCart('${(item.title||'').replace(/'/g, "\\'")}', '${item.item_type || 'product'}')"
-                                            style="padding:0.5rem 1rem;background:#fff;color:#000;border-radius:12px;font-weight:600;font-size:0.85rem;">
-                                        Повторить
-                                    </button>
-                                </div>
-                            `;
-                        }).join('')}
-                        ${order.items.length > 3 ? 
-                            `<div style="text-align:center;color:#888;padding:0.6rem;">…и ещё ${order.items.length - 3}</div>` : ''}
+                        <div class="archive-order-total">${order.total_str}</div>
                     </div>
-
-                    <!-- КОМПАКТНЫЙ БЛОК ОТМЕНЫ -->
-                    ${order.status === 'cancelled' && safeReason ? `
-                    <div style="
-                        margin: 1.3rem 0 0;
-                        padding: 0.9rem 1.1rem;
-                        background: rgba(255,68,68,0.08);
-                        border: 1px solid rgba(255,68,68,0.2);
-                        border-radius: 14px;
-                        color: #ff6b6b;
-                        font-size: 0.9rem;
-                        line-height: 1.5;
-                    ">
-                        <div style="font-weight:700;font-size:0.94rem;color:#ff4444;margin-bottom:0.3rem;display:flex;align-items:center;gap:0.4rem;">
-                            <i class="fas fa-info-circle"></i> Причина отмены
-                        </div>
-                        <div style="white-space:pre-wrap;opacity:0.92;">
-                            ${safeReason}
-                        </div>
-                    </div>
-                    ` : ''}
                 </div>
+
+                <!-- 5 точек прогресса — ВСЕ ОСТАЛИСЬ! -->
+                ${!isCompleted && !isCancelled ? `
+                    <div class="archive-progress-chain">
+                        ${steps.map((step, i) => `
+                            <div class="progress-step ${i < filledCount ? 'filled' : ''}">
+                                <div class="progress-dot"></div>
+                                ${i < steps.length - 1 ? '<div class="progress-line"></div>' : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="progress-labels">
+                        ${steps.map((step, i) => `
+                            <div class="progress-label ${i < filledCount ? 'filled' : ''}">
+                                ${step.label}
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+
+                <!-- Иконка завершения/отмены -->
+                ${isCompleted || isCancelled ? `
+                    <div class="archive-final-status">
+                        <div class="final-icon ${isCompleted ? 'completed' : 'cancelled'}">
+                            ${isCompleted ? '✓' : '✕'}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <!-- Товары -->
+<div class="archive-items-list">
+    ${order.items.slice(0, 4).map(item => {
+        // ВСЁ! image_url уже приходит с бэкенда — просто берём его!
+        const img = item.image_url || '/static/assets/no-image.png';
+
+        return `
+            <div class="archive-item-row">
+                <img src="${img}" 
+                     class="archive-item-thumb" 
+                     onerror="this.src='/static/assets/no-image.png'" 
+                     loading="lazy">
+                <div class="archive-item-info">
+                    <div class="archive-item-name">${item.title || 'Без названия'}</div>
+                    <div class="archive-item-details">
+                        ${item.quantity || 1} × ${item.price_str || '—'}
+                    </div>
+                </div>
+                <button class="archive-repeat-btn" 
+                        onclick="event.stopPropagation(); repeatOrderItem(${item.item_id}, '${item.item_type}')">
+                    Повторить
+                </button>
+            </div>
+        `;
+    }).join('')}
+    ${order.items.length > 4 ? `<div class="archive-more-items">…и ещё ${order.items.length - 4}</div>` : ''}
+</div>
+
+                <!-- Причина отмены -->
+                ${isCancelled && safeReason ? `
+                    <div class="archive-cancel-reason">
+                        <div class="cancel-reason-title">Причина отмены</div>
+                        <div class="cancel-reason-text">${safeReason}</div>
+                    </div>
+                ` : ''}
             </div>
         `;
     }).join('');
-
     // Клик по карточке — как было
     list.onclick = function(e) {
         let card = e.target.closest('.clickable-order');
@@ -706,6 +837,18 @@ function renderOrders() {
         if (window.pollInterval) clearInterval(window.pollInterval);
         window.startOrderChain(orderId);
     };
+    window.repeatOrderItem = async function(itemId, type = 'product') {
+    if (!itemId) return;
+    await fetch('/api/cart/add', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(
+            type === 'service' ? { service_id: itemId } : { product_id: itemId }
+        )
+    });
+    document.dispatchEvent(new CustomEvent('cartUpdated'));
+};
 }
 
 // === ГЛАВНОЕ: ЛОВИМ ИЗМЕНЕНИЕ СТАТУСА И ОБНОВЛЯЕМ МИНИ-ЦЕПОЧКУ В АРХИВЕ ===
@@ -742,15 +885,20 @@ document.addEventListener('orderStatusChanged', (e) => {
 });
 
 // Переключение табов
+// Переключение табов — ПОЛНАЯ ПЕРЕЗАГРУЗКА ДАННЫХ!
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentTab = btn.dataset.tab;
-        renderOrders();
+
+        // ←←←←←←←←←←←←←←← ЭТО ГЛАВНОЕ ←←←←←←←←←←←←←←←
+        allOrders = [];      // очищаем старое
+        currentPage = 1;     // сбрасываем пагинацию
+        loadOrders(true);    // ← ПЕРЕЗАГРУЖАЕМ с правильного endpoint!
+        // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
     });
 });
-
 // Поиск
 document.getElementById('orderSearch').addEventListener('input', () => renderOrders());
 
@@ -831,29 +979,6 @@ document.getElementById('orderChainToggle')?.addEventListener('click', () => {
   elements.archiveModal?.addEventListener('click', e => { if (e.target === elements.archiveModal) elements.archiveModal.style.display = 'none'; });
   
 });
-
-
-// КАРУСЕЛЬ — РАБОТАЕТ ИДЕАЛЬНО (первый слайд активен сразу, остальные — только по свайпу)
-if (window.matchMedia("(max-width: 1024px)").matches) {
-  const carousel = document.getElementById('instaCarousel');
-  const bars = document.querySelectorAll('.insta-progress > div');
-
-  const update = () => {
-    const index = Math.round(carousel.scrollLeft / carousel.clientWidth);
-    bars.forEach((bar, i) => {
-      bar.classList.toggle('active', i === index);
-    });
-  };
-
-  // Инициализация: первый слайд активен сразу
-  update();
-
-  // При скролле
-  carousel.addEventListener('scroll', () => requestAnimationFrame(update));
-
-  // При ресайзе/повороте
-  window.addEventListener('resize', update);
-}
 
 
 const themeToggle = document.getElementById('theme-toggle');
@@ -1012,110 +1137,6 @@ document.addEventListener('click', (e) => {
 });
 
 
-
-// СВАЙП ВЛЕВО — ЗАКРЫТИЕ ШТОРКИ ИЗ ЛЮБОЙ ТОЧКИ ЭКРАНА (Telegram / Wildberries 2025)
-(() => {
-  const sidebar = document.getElementById('mobileSidebar');
-  if (!sidebar) return;
-
-  let startX = 0;
-  let currentX = 0;
-  let isDragging = false;
-
-  const close = () => {
-    sidebar.classList.remove('active');
-    document.body.classList.remove('sidebar-open');
-    // Сбрасываем стили
-    sidebar.style.transition = '';
-    sidebar.style.transform = '';
-  };
-
-  const handleTouchStart = (e) => {
-    if (!sidebar.classList.contains('active')) return;
-
-    startX = e.touches[0].clientX;
-    currentX = startX;
-    isDragging = true;
-
-    // Отключаем плавность для мгновенной реакции
-    sidebar.style.transition = 'none';
-  };
-
-  const handleTouchMove = (e) => {
-    if (!isDragging) return;
-
-    currentX = e.touches[0].clientX;
-    const diff = currentX - startX;
-
-    // Разрешаем тянуть только влево (и только если начали с левой части или тянем влево)
-    if (diff < 0 || startX < window.innerWidth * 0.3) {
-      e.preventDefault(); // критично для плавного свайпа
-      sidebar.style.transform = `translateX(${Math.max(diff, -window.innerWidth)}px)`;
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (!isDragging) return;
-    isDragging = false;
-
-    const diff = currentX - startX;
-
-    // Если проскроллили больше 100px влево — закрываем
-    if (diff < -100) {
-      sidebar.style.transition = 'transform 0.28s cubic-bezier(0.22, 0.88, 0.38, 1)';
-      sidebar.style.transform = 'translateX(-100%)';
-      
-      setTimeout(() => {
-        close();
-      }, 280);
-    } else {
-      // Возвращаем на место
-      sidebar.style.transition = 'transform 0.32s cubic-bezier(0.2, 0.8, 0.4, 1)';
-      sidebar.style.transform = 'translateX(0)';
-      
-      setTimeout(() => {
-        sidebar.style.transition = '';
-      }, 320);
-    }
-  };
-
-  // Вешаем на весь документ — чтобы ловить свайп из любой зоны
-  document.addEventListener('touchstart', handleTouchStart, { passive: true });
-  document.addEventListener('touchmove', handleTouchMove, { passive: false });
-  document.addEventListener('touchend', handleTouchEnd);
-
-  // Опционально: поддержка мыши на планшетах/ноутбуках с тачскрином
-  document.addEventListener('mousedown', handleTouchStart);
-  document.addEventListener('mousemove', (e) => {
- if (isDragging) handleTouchMove({ touches: [{ clientX: e.clientX }] });
-   });
-  document.addEventListener('mouseup', handleTouchEnd);
-})();
-
-// КАРУСЕЛЬ — РАБОТАЕТ ИДЕАЛЬНО (первый слайд активен сразу, остальные — только по свайпу)
-if (window.matchMedia("(max-width: 1024px)").matches) {
-  const carousel = document.getElementById('instaCarousel');
-  const bars = document.querySelectorAll('.insta-progress > div');
-
-  const update = () => {
-    const index = Math.round(carousel.scrollLeft / carousel.clientWidth);
-    bars.forEach((bar, i) => {
-      bar.classList.toggle('active', i === index);
-    });
-  };
-
-  // Инициализация: первый слайд активен сразу
-  update();
-
-  // При скролле
-  carousel.addEventListener('scroll', () => requestAnimationFrame(update));
-
-  // При ресайзе/повороте
-  window.addEventListener('resize', update);
-}
-
-
-
 // УНИВЕРСАЛЬНЫЙ ПЕРЕХВАТЧИК — ЛОВИТ ВСЁ
 document.addEventListener('click', function(e) {
   const target = e.target.closest(
@@ -1177,103 +1198,230 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// СВАЙП ВЛЕВО — ЗАКРЫТИЕ ШТОРКИ ИЗ ЛЮБОЙ ТОЧКИ ЭКРАНА (Telegram / Wildberries 2025)
-(() => {
-  const sidebar = document.getElementById('mobileSidebar');
-  if (!sidebar) return;
 
-  let startX = 0;
-  let currentX = 0;
-  let isDragging = false;
+// МОБИЛЬНАЯ КНОПКА «ОФОРМИТЬ ЗАКАЗ» — 100% РАБОТАЕТ С 2025 ГОДА
+document.addEventListener('DOMContentLoaded', () => {
+  const mobileBtn = document.getElementById('mobileCheckoutBtn');
+  const desktopBtn = document.getElementById('checkoutBtn');
+  const modal = document.getElementById('checkoutModal');
 
-  const close = () => {
-    sidebar.classList.remove('active');
-    document.body.classList.remove('sidebar-open');
-    // Сбрасываем стили
-    sidebar.style.transition = '';
-    sidebar.style.transform = '';
-  };
+  if (!mobileBtn || !modal) return;
 
-  const handleTouchStart = (e) => {
-    if (!sidebar.classList.contains('active')) return;
-
-    startX = e.touches[0].clientX;
-    currentX = startX;
-    isDragging = true;
-
-    // Отключаем плавность для мгновенной реакции
-    sidebar.style.transition = 'none';
-  };
-
-  const handleTouchMove = (e) => {
-    if (!isDragging) return;
-
-    currentX = e.touches[0].clientX;
-    const diff = currentX - startX;
-
-    // Разрешаем тянуть только влево (и только если начали с левой части или тянем влево)
-    if (diff < 0 || startX < window.innerWidth * 0.3) {
-      e.preventDefault(); // критично для плавного свайпа
-      sidebar.style.transform = `translateX(${Math.max(diff, -window.innerWidth)}px)`;
+  // Синхронизация состояния disabled
+  const syncButtonState = () => {
+    const hasItems = document.querySelectorAll('.apple-cart-item').length > 0;
+    if (hasItems) {
+      mobileBtn.removeAttribute('disabled');
+    } else {
+      mobileBtn.setAttribute('disabled', 'disabled');
     }
   };
 
-  const handleTouchEnd = () => {
+  // Клик = открываем ту же модалку, что и на десктопе
+  mobileBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (mobileBtn.hasAttribute('disabled')) return;
+
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+
+    // Если у тебя есть глобальная функция открытия — вызываем и её
+    if (typeof openCheckoutModal === 'function') openCheckoutModal();
+    if (typeof window.dispatchEvent === 'function') {
+      window.dispatchEvent(new Event('checkoutModalOpened'));
+    }
+  });
+
+  // Синхронизируем при обновлении корзины
+  document.addEventListener('cartUpdated', syncButtonState);
+  syncButtonState(); // при загрузке
+
+  // На всякий случай — через секунду ещё раз (если cart.js грузится дольше)
+  setTimeout(syncButtonState, 1000);
+});
+
+// === СВАЙП ВВЕРХ С НИЖНЕЙ ЧАСТИ ЭКРАНА → ЗАКРЫТИЕ ШТОРКИ multiOrderModal (2025 стиль) ===
+(() => {
+  const modal = document.getElementById('multiOrderModal');
+  if (!modal) return;
+
+  const sheet = modal.querySelector('div[style*="background:var(--modal-bg)"]');
+  if (!sheet) return;
+
+  let startY = 0;
+  let isDragging = false;
+  const threshold = 100; // пикселей вверх → закрываем
+
+  // Функция: получаем текущую видимую высоту шторки
+  const getSheetBottomY = () => {
+    const rect = sheet.getBoundingClientRect();
+    return rect.bottom; // координата нижнего края шторки
+  };
+
+  const handleStart = (e) => {
+    if (window.innerWidth > 1026) return; // только телефоны
+    if (!modal.classList.contains('show')) return;
+
+    const touch = e.touches[0];
+    const sheetBottom = getSheetBottomY();
+
+    // Разрешаем начать свайп, если коснулись НИЖЕ нижнего края шторки
+    // (или совсем чуть выше — на 30px, чтобы можно было схватить за край)
+    if (touch.clientY < sheetBottom - 30) return;
+
+    startY = touch.clientY;
+    isDragging = true;
+    sheet.style.transition = 'none';
+    e.preventDefault();
+  };
+
+  const handleMove = (e) => {
+    if (!isDragging) return;
+
+    const touch = e.touches[0];
+    const deltaY = startY - touch.clientY; // >0 = тянем вверх
+
+    if (deltaY > 0) {
+      sheet.style.transform = `translateY(-${deltaY}px)`;
+      e.preventDefault();
+    }
+  };
+
+  const handleEnd = () => {
     if (!isDragging) return;
     isDragging = false;
 
-    const diff = currentX - startX;
+    const moved = parseFloat(sheet.style.transform?.replace(/[^0-9.-]/g, '') || '0');
+    const movedUp = -moved;
 
-    // Если проскроллили больше 100px влево — закрываем
-    if (diff < -100) {
-      sidebar.style.transition = 'transform 0.28s cubic-bezier(0.22, 0.88, 0.38, 1)';
-      sidebar.style.transform = 'translateX(-100%)';
-      
-      setTimeout(() => {
-        close();
-      }, 280);
+    if (movedUp > threshold) {
+      sheet.style.transition = 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)';
+      sheet.style.transform = 'translateY(-100%)';
+
+      sheet.addEventListener('transitionend', () => {
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+        sheet.style.transform = '';
+        sheet.style.transition = '';
+      }, { once: true });
     } else {
-      // Возвращаем на место
-      sidebar.style.transition = 'transform 0.32s cubic-bezier(0.2, 0.8, 0.4, 1)';
-      sidebar.style.transform = 'translateX(0)';
-      
-      setTimeout(() => {
-        sidebar.style.transition = '';
-      }, 320);
+      sheet.style.transition = 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)';
+      sheet.style.transform = 'translateY(0)';
+      setTimeout(() => sheet.style.transition = '', 500);
     }
   };
 
-  // Вешаем на весь документ — чтобы ловить свайп из любой зоны
-  document.addEventListener('touchstart', handleTouchStart, { passive: true });
-  document.addEventListener('touchmove', handleTouchMove, { passive: false });
-  document.addEventListener('touchend', handleTouchEnd);
+  // Слушаем по всему документу — ловим свайп даже в пустой области под шторкой
+  document.addEventListener('touchstart', handleStart, { passive: false });
+  document.addEventListener('touchmove', handleMove, { passive: false });
+  document.addEventListener('touchend', handleEnd);
 
-  // Опционально: поддержка мыши на планшетах/ноутбуках с тачскрином
-  document.addEventListener('mousedown', handleTouchStart);
-  document.addEventListener('mousemove', (e) => {
- if (isDragging) handleTouchMove({ touches: [{ clientX: e.clientX }] });
-   });
-  document.addEventListener('mouseup', handleTouchEnd);
+  // Дополнительно — на саму шторку (если вдруг кто-то тянет за контент)
+  sheet.addEventListener('touchstart', handleStart, { passive: false });
+
+  // Пересчитываем при изменении содержимого (например, после renderVerticalOrders)
+  const observer = new MutationObserver(() => {
+    // Просто триггерим пересчёт при любом изменении внутри шторки
+    if (isDragging) return;
+    // Ничего не делаем — getSheetBottomY() и так всегда актуальна
+  });
+  observer.observe(sheet, { childList: true, subtree: true, attributes: true });
+
 })();
 
-// КАРУСЕЛЬ — РАБОТАЕТ ИДЕАЛЬНО (первый слайд активен сразу, остальные — только по свайпу)
-if (window.matchMedia("(max-width: 1024px)").matches) {
-  const carousel = document.getElementById('instaCarousel');
-  const bars = document.querySelectorAll('.insta-progress > div');
+(() => {
+  const modal = document.getElementById('archiveModal');
+  if (!modal) return;
 
-  const update = () => {
-    const index = Math.round(carousel.scrollLeft / carousel.clientWidth);
-    bars.forEach((bar, i) => {
-      bar.classList.toggle('active', i === index);
-    });
+  const sheet = modal.querySelector('.smart-sheet');
+  if (!sheet) return;
+
+  let startY = 0;
+  let isDragging = false;
+  const THRESHOLD = 100;
+
+  // Разрешаем начинать свайп только за граббер или верхние 100px шторки
+  const canStartDrag = (y) => {
+    if (window.innerWidth > 1026) return false;
+    const grabber = modal.querySelector('.grabber');
+    if (grabber) {
+      const rect = grabber.getBoundingClientRect();
+      if (y >= rect.top - 20 && y <= rect.bottom + 60) return true;
+    }
+    return y <= 120; // верхняя часть экрана
   };
 
-  // Инициализация: первый слайд активен сразу
-  update();
+  const handleStart = (e) => {
+    if (window.innerWidth > 1026) return;
+    if (modal.style.display !== 'flex' && !modal.classList.contains('show')) return;
 
-  // При скролле
-  carousel.addEventListener('scroll', () => requestAnimationFrame(update));
+    const touch = e.touches ? e.touches[0] : e;
+    if (!canStartDrag(touch.clientY)) return;
 
-  // При ресайзе/повороте
-  window.addEventListener('resize', update);
-}
+    startY = touch.clientY;
+    isDragging = true;
+    sheet.style.transition = 'none';
+  };
+
+  const handleMove = (e) => {
+    if (!isDragging) return;
+    const touch = e.touches[0];
+    const delta = touch.clientY - startY;
+
+    if (delta > 0) {
+      sheet.style.transform = `translateY(${delta}px)`;
+      e.preventDefault();
+    }
+  };
+
+  const handleEnd = () => {
+    if (!isDragging) return;
+    isDragging = false;
+
+    const moved = parseFloat(sheet.style.transform.replace(/[^0-9.-]/g, '') || '0');
+
+    if (moved > THRESHOLD) {
+      sheet.style.transition = 'transform 0.45s cubic-bezier(0.34, 1, 0.64, 1)';
+      sheet.style.transform = 'translateY(100vh)';
+      sheet.addEventListener('transitionend', () => {
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+        sheet.style.transform = '';
+        sheet.style.transition = '';
+        document.body.style.overflow = '';
+      }, { once: true });
+    } else {
+      sheet.style.transition = 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)';
+      sheet.style.transform = 'translateY(0)';
+    }
+  };
+
+  // Слушаем ТОЛЬКО внутри самой модалки — НИГДЕ больше!
+  modal.addEventListener('touchstart', handleStart, { passive: false });
+  modal.addEventListener('touchmove', handleMove, { passive: false });
+  modal.addEventListener('touchend', handleEnd);
+  modal.addEventListener('mousedown', handleStart);
+  modal.addEventListener('mousemove', handleMove);
+  modal.addEventListener('mouseup', handleEnd);
+
+  // При открытии — гарантированно сбрасываем transform
+  const resetOnOpen = () => {
+    if (modal.style.display === 'flex' || modal.classList.contains('show')) {
+      requestAnimationFrame(() => {
+        sheet.style.transform = 'translateY(0)';
+        sheet.style.transition = 'none';
+        requestAnimationFrame(() => sheet.style.transition = '');
+      });
+    }
+  };
+
+  // Отслеживаем открытие (вдруг кто-то открывает через display = 'flex')
+  new MutationObserver(resetOnOpen).observe(modal, { attributes: true });
+
+  // Если кто-то открывает через твой старый код — тоже сбросим
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) resetOnOpen();
+  });
+
+})();
+

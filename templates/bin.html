@@ -18,7 +18,46 @@
   <link rel="stylesheet" href="/static/css/bins.css">
 
 
-  
+  <style>
+  /* Анимация шторки сверху вниз — только на мобильных */
+  @media (max-width: 1026px) {
+    #multiOrderModal {
+      align-items: flex-start !important;
+      padding-top: env(safe-area-inset-top);
+    }
+
+    #multiOrderModal .modal-inner {
+      width: 100%;
+      max-width: none;
+      height: auto;
+      max-height: 96vh;
+      border-radius: 0 0 32px 32px !important;
+      transform: translateY(-100%);
+      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    #multiOrderModal.show .modal-inner {
+      transform: translateY(0);
+    }
+
+    /* Граббер как у iOS */
+    #multiOrderModal .ios-grabber {
+      width: 40px;
+      height: 5px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 3px;
+      margin: 12px auto 8px;
+    }
+  }
+</style>
+<style>
+@media (max-width: 1026px) {
+  #multiOrderModal {
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(20px);
+  }
+}
+</style>
   <style>
 @keyframes slideDown {
   from { transform: translateX(-50%) translateY(-100px); opacity: 0; }
@@ -31,67 +70,61 @@
 <body>
 
   <!-- ВЕРХНИЙ ХЕДЕР — ТОЛЬКО НА ДЕСКТОПЕ -->
-  <header class="main-header desktop-only">
-    <a href="/" class="logo">
-      <img src="/static/assets/logo.png" alt="Piligrim" class="logo-img">
-    </a>
+<header class="main-header desktop-only">
+  <a href="/" class="logo">
+    <img src="/static/assets/logo.png" alt="Piligrim" class="logo-img">
+  </a>
 
-    <nav class="desktop-nav">
-      <a href="/" class="nav-link">Главная</a>
-      <a href="/goods" class="nav-link">Товары</a>
-      <a href="/services" class="nav-link">Услуги</a>
-      <a href="/news" class="nav-link">Новости</a>
-      <a href="/about_company" class="nav-link">О компании</a>
-      <a href="/contacts" class="nav-link">Контакты</a>
-    </nav>
+  <nav class="desktop-nav">
+    <a href="/" class="nav-link">Главная</a>
+    <a href="/goods" class="nav-link">Товары</a>
+    <a href="/services" class="nav-link">Услуги</a>
+    <a href="/news" class="nav-link">Новости</a>
+    <a href="/about_company" class="nav-link">О компании</a>
+    <a href="/contacts" class="nav-link">Контакты</a>
+  </nav>
 
-    <div class="header-right">
-      <div class="header-icons">
-        <div class="search-wrapper">
-          <div class="search-container">
-            <div class="search-icon"><i class="fas fa-search"></i></div>
-            <input type="text" class="search-input" id="searchInput" placeholder="Поиск...">
-            <button id="searchClear" class="search-clear">×</button>
-          </div>
-          <div id="autocompleteList" class="autocomplete-list"></div>
+  <div class="header-right">
+    <div class="header-icons">
+      <!-- Поиск -->
+      <div class="search-wrapper">
+        <div class="search-container">
+          <div class="search-icon"><i class="fas fa-search"></i></div>
+          <input type="text" class="search-input" id="searchInput" placeholder="Поиск...">
+          <button id="searchClear" class="search-clear">×</button>
         </div>
-
-        <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
-
-       <div class="cart-wrapper" id="desktopCartWrapper">
-  <button class="icon-btn" id="cartBtn">
-    <i class="fas fa-shopping-bag"></i>
-    <span class="cart-count" id="cartCount">0</span>
-  </button>
-
-  <!-- Мини-корзина — 100% рабочая версия 2025 -->
-  <div class="mini-cart-dropdown" id="miniCartDropdown">
-    <div class="mini-cart-header">
-      <div class="mini-cart-title">Корзина</div>
-      <button class="mini-cart-close" id="closeMiniCart">×</button>
-    </div>
-
-    <div class="mini-cart-items" id="miniCartItems">
-      <div class="mini-cart-empty-state">
-        <i class="fas fa-shopping-bag"></i>
-        <p>Корзина пуста</p>
+        <div id="autocompleteList" class="autocomplete-list"></div>
       </div>
-    </div>
 
-    <div class="mini-cart-footer">
-      <div class="mini-cart-summary">
-        <span>Итого:</span>
-        <strong id="miniCartTotal">0 ₽</strong>
+      <!-- Вход -->
+      <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
+
+      <!-- Корзина — мини-дропдаун (как на contacts.html) -->
+      <div class="cart-wrapper">
+        <button class="icon-btn" id="cartBtn">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+
+        <div id="miniCartDropdown" class="mini-cart-dropdown">
+          <div class="mini-cart-header">
+            <div class="mini-cart-title">Корзина</div>
+          </div>
+          <div class="mini-cart-items" id="miniCartItems">
+            <div class="mini-cart-empty">Корзина пуста</div>
+          </div>
+          <div class="mini-cart-footer">
+            <div class="mini-cart-total" id="miniCartTotal">Итого: 0 ₽</div>
+            <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
+          </div>
+        </div>
       </div>
-      <button class="mini-cart-checkout" id="goToCartBtn">Перейти в корзину</button>
+
+      <!-- ПОДДЕРЖКА — ОДИН ID НА ВСЁМ САЙТЕ! -->
+      <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
     </div>
   </div>
-</div>
-
-        <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
-      </div>
-    </div>
-  </header>
+</header>
 
   <!-- НИЖНЯЯ ПАНЕЛЬ — ТОЛЬКО НА МОБИЛЬНЫХ -->
   <nav class="mobile-bottom-bar">
@@ -189,7 +222,14 @@
       <button class="mobile-search-clear" id="mobileSearchClear">×</button>
     </div>
   </div>
-
+<!-- МОБИЛЬНЫЙ АДАПТИВНЫЙ АЛЕРТ (только ≤1026px) -->
+<div id="mobileAlert" class="mobile-alert">
+  <div class="mobile-alert-content">
+    <div class="mobile-alert-icon">Warning</div>
+    <div class="mobile-alert-message" id="mobileAlertMessage">Сообщение</div>
+    <button class="mobile-alert-btn" id="mobileAlertClose">Понятно</button>
+  </div>
+</div>
 
   <!-- Результаты поиска -->
   <div class="mobile-search-results-content" id="mobileSearchResults">
@@ -253,100 +293,148 @@
     </label>
   </div>
 
-<!-- ПЛАВАЮЩАЯ ПАНЕЛЬ С ПОДДЕРЖКОЙ НЕСКОЛЬКИХ ЗАКАЗОВ — ПОЛНОСТЬЮ ЧЁРНО-БЕЛАЯ -->
-<div id="floatingOrderBar" style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:9998; display:none;">
+<!-- ПЛАВАЮЩАЯ ШТОРКА — ФИНАЛЬНАЯ ВЕРСИЯ 2025, БЕЗ БАГОВ -->
+<!-- ПЛАВАЮЩАЯ ПЛАШКА ЗАКАЗОВ — ИСПРАВЛЕННАЯ ВЕРСИЯ 2025 (без багов на мобилке и в светлой теме) -->
+<div id="floatingOrderBar" style="
+  position: fixed;
+  bottom: max(28px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: -47; 
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.45s cubic-bezier(0.22,1,0.36,1), transform 0.5s cubic-bezier(0.22,1,0.36,1);
+">
   <div id="multiOrderPill" onclick="openMultiOrderModal()" style="
-    cursor:pointer;
-    background:var(--pill-bg);
-    backdrop-filter:blur(30px);
-    border:1px solid var(--pill-border);
-    border-radius:28px;
-    padding:1rem 1.8rem;
-    display:flex;
-    align-items:center;
-    gap:1.2rem;
-    box-shadow:var(--pill-shadow);
-    transition:all 0.4s;
-  ">
-    <div style="position:relative;">
-      <i class="fas fa-truck" style="font-size:1.9rem; color:var(--icon-color);"></i>
+    cursor: pointer;
+    background: var(--pill-bg, rgba(28,28,30,0.88));
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border: 1px solid rgba(255,255,255,0.06); /* тонкая почти незаметная граница — одинаково красиво в обеих темах */
+    border-radius: 28px;
+    padding: 1rem 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.24);
+    transition: all 0.4s cubic-bezier(0.22,1,0.36,1);
+    pointer-events: auto;
+    max-width: calc(100vw - 40px);
+    box-sizing: border-box;
+  "
+  onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 28px 56px rgba(0,0,0,0.38)'"
+  onmouseout="this.style.transform=''; this.style.boxShadow='0 16px 40px rgba(0,0,0,0.24)'">
+
+    <div style="position:relative; flex-shrink:0;">
+      <i class="fas fa-truck" style="font-size:1.9rem; color:var(--accent, #00ff95);"></i>
       <span id="activeOrdersBadge" style="
-        position:absolute; top:-6px; right:-10px;
-        background:var(--badge-bg); color:var(--badge-fg);
-        font-size:0.75rem; font-weight:700;
+        position:absolute; top:-8px; right:-10px;
+        background:#ff3b30; color:white;
+        font-size:0.72rem; font-weight:700;
         min-width:18px; height:18px; border-radius:9px;
         display:flex; align-items:center; justify-content:center;
-        padding:0 5px;
+        padding:0 6px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.3);
       ">1</span>
     </div>
-    <div>
-      <div style="font-weight:600; color:var(--text-primary); font-size:1.12rem;">
+
+    <div style="flex:1; min-width:0;">
+      <div style="font-weight:600; color:var(--text-primary); font-size:1.12rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
         <span id="pillMainText">Заказ №1423 в работе</span>
       </div>
-      <div style="font-size:0.88rem; color:var(--text-secondary); margin-top:0.3rem;">
+      <div style="font-size:0.88rem; color:var(--text-secondary); margin-top:0.3rem; opacity:0.9;">
         <span id="pillSubText">Нажмите для подробностей</span>
       </div>
     </div>
-    <i class="fas fa-chevron-up" style="font-size:1.4rem; color:var(--text-secondary); margin-left:auto;"></i>
+
+    <i class="fas fa-chevron-up" style="font-size:1.4rem; color:var(--text-secondary); margin-left:auto; flex-shrink:0;"></i>
   </div>
 </div>
 
-<!-- МОДАЛКА АКТИВНЫХ ЗАКАЗОВ — 100% ЧЁРНО-БЕЛАЯ В ЛЮБОЙ ТЕМЕ -->
-<div id="multiOrderModal" style="display:none; position:fixed; inset:0; background:var(--modal-overlay); backdrop-filter:blur(32px); -webkit-backdrop-filter:blur(32px); z-index:9999; justify-content:center; align-items:center; padding:16px; box-sizing:border-box;">
+<!-- АНИМАЦИЯ ПОЯВЛЕНИЯ — ПРЯМО ЗДЕСЬ, ВНУТРИ БЛОКА -->
+<style>
+  @keyframes pillSlideUp {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(40px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+</style>
+
+
+<!-- МОДАЛКА АКТИВНЫХ ЗАКАЗОВ — ОБНОВЛЁННЫЙ МИНИМАЛИСТИЧНЫЙ ДИЗАЙН 2025 -->
+<div id="multiOrderModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(32px); -webkit-backdrop-filter:blur(32px); z-index:9999; justify-content:center; align-items:center; padding:16px; box-sizing:border-box;">
   <div style="
     background:var(--modal-bg);
     backdrop-filter:blur(50px);
     border-radius:32px;
-    width:100%; max-width:720px; max-height:94vh;
+    width:100%; 
+    max-width:720px; 
+    max-height:94vh;
     overflow:hidden;
-    box-shadow:var(--modal-shadow);
+    box-shadow:0 32px 80px rgba(0,0,0,0.5);
     border:1px solid var(--modal-border);
     position:relative;
+    display:flex;
+    flex-direction:column;
   ">
-    <!-- Граббер -->
+    <!-- Граббер (iOS-style) -->
     <div style="height:56px; display:flex; align-items:center; justify-content:center; padding-top:env(safe-area-inset-top);">
-      <div style="width:52px; height:6px; background:var(--grabber); border-radius:4px;"></div>
+      <div style="width:52px; height:6px; background:var(--grabber); border-radius:4px; opacity:0.4;"></div>
     </div>
 
-    <!-- Заголовок -->
-    <div style="padding:0 2.5rem 1.8rem; text-align:center;">
-      <h2 style="margin:0; font-size:2.4rem; font-weight:800; color:var(--text-primary); letter-spacing:-0.5px;">
+    <!-- Заголовок — чуть компактнее и элегантнее -->
+    <div style="padding:0 2rem 1.2rem; text-align:center;">
+      <h2 style="margin:0; font-size:2.1rem; font-weight:800; color:var(--text-primary); letter-spacing:-0.8px;">
         Ваши заказы
       </h2>
-      <p style="margin:0.8rem 0 0; color:var(--text-secondary); font-size:1.15rem;">
-        <span id="activeOrdersCountText"> Заказы</span> в обработке · Обновляется автоматически
+      <p style="margin:0.6rem 0 0; color:var(--text-secondary); font-size:1.05rem; opacity:0.9;">
+        <span id="activeOrdersCountText">Заказы</span> в обработке · Обновляется автоматически
       </p>
     </div>
 
-    <!-- Список заказов -->
-    <div id="ordersVerticalList" style="padding:0 2.5rem 2.5rem; display:flex; flex-direction:column; gap:2.2rem; max-height:60vh; overflow-y:auto; scrollbar-width:none;">
-      <!-- JS подгрузит сюда карточки -->
+    <!-- Список заказов — ПЛОТНЫЙ, КРАСИВЫЙ, СОВРЕМЕННЫЙ -->
+    <div id="ordersVerticalList" style="
+      flex:1;
+      overflow-y:auto;
+      padding:0 2rem 1rem;
+      margin:0 -2rem;
+      scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;
+    ">
+      <!-- JS будет вставлять сюда карточки -->
     </div>
 
-    <!-- Кнопка закрытия -->
-<!-- Кнопка закрытия модалки активных заказов -->
-<div style="padding:0 2.5rem 3rem calc(3rem + env(safe-area-inset-bottom));">
-  <button type="button"
-          onclick="closeMultiOrderModal()"
-          style="
-            width:100%; 
-            background:var(--btn-bg); 
-            color:var(--btn-fg);
-            border:none; 
-            padding:1.3rem; 
-            border-radius:24px;
-            font-size:1.2rem; 
-            font-weight:600; 
-            cursor:pointer;
-            transition:all 0.4s;
-          "
-          onmouseover="this.style.background='var(--btn-hover)'"
-          onmouseout="this.style.background='var(--btn-bg)'">
-    Закрыть
-  </button>
+    <!-- Кнопка "Закрыть" — тоньше и внизу прилипает -->
+    <div style="padding:1rem 2rem 2rem; margin-top:auto; padding-bottom:calc(2rem + env(safe-area-inset-bottom));">
+      <button type="button"
+              onclick="closeMultiOrderModal()"
+              style="
+                width:100%; 
+                background:var(--btn-bg); 
+                color:var(--btn-fg);
+                border:none; 
+                padding:1.1rem; 
+                border-radius:20px;
+                font-size:1.15rem; 
+                font-weight:600; 
+                cursor:pointer;
+                transition:all 0.35s cubic-bezier(0.22,0.61,0.36,1);
+                backdrop-filter:blur(20px);
+              "
+              onmouseover="this.style.background='var(--btn-hover)'; this.style.transform='translateY(-2px)'"
+              onmouseout="this.style.background='var(--btn-bg)'; this.style.transform=''">
+        Закрыть
+      </button>
+    </div>
+  </div>
 </div>
-</div>
-</div>
+
 <!-- ВЕРХНЯЯ ТЁМНАЯ ПОЛОСА + БЭКДРОП (ОБЯЗАТЕЛЬНО ДЛЯ feedback.js) -->
 <div id="mobileFeedbackTop" style="display:none; position:fixed; top:0; left:0; right:0; height:140px; background:linear-gradient(to bottom, rgba(0,0,0,0.75), transparent); z-index:9997; pointer-events:none;"></div>
 
@@ -392,24 +480,48 @@
   </form>
 </div>
   <!-- КОНТЕНТ КОРЗИНЫ -->
-  <main>
-    <div>
-      <h1 class="page-title">Корзина</h1>
-      <div id="cartItemsList">
+<main>
+  <!-- ПК-версия (остаётся как было) -->
+  <div class="desktop-cart-left">
+    <h1 class="page-title">Корзина</h1>
+    <div id="cartItemsList" class="cart-items-desktop"></div>
+    <div class="pagination" id="pagination" style="display:none;justify-content:center;margin-top:3rem;gap:1rem;"></div>
+  </div>
 
+  <div class="checkout-sidebar desktop-only">
+    <h3 class="checkout-title">Итого</h3>
+    <div class="summary-row"><span>Товаров:</span><strong id="summaryCount">0</strong></div>
+    <div class="summary-row total"><span>К оплате:</span><strong id="summaryTotal">0 ₽</strong></div>
+    <button class="checkout-btn" id="checkoutBtn" disabled>Оформить заказ</button>
+    <button class="archive-btn" id="openArchiveBtn"><i class="fas fa-history"></i> Архив заказов</button>
+  </div>
+
+  <!-- МОБИЛЬНАЯ ВЕРСИЯ — ПРАВИЛЬНЫЙ ПОРЯДОК 2025 -->
+  <div class="mobile-cart-layout">
+    <header class="mobile-cart-header" style="border-bottom:none !important; box-shadow:none !important;">
+  <h1 class="page-title">Корзина</h1>
+  <button class="archive-btn-mobile" id="openArchiveBtn">
+    <i class="fas fa-history"></i>
+  </button>
+</header>
+
+    <!-- 1. БЛОК ИТОГО С ЛИНИЯМИ — СНАЧАЛА! -->
+    <div class="mobile-summary-minimal">
+
+      <div class="summary-content">
+        <div class="summary-row"><span>Товаров:</span> <strong id="summaryCount">0</strong></div>
+        <div class="summary-row total"><span>К оплате:</span> <strong id="summaryTotal">0 ₽</strong></div>
       </div>
-      <div class="pagination" id="pagination" style="display:none; justify-content:center; margin-top:3rem; gap:1rem;"></div>
+
     </div>
 
-    <div class="checkout-sidebar">
-      <h3 class="checkout-title">Итого</h3>
-      <div class="summary-row"><span>Товаров:</span><strong id="summaryCount">0</strong></div>
-      <div class="summary-row total"><span>К оплате:</span><strong id="summaryTotal">0 ₽</strong></div>
-      <button class="checkout-btn" id="checkoutBtn" disabled>Оформить заказ</button>
-      <button class="archive-btn" id="openArchiveBtn"><i class="fas fa-history"></i> Архив заказов</button>
-    </div>
-  </main>
+    <!-- 2. ТОВАРЫ — ПОД ИТОГОМ -->
+    <div id="cartItemsList" class="cart-items-mobile"></div>
 
+    <!-- 3. ПРИЛИПАЮЩАЯ КНОПКА — ВСЕГДА СНИЗУ -->
+   <button class="checkout-btn-fixed" id="mobileCheckoutBtn" disabled>Оформить заказ</button>
+  </div>
+</main>
   <!-- МОДАЛКА АВТОРИЗАЦИИ — ОБЯЗАТЕЛЬНО ДОЛЖНА БЫТЬ НА КАЖДОЙ СТРАНИЦЕ -->
 <div id="authModal" class="auth-modal">
   <div class="auth-modal-content">
@@ -466,7 +578,7 @@
   </div>
 </div>
 
-<!-- МОДАЛКА ОБРАТНОЙ СВЯЗИ — ТОЧНО КАК НА КОНТАКТАХ (работает 100%) -->
+<!-- МОДАЛКА ОБРАТНОЙ СВЯЗИ -->
 <div class="custom-alert" id="feedbackModal" style="display:none;">
   <div class="alert-content">
     <button class="alert-close" id="closeFeedbackModal">×</button>
@@ -506,7 +618,7 @@
   </div>
 </div>
 
-<!-- САМАЯ КРАСИВАЯ ЧЁРНО-БЕЛАЯ МОДАЛКА 2025 ГОДА -->
+<!-- МОДАЛКА ОФОРМЛЕНИЯ ЗАКАЗА -->
 <div id="checkoutModal" class="modal" style="display:none;">
   <div class="checkout-modal-beauty">
     <button class="close-modal" id="closeCheckout">×</button>
@@ -553,12 +665,12 @@
         <input type="tel" id="checkoutPhone" placeholder="+7 (999) 999-99-99" required autocomplete="tel">
       </div>
 
-      <button type="button" id="confirmOrderBtn" class="confirm-beauty-btn">
-        <span class="btn-text">Подтвердить заказ</span>
-        <span class="btn-loader" style="display:none;">
-          <i class="fas fa-spinner fa-spin"></i> Оформляем...
-        </span>
-      </button>
+      <button type="submit" id="confirmOrderBtn" class="confirm-beauty-btn" form="checkoutForm">
+  <span class="btn-text">Подтвердить заказ</span>
+  <span class="btn-loader" style="display:none;">
+    <i class="fas fa-spinner fa-spin"></i> Оформляем...
+  </span>
+</button>
     </form>
 
     <div class="checkout-footer">
@@ -567,10 +679,7 @@
   </div>
 </div>
 
-
-
-
-<!-- APPLE-LEVEL МОДАЛКА ОТЗЫВОВ — МИНИМАЛИЗМ 2025 -->
+<!-- МОДАЛКА ОТЗЫВОВ -->
 <div id="reviewModal" class="modal" style="display:none;">
   <div class="review-modal-apple">
     <button class="close-modal" id="closeReview">×</button>
@@ -599,7 +708,6 @@
     </div>
   </div>
 </div>
-
 
 <div class="product-modal" id="productModal">
   <div class="product-content">
@@ -637,82 +745,75 @@
     </div>
   </div>
 </div>
+<!-- АРХИВ ЗАКАЗОВ — 100 % РАБОТАЕТ НА ВСЕХ УСТРОЙСТВАХ (2025) -->
+<div id="archiveModal" class="smart-archive">
+  <div class="smart-sheet">
 
+    <!-- Граббер только на телефонах -->
+    <div class="grabber"></div>
 
-<!-- ЕДИНСТВЕННАЯ РАБОЧАЯ МОДАЛКА АРХИВА — ОСТАВЬТЕ ТОЛЬКО ЭТУ! -->
-<div id="archiveModal" class="modal" style="display:none;">
-  <div class="archive-modal-beauty" style="max-width:920px;">
-    <button class="close-modal" id="closeArchive">×</button>
-    <div class="archive-header">
-      <div class="archive-icon"><i class="fas fa-receipt"></i></div>
-      <h2>Мои заказы</h2>
-      <p id="archiveSubtitle">Все ваши заказы в одном месте</p>
-    </div>
+    <!-- Крестик только на десктопе -->
+    <button class="close-btn desktop-only" id="closeArchive">×</button>
 
-    <div class="orders-tabs">
-      <button class="tab-btn active" data-tab="active">Активные <span id="activeCount"></span></button>
-      <button class="tab-btn" data-tab="completed">Завершённые</button>
-      <button class="tab-btn" data-tab="all">Все заказы</button>
-    </div>
+    <h2 class="smart-title">Мои заказы</h2>
 
-    <div class="orders-search">
-      <i class="fas fa-search"></i>
+    <div class="smart-tabs">
+  <button class="tab-btn active" data-tab="active">Активные <span id="activeCount"></span></button>
+  <button class="tab-btn" data-tab="completed">Завершённые</button>
+  <button class="tab-btn" data-tab="all">Все</button>
+</div>
+
+    <div class="smart-search">
+      <i class="fas fa-magnifying-glass"></i>
       <input type="text" id="orderSearch" placeholder="Поиск по номеру или товару...">
     </div>
 
-    <div id="ordersList" class="orders-list"></div>
+    <div id="ordersList" class="smart-list"></div>
 
-    <div id="loadMoreContainer" style="text-align:center;padding:2rem 0;display:none;">
-      <button id="loadMoreBtn" class="archive-btn" style="padding:0.9rem 2rem;font-size:1rem;">
-        Показать ещё
-      </button>
+    <div id="loadMoreContainer" class="smart-more">
+      <button id="loadMoreBtn">Показать ещё</button>
     </div>
 
-    <div class="archive-empty" id="emptyActive" style="display:none;text-align:center;padding:3rem 1rem;color:#aaa;">
-      <i class="fas fa-truck" style="font-size:3.5rem;margin-bottom:1rem;opacity:0.4;"></i>
-      <div style="font-size:1.4rem;">Активных заказов нет</div>
-      <div style="font-size:1rem;margin-top:0.5rem;">Новые заказы появятся здесь автоматически</div>
+    <div class="smart-empty" id="emptyActive">
+      <div style="font-size:72px;margin-bottom:16px;opacity:0.3;">Receipt</div>
+      <h3>Активных заказов нет</h3>
+      <p>Новые появятся здесь автоматически</p>
     </div>
 
   </div>
 </div>
-<!-- КРАСИВАЯ APPLE-МОДАЛКА ОТМЕНЫ ЗАКАЗА -->
+
+<!-- МОДАЛКА ОТМЕНЫ ЗАКАЗА -->
+
 <div id="cancelOrderModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); backdrop-filter:blur(32px); z-index:99999; justify-content:center; align-items:center; padding:16px;">
-  <div style="background:rgba(15,15,30,0.98); border-radius:28px; max-width:460px; width:100%; padding:2rem 2rem 2.5rem; box-shadow:0 40px 100px rgba(0,0,0,0.8); border:1px solid rgba(255,255,255,0.09); text-align:center;">
+  <div class="cancel-modal-inner">
     
     <!-- Граббер как в iOS -->
-    <div style="position:absolute; top:12px; left:50%; transform:translateX(-50%); width:44px; height:5.5px; background:rgba(255,255,255,0.3); border-radius:3px;"></div>
+    <div class="ios-grabber"></div>
     
-    <div style="width:84px; height:84px; margin:0 auto 1.5rem; background:#ff4444; border-radius:50%; display:flex; align-items:center; justify-content:center;">
-      <i class="fas fa-times-circle" style="font-size:3rem; color:white;"></i>
+    <div class="cancel-modal-icon">
+      <i class="fas fa-times-circle"></i>
     </div>
 
-    <h2 style="margin:0 0 1rem; font-size:1.9rem; font-weight:700; color:#fff;">Отменить заказ?</h2>
-    <p style="margin:0 0 2rem; color:#ccc; font-size:1.1rem; line-height:1.6;">
+    <h2 class="cancel-modal-title">Отменить заказ?</h2>
+    <p class="cancel-modal-text">
       Заказ №<strong id="cancelModalOrderId">000</strong> будет отменён.<br>
       Это действие нельзя будет отменить.
     </p>
 
     <textarea id="cancelReasonInput" placeholder="Обязательно укажите причину отмены..." 
-              style="width:100%; height:110px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:16px; padding:1rem; color:#fff; font-size:1rem; resize:none; margin-bottom:1.5rem;"
-              required></textarea>
+              class="cancel-modal-textarea" required></textarea>
 
-    <div style="display:flex; gap:1rem;">
-      <button id="confirmCancelFinalBtn" 
-              style="flex:1; background:#ff4444; color:white; border:none; padding:1.1rem; border-radius:20px; font-weight:600; font-size:1.1rem; cursor:pointer;">
+    <div class="cancel-modal-buttons">
+      <button id="confirmCancelFinalBtn" class="cancel-btn-danger">
         Отменить заказ
       </button>
-      <button onclick="document.getElementById('cancelOrderModal').style.display='none'" 
-              style="flex:1; background:rgba(255,255,255,0.12); color:#fff; border:none; padding:1.1rem; border-radius:20px; font-weight:600; cursor:pointer;">
+      <button onclick="document.getElementById('cancelOrderModal').style.display='none'" class="cancel-btn-secondary">
         Не отменять
       </button>
     </div>
   </div>
 </div>
-
-
-
-
 
 
 <script>
@@ -802,64 +903,130 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.addEventListener('click', handleCartClick);
 
-  const renderFullCart = (items = []) => {
-    if (hasRendered && items.length === 0 && currentCartItems.length === 0) return;
-    currentCartItems = items.slice();
-    hasRendered = true;
+const renderFullCart = (items = []) => {
+  if (hasRendered && items.length === 0 && currentCartItems.length === 0) return;
+  currentCartItems = items.slice();
+  hasRendered = true;
 
-    if (items.length === 0) {
-      cartItemsList.innerHTML = `
-        <div class="cart-empty-apple">
-          <i class="fas fa-shopping-bag"></i>
-          <div class="empty-title">Корзина пуста</div>
-          <div class="empty-subtitle">Добавьте товары и они появятся здесь</div>
-        </div>`;
-      summaryCount.textContent = '0';
-      summaryTotal.textContent = '0 ₽';
-      checkoutBtn?.setAttribute('disabled', '');
-      return;
-    }
+  const isMobile = window.innerWidth <= 1026;
 
-    const totalCents = items.reduce((s, i) => s + (i.price_cents || 0) * i.quantity, 0);
-    const totalCount = items.reduce((s, i) => s + i.quantity, 0);
+  // Контейнеры
+  const desktopContainer = document.querySelector('.cart-items-desktop');
+  const mobileContainer  = document.querySelector('.cart-items-mobile');
 
-    cartItemsList.innerHTML = items.map(item => `
-      <div class="apple-cart-item" data-id="${item.id}" data-type="${item.type || 'product'}">
-        <div class="apple-cart-image">
-          <img src="${item.image_url || '/static/assets/no-image.png'}"
-             onerror="this.src='/static/assets/no-image.png'" alt="${item.title}">
-        </div>
-        <div class="apple-cart-info">
-          <h3 class="apple-cart-title">${item.title}</h3>
-          <div class="apple-cart-price">${formatPrice(item.price_cents)}</div>
-        </div>
-        <div class="apple-quantity-control">
-          <button class="apple-qty-btn minus" ${item.quantity <= 1 ? 'disabled' : ''}>
-            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M5 12h14" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>
-          </button>
-          <span class="apple-qty-value">${item.quantity}</span>
-          <button class="apple-qty-btn plus">
-            <svg width="18" height="18" viewBox="0 0 24 24">
-              <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
-            </svg>
-          </button>
-        </div>
-        <button class="apple-remove-btn">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1-1v2M8 6h8m-9 0v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6H7Z"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+// === ПУСТАЯ КОРЗИНА ===
+if (items.length === 0) {
+  const emptyHtml = `
+    <div class="cart-empty-apple" style="text-align:center;padding:4rem 1rem;color:#888;">
+      <i class="fas fa-shopping-bag" style="font-size:3.5rem;margin-bottom:1rem;opacity:0.3;"></i>
+      <div class="empty-title" style="font-size:1.4rem;font-weight:600;">Корзина пуста</div>
+      <div class="empty-subtitle" style="margin-top:0.5rem;">Добавьте товары и они появятся здесь</div>
+    </div>`;
+
+  if (desktopContainer) desktopContainer.innerHTML = emptyHtml;
+  if (mobileContainer)  mobileContainer.innerHTML  = emptyHtml;
+
+  // ← ВАЖНО: СНАЧАЛА ОБНОВЛЯЕМ ИТОГИ, ПОТОМ ВЫХОДИМ!
+  document.querySelectorAll('#summaryCount').forEach(el => el.textContent = '0');
+  document.querySelectorAll('#summaryTotal').forEach(el => el.textContent = '0 ₽');
+  document.getElementById('checkoutBtn')?.setAttribute('disabled', '');
+
+  return; // теперь можно выйти — итоги уже обновлены везде!
+}
+
+
+  const totalCents = items.reduce((s, i) => s + (i.price_cents || 0) * i.quantity, 0);
+  const totalCount = items.reduce((s, i) => s + i.quantity, 0);
+
+  // === ПК ВЕРСИЯ (твоя старая, красивая) ===
+  const desktopHtml = items.map(item => `
+    <div class="apple-cart-item" data-id="${item.id}" data-type="${item.type || 'product'}">
+      <div class="apple-cart-image">
+        <img src="${item.image_url || '/static/assets/no-image.png'}"
+           onerror="this.src='/static/assets/no-image.png'" alt="${item.title}">
+      </div>
+      <div class="apple-cart-info">
+        <h3 class="apple-cart-title">${item.title}</h3>
+        <div class="apple-cart-price">${formatPrice(item.price_cents)}</div>
+      </div>
+      <div class="apple-quantity-control">
+        <button class="apple-qty-btn minus" ${item.quantity <= 1 ? 'disabled' : ''}>
+          <svg width="18" height="18" viewBox="0 0 24 24"><path d="M5 12h14" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>
+        </button>
+        <span class="apple-qty-value">${item.quantity}</span>
+        <button class="apple-qty-btn plus">
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
           </svg>
         </button>
-        <div class="apple-cart-total">
+      </div>
+      <button class="apple-remove-btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1-1v2M8 6h8m-9 0v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6H7Z"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
+    </div>
+  `).join('');
+
+  // === МОБИЛЬНАЯ ВЕРСИЯ (новая, шикарная) ===
+const mobileHtml = items.map(item => `
+  <div class="mobile-cart-item apple-cart-item" data-id="${item.id}" data-type="${item.type || 'product'}">
+    
+    <!-- Фото -->
+    <div class="mobile-cart-image">
+      <img src="${item.image_url || '/static/assets/no-image.png'}"
+           onerror="this.src='/static/assets/no-image.png'" alt="${item.title}">
+    </div>
+
+    <!-- Основная инфа -->
+    <div class="mobile-cart-content">
+      <h3 class="mobile-cart-title">${item.title}</h3>
+      
+      <div class="mobile-cart-footer">
+        <div class="mobile-cart-price">${formatPrice(item.price_cents)}</div>
+        
+        <div class="mobile-quantity-control">
+          <button class="apple-qty-btn minus" ${item.quantity <= 1 ? 'disabled' : ''}>−</button>
+          <span class="apple-qty-value">${item.quantity}</span>
+          <button class="apple-qty-btn plus">+</button>
+        </div>
+        
+        <div class="mobile-cart-total-price">
           ${formatPrice((item.price_cents || 0) * item.quantity)}
         </div>
       </div>
-    `).join('');
+    </div>
 
-    summaryCount.textContent = totalCount;
-    summaryTotal.textContent = formatPrice(totalCents);
-    checkoutBtn?.removeAttribute('disabled');
-  };
+    <!-- Мусорка — В САМОМ ПРАВОМ ВЕРХНЕМ УГЛУ -->
+<button 
+  class="mobile-remove-btn apple-remove-btn" 
+  aria-label="Удалить"
+  style="position: relative; z-index: 1;">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+    <path d="M3 6h18M10 11v6M14 11v6M5 6l1 12a2 2 0 002 2h8a2 2 0 002-2l1-12M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+  </svg>
+</button>
+  </div>
+`).join('');
+
+  // Рендерим в нужные контейнеры
+  if (desktopContainer) desktopContainer.innerHTML = desktopHtml;
+  if (mobileContainer)  mobileContainer.innerHTML  = mobileHtml;
+
+  // Обновляем итоги (одни и те же элементы)
+ document.querySelectorAll('#summaryCount').forEach(el => el.textContent = totalCount);
+document.querySelectorAll('#summaryTotal').forEach(el => el.textContent = formatPrice(totalCents));
+  // ←←←← НОВЫЕ ТРИ СТРОЧКИ — ДЕЛАЮТ МАГИЮ НА МОБИЛКЕ ←←←←
+  const allCountEls  = document.querySelectorAll('#summaryCount');
+  const allTotalEls  = document.querySelectorAll('#summaryTotal');
+  
+  allCountEls.forEach(el => el.textContent = totalCount);
+  allTotalEls.forEach(el => el.textContent = formatPrice(totalCents));
+  // ←←←← КОНЕЦ НОВЫХ СТРОЧЕК ←←←←
+  document.getElementById('checkoutBtn')?.removeAttribute('disabled');
+};
 
   // Слушаем обновления от мини-корзины и от себя
   document.addEventListener('cartUpdated', e => renderFullCart(e.detail.items || []));
@@ -1106,95 +1273,201 @@ blockGlobalChain();
 
 // Обновление плашки снизу
 function updateFloatingPill() {
-  const pill = document.getElementById('floatingOrderBar');
+  const bar = document.getElementById('floatingOrderBar');
   const badge = document.getElementById('activeOrdersBadge');
   const main = document.getElementById('pillMainText');
   const sub = document.getElementById('pillSubText');
 
   if (!activeOrders.length) {
-    pill.classList.remove('show');
-    pill.classList.add('hide');
-    setTimeout(() => pill.style.display = 'none', 400);
+    bar.style.opacity = '0';
+    bar.style.visibility = 'hidden';
     return;
   }
 
-  pill.style.display = 'block';
-  pill.classList.remove('hide');
-  pill.classList.add('show');
-
+  // Текст
   badge.textContent = activeOrders.length;
   badge.style.display = activeOrders.length > 1 ? 'flex' : 'none';
+  main.textContent = activeOrders.length === 1 
+    ? `Заказ ${activeOrders[0].display_id || activeOrders[0].id} в работе`
+    : `${activeOrders.length} заказа в работе`;
+  sub.textContent = activeOrders.length === 1 ? "Нажмите для подробностей" : "Нажмите, чтобы посмотреть все";
 
-  main.textContent = activeOrders.length === 1
-  ? `Заказ ${activeOrders[0].display_id} в работе`
-  : `${activeOrders.length} заказа в работе`;
-
-  sub.textContent = activeOrders.length === 1 
-    ? "Нажмите для подробностей" 
-    : "Нажмите, чтобы посмотреть все";
+  // Показ с анимацией — сразу по центру, без прыжков
+  bar.style.opacity = '1';
+  bar.style.visibility = 'visible';
+  bar.style.animation = 'pillSlideUp 0.5s cubic-bezier(0.22,1,0.36,1)';
 }
 
-// Рендер вертикального списка
+// Анимация — вставь один раз в <head> или прямо над шторкой
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes pillSlideUp {
+    from { opacity:0; transform:translateX(-50%) translateY(50px) scale(0.94); }
+    to   { opacity:1; transform:translateX(-50%) translateY(0) scale(1); }
+  }
+`;
+document.head.appendChild(style);
+
 function renderVerticalOrders() {
   const container = document.getElementById('ordersVerticalList');
   container.innerHTML = '';
 
-  activeOrders.forEach(order => {
-    const block = document.createElement('div');
-    block.style.cssText = `background:rgba(255,255,255,0.06); border-radius:20px; padding:1.6rem; border:1px solid rgba(255,255,255,0.08); box-shadow:0 8px 25px rgba(0,0,0,0.15); margin-bottom:1rem;`;
+  if (activeOrders.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:80px 20px;color:var(--text-secondary);opacity:0.7;">
+      <i class="fas fa-receipt" style="font-size:56px;margin-bottom:16px;opacity:0.3;"></i>
+      <div style="font-weight:600;font-size:17px;">Активных заказов нет</div>
+    </div>`;
+    return;
+  }
 
-block.innerHTML = `
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-    <div style="font-size:1.5rem; font-weight:700; color:#fff;">
-      Заказ ${order.display_id}
+  activeOrders.forEach(order => {
+    const card = document.createElement('div');
+    
+    card.style.cssText = `
+      background:rgba(255,255,255,0.09);
+      border-radius:20px;
+      margin-bottom:12px;
+      overflow:hidden;
+      border-left:5px solid #00ff95;
+      transition:all 0.4s cubic-bezier(0.22,1,0.36,1);
+      cursor:pointer;
+    `;
+
+    card.onmouseenter = () => card.style.transform = 'translateY(-2px)';
+    card.onmouseleave = () => card.style.transform = '';
+
+   card.innerHTML = `
+  <!-- Заголовок карточки -->
+  <div class="order-header" style="padding:16px 18px;display:flex;align-items:center;gap:14px;">
+    <div style="width:52px;height:52px;background:var(--order-icon-bg);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <i class="fas fa-truck" style="font-size:24px;color:var(--order-icon-color);"></i>
     </div>
-    <div style="padding:0.4rem 1rem; background:rgba(0,255,149,0.2); color:#00ff95; border-radius:12px; font-size:0.9rem; font-weight:600;">
-      В работе
+    <div style="flex:1;min-width:0;">
+      <div style="font-weight:800;font-size:17px;color:var(--text-primary);margin-bottom:3px;">
+        Заказ ${order.display_id || order.id}
+      </div>
+      <div style="font-size:14px;color:var(--text-secondary);">
+        ${order.total_str || '—'} • ${new Date(order.created_at).toLocaleDateString('ru-RU', {day:'numeric', month:'short', year:'numeric'})}
+      </div>
+    </div>
+    <i class="fas fa-chevron-down expand-icon" style="color:var(--text-secondary);font-size:20px;transition:transform 0.3s;"></i>
+  </div>
+
+  <!-- Раскрывающаяся часть — теперь идеально в обеих темах -->
+  <div class="order-details" style="max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.22,1,0.36,1);background:var(--order-details-bg);border-top:1px solid var(--order-details-border);">
+    <div style="padding:18px 18px 22px;">
+      <div id="chain-${order.id}"></div>
     </div>
   </div>
-  <div style="color:#aaa; font-size:0.95rem; margin-bottom:1.5rem;">
-    ${order.total_str || '—'} • ${new Date(order.created_at || Date.now()).toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' })}
-  </div>
-  <div id="chain-${order.id}" class="order-chain-mini"></div>
 `;
 
-    container.appendChild(block);
+    // Раскрытие по клику
+    card.querySelector('.order-header').onclick = (e) => {
+      e.stopPropagation();
+      const details = card.querySelector('.order-details');
+      const icon = card.querySelector('.expand-icon');
+      const isOpen = details.style.maxHeight && details.style.maxHeight !== '0px';
 
-    // ВАЖНО: временно подменяем getElementById только для этого заказа
+      if (isOpen) {
+        details.style.maxHeight = '0';
+        icon.style.transform = 'rotate(0deg)';
+      } else {
+        // Авто-подгон высоты под содержимое
+        details.style.maxHeight = details.scrollHeight + 40 + 'px';
+        icon.style.transform = 'rotate(180deg)';
+      }
+    };
+
+    container.appendChild(card);
+
+    // Вставляем цепочку статусов (работает как раньше)
     setTimeout(() => {
       const target = document.getElementById(`chain-${order.id}`);
       if (!target) return;
 
-      const realGetElementById = Document.prototype.getElementById;
-      Document.prototype.getElementById = function(id) {
-        return id === 'orderChain' ? target : realGetElementById.call(this, id);
-      };
-
-      window.startOrderChain(order.id);
-
-      // Возвращаем обратно защиту
-      Document.prototype.getElementById = function(id) {
-        if (id === 'orderChain') {
-          const fake = document.createElement('div');
-          fake.style.display = 'none';
-          return fake;
-        }
-        return realGetElementById.call(this, id);
-      };
-    }, 100);
+      const real = Document.prototype.getElementById;
+      Document.prototype.getElementById = id => id === 'orderChain' ? target : real.call(this, id);
+      window.startOrderChain?.(order.id);
+      Document.prototype.getElementById = real;
+    }, 150);
   });
 }
 
-// Открытие/закрытие
+
+
+// === РАБОЧАЯ ВЕРСИЯ 2025 — КНОПКА "ЗАКРЫТЬ" РАБОТАЕТ НА МОБИЛКЕ НА 100% ===
+
+const multiModal = document.getElementById('multiOrderModal');
+const modalInner = multiModal.querySelector('div[style*="background:var(--modal-bg)"]');
+
 function openMultiOrderModal() {
-  const modal = document.getElementById('multiOrderModal');
-  modal.style.display = 'flex';
-  setTimeout(renderVerticalOrders, 180);
+  multiModal.style.display = 'flex';
+
+  // Добавляем граббер один раз (iOS-style)
+  if (window.innerWidth <= 1026 && !multiModal.querySelector('.ios-grabber')) {
+    const grabber = document.createElement('div');
+    grabber.className = 'ios-grabber';
+    grabber.style.cssText = 'width:40px;height:5px;background:rgba(255,255,255,0.3);border-radius:3px;margin:12px auto 8px;';
+    modalInner.insertBefore(grabber, modalInner.firstChild);
+  }
+
+  // На мобильных — просто добавляем класс .show (анимация в CSS)
+  if (window.innerWidth <= 1026) {
+    requestAnimationFrame(() => {
+      multiModal.classList.add('show');
+    });
+  }
+
+  setTimeout(renderVerticalOrders, 100);
 }
 
 function closeMultiOrderModal() {
-  document.getElementById('multiOrderModal').style.display = 'none';
+  if (window.innerWidth <= 1026) {
+    multiModal.classList.remove('show');
+
+    // Дожидаемся окончания анимации и только потом скрываем
+    modalInner.addEventListener('transitionend', function hide() {
+      multiModal.style.display = 'none';
+      multiModal.classList.remove('show'); // на всякий случай
+      modalInner.removeEventListener('transitionend', hide);
+    }, { once: true });
+  } else {
+    multiModal.style.display = 'none';
+  }
 }
+
+// ——— КНОПКА "ЗАКРЫТЬ" ———
+document.querySelector('#multiOrderModal button[onclick="closeMultiOrderModal()"]')
+  ?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    closeMultiOrderModal();
+  });
+
+// ——— ЗАКРЫТИЕ ПО БЭКДРОПУ ———
+multiModal.addEventListener('click', (e) => {
+  if (e.target === multiModal) {
+    closeMultiOrderModal();
+  }
+});
+
+// ——— КЛИК ПО ПЛАШКЕ СНИЗУ ———
+document.getElementById('multiOrderPill')?.addEventListener('click', openMultiOrderModal);
+
+// Клик по плашке — теперь умный
+document.getElementById('multiOrderPill')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  openMultiOrderModal();
+});
+
+// Закрытие по бэкдропом (оставляем как было)
+document.getElementById('multiOrderModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('multiOrderModal')) {
+    closeMultiOrderModal();
+  }
+});
+
 
 // Закрытие по клику вне
 document.getElementById('multiOrderModal').addEventListener('click', e => {
@@ -1520,6 +1793,118 @@ document.addEventListener('DOMContentLoaded', () => {
   <script src="/static/js/bin.js"></script>
   <script src="/static/js/statuschain.js" defer></script>
 
+<script>
+(() => {
+  const modal = document.getElementById('checkoutModal');
+  if (!modal) return;
 
+  const sheet = modal.querySelector('.checkout-modal-beauty');
+  if (!sheet) return;
+
+  let startY = 0;
+  let isDragging = false;
+  const THRESHOLD = 120; // пикселей для закрытия
+
+  // Разрешаем начинать свайп только за граббер или верхние ~120px
+  const canStartDrag = (y) => {
+    if (window.innerWidth > 1025) return false;
+    const rect = sheet.getBoundingClientRect();
+    return y <= rect.top + 120; // верхняя часть шторки
+  };
+
+  const openCheckout = () => {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => {
+      modal.classList.add('show');
+      // Сбрасываем transform на всякий случай
+      sheet.style.transition = 'none';
+      sheet.style.transform = 'translateY(0)';
+      requestAnimationFrame(() => sheet.style.transition = '');
+    });
+  };
+
+  const closeCheckout = () => {
+    sheet.style.transition = 'transform 0.55s cubic-bezier(0.34, 1, 0.64, 1)';
+    sheet.style.transform = 'translateY(100dvh)';
+    sheet.addEventListener('transitionend', () => {
+      modal.style.display = 'none';
+      modal.classList.remove('show');
+      sheet.style.transform = '';
+      sheet.style.transition = '';
+      document.body.style.overflow = '';
+    }, { once: true });
+  };
+
+  // === СВАЙП ВНИЗ ===
+  const handleStart = (e) => {
+    if (window.innerWidth > 1025) return;
+    if (!modal.classList.contains('show')) return;
+
+    const touch = e.touches ? e.touches[0] : e;
+    if (!canStartDrag(touch.clientY)) return;
+
+    startY = touch.clientY;
+    isDragging = true;
+    sheet.style.transition = 'none';
+  };
+
+  const handleMove = (e) => {
+    if (!isDragging) return;
+    const touch = e.touches[0];
+    const delta = touch.clientY - startY;
+    if (delta > 0) {
+      sheet.style.transform = `translateY(${delta}px)`;
+      e.preventDefault();
+    }
+  };
+
+  const handleEnd = () => {
+    if (!isDragging) return;
+    isDragging = false;
+
+    const moved = parseFloat(sheet.style.transform.replace(/[^0-9.-]/g, '') || '0');
+    sheet.style.transition = '';
+
+    if (moved > THRESHOLD) {
+      closeCheckout();
+    } else {
+      sheet.style.transition = 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)';
+      sheet.style.transform = 'translateY(0)';
+    }
+  };
+
+  // События
+  modal.addEventListener('touchstart', handleStart, { passive: false });
+  modal.addEventListener('touchmove', handleMove, { passive: false });
+  modal.addEventListener('touchend', handleEnd);
+
+  modal.addEventListener('mousedown', handleStart);
+  modal.addEventListener('mousemove', handleMove);
+  modal.addEventListener('mouseup', handleEnd);
+
+  // Открытие по кнопкам
+  document.addEventListener('click', e => {
+    if (e.target.closest('#checkoutBtn, #mobileCheckoutBtn, .go-to-cart-btn, #mobileGoToCartBtn')) {
+      e.preventDefault();
+      openCheckout();
+    }
+  });
+
+  // Закрытие по крестику и бэкдропу
+  document.getElementById('closeCheckout')?.addEventListener('click', closeCheckout);
+  modal.addEventListener('click', e => {
+    if (e.target === modal) closeCheckout();
+  });
+
+  // Принудительный сброс при открытии (на случай если кто-то делает display = flex вручную)
+  new MutationObserver(() => {
+    if (modal.style.display === 'flex') {
+      requestAnimationFrame(() => sheet.style.transform = 'translateY(0)');
+    }
+  }).observe(modal, { attributes: true, attributeFilter: ['style'] });
+
+})();
+</script>
 </body>
 </html>

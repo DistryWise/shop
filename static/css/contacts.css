@@ -790,6 +790,7 @@ main { padding: calc(90px + 15vh) 8% 20vh; display: flex; flex-direction: column
   .requisites-grid {
     grid-template-columns: 1fr 1fr;
     gap: 4rem 8rem;
+    
   }
 }
 

@@ -1045,32 +1045,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Флаг: пользователь нажал "Изменить" → автозаполнение отключено
   let userChangedPhone = false;
 
-  // Кнопка "Изменить"
-  const changeBtn = document.createElement('button');
-changeBtn.type = 'button';
-changeBtn.textContent = 'Изменить';
-changeBtn.className = 'change-phone-btn';
-changeBtn.style.cssText = `
-  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-  background: rgba(255,255,255,0.15); color: #fff; border: none; border-radius: 12px;
-  padding: 7px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer; z-index: 10;
-  opacity: 0; pointer-events: none; transition: all 0.32s ease; backdrop-filter: blur(10px);
 
-  /* ← ДОБАВЛЕНО: адаптив + светлая тема (всего 5 строк) */
-  font-family: 'Inter', sans-serif;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  ${document.documentElement.getAttribute('data-theme') === 'light' 
-    ? 'background: rgba(0,0,0,0.1) !important; color: #111 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.18) !important;' 
-    : ''
-  }
-  ${window.innerWidth <= 480 
-    ? 'padding: 9px 16px; font-size: 0.92rem; right: 8px;' 
-    : ''
-  }
-`;
-
-phoneWrapper.style.position = 'relative';
-phoneWrapper.appendChild(changeBtn);
 
   // === ПОЛУЧЕНИЕ НОМЕРА ===
   const getCurrentPhone = () => {
@@ -1101,15 +1076,13 @@ phoneWrapper.appendChild(changeBtn);
     if (userChangedPhone) return;
     if (!isAuthenticated()) {
       phoneInput.value = '';
-      changeBtn.style.opacity = '0';
-      changeBtn.style.pointerEvents = 'none';
+
       return;
     }
     const saved = getCurrentPhone();
     if (saved) {
       phoneInput.value = formatPhone('7' + saved);
-      changeBtn.style.opacity = '1';
-      changeBtn.style.pointerEvents = 'auto';
+
     }
   };
 
@@ -1137,9 +1110,7 @@ phoneWrapper.appendChild(changeBtn);
 
     requestAnimationFrame(() => this.setSelectionRange(newPos, newPos));
 
-    const isFull = newValue.length >= 18;
-    changeBtn.style.opacity = isFull ? '1' : '0';
-    changeBtn.style.pointerEvents = isFull ? 'auto' : 'none';
+
   });
 
   phoneInput.addEventListener('focus', () => {
@@ -1155,14 +1126,7 @@ phoneWrapper.appendChild(changeBtn);
     }
   });
 
-  changeBtn.addEventListener('click', () => {
-    userChangedPhone = true;
-    phoneInput.value = '+7';
-    phoneInput.focus();
-    requestAnimationFrame(() => phoneInput.setSelectionRange(3, 3));
-    changeBtn.style.opacity = '0';
-    changeBtn.style.pointerEvents = 'none';
-  });
+
 
   // === КУЛДАУН ===
   const startCooldown = (seconds = 30) => {

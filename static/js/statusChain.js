@@ -104,6 +104,15 @@ window.startOrderChain = async function(orderId) {
     ];
 
     const poll = async () => {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            const bg = isLight ? '255,255,255' : '15,15,30';
+            const cardBg = isLight ? '255,255,255' : '30,30,40';
+            const border = isLight ? '0,0,0,0.08' : '255,255,255,0.1';
+            const text = isLight ? '#000' : '#fff';
+            const text2 = isLight ? '#555' : '#ccc';
+            const accent = isLight ? '#00d47a' : '#00ff95';
+            const cancel = isLight ? '#ff3b30' : '#ff453a';
+            const shadow = isLight ? '0,0,0,0.12' : '0,0,0,0.5';
         try {
             const res = await fetch(`/api/order_status/${orderId}?t=${Date.now()}`);
             if (!res.ok) return;
@@ -129,110 +138,160 @@ window.startOrderChain = async function(orderId) {
                 }
             }
 
-            // === МОБИЛЬНАЯ ВЕРТИКАЛЬНАЯ ЦЕПОЧКА + КРУПНЫЕ ТОВАРЫ ===
-            const chainHTML = `
-                <!-- Шапка с кнопками (только на мобилке) -->
-                ${isMobile ? `
-                <div style="position:sticky;top:0;background:rgba(15,15,25,0.95);backdrop-filter:blur(20px);
-                              padding:calc(env(safe-area-inset-top) + 12px) 20px 16px;z-index:10;
-                              border-bottom:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;">
-                    <button onclick="document.getElementById('orderChain').style.display='none'" 
-                            style="background:none;border:none;color:#fff;font-size:28px;cursor:pointer;padding:8px;">×</button>
-                    <div style="font-weight:700;color:#fff;font-size:1.4rem;">Заказ ${displayId}</div>
-                    <button onclick="document.getElementById('orderChain').style.display='none'" 
-                            style="background:rgba(255,255,255,0.15);width:44px;height:44px;border-radius:50%;
-                                   display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;">↑</button>
-                </div>` : ''}
+// ←←←←←←←←←← ФИНАЛ: ПК = 100% ТВОЯ ВЕРСИЯ | МОБИЛКА = СТАТУС ВЫДЕЛЯЕТСЯ ЯРКО И СРАЗУ БРОСАЕТСЯ В ГЛАЗА ←←←←←←←←←←
+const isMobile = window.innerWidth <= 768;
 
-                <!-- Заголовок (на ПК) -->
-                ${!isMobile ? `
-                <div style="text-align:center;padding-top:2rem;margin-bottom:1.5rem;">
-                    <div style="font-size:1.8rem;font-weight:800;color:#fff;">
-                        Заказ <span style="color:#00ff95;">${displayId}</span>
-                    </div>
-                    ${data.label ? `<div style="color:#aaa;margin-top:0.5rem;font-size:1.1rem;">${data.label}</div>` : ''}
-                </div>` : ''}
+const chainHTML = isMobile ? `
+<!-- МОБИЛЬНАЯ ВЕРСИЯ — ПОЛНАЯ ПОДДЕРЖКА СВЕТЛОЙ ТЕМЫ -->
+<div style="padding:16px;font-family:-apple-system,system-ui,'SF Pro Display',sans-serif;color:${text};">
+  <div style="background:rgba(${cardBg},0.98);
+              border-radius:28px;overflow:hidden;position:relative;
+              border:1px solid rgba(${border});
+              box-shadow:0 20px 50px rgba(${shadow});
+              backdrop-filter:blur(20px);">
 
-                <!-- Цепочка статусов — вертикальная на мобилке, горизонтальная на ПК -->
-                <div class="status-chain-wrapper" style="${isMobile ? 'padding:20px 0;display:flex;flex-direction:column;gap:32px;align-items:center;' : 'display:flex;justify-content:center;gap:1.5rem;padding:2rem;flex-wrap:wrap;'}">
-                    ${steps.map((step, i) => `
-                        <div style="text-align:center;position:relative;${isMobile ? 'width:100%;' : 'flex:1;min-width:80px;'}">
-                            <div class="chain-img-circle ${i === currentIdx ? 'active' : ''} ${i < currentIdx ? 'done' : ''}"
-                                 style="width:${isMobile ? '84px' : '68px'};height:${isMobile ? '84px' : '68px'};border-radius:50%;margin:0 auto;
-                                        border:5px solid ${i <= currentIdx && !isFinal ? '#00ff95' : '#444'};
-                                        box-shadow:0 0 30px ${i === currentIdx ? 'rgba(0,255,149,0.7)' : 'transparent'};overflow:hidden;">
-                                <img src="${icons[i]}" style="width:100%;height:100%;object-fit:contain;">
-                            </div>
-                            <div style="margin-top:12px;font-size:${isMobile ? '1.1rem' : '0.95rem'};font-weight:600;
-                                        color:${i <= currentIdx ? '#fff' : '#888'};">${step.label}</div>
-                            ${i < steps.length - 1 ? `
-                                <div style="position:absolute;
-                                           ${isMobile ? 'bottom:-44px;left:50%;transform:translateX(-50%);width:5px;height:60px;' : 'top:34px;left:70px;right:-40px;height:5px;'}
-                                           background:${i < currentIdx ? '#00ff95' : '#444'};
-                                           ${i < currentIdx ? 'box-shadow:0 0 20px rgba(0,255,149,0.5);' : ''}">
-                                </div>
-                            ` : ''}
-                        </div>
-                    `).join('')}
-                </div>
+    <!-- Полоска слева -->
+    <div style="position:absolute;left:0;top:0;bottom:0;width:7px;
+                background:${data.status==='cancelled'?cancel:accent};
+                box-shadow:0 0 30px ${data.status==='cancelled'?cancel+'99':accent+'99'};
+                border-radius:28px 0 0 28px;
+                animation:${data.status==='cancelled'?'none':'pulse 2.2s infinite'};"></div>
+    <style>@keyframes pulse{0%,100%{opacity:0.8;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.15);box-shadow:0 0 40px ${accent}99}}</style>
 
-                <!-- Товары — крупные карточки на мобилке -->
-                ${data.items && data.items.length > 0 ? `
-                <div style="margin:2rem 1rem 1rem;background:rgba(255,255,255,0.06);border-radius:24px;padding:1.6rem;">
-                    <div style="font-weight:800;color:#fff;margin-bottom:1.2rem;font-size:1.3rem;">Состав заказа</div>
-                    <div style="display:flex;flex-direction:column;gap:1.2rem;">
-                        ${data.items.slice(0, isMobile ? 10 : 5).map(item => {
-                            const imgSrc = item.image_url || (item.item_type === 'service' ? '/static/assets/service-placeholder.png' : '/static/assets/no-image.png');
-                            const totalPrice = ((item.price_cents || 0) * item.quantity / 100).toFixed(2).replace('.', ',');
-                            return `
-                                <div style="display:flex;gap:1.2rem;align-items:center;background:rgba(255,255,255,0.06);padding:1.2rem;border-radius:20px;">
-                                    <img src="${imgSrc}" onerror="this.src='/static/assets/no-image.png'"
-                                         style="width:${isMobile ? '76px' : '60px'};height:${isMobile ? '76px' : '60px'};border-radius:16px;object-fit:cover;background:#222;flex-shrink:0;">
-                                    <div style="flex:1;min-width:0;">
-                                        <div style="font-weight:600;color:#fff;font-size:${isMobile ? '1.15rem' : '1rem'};line-height:1.4;">${item.title}</div>
-                                        <div style="color:#aaa;font-size:0.95rem;margin-top:4px;">
-                                            ${item.quantity} × ${item.price_str || (item.price_cents/100).toFixed(2) + ' ₽'}
-                                        </div>
-                                    </div>
-                                    <div style="font-weight:700;color:#00ff95;font-size:1.4rem;white-space:nowrap;">
-                                        ${totalPrice} ₽
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
-                        ${data.items.length > (isMobile ? 10 : 5) ? `<div style="text-align:center;color:#888;padding:1rem;">…и ещё ${data.items.length - (isMobile ? 10 : 5)} товаров</div>` : ''}
-                    </div>
-                    <div style="margin-top:1.6rem;padding-top:1.4rem;border-top:1px solid rgba(255,255,255,0.12);text-align:right;">
-                        <strong style="color:#00ff95;font-size:1.8rem;font-weight:800;">
-                            Итого: ${data.total_str || '—'}
-                        </strong>
-                    </div>
-                </div>` : ''}
+    <div style="padding:32px 24px 24px;text-align:center;">
+      <div style="font-size:13px;color:${text2};letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Текущий статус</div>
+      <div style="font-size:28px;font-weight:900;
+                  background:linear-gradient(90deg,${accent},${accent}dd);
+                  -webkit-background-clip:text;background-clip:text;color:transparent;
+                  text-shadow:0 0 30px ${accent}66;line-height:1.1;">
+        ${steps[currentIdx].label}
+      </div>
+      <div style="font-size:16px;color:${text2};margin-top:8px;">
+        ${currentIdx === 0 ? 'Ожидаем оплату' :
+          currentIdx === 1 ? 'Собираем ваш заказ' :
+          currentIdx === 2 ? 'Передан курьеру' :
+          currentIdx === 3 ? 'Едет к вам' : 'Готов к выдаче'}
+      </div>
+    </div>
 
-                <!-- Кнопка отмены -->
-                ${data.can_cancel && !isFinal ? `
-                    <div style="text-align:center;margin:2rem 1rem;">
-                        <button onclick="cancelOrder(${orderId})"
-                                style="background:#ff4444;color:#fff;border:none;padding:1rem 2.8rem;
-                                       border-radius:24px;font-weight:700;font-size:1.3rem;cursor:pointer;
-                                       box-shadow:0 8px 30px rgba(255,68,68,0.5);">
-                            Отменить заказ
-                        </button>
-                    </div>
-                ` : ''}
+    <div style="text-align:center;padding:0 24px 28px;border-bottom:1px solid rgba(${border});">
+      <div style="font-size:36px;font-weight:900;letter-spacing:-1.8px;color:${text};">Заказ ${displayId}</div>
+      <div style="font-size:32px;font-weight:800;color:${accent};margin-top:6px;">${data.total_str || '—'}</div>
+    </div>
 
-                <!-- Причина отмены -->
-                ${data.cancel_reason ? `
-                    <div style="margin:2rem 1rem;padding:1.6rem;background:rgba(255,68,68,0.15);
-                                 border-radius:20px;border-left:5px solid #ff4444;color:#ff8c8c;">
-                        <div style="font-weight:800;color:#ff4444;margin-bottom:0.8rem;">Причина отмены</div>
-                        <div style="white-space:pre-wrap;line-height:1.6;">
-                            ${String(data.cancel_reason).replace(/</g, '&lt;').replace(/\n/g, '<br>')}
-                        </div>
-                    </div>
-                ` : ''}
-            `;
+    ${data.items && data.items.length > 0 ? `
+      <div style="padding:24px 20px 20px;">
+        <div style="display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;padding:8px 0;">
+          ${data.items.map(item => `
+            <div style="flex-shrink:0;width:100px;text-align:center;">
+              <img src="${item.image_url || '/static/assets/no-image.png'}"
+                   style="width:100px;height:100px;border-radius:24px;object-fit:cover;
+                          box-shadow:0 12px 30px rgba(${shadow});"
+                   onerror="this.src='/static/assets/no-image.png'">
+              <div style="margin-top:8px;font-size:13px;color:${text2};">
+                ${item.quantity > 1 ? item.quantity+'× ' : ''}${item.title.length > 17 ? item.title.slice(0,17)+'...' : item.title}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : ''}
 
+    ${data.can_cancel && data.status !== 'cancelled' && data.status !== 'completed' ? `
+      <div style="padding:20px 24px 32px;text-align:center;">
+        <button onclick="cancelOrder(${orderId})"
+                style="background:transparent;color:${cancel};border:2px solid ${cancel};
+                       padding:14px 32px;border-radius:18px;font-size:17px;font-weight:700;
+                       width:100%;max-width:300px;cursor:pointer;">
+          Отменить заказ
+        </button>
+      </div>
+    ` : ''}
+
+    ${data.status === 'cancelled' ? `
+      <div style="position:absolute;left:0;top:0;bottom:0;width:7px;background:${cancel};
+                  box-shadow:0 0 30px ${cancel}99;border-radius:28px 0 0 28px;"></div>
+      <div style="padding:20px 24px 32px;background:${cancel}12;text-align:center;">
+        <div style="font-size:22px;font-weight:900;color:${cancel};">Заказ отменён</div>
+        ${data.cancel_reason ? `<div style="margin-top:10px;font-size:15px;color:${cancel}cc;">${data.cancel_reason}</div>` : ''}
+      </div>
+    ` : ''}
+  </div>
+</div>
+` : `
+<!-- ДЕСКТОПНАЯ ВЕРСИЯ — ТОЖЕ С ПОДДЕРЖКОЙ СВЕТЛОЙ ТЕМЫ -->
+<div style="padding:24px 20px;font-family:-apple-system,system-ui,'SF Pro Display',sans-serif;color:${text};">
+  <div style="background:rgba(${cardBg},0.98);
+              border-radius:28px;padding:24px 28px 28px;
+              border:1px solid rgba(${border});
+              box-shadow:0 20px 50px rgba(${shadow});
+              backdrop-filter:blur(20px);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;">
+      <div>
+        <div style="font-size:32px;font-weight:800;letter-spacing:-1.2px;color:${text};">Заказ ${displayId}</div>
+        <div style="font-size:24px;font-weight:700;color:${accent};margin-top:6px;">${data.total_str || '—'}</div>
+      </div>
+      ${data.can_cancel && data.status !== 'cancelled' && data.status !== 'completed' ? `
+        <button onclick="cancelOrder(${orderId})"
+                style="width:56px;height:56px;background:${cancel}22;border:2px solid ${cancel};border-radius:18px;
+                       display:flex;align-items:center;justify-content:center;cursor:pointer;">
+          <i class="fas fa-times" style="font-size:24px;color:${cancel};"></i>
+        </button>
+      ` : ''}
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:center;gap:20px;margin:32px 0;">
+      ${steps.slice(0,4).map((step, i) => {
+        const done = i < currentIdx;
+        const active = i === currentIdx;
+        return `
+          <div style="text-align:center;">
+            <div style="width:60px;height:60px;margin:0 auto 10px;border-radius:50%;overflow:hidden;
+                        border:4px solid ${done || active ? accent : 'rgba('+(isLight?'0,0,0,0.15':'255,255,255,0.15')+')'};
+                        box-shadow:${active ? '0 0 40px '+accent+'88' : 'none'};">
+              <img src="${icons[i]}" style="width:100%;height:100%;object-fit:contain;">
+            </div>
+            <div style="font-size:13px;font-weight:700;color:${done || active ? text : text2}">${step.label}</div>
+          </div>
+          ${i < 3 ? `<div style="flex:1;height:3px;background:${done ? accent : 'rgba('+(isLight?'0,0,0,0.15':'255,255,255,0.15')+')'};
+                             box-shadow:${done ? '0 0 16px '+accent+'66' : 'none'};"></div>` : ''}
+        `;
+      }).join('')}
+    </div>
+
+    ${data.status === 'cancelled' ? `
+      <div style="margin:20px -28px -28px;padding:20px 28px;background:${cancel}22;
+                  border-radius:0 0 28px 28px;text-align:center;">
+        <div style="font-size:18px;font-weight:700;color:${cancel};">Заказ отменён</div>
+        ${data.cancel_reason ? `<div style="margin-top:8px;font-size:15px;color:${cancel}cc;">${data.cancel_reason}</div>` : ''}
+      </div>
+    ` : ''}
+
+    ${data.items && data.items.length > 0 ? `
+      <div style="margin-top:28px;">
+        <div style="font-size:15px;color:${text2};margin-bottom:12px;font-weight:600;">
+          ${data.items.length} товар${data.items.length > 4 ? 'ов' : data.items.length === 1 ? '' : 'а'}
+        </div>
+        <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;">
+          ${data.items.map(item => `
+            <div style="flex-shrink:0;width:80px;text-align:center;">
+              <div style="width:80px;height:80px;border-radius:18px;overflow:hidden;
+                          background:${isLight?'#f5f5f7':'#111'};box-shadow:0 8px 20px rgba(${shadow});margin-bottom:8px;">
+                <img src="${item.image_url || '/static/assets/no-image.png'}"
+                     style="width:100%;height:100%;object-fit:cover;"
+                     onerror="this.src='/static/assets/no-image.png'">
+              </div>
+              <div style="font-size:12px;color:${text2};line-height:1.3;">
+                ${item.quantity}× ${item.title.length > 20 ? item.title.slice(0,20)+'...' : item.title}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : ''}
+  </div>
+</div>
+`;
             chain.innerHTML = chainHTML;
 
             if (isFinal) {

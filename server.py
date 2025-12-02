@@ -146,17 +146,7 @@ def create_app():
     from flask import request, render_template, redirect
     
     @app.route('/bin')
-    def bin():
-        ua = request.headers.get('User-Agent', '').lower()
-        is_mobile = any(x in ua for x in ['mobile', 'android', 'iphone', 'ipad', 'ipod', 'windows phone'])
-
-        # Дополнительно: если передали ширину экрана (можно из JS)
-        width = request.args.get('w')
-        if width and int(width) <= 1024:
-            is_mobile = True
-
-        return redirect('/cart-mobile') if is_mobile else render_template('bin.html')
-
+    def bin(): return render_template('/bin.html')
 
     @app.route('/cart-mobile')
     def cart_mobile():
@@ -289,16 +279,16 @@ def create_app():
         
 
 
-    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyBQWw2CY6oO8Uf4jq08mUFmCzRNs3sO8vY") 
-    GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
-    GEMINI_MODEL = "gemini-2.5-flash"
-    
+    # === DEEPSEEK API КОНФИГУРАЦИЯ ===
+    DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "sk-2677a916a2ef42619d1ff71e3a926d11") 
+    DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
+    DEEPSEEK_MODEL = "deepseek-chat"  # или "deepseek-reasoner"
+
     SYSTEM_PROMPT = """Ты — юрист Priligrim. Отвечай строго по-русски, коротко (2–4 предложения), уверенно и профессионально.
     Темы: договор оферты, возврат товара в течение 14 дней, VIP-клуб, оплата криптовалютой, защита персональных данных.
     Если вопрос не по теме — ответь: «Я специализируюсь только на юридических вопросах нашего магазина. Задайте вопрос по договору, возврату или VIP-клубу.»"""
 
-# ───── ЗАПРОС К GEMINI API ─────
-
+    # ───── ЗАПРОС К DEEPSEEK API ─────
     @app.route('/api/ai', methods=['POST'])
     def ai_chat():
         try:
@@ -307,52 +297,57 @@ def create_app():
             if not prompt:
                 return "Задайте вопрос.", 200
 
-            # Синхронный запрос к API Gemini
+            # Формируем запрос в формате DeepSeek API
+            headers = {
+                "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "model": DEEPSEEK_MODEL,
+                "messages": [
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": prompt}
+                ],
+                "max_tokens": 900,
+                "temperature": 0.6,
+                "stream": False
+            }
+
+            # Синхронный запрос к API DeepSeek
             response = httpx.post(
-                            GEMINI_API_URL, 
-                            params={"key": GEMINI_API_KEY},
-                            json={
-                                "contents": [
-                                    {
-                                        "role": "user",
-                                        "parts": [
-                                            {"text": f"{SYSTEM_PROMPT}\n\nПользовательский вопрос: {prompt}"}
-                                        ]
-                                    }
-                                ],
-                                # ИСПРАВЛЕНО: 'config' заменено на 'generationConfig'
-                                "generationConfig": {
-                                    "temperature": 0.6,
-                                    "maxOutputTokens": 900
-                                }
-                            },
-                            timeout=60.0
-                        )
+                DEEPSEEK_API_URL,
+                headers=headers,
+                json=payload,
+                timeout=60.0
+            )
 
             if response.status_code != 200:
-                logger.error(f"Gemini API error ({response.status_code}): {response.text}")
-                # Обработка ошибок
-                if response.status_code == 400:
-                    return "Ошибка: Неверный запрос к Gemini API.", 200
-                if response.status_code == 403:
-                    return "Ошибка: Недействительный или просроченный API-ключ Gemini.", 200
+                logger.error(f"DeepSeek API error ({response.status_code}): {response.text}")
+                if response.status_code == 401:
+                    return "Ошибка: Недействительный API-ключ DeepSeek.", 200
+                if response.status_code == 429:
+                    return "Лимит запросов исчерпан. Попробуйте позже.", 200
                 return f"Сервис временно недоступен (код {response.status_code}).", 200
 
-            # Парсинг ответа Gemini
+            # Парсинг ответа DeepSeek
             response_data = response.json()
             
-            # Проверка наличия ответа
-            if 'candidates' in response_data and response_data['candidates']:
-                answer = response_data['candidates'][0]['content']['parts'][0]['text']
+            # Извлекаем текст ответа
+            if 'choices' in response_data and response_data['choices']:
+                answer = response_data['choices'][0]['message']['content']
             else:
-                answer = "Извините, Gemini не смог сгенерировать ответ."
-                logger.warning(f"Gemini не сгенерировал ответ: {response.text}")
+                answer = "Извините, DeepSeek не смог сгенерировать ответ."
+                logger.warning(f"DeepSeek не сгенерировал ответ: {response.text}")
             
             return answer
 
+        except httpx.TimeoutException:
+            logger.error("DeepSeek API timeout")
+            return "Сервис временно недоступен (таймаут).", 200
         except Exception as e:
             logger.error(f"AI error: {e}")
-            return "Сервис временно недоступен.", 200
+        return "Сервис временно недоступен.", 200
 
     @app.route('/api/verify_code', methods=['POST'])
     def api_verify_code():
