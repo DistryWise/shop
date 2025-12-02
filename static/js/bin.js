@@ -1872,13 +1872,8 @@ window.startOrderChain = async function(orderId) {
     }
 
     updateFloatingPill();
-    
-    // Автоматически открываем модалку при новом заказе
-    if (document.getElementById('multiOrderModal').style.display !== 'flex') {
-      openMultiOrderModal();
-    } else {
-      renderVerticalOrders();
-    }
+    renderVerticalOrders();
+
   } catch (err) {
     console.warn('Не удалось загрузить заказ', orderId);
     if (!activeOrders.find(o => o.id === orderId)) {
@@ -1886,7 +1881,6 @@ window.startOrderChain = async function(orderId) {
       if (activeOrders.length > 3) activeOrders.pop();
     }
     updateFloatingPill();
-    openMultiOrderModal();
   }
 };
 
