@@ -586,7 +586,6 @@ elements.confirmOrderBtn?.addEventListener('click', async () => {
   });
 
 // ОТКРЫТИЕ АРХИВА — ОДИН РАЗ + ЗАЩИТА ОТ ДУБЛИРОВАНИЯ
-// ОТКРЫТИЕ АРХИВА — РАБОТАЕТ НА ПК И НА МОБИЛЕ С ОДНИМ ID!
 document.querySelectorAll('#openArchiveBtn').forEach(btn => btn.addEventListener('click', async () => {
     // Проверяем сессию быстро и без лишних запросов
     const userId = sessionStorage.getItem('user_id');
@@ -607,7 +606,9 @@ document.querySelectorAll('#openArchiveBtn').forEach(btn => btn.addEventListener
         } else {
             renderOrders();
         }
+        updateArchiveTabsCounts();
     }
+    
 }));
 
 // Глобальные переменные (должны быть объявлены снаружи!)
@@ -618,48 +619,63 @@ const PER_PAGE = 10;
 
 // ЗАГРУЗКА ЗАКАЗОВ — БЕЗ ДУБЛИРОВАНИЯ
 async function loadOrders(forceReload = false) {
-    if (forceReload) {
-        allOrders = [];
-        currentPage = 1;
-    }
-
     const list = document.getElementById('ordersList');
     const loadMoreContainer = document.getElementById('loadMoreContainer');
 
-    if (currentPage === 1 && allOrders.length === 0) {
-        list.innerHTML = '<div style="text-align:center;padding:3rem;color:#aaa;">Загружаем заказы...</div>';
+    // ←←← ГЛАВНОЕ ИСПРАВЛЕНИЕ №1 — ОЧИЩАЕМ ТОЛЬКО ПРИ forceReload И ПРИ ПЕРЕКЛЮЧЕНИИ ТАБА
+    if (forceReload || currentPage === 1) {
+        allOrders = [];
+        currentPage = 1;
+        if (list) list.innerHTML = '<div style="text-align:center;padding:3rem;color:#aaa;">Загружаем заказы...</div>';
     }
 
     try {
-        // ←←←←←←←←←←←←←←← ЭТО КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ ←←←←←←←←←←←←←←←
         const endpoint = (currentTab === 'all' || currentTab === 'completed')
-    ? '/api/user_archived_orders'
-    : '/api/user_orders';
-        // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+            ? '/api/user_archived_orders'
+            : '/api/user_orders';
 
         const res = await fetch(`${endpoint}?page=${currentPage}&per=${PER_PAGE}&t=${Date.now()}`, {
             cache: 'no-store'
         });
 
         if (!res.ok) throw new Error('Server error');
+
         const newOrders = await res.json();
 
-        if (forceReload) {
-            allOrders = newOrders;
-        } else {
-            allOrders = [...allOrders, ...newOrders];
-        }
+        // ←←← ГЛАВНОЕ ИСПРАВЛЕНИЕ №2 — УБИРАЕМ ДУБЛИ ПО ID!
+        const existingIds = new Set(allOrders.map(o => o.id));
+        const uniqueNewOrders = newOrders.filter(order => !existingIds.has(order.id));
+
+        // Добавляем только новые
+        allOrders = [...allOrders, ...uniqueNewOrders];
 
         renderOrders();
-        loadMoreContainer.style.display = newOrders.length === PER_PAGE ? 'block' : 'none';
 
-        const activeCount = allOrders.filter(o => !['completed', 'cancelled'].includes(o.status)).length;
-        const badge = document.querySelector('[data-tab="active"] span');
-        if (badge) badge.textContent = activeCount || '';
+        // Показываем/скрываем кнопку "Загрузить ещё"
+        if (loadMoreContainer) {
+            if (uniqueNewOrders.length < PER_PAGE) {
+                loadMoreContainer.style.display = 'none'; // больше нет заказов
+            } else {
+                loadMoreContainer.style.display = 'block';
+            }
+        }
+
+        // ←←← ОБНОВЛЯЕМ КРУЖКИ (из activeOrders, как мы починили раньше)
+        setTimeout(() => {
+            const activeCount = activeOrders.filter(o => o && !['completed', 'cancelled'].includes(o.status)).length;
+            const completedCount = allOrders.filter(o => ['completed', 'cancelled'].includes(o.status)).length;
+            const totalCount = allOrders.length;
+
+            document.querySelector('[data-tab="active"] span')?.then(b => b.textContent = activeCount || '');
+            document.querySelector('[data-tab="completed"] span')?.then(b => b.textContent = completedCount || '');
+            document.querySelector('[data-tab="all"] span')?.then(b => b.textContent = totalCount || '');
+        }, 250);
 
     } catch (err) {
         console.error(err);
-        list.innerHTML = '<div style="text-align:center;padding:3rem;color:#ff6b6b;">Ошибка загрузки</div>';
+        if (currentPage === 1) {
+            list.innerHTML = '<div style="text-align:center;padding:3rem;color:#ff6b6b;">Ошибка загрузки</div>';
+        }
     }
 }
 // === НОВАЯ ВЕРСИЯ renderOrders() — РЕАЛ-ТАЙМ ЦЕПОЧКИ + ПРИЧИНА ОТМЕНЫ ===
@@ -879,24 +895,38 @@ document.addEventListener('orderStatusChanged', (e) => {
     // Если завершён — можно убрать карточку или перерисовать весь список
     if (isFinal) {
         setTimeout(() => {
-            loadOrders(true); // полная перезагрузка архива — чисто и надёжно
-        }, 1500);
+        if (typeof allOrders !== 'undefined' && Array.isArray(allOrders)) {
+            updateArchiveTabsCounts();
+        }
+    }, 500);
     }
 });
 
 // Переключение табов
 // Переключение табов — ПОЛНАЯ ПЕРЕЗАГРУЗКА ДАННЫХ!
+// Переключение табов — ИСПРАВЛЕННАЯ ВЕРСИЯ 2025 (всчитает правильно всегда!)
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentTab = btn.dataset.tab;
+        currentPage = 1;
 
-        // ←←←←←←←←←←←←←←← ЭТО ГЛАВНОЕ ←←←←←←←←←←←←←←←
-        allOrders = [];      // очищаем старое
-        currentPage = 1;     // сбрасываем пагинацию
-        loadOrders(true);    // ← ПЕРЕЗАГРУЖАЕМ с правильного endpoint!
-        // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+        // ←←←←←←←←←←←←←←← ГЛАВНОЕ ИСПРАВЛЕНИЕ ←←←←←←←←←←←←←←←
+        if (currentTab === 'active') {
+            // Только активные — грузим с /api/user_orders и НЕ трогаем allOrders
+            loadOrders(true);
+        } else {
+            // «Все» или «Завершённые» — грузим архивные, но ПЕРЕД ЭТИМ возвращаем активные!
+            fetch('/api/user_orders?t=' + Date.now(), { cache: 'no-store' })
+                .then(r => r.ok ? r.json() : [])
+                .then(activeOnes => {
+                    allOrders = activeOnes.filter(o => !['completed', 'cancelled'].includes(o.status));
+                    loadOrders(true); // теперь добавит завершённые к активным
+                })
+                .catch(() => loadOrders(true));
+        }
+        // ←←←←←←←←←←←←←←← КОНЕЦ ГЛАВНОГО ИСПРАВЛЕНИЯ ←←←←←←←←←←←←←←←
     });
 });
 // Поиск
@@ -1700,12 +1730,15 @@ function renderVerticalOrders() {
   container.innerHTML = '';
 
   if (activeOrders.length === 0) {
-    container.innerHTML = `<div style="text-align:center;padding:80px 20px;color:var(--text-secondary);opacity:0.7;">
-      <i class="fas fa-receipt" style="font-size:56px;margin-bottom:16px;opacity:0.3;"></i>
-      <div style="font-weight:600;font-size:17px;">Активных заказов нет</div>
-    </div>`;
+    container.innerHTML = `
+        <div style="text-align:center;padding:80px 20px;color:var(--text-secondary);opacity:0.7;">
+            <svg style="width:64px;height:64px;margin-bottom:16px;opacity:0.3;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M9 12h6m-6-4h6m-6 8h6m-2 4H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4l-2 2-2-2Z"/>
+            </svg>
+            <div style="font-weight:600;font-size:17px;">Активных заказов нет</div>
+        </div>`;
     return;
-  }
+}
 
   activeOrders.forEach(order => {
     const card = document.createElement('div');

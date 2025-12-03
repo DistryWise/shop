@@ -2451,7 +2451,27 @@ html[data-theme="dark"] button[onclick="closeMultiOrderModal()"]:hover {
     margin-top: 40px;
   }
 }
+#archiveModal {
+    overscroll-behavior: contain; /* важно для iOS */
+}
 
+#archiveModal .smart-sheet,
+#archiveModal .archive-content {
+    max-height: 92vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 100px; /* чтобы кнопка "Загрузить ещё" не прилипала к низу */
+}
+
+/* Плавный скролл на айфонах */
+#archiveModal::-webkit-scrollbar {
+    width: 6px;
+}
+#archiveModal::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius: 3px;
+}
 @media (max-width: 1026px) {
   .mobile-remove-btn {
     position: absolute !important;

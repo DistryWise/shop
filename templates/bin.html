@@ -5,7 +5,7 @@
 
 
   <title>Корзина — Piligrim</title>
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
@@ -303,6 +303,15 @@
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.45s cubic-bezier(0.22,1,0.36,1), transform 0.5s cubic-bezier(0.22,1,0.36,1);
+  font-weight: 700;
+  font-size: 15px;
+  color: #ffffff;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  padding: 0;
+  border-radius: 0;
 ">
   <div id="multiOrderPill" style="
     cursor: pointer;
@@ -746,38 +755,52 @@
   </div>
 </div>
 <!-- АРХИВ ЗАКАЗОВ — 100 % РАБОТАЕТ НА ВСЕХ УСТРОЙСТВАХ (2025) -->
+<!-- АРХИВ ЗАКАЗОВ — ИСПРАВЛЕННАЯ ВЕРСИЯ 2025 (без прыжков и багов) -->
 <div id="archiveModal" class="smart-archive">
   <div class="smart-sheet">
 
-    <!-- Граббер только на телефонах -->
+    <!-- Граббер только на мобильных -->
     <div class="grabber"></div>
 
     <!-- Крестик только на десктопе -->
     <button class="close-btn desktop-only" id="closeArchive">×</button>
 
-    <h2 class="smart-title">Мои заказы</h2>
+    <div class="smart-header-fixed">
+      <h2 class="smart-title">Мои заказы</h2>
 
-    <div class="smart-tabs">
-  <button class="tab-btn active" data-tab="active">Активные <span id="activeCount"></span></button>
-  <button class="tab-btn" data-tab="completed">Завершённые</button>
-  <button class="tab-btn" data-tab="all">Все</button>
+      <!-- Табы — фиксированные, не прыгают никогда -->
+<div class="smart-tabs">
+  <button class="tab-btn active" data-tab="active">
+    Активные
+  </button>
+  <button class="tab-btn" data-tab="completed">
+    Завершённые
+  </button>
+  <button class="tab-btn" data-tab="all">
+    Все
+  </button>
 </div>
 
-    <div class="smart-search">
-      <i class="fas fa-magnifying-glass"></i>
-      <input type="text" id="orderSearch" placeholder="Поиск по номеру или товару...">
+      <!-- Поиск — тоже фиксированный, всегда под табами -->
+      <div class="smart-search">
+        <i class="fas fa-magnifying-glass"></i>
+        <input type="text" id="orderSearch" placeholder="Поиск по номеру или товару...">
+      </div>
     </div>
 
-    <div id="ordersList" class="smart-list"></div>
+    <!-- Список заказов — теперь в отдельном скролле -->
+    <div class="smart-list-container">
+      <div id="ordersList" class="smart-list"></div>
 
-    <div id="loadMoreContainer" class="smart-more">
-      <button id="loadMoreBtn">Показать ещё</button>
-    </div>
+      <div id="loadMoreContainer" class="smart-more">
+        <button id="loadMoreBtn">Показать ещё</button>
+      </div>
 
-    <div class="smart-empty" id="emptyActive">
-      <div style="font-size:72px;margin-bottom:16px;opacity:0.3;">Receipt</div>
-      <h3>Активных заказов нет</h3>
-      <p>Новые появятся здесь автоматически</p>
+      <div class="smart-empty" id="emptyActive">
+        <i class="fas fa-receipt" style="font-size:72px;margin-bottom:16px;opacity:0.3;"></i>
+        <h3>Нет заказов</h3>
+        <p>Здесь появятся ваши заказы</p>
+      </div>
     </div>
 
   </div>

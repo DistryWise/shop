@@ -365,3 +365,24 @@ document.getElementById('confirmCancelFinalBtn')?.addEventListener('click', asyn
     }
     
 });
+// ОБНОВЛЕНИЕ СЧЁТЧИКОВ В ТАБАХ АРХИВА — ФИНАЛЬНАЯ ВЕРСИЯ 2025
+function updateArchiveTabsCounts() {
+  const activeCount     = allOrders.filter(o => !['completed', 'cancelled'].includes(o.status)).length;
+  const completedCount  = allOrders.filter(o => ['completed', 'cancelled'].includes(o.status)).length;
+  const allCount        = allOrders.length;
+
+  const activeBadge     = document.getElementById('activeCountBadge');
+  const completedBadge  = document.getElementById('completedCountBadge');
+  const allBadge        = document.getElementById('allCountBadge');
+
+  if (activeBadge)     activeBadge.textContent     = activeCount > 0 ? activeCount : '';
+  if (completedBadge)  completedBadge.textContent  = completedCount > 0 ? completedCount : '';
+  if (allBadge)        allBadge.textContent        = allCount > 0 ? allCount : '';
+}
+
+// Вызываем при переключении табов (на всякий случай с небольшой задержкой)
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    setTimeout(updateArchiveTabsCounts, 300); // даём время на загрузку новых заказов
+  });
+});

@@ -1205,23 +1205,16 @@ html[data-theme="light"] #authBtn.logged-in:hover .avatar-circle {
   }
 
   /* Крестик — справа сверху, как у Apple в 99 % случаев */
-  .close-modal {
-    position: absolute;
-    right: 18px !important;   /* СПРАВА */
-    left: auto !important;
-    top: 18px;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    font-size: 1.3rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+ .close-modal {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 1rem !important;
+    right: 16px !important;
+    top: 16px !important;
+    background: rgba(255,255,255,0.08) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
   }
+}
 
   .close-modal:active {
     background: rgba(255, 255, 255, 0.25);
