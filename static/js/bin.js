@@ -977,8 +977,7 @@ document.addEventListener('orderStatusChanged', (e) => {
 });
 
 // Переключение табов
-// Переключение табов — ПОЛНАЯ ПЕРЕЗАГРУЗКА ДАННЫХ!
-// Переключение табов — ИСПРАВЛЕННАЯ ВЕРСИЯ 2025 (всчитает правильно всегда!)
+
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));

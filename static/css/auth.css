@@ -1356,7 +1356,7 @@ html[data-theme="light"] #authBtn.logged-in:hover .avatar-circle {
   html[data-theme="light"] .auth-link {
     color: #333;
   }
-}
+
 /* ✅ ФИКС: МОБИЛЬНАЯ КНОПКА — МАЛЕНЬКИЙ ТЕКСТ */
 @media (max-width: 768px) {
   #mobileAuthBtn .logout-text,
@@ -1405,4 +1405,22 @@ html[data-theme="light"] #authBtn.logged-in:hover .avatar-circle {
 /* 🔥 ПРИ ХОВЕРЕ — ПОКАЗЫВАЕМ "Выйти" */
 #mobileAuthBtn.logged-in:hover .logout-text {
   opacity: 1 !important;
+}
+
+/* ИДЕАЛЬНЫЙ ПЕРЕНОС ТОЛЬКО НА "ТЕЛЕФОНА" — НА ВСЕХ ТЕЛЕФОНАХ */
+@media (max-width: 1024px) {
+  .auth-title {
+    font-size: 1.78rem !important;
+    line-height: 1.26 !important;
+    max-width: 280px !important;
+    margin: 0 auto 28px !important;
+    text-align: center !important;
+    white-space: normal !important;
+  }
+
+  /* Самое главное — заставляем браузер рвать именно после "номеру" */
+  .auth-title::after {
+    content: "\A";
+    white-space: pre;
+  }
 }
