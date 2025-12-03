@@ -252,29 +252,35 @@ def create_app():
 
     @app.route('/api/send_code', methods=['POST'])
     def api_send_code():
-        data = request.get_json()
+        data = request.get_json() or {}
         phone = data.get('phone')
-        
-        if not phone or len(phone.replace('+', '').replace('-', '')) < 10:
+        honeypot = data.get('honeypot', '').strip()
+        fp_token = data.get('fp_token', '')
+
+        # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+        # ЗАЩИТА ОТ БОТОВ — ЕСЛИ НЕ ПРОЙДЁТ → БЛОК
+        if honeypot or not fp_token:
+            logger.warning(f"БОТ ЗАБЛОКИРОВАН → IP: {get_client_ip()}")
+            return jsonify({"success": False, "error": "Ошибка"}), 403
+        # Сохраняем fp_token как эталон для этого сеанса
+        session['expected_fp_token'] = fp_token
+        # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
+        if not phone:
             return jsonify({"success": False, "error": "Некорректный номер"}), 400
 
-        # Убираем всё лишнее, оставляем только цифры и +
         clean_phone = ''.join(filter(str.isdigit, phone))
-        if phone.startswith('+'):
-            clean_phone = '+' + clean_phone
-        elif len(clean_phone) == 10:
+        if len(clean_phone) == 10:
             clean_phone = '+7' + clean_phone
-        elif len(clean_phone) == 11 and clean_phone.startswith('8'):
+        elif clean_phone.startswith('8'):
             clean_phone = '+7' + clean_phone[1:]
+        else:
+            clean_phone = '+' + clean_phone
 
-        # Отправляем настоящий код через Exolve
         success, message = generate_and_send_code(clean_phone)
-        
         if success:
-            logger.info(f"Код успешно отправлен на {clean_phone}")
             return jsonify({"success": True})
         else:
-            logger.error(f"Ошибка отправки кода на {clean_phone}: {message}")
             return jsonify({"success": False, "error": message}), 500
         
 
@@ -351,22 +357,28 @@ def create_app():
 
     @app.route('/api/verify_code', methods=['POST'])
     def api_verify_code():
-        data = request.get_json()
+        data = request.get_json() or {}
         phone = data.get('phone')
         code = data.get('code', '').strip()
-        client_cart = data.get('cart', [])
+        honeypot = data.get('honeypot', '').strip()
+        fp_token = data.get('fp_token', '')
+
+        # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+        # ЗАЩИТА ОТ БОТОВ — СТРОГАЯ ПРОВЕРКА
+        if honeypot or not fp_token or fp_token != session.get('expected_fp_token'):
+            logger.warning(f"БОТ НА ПРОВЕРКЕ КОДА → IP: {get_client_ip()}")
+            return jsonify({"success": False, "error": "Ошибка"}), 403
+        # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 
         if not phone or not code:
-            return jsonify({"success": False, "error": "Нет номера или кода"}), 400
+            return jsonify({"success": False, "error": "Нет данных"}), 400
 
-        # Приводим номер к единому виду (без + в начале)
         clean_phone = ''.join(filter(str.isdigit, phone))
         if len(clean_phone) == 10:
             clean_phone = '7' + clean_phone
         elif clean_phone.startswith('8'):
             clean_phone = '7' + clean_phone[1:]
 
-        # Проверяем код из SMS
         is_valid, message = verify_user_code('+' + clean_phone, code)
         if not is_valid:
             return jsonify({"success": False, "error": message}), 401
@@ -418,7 +430,8 @@ def create_app():
         session['user_id'] = user_id
         session['phone'] = clean_phone
 
-        # Сливаем корзину
+        # Сливаем корзину (если клиент прислал локальную корзину до логина)
+        client_cart = data.get('cart', [])
         if client_cart:
             from database_goods import merge_cart_from_client
             merge_cart_from_client(user_id, client_cart)

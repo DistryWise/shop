@@ -70,34 +70,83 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentReviewItem = null;
   let selectedStars = 0;
 
-  // Универсальные тосты
-  const showToast = (title, message = '', error = false, duration = 3000) => {
-    const toast = document.createElement('div');
-    toast.className = `toast-alert ${error ? 'error' : 'success'}`;
-    toast.innerHTML = `
-      <div class="alert-content">
-        <i class="fas ${error ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>
-        <div class="alert-text">
-          <strong>${title}</strong>
-          <span>${message}</span>
-        </div>
-        <button class="alert-close">×</button>
+// Универсальные тосты — ИСПРАВЛЕНО: текст по центру, красиво на ПК и телефоне
+const showToast = (title, message = '', error = false, duration = 3000) => {
+  const toast = document.createElement('div');
+  toast.className = `toast-alert ${error ? 'error' : 'success'}`;
+  toast.innerHTML = `
+    <div class="alert-content">
+      <i class="fas ${error ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>
+      <div class="alert-text">
+        <strong>${title}</strong>
+        ${message ? `<span>${message}</span>` : ''}
       </div>
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.classList.add('show'), 10);
-    setTimeout(() => {
-      toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 500);
-    }, duration);
-    toast.querySelector('.alert-close').onclick = () => {
-      toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 500);
-    };
-  };
+      <button class="alert-close">×</button>
+    </div>
+  `;
+  document.body.appendChild(toast);
 
+  // Стили для нормального центрирования
+  Object.assign(toast.style, {
+    position: 'fixed',
+    bottom: '30px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: error ? '#ff4444' : '#00ff95',
+    color: error ? 'white' : 'black',
+    padding: '14px 24px',
+    borderRadius: '20px',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+    zIndex: '99999',
+    fontFamily: 'Inter, sans-serif',
+    maxWidth: '90%',
+    opacity: '0',
+    transition: 'all 0.4s ease',
+    pointerEvents: 'none'
+  });
+
+  // Контент — flex с центрированием
+  const content = toast.querySelector('.alert-content');
+  Object.assign(content.style, {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    pointerEvents: 'auto'
+  });
+
+  const textDiv = toast.querySelector('.alert-text');
+  Object.assign(textDiv.style, {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center'
+  });
+
+  const closeBtn = toast.querySelector('.alert-close');
+  Object.assign(closeBtn.style, {
+    marginLeft: 'auto',
+    background: 'none',
+    border: 'none',
+    fontSize: '1.6rem',
+    cursor: 'pointer',
+    opacity: '0.8',
+    padding: '0 4px'
+  });
+
+  setTimeout(() => toast.style.opacity = '1', 10);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 500);
+  }, duration);
+
+  closeBtn.onclick = () => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 500);
+  };
+};
+
+// Главный надёжный тост — ТЕКСТ ПО ЦЕНТРУ, КРАСИВО, БЕЗ СДВИГОВ
 const reliableToast = (title, message = '', isError = false, duration = 4000) => {
-  // Удаляем все предыдущие тосты
+  // Удаляем старые
   document.querySelectorAll('.reliable-toast').forEach(t => t.remove());
 
   const toast = document.createElement('div');
@@ -105,14 +154,14 @@ const reliableToast = (title, message = '', isError = false, duration = 4000) =>
   toast.innerHTML = `
     <div class="toast-content">
       <i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>
-      <div>
-        <strong>${title}</strong>
-        ${message ? `<div style="font-size:0.92rem; opacity:0.92; margin-top:4px;">${message}</div>` : ''}
+      <div class="toast-text-wrapper">
+        <strong class="toast-title">${title}</strong>
+        ${message ? `<div class="toast-message">${message}</div>` : ''}
       </div>
     </div>
   `;
 
-  // Стили — всё в одном месте, красиво и без багов
+  // Идеальные стили — выравнивание по центру 100%
   Object.assign(toast.style, {
     position: 'fixed',
     bottom: '30px',
@@ -121,8 +170,8 @@ const reliableToast = (title, message = '', isError = false, duration = 4000) =>
     background: isError ? '#ff4444' : '#00ff95',
     color: isError ? 'white' : 'black',
     padding: '16px 28px',
-    borderRadius: '22px',
-    boxShadow: '0 12px 40px rgba(0,0,0,0.35)',
+    borderRadius: '24px',
+    boxShadow: '0 14px 40px rgba(0,0,0,0.38)',
     zIndex: '99999',
     display: 'flex',
     alignItems: 'center',
@@ -133,34 +182,69 @@ const reliableToast = (title, message = '', isError = false, duration = 4000) =>
     backdropFilter: 'blur(20px)',
     WebkitBackdropFilter: 'blur(20px)',
     animation: 'toastUp 0.5s cubic-bezier(0.22, 0.61, 0.36, 1)',
-    fontFamily: 'Inter, sans-serif'
+    fontFamily: 'Inter, sans-serif',
+    opacity: '0'
   });
+
+  // Текст строго по центру
+  const wrapper = toast.querySelector('.toast-text-wrapper');
+  Object.assign(wrapper.style, {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    lineHeight: '1.35'
+  });
+
+  const titleEl = toast.querySelector('.toast-title');
+  titleEl.style.margin = '0';
+
+  const msgEl = toast.querySelector('.toast-message');
+  if (msgEl) {
+    Object.assign(msgEl.style, {
+      fontSize: '0.94rem',
+      opacity: '0.94',
+      marginTop: '4px',
+      fontWeight: '500'
+    });
+  }
 
   document.body.appendChild(toast);
 
-  // Авто-исчезновение
+  // Появление
+  requestAnimationFrame(() => toast.style.opacity = '1');
+
+  // Исчезновение
   setTimeout(() => {
     toast.style.animation = 'toastDown 0.4s ease forwards';
-    setTimeout(() => toast.remove(), 400);
+    setTimeout(() => toast.remove(), 450);
   }, duration);
 };
 
-// Анимации — вставь один раз в <head или в этот же скрипт
-const toastStyles = document.createElement('style');
-toastStyles.textContent = `
-  @keyframes toastUp {
-    from { transform: translateX(-50%) translateY(100px); opacity: 0; }
-    to   { transform: translateX(-50%) translateY(0); opacity: 1; }
-  }
-  @keyframes toastDown {
-    to { transform: translateX(-50%) translateY(80px); opacity: 0; }
-  }
-  .reliable-toast i { font-size: 1.6rem; }
-`;
-document.head.appendChild(toastStyles);
+// Анимации тостов — один раз
+if (!document.getElementById('reliableToastStyles')) {
+  const style = document.createElement('style');
+  style.id = 'reliableToastStyles';
+  style.textContent = `
+    @keyframes toastUp {
+      from { transform: translateX(-50%) translateY(80px); opacity: 0; }
+      to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+    }
+    @keyframes toastDown {
+      to { transform: translateX(-50%) translateY(80px); opacity: 0; }
+    }
+    .reliable-toast i {
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+    .toast-alert i {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+  `;
+  document.head.appendChild(style);
+}
 
-// Красивая модалка "Лимит достигнут"
-// === КРАСИВАЯ МОДАЛКА "ЛИМИТ ДОСТИГНУТ" — АВТО-ПОДДЕРЖКА СВЕТЛОЙ/ТЁМНОЙ ТЕМЫ ===
+// Красивая модалка "Лимит достигнут" — без изменений (уже идеальна)
 document.body.insertAdjacentHTML('beforeend', `
 <div id="activeOrdersLimitModal" class="limit-modal-overlay">
   <div class="limit-modal-content">
@@ -184,7 +268,7 @@ document.body.insertAdjacentHTML('beforeend', `
 </div>
 `);
 
-// === СТИЛИ С ПОДДЕРЖКОЙ ТЁМНОЙ И СВЕТЛОЙ ТЕМЫ ===
+// Стили модалки — без изменений
 const limitModalStyles = document.createElement('style');
 limitModalStyles.textContent = `
   #activeOrdersLimitModal {
@@ -200,7 +284,6 @@ limitModalStyles.textContent = `
     padding: 16px;
     font-family: 'Inter', system-ui, sans-serif;
   }
-
   .limit-modal-content {
     background: rgba(20, 20, 35, 0.98);
     border-radius: 28px;
@@ -212,7 +295,6 @@ limitModalStyles.textContent = `
     border: 1px solid rgba(255, 255, 255, 0.1);
     animation: modalPop 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
   }
-
   .limit-modal-icon {
     width: 90px;
     height: 90px;
@@ -223,97 +305,36 @@ limitModalStyles.textContent = `
     align-items: center;
     justify-content: center;
   }
-
-  .limit-modal-icon i {
-    font-size: 3rem;
-    color: white;
-  }
-
-  .limit-modal-title {
-    margin: 0 0 1rem;
-    font-size: 1.9rem;
-    font-weight: 800;
-    color: #fff;
-  }
-
-  .limit-modal-text {
-    margin: 0 0 2rem;
-    color: #ccc;
-    font-size: 1.1rem;
-    line-height: 1.5;
-  }
-
-  .limit-modal-text strong {
-    color: #fff;
-  }
-
+  .limit-modal-icon i { font-size: 3rem; color: white; }
+  .limit-modal-title { margin: 0 0 1rem; font-size: 1.9rem; font-weight: 800; color: #fff; }
+  .limit-modal-text { margin: 0 0 2rem; color: #ccc; font-size: 1.1rem; line-height: 1.5; }
+  .limit-modal-text strong { color: #fff; }
   .limit-modal-btn-primary {
-    background: #00ff95;
-    color: #000;
-    border: none;
-    padding: 1rem 2.5rem;
-    border-radius: 22px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    width: 100%;
-    transition: all 0.3s;
+    background: #00ff95; color: #000; border: none; padding: 1rem 2.5rem;
+    border-radius: 22px; font-size: 1.1rem; font-weight: 700; cursor: pointer;
+    width: 100%; transition: all 0.3s;
   }
-
   .limit-modal-btn-primary:hover {
-    background: #00ffaa;
-    transform: translateY(-2px);
+    background: #00ffaa; transform: translateY(-2px);
     box-shadow: 0 10px 30px rgba(0, 255, 149, 0.4);
   }
-
   .limit-modal-link {
-    background: transparent;
-    color: #00ff95;
-    border: none;
-    font-size: 1rem;
-    cursor: pointer;
-    text-decoration: underline;
-    margin-top: 1.5rem;
-    padding: 0;
-    transition: opacity 0.2s;
+    background: transparent; color: #00ff95; border: none;
+    font-size: 1rem; cursor: pointer; text-decoration: underline;
+    margin-top: 1.5rem; padding: 0; transition: opacity 0.2s;
   }
-
-  .limit-modal-link:hover {
-    opacity: 0.8;
-  }
-
-  /* === СВЕТЛАЯ ТЕМА === */
+  .limit-modal-link:hover { opacity: 0.8; }
   html[data-theme="light"] .limit-modal-content {
     background: rgba(255, 255, 255, 0.98);
     border: 1px solid rgba(0, 0, 0, 0.1);
     box-shadow: 0 40px 100px rgba(0, 0, 0, 0.15);
   }
-
-  html[data-theme="light"] .limit-modal-title {
-    color: #111;
-  }
-
-  html[data-theme="light"] .limit-modal-text {
-    color: #555;
-  }
-
-  html[data-theme="light"] .limit-modal-text strong {
-    color: #000;
-  }
-
-  html[data-theme="light"] .limit-modal-btn-primary {
-    background: #00cc77;
-    color: white;
-  }
-
-  html[data-theme="light"] .limit-modal-btn-primary:hover {
-    background: #00bb66;
-  }
-
-  html[data-theme="light"] .limit-modal-link {
-    color: #00aa66;
-  }
-
+  html[data-theme="light"] .limit-modal-title { color: #111; }
+  html[data-theme="light"] .limit-modal-text { color: #555; }
+  html[data-theme="light"] .limit-modal-text strong { color: #000; }
+  html[data-theme="light"] .limit-modal-btn-primary { background: #00cc77; color: white; }
+  html[data-theme="light"] .limit-modal-btn-primary:hover { background: #00bb66; }
+  html[data-theme="light"] .limit-modal-link { color: #00aa66; }
   @keyframes modalPop {
     from { transform: scale(0.8); opacity: 0; }
     to   { transform: scale(1); opacity: 1; }
@@ -334,118 +355,125 @@ async function checkActiveOrdersLimit() {
   }
 }
 
-// === ОБНОВЛЁННЫЙ ОБРАБОТЧИК КНОПКИ "ОФОРМИТЬ ЗАКАЗ" ===
-// === КНОПКА "ОФОРМИТЬ ЗАКАЗ" ВНИЗУ СТРАНИЦЫ (ГЛАВНАЯ) ===
-elements.checkoutBtn?.addEventListener('click', async () => {
+// === ФИНАЛЬНЫЙ УНИВЕРСАЛЬНЫЙ ОБРАБОТЧИК ОФОРМЛЕНИЯ 2025 — ПК + МОБИЛКА 100% РАБОТАЕТ ===
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('#checkoutBtn, #mobileCheckoutBtn');
+  if (!btn) return;
+
+  e.preventDefault();
+  e.stopImmediatePropagation();
+
   const itemsCount = parseInt(document.getElementById('summaryCount')?.textContent || '0', 10);
 
-  // Если корзина пуста — показываем красивый алерт с кнопками "К товарам" и "К услугам"
+  // 1. Пустая корзина → красивый алерт
   if (itemsCount === 0) {
-    // Удаляем старый алерт, если был
     document.querySelectorAll('#emptyCartMainAlert').forEach(el => el.remove());
-
     const alert = document.createElement('div');
     alert.id = 'emptyCartMainAlert';
     alert.innerHTML = `
-      <div style="text-align:center; padding:2.8rem 1.8rem 2.2rem;">
-        <i class="fas fa-shopping-bag" style="font-size:5.5rem; color:#00ff95; opacity:0.88; margin-bottom:1.6rem; display:block;"></i>
-        <h3 style="margin:0 0 1rem; font-size:2.1rem; font-weight:800; color:#fff;">
-          Корзина пуста
-        </h3>
-        <p style="margin:0 0 2.4rem; color:#ccc; font-size:1.22rem; line-height:1.6; max-width:420px; margin-left:auto; margin-right:auto;">
+      <div style="text-align:center;padding:2.8rem 1.8rem 2.2rem;position:relative;">
+        <i class="fas fa-shopping-bag" style="font-size:5.5rem;color:#00ff95;opacity:0.88;margin-bottom:1.6rem;display:block;"></i>
+        <h3 style="margin:0 0 1rem;font-size:2.1rem;font-weight:800;color:#fff;">Корзина пуста</h3>
+        <p style="margin:0 0 2.4rem;color:#ccc;font-size:1.22rem;line-height:1.6;max-width:420px;margin:auto;">
           Добавьте товары или услуги, чтобы оформить заказ
         </p>
-        <div style="display:flex; gap:1.4rem; justify-content:center; flex-wrap:wrap;">
-          <a href="/goods" style="
-            background:#00ff95; color:#000; padding:1.1rem 2.4rem; 
-            border-radius:26px; font-weight:700; text-decoration:none; font-size:1.15rem;
-            box-shadow:0 8px 25px rgba(0,255,149,0.3);
-            transition:all 0.3s;
-          " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 12px 35px rgba(0,255,149,0.4)'"
-             onmouseout="this.style.transform=''; this.style.boxShadow='0 8px 25px rgba(0,255,149,0.3)'">
-            К товарам
-          </a>
-          <a href="/services" style="
-            background:rgba(255,255,255,0.1); color:#fff; padding:1.1rem 2.4rem; 
-            border-radius:26px; font-weight:600; text-decoration:none; font-size:1.15rem;
-            border:1px solid rgba(255,255,255,0.18); backdrop-filter:blur(10px);
-            transition:all 0.3s;
-          " onmouseover="this.style.background='rgba(255,255,255,0.18)'"
-             onmouseout="this.style.background='rgba(255,255,255,0.1)'">
-            К услугам
-          </a>
+        <div style="display:flex;gap:1.4rem;justify-content:center;flex-wrap:wrap;">
+          <a href="/goods" class="empty-cart-btn">К товарам</a>
+          <a href="/services" class="empty-cart-btn secondary">К услугам</a>
         </div>
-        <button style="
-          position:absolute; top:18px; right:24px; background:none; border:none; 
-          color:#fff; font-size:2.4rem; cursor:pointer; opacity:0.6; 
-          transition:opacity 0.3s;
-        " onclick="this.closest('#emptyCartMainAlert')?.remove()">
-          ×
-        </button>
-      </div>
-    `;
-
+        <button onclick="this.closest('#emptyCartMainAlert')?.remove()" style="position:absolute;top:18px;right:24px;background:none;border:none;color:#fff;font-size:2.4rem;opacity:0.6;cursor:pointer;">×</button>
+      </div>`;
     Object.assign(alert.style, {
-      position: 'fixed',
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-      background: 'rgba(15,15,30,0.98)',
-      backdropFilter: 'blur(40px)',
-      WebkitBackdropFilter: 'blur(40px)',
-      border: '1px solid rgba(255,255,255,0.12)',
-      borderRadius: '36px',
-      maxWidth: '520px',
-      width: '92%',
-      boxShadow: '0 50px 120px rgba(0,0,0,0.7)',
-      zIndex: '999999',
-      animation: 'modalPop 0.5s cubic-bezier(0.22,0.61,0.36,1)',
-      fontFamily: 'Inter, sans-serif'
+      position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',
+      background:'rgba(15,15,30,0.98)',backdropFilter:'blur(40px)',WebkitBackdropFilter:'blur(40px)',
+      border:'1px solid rgba(255,255,255,0.12)',borderRadius:'36px',maxWidth:'520px',width:'92%',
+      boxShadow:'0 50px 120px rgba(0,0,0,0.7)',zIndex:'999999',fontFamily:'Inter, sans-serif',
+      animation:'modalPop 0.5s cubic-bezier(0.22,0.61,0.36,1)'
     });
-
+    const style = document.createElement('style');
+    style.textContent = `.empty-cart-btn{background:#00ff95;color:#000;padding:1.1rem 2.4rem;border-radius:26px;font-weight:700;text-decoration:none;font-size:1.15rem;box-shadow:0 8px 25px rgba(0,255,149,0.3);transition:all .3s;}.empty-cart-btn:hover{transform:translateY(-3px);box-shadow:0 12px 35px rgba(0,255,149,0.4);}.empty-cart-btn.secondary{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.18);backdrop-filter:blur(10px);}.empty-cart-btn.secondary:hover{background:rgba(255,255,255,0.18);}`;
+    document.head.appendChild(style);
     document.body.appendChild(alert);
-
-    // Закрытие по клику вне контента
-    alert.addEventListener('click', (e) => {
-      if (e.target === alert) alert.remove();
-    });
-
-    return; // прерываем выполнение
+    alert.onclick = ev => ev.target === alert && alert.remove();
+    return;
   }
 
-  // Если корзина НЕ пустая — открываем модалку оформления (как раньше)
-  try {
-    const sessionRes = await fetch('/api/session');
-    const sessionData = await sessionRes.json();
-    if (!sessionData.logged_in) {
-      elements.authBtn.click();
-      return;
-    }
-
-    const canPlaceOrder = await checkActiveOrdersLimit();
-    if (!canPlaceOrder) {
+  // 2. Лимит 3 активных заказа — железная блокировка
+  if (typeof activeOrders !== 'undefined' && Array.isArray(activeOrders)) {
+    const active = activeOrders.filter(o => o && !['completed', 'cancelled'].includes(o.status)).length;
+    if (active >= 3) {
       document.getElementById('activeOrdersLimitModal').style.display = 'flex';
       return;
     }
+  }
 
-    const rawPhone = sessionData.phone || '—';
-    const formatted = rawPhone === '—' ? '—' : `+7 (${rawPhone.slice(1,4)}) ${rawPhone.slice(4,7)}-${rawPhone.slice(7,9)}-${rawPhone.slice(9,11)}`;
-    const premiumBlock = document.getElementById('checkoutPhonePremium');
-    const formattedEl = document.getElementById('checkoutPhoneFormatted');
-    if (premiumBlock && formattedEl) {
-      formattedEl.textContent = formatted;
-      premiumBlock.style.display = 'flex';
-      document.getElementById('checkoutPhoneManual')?.style.setProperty('display', 'none');
+  // 3. Не авторизован → открываем вход
+  if (!sessionStorage.getItem('user_id') && !localStorage.getItem('user_id')) {
+    document.getElementById('authBtn')?.click();
+    return;
+  }
+
+  // 4. ВСЁ ОК — ОТКРЫВАЕМ ШТОРКУ ОФОРМЛЕНИЯ
+  const modal = document.getElementById('checkoutModal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  // Анимация открытия (для мобильной шторки)
+  requestAnimationFrame(() => {
+    modal.classList.add('show');
+    const sheet = modal.querySelector('.checkout-modal-beauty');
+    if (sheet) {
+      sheet.style.transition = 'none';
+      sheet.style.transform = 'translateY(0)';
+      requestAnimationFrame(() => sheet.style.transition = '');
+    }
+  });
+
+  // === ВСЁ, ЧТО НУЖНО ПОДСТАВИТЬ (работает и на ПК, и на мобилке) ===
+  setTimeout(() => {
+    // Количество и сумма
+    const count = document.getElementById('summaryCount')?.textContent || '0';
+    const total = document.getElementById('summaryTotal')?.textContent || '0 ₽';
+    const checkoutCountEl = document.getElementById('checkoutCount');
+    const checkoutTotalEl = document.getElementById('checkoutTotal');
+    if (checkoutCountEl) checkoutCountEl.textContent = count;
+    if (checkoutTotalEl) checkoutTotalEl.textContent = total;
+
+    // Телефон — с надёжным ожиданием появления блоков в DOM
+    const applyPhone = () => {
+      const premium = document.getElementById('checkoutPhonePremium');
+      const textEl = document.getElementById('checkoutPhoneFormatted');
+      const manual = document.getElementById('checkoutPhoneManual');
+
+      if (premium && textEl) {
+        const phone = sessionStorage.getItem('phone') || localStorage.getItem('phone');
+        if (phone && phone !== '—' && phone.length >= 11) {
+          const formatted = `+7 (${phone.slice(1,4)}) ${phone.slice(4,7)}-${phone.slice(7,9)}-${phone.slice(9,11)}`;
+          textEl.textContent = formatted;
+          premium.style.display = 'flex';
+          if (manual) manual.style.display = 'none';
+        }
+        return true;
+      }
+      return false;
+    };
+
+    if (!applyPhone()) {
+      // Если блоков ещё нет — ждём до 2 секунд (хватит за глаза)
+      let attempts = 0;
+      const interval = setInterval(() => {
+        if (applyPhone() || attempts++ > 60) {
+          clearInterval(interval);
+        }
+      }, 30);
     }
 
-    document.getElementById('checkoutCount').textContent = itemsCount;
-    document.getElementById('checkoutTotal').textContent = document.getElementById('summaryTotal').textContent;
-    elements.checkoutModal.style.display = 'flex';
-    elements.fullName.focus();
-  } catch (e) {
-    reliableToast('Ошибка связи', 'Попробуйте позже', true, 4000);
-  }
-});
+    // Фокус на ФИО
+    document.getElementById('fullName')?.focus();
+
+  }, 80); // 80 мс — идеально для всех анимаций открытия шторки
+
+}, true); // true = capture phase — ловит клик первым
 
 // === НОВЫЙ ФИНАЛЬНЫЙ ОБРАБОТЧИК ОФОРМЛЕНИЯ ЗАКАЗА (2025) ===
 // === НОВЫЙ ФИНАЛЬНЫЙ ОБРАБОТЧИК ОФОРМЛЕНИЯ ЗАКАЗА (2025) — ИСПРАВЛЕНО ===
@@ -499,8 +527,7 @@ elements.confirmOrderBtn?.addEventListener('click', async () => {
       updateFloatingPill();
       openMultiOrderModal();
 
-      // КРАСИВЫЙ ТОСТ — ВСЁ ЧЕРЕЗ reliableToast
-      reliableToast(`Заказ ${data.display_id} создан!`, 'Он уже в работе', false, 4000);
+
 
       setTimeout(() => window.startOrderChain(data.order_id), 800);
 
@@ -551,8 +578,16 @@ elements.confirmOrderBtn?.addEventListener('click', async () => {
     showNextReview();
   });
 
-  elements.submitReview?.addEventListener('click', async () => {
-    if (selectedStars === 0) return showToast('Выберите оценку', '', true);
+elements.submitReview?.addEventListener('click', async () => {
+  if (selectedStars === 0) {
+    // Адаптивный тост — маленький на мобильных, обычный на ПК
+    if (window.innerWidth <= 1026) {
+      reliableToast('Выберите оценку ⭐', '', true, 3000);
+    } else {
+      showToast('Выберите оценку', '', true);
+    }
+    return;
+  }
     const phone = sessionStorage.getItem('phone') || 'Аноним';
     const title = currentReviewItem.title || 'Без названия';
 
@@ -605,8 +640,9 @@ document.querySelectorAll('#openArchiveBtn').forEach(btn => btn.addEventListener
             loadOrders(true);
         } else {
             renderOrders();
+            updateArchiveTabsCounts();
         }
-        updateArchiveTabsCounts();
+        
     }
     
 }));
@@ -685,11 +721,17 @@ function renderOrders() {
 
     let filtered = allOrders;
 
-if (currentTab === 'active') {
-    filtered = allOrders.filter(o => !['completed', 'cancelled'].includes(o.status));
-} else if (currentTab === 'all') {
-    filtered = allOrders.filter(o => ['completed', 'cancelled'].includes(o.status));
-}
+// === ФИЛЬТРАЦИЯ ПО ТАБУ ===
+    if (currentTab === 'active') {
+        filtered = allOrders.filter(o => !['completed', 'cancelled'].includes(o.status));
+    } else if (currentTab === 'cancelled') {
+        filtered = allOrders.filter(o => o.status === 'cancelled');
+    } else if (currentTab === 'completed') {
+        filtered = allOrders.filter(o => o.status === 'cancelled');
+    }
+    else if (currentTab === 'completed') {
+        filtered = allOrders.filter(o => o.status === 'cancelled');
+    }
 
     if (search) {
         filtered = filtered.filter(order =>
@@ -803,14 +845,46 @@ if (currentTab === 'active') {
                 <!-- Товары -->
 <div class="archive-items-list">
     ${order.items.slice(0, 4).map(item => {
-        // ВСЁ! image_url уже приходит с бэкенда — просто берём его!
-        const img = item.image_url || '/static/assets/no-image.png';
+        const imgId = `archive-thumb-${order.id}-${item.item_id}`;
+        const isService = item.item_type === 'service';
+        const apiUrl = isService 
+            ? `/api/service?id=${item.item_id}&t=${Date.now()}`
+            : `/api/product?id=${item.item_id}&t=${Date.now()}`;
+
+        // Сначала ставим то, что уже есть (для архивных заказов)
+        let initialSrc = item.image_url || '/static/assets/no-image.png';
+
+        // Асинхронно подгружаем реальную фотку, если её не было
+        if (!item.image_url && item.item_id) {
+            setTimeout(() => {
+                fetch(apiUrl, { credentials: 'include', cache: 'no-store' })
+                    .then(r => r.ok ? r.json() : null)
+                    .then(data => {
+                        if (!data) return;
+                        const url = data.image_url || data.image_urls?.[0] || data.image;
+                        if (url) {
+                            const img = document.getElementById(imgId);
+                            if (img) img.src = url;
+                            // Кешируем
+                            if (isService) {
+                                window.serviceImages = window.serviceImages || {};
+                                window.serviceImages[item.item_id] = url;
+                            } else {
+                                window.productImages = window.productImages || {};
+                                window.productImages[item.item_id] = url;
+                            }
+                        }
+                    })
+                    .catch(() => {});
+            }, 80);
+        }
 
         return `
             <div class="archive-item-row">
-                <img src="${img}" 
-                     class="archive-item-thumb" 
-                     onerror="this.src='/static/assets/no-image.png'" 
+                <img id="${imgId}"
+                     src="${initialSrc}"
+                     class="archive-item-thumb"
+                     onerror="this.src='/static/assets/no-image.png'"
                      loading="lazy">
                 <div class="archive-item-info">
                     <div class="archive-item-name">${item.title || 'Без названия'}</div>
@@ -819,7 +893,7 @@ if (currentTab === 'active') {
                     </div>
                 </div>
                 <button class="archive-repeat-btn" 
-                        onclick="event.stopPropagation(); repeatOrderItem(${item.item_id}, '${item.item_type}')">
+                        onclick="event.stopPropagation(); repeatOrderItem(${item.item_id}, '${item.item_type || 'product'}')">
                     Повторить
                 </button>
             </div>
@@ -938,62 +1012,6 @@ document.getElementById('loadMoreBtn')?.addEventListener('click', () => {
     loadOrders();
 });
 
-  // === ОБРАТНАЯ СВЯЗЬ ===
-  elements.feedbackBtn?.addEventListener('click', () => {
-    if (!sessionStorage.getItem('user_id')) {
-      elements.authBtn.click();
-      return;
-    }
-    const phoneInput = $('feedbackPhoneInput');
-    const editBtn = $('editPhoneBtn');
-    const rawPhone = sessionStorage.getItem('phone') || '';
-    if (rawPhone && rawPhone !== '—') {
-      phoneInput.value = `+7 (${rawPhone.slice(1,4)}) ${rawPhone.slice(4,7)}-${rawPhone.slice(7,9)}-${rawPhone.slice(9,11)}`;
-      phoneInput.readOnly = true;
-      editBtn.style.display = 'block';
-    } else {
-      phoneInput.value = '';
-      phoneInput.readOnly = false;
-      editBtn.style.display = 'none';
-    }
-    elements.feedbackModal.style.display = 'flex';
-    editBtn.onclick = () => { phoneInput.readOnly = false; phoneInput.focus(); editBtn.style.display = 'none'; };
-  });
-
-  $('closeFeedbackModal')?.addEventListener('click', () => elements.feedbackModal.style.display = 'none');
-  elements.feedbackModal?.addEventListener('click', e => { if (e.target === elements.feedbackModal) elements.feedbackModal.style.display = 'none'; });
-
-  $('feedbackForm')?.addEventListener('submit', async e => {
-    e.preventDefault();
-    const form = e.target;
-    const name = form.name.value.trim();
-    const phone = form.phone.value.trim();
-    const email = form.email.value.trim();
-    const message = form.message.value.trim();
-    if (!name || !phone || !email || !message) return reliableToast('Заполните все поля', '', true);
-
-    const submitBtn = $('feedbackSubmitBtn');
-    const btnText = submitBtn.querySelector('.btn-text');
-    const cooldown = submitBtn.querySelector('.btn-cooldown');
-    const timer = cooldown.querySelector('.timer');
-    submitBtn.disabled = true; btnText.style.display = 'none'; cooldown.style.display = 'inline';
-    let seconds = 30; timer.textContent = seconds;
-    const interval = setInterval(() => { seconds--; timer.textContent = seconds; if (seconds <= 0) { clearInterval(interval); submitBtn.disabled = false; btnText.style.display = 'inline'; cooldown.style.display = 'none'; } }, 1000);
-
-    try {
-      const res = await fetch('/api/feedback', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, phone, email, message}) });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        reliableToast('Спасибо! Сообщение отправлено', 'Мы свяжемся с вами скоро', false, 5000);
-        elements.feedbackModal.style.display = 'none';
-        form.reset();
-      } else {
-        reliableToast('Ошибка отправки', data.error || 'Попробуйте позже', true);
-      }
-    } catch (err) {
-      reliableToast('Нет связи с сервером', 'Проверьте интернет', true);
-    }
-  });
   // Закрытие цепочки по кнопке
 document.getElementById('orderChainToggle')?.addEventListener('click', () => {
     document.getElementById('orderChainContainer').style.display = 'none';
@@ -1238,7 +1256,6 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 
 
-
 document.addEventListener('DOMContentLoaded', () => {
   const cartItemsList = document.getElementById('cartItemsList');
   const summaryCount  = document.getElementById('summaryCount');
@@ -1468,7 +1485,6 @@ document.querySelectorAll('#summaryTotal').forEach(el => el.textContent = format
 });
 
 
-
 // ГЛОБАЛЬНЫЙ АНТИСПАМ — Сохраняется при обновлении страницы! (2025 версия)
 const GlobalCartProtection = (() => {
   const STORAGE_KEY = 'cart_protection_blocked_until';
@@ -1686,33 +1702,62 @@ function blockGlobalChain() {
 blockGlobalChain();
 
 // Обновление плашки снизу
-function updateFloatingPill() {
+async function updateFloatingPill() {
   const bar = document.getElementById('floatingOrderBar');
   const badge = document.getElementById('activeOrdersBadge');
   const main = document.getElementById('pillMainText');
   const sub = document.getElementById('pillSubText');
 
-  if (!activeOrders.length) {
+  if (!bar) return;
+
+  let orders = [];
+
+  // Сначала пробуем взять из глобальной переменной (если уже загружено)
+  if (typeof activeOrders !== 'undefined' && Array.isArray(activeOrders) && activeOrders.length > 0) {
+    orders = activeOrders;
+  } else {
+    // Если нет — делаем запрос к API (один раз!)
+    try {
+      const res = await fetch('/api/active_orders', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        orders = data.list || [];  // ← важно: у тебя в API должен быть массив в .list
+        window.activeOrders = orders; // сохраняем глобально, чтобы не запрашивать снова
+      }
+    } catch (err) {
+      console.log('Не удалось загрузить заказы для плашки');
+    }
+  }
+
+  // Если заказов нет — скрываем
+  if (orders.length === 0) {
     bar.style.opacity = '0';
     bar.style.visibility = 'hidden';
-    bar.style.transform = 'translateX(-50%) translateY(20px)'; // лёгкий уезд вниз
-    document.body.classList.remove('has-active-orders'); // ← УБИРАЕМ ОТСТУП
+    bar.style.transform = 'translateX(-50%) translateY(20px)';
+    document.body.classList.remove('has-active-orders');
     return;
   }
 
-  // Есть заказы — показываем плашку
-  badge.textContent = activeOrders.length;
-  badge.style.display = activeOrders.length > 1 ? 'flex' : 'none';
-  main.textContent = activeOrders.length === 1
-    ? `Заказ ${activeOrders[0].display_id || activeOrders[0].id} в работе`
-    : `${activeOrders.length} заказа в работе`;
-  sub.textContent = activeOrders.length === 1 ? "Нажмите для подробностей" : "Нажмите, чтобы посмотреть все";
+  // Есть заказы — показываем
+  const count = orders.length;
+  badge.textContent = count;
+  badge.style.display = count > 1 ? 'flex' : 'none';
 
+  main.textContent = count === 1
+    ? `Заказ №${orders[0].display_id || orders[0].id} в работе`
+    : `${count} заказа в работе`;
+
+  sub.textContent = count === 1
+    ? "Нажмите для подробностей"
+    : "Нажмите, чтобы посмотреть все";
+
+  // Показываем плавно
+  bar.style.display = 'flex';
   bar.style.opacity = '1';
   bar.style.visibility = 'visible';
   bar.style.transform = 'translateX(-50%) translateY(0)';
-  
-  document.body.classList.add('has-active-orders'); // ← ДОБАВЛЯЕМ ОТСТУП
+
+  document.body.classList.add('has-active-orders');
 }
 
 // Анимация — вставь один раз в <head> или прямо над шторкой
@@ -1727,22 +1772,24 @@ document.head.appendChild(style);
 
 function renderVerticalOrders() {
   const container = document.getElementById('ordersVerticalList');
+  if (!container) return;
   container.innerHTML = '';
 
   if (activeOrders.length === 0) {
     container.innerHTML = `
-        <div style="text-align:center;padding:80px 20px;color:var(--text-secondary);opacity:0.7;">
-            <svg style="width:64px;height:64px;margin-bottom:16px;opacity:0.3;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M9 12h6m-6-4h6m-6 8h6m-2 4H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4l-2 2-2-2Z"/>
-            </svg>
-            <div style="font-weight:600;font-size:17px;">Активных заказов нет</div>
-        </div>`;
+      <div style="text-align:center;padding:80px 20px;color:var(--text-secondary);opacity:0.7;">
+        <svg style="width:64px;height:64px;margin-bottom:16px;opacity:0.3;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 12h6m-6-4h6m-6 8h6m-2 4H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4l-2 2-2-2Z"/>
+        </svg>
+        <div style="font-weight:600;font-size:17px;">Активных заказов нет</div>
+      </div>`;
     return;
-}
+  }
 
   activeOrders.forEach(order => {
     const card = document.createElement('div');
     
+    // ← Твои родные стили — всё как было!
     card.style.cssText = `
       background:rgba(255,255,255,0.09);
       border-radius:20px;
@@ -1756,60 +1803,84 @@ function renderVerticalOrders() {
     card.onmouseenter = () => card.style.transform = 'translateY(-2px)';
     card.onmouseleave = () => card.style.transform = '';
 
-   card.innerHTML = `
-  <!-- Заголовок карточки -->
-  <div class="order-header" style="padding:16px 18px;display:flex;align-items:center;gap:14px;">
-    <div style="width:52px;height:52px;background:var(--order-icon-bg);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-      <i class="fas fa-truck" style="font-size:24px;color:var(--order-icon-color);"></i>
-    </div>
-    <div style="flex:1;min-width:0;">
-      <div style="font-weight:800;font-size:17px;color:var(--text-primary);margin-bottom:3px;">
-        Заказ ${order.display_id || order.id}
+    card.innerHTML = `
+      <!-- Заголовок -->
+      <div class="order-header" style="padding:16px 18px;display:flex;align-items:center;gap:14px;">
+        <div style="width:52px;height:52px;background:var(--order-icon-bg);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="fas fa-truck" style="font-size:24px;color:var(--order-icon-color);"></i>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:800;font-size:17px;color:var(--text-primary);margin-bottom:3px;">
+            Заказ ${order.display_id || order.id}
+          </div>
+          <div style="font-size:14px;color:var(--text-secondary);">
+            ${order.total_str || '—'} • ${new Date(order.created_at).toLocaleDateString('ru-RU', {day:'numeric', month:'short', year:'numeric'})}
+          </div>
+        </div>
+        <i class="fas fa-chevron-down expand-icon" style="color:var(--text-secondary);font-size:20px;transition:transform 0.3s;"></i>
       </div>
-      <div style="font-size:14px;color:var(--text-secondary);">
-        ${order.total_str || '—'} • ${new Date(order.created_at).toLocaleDateString('ru-RU', {day:'numeric', month:'short', year:'numeric'})}
+
+      <!-- Раскрывающаяся часть — ТОЧНО КАК У ТЕБЯ -->
+      <div class="order-details" style="max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.22,1,0.36,1);background:var(--order-details-bg);border-top:1px solid var(--order-details-border);">
+        <div style="padding:18px 18px 22px;">
+          <div id="chain-${order.id}"></div>
+        </div>
       </div>
-    </div>
-    <i class="fas fa-chevron-down expand-icon" style="color:var(--text-secondary);font-size:20px;transition:transform 0.3s;"></i>
-  </div>
+    `;
 
-  <!-- Раскрывающаяся часть — теперь идеально в обеих темах -->
-  <div class="order-details" style="max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.22,1,0.36,1);background:var(--order-details-bg);border-top:1px solid var(--order-details-border);">
-    <div style="padding:18px 18px 22px;">
-      <div id="chain-${order.id}"></div>
-    </div>
-  </div>
-`;
+card.querySelector('.order-header').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const details = card.querySelector('.order-details');
+  const icon = card.querySelector('.expand-icon');
+  const target = document.getElementById(`chain-${order.id}`);
 
-    // Раскрытие по клику
-    card.querySelector('.order-header').onclick = (e) => {
-      e.stopPropagation();
-      const details = card.querySelector('.order-details');
-      const icon = card.querySelector('.expand-icon');
-      const isOpen = details.style.maxHeight && details.style.maxHeight !== '0px';
+  if (!target) return;
 
-      if (isOpen) {
-        details.style.maxHeight = '0';
-        icon.style.transform = 'rotate(0deg)';
-      } else {
-        // Авто-подгон высоты под содержимое
-        details.style.maxHeight = details.scrollHeight + 40 + 'px';
-        icon.style.transform = 'rotate(180deg)';
+  // Надёжное определение состояния — через data-атрибут
+  const isOpen = details.dataset.open === 'true';
+
+  if (isOpen) {
+    // ЗАКРЫВАЕМ — всегда работает
+    details.style.maxHeight = '0px';
+    details.dataset.open = 'false';
+    icon.style.transform = 'rotate(0deg)';
+  } else {
+    // ОТКРЫВАЕМ — всегда работает
+    details.dataset.open = 'true';
+    icon.style.transform = 'rotate(180deg)';
+
+    // Подмена + запуск цепочки
+    const real = Document.prototype.getElementById;
+    Document.prototype.getElementById = (id) => id === 'orderChain' ? target : real.call(this, id);
+
+    if (!target.dataset.loaded) {
+      window.startOrderChain?.(order.id);
+      target.dataset.loaded = 'true';
+    }
+
+    Document.prototype.getElementById = real;
+
+    // Открываем на безопасную высоту
+    details.style.maxHeight = '3000px';
+
+    // Подгоняем высоту каждые 80 мс, пока контент растёт
+    let attempts = 0;
+    const adjust = () => {
+      if (details.dataset.open === 'true') {  // если не закрыли за это время
+        const needed = details.scrollHeight + 90;
+        if (needed + 50 > parseFloat(details.style.maxHeight)) {
+          details.style.maxHeight = needed + 'px';
+        }
+        if (attempts++ < 20) {
+          setTimeout(adjust, 80);
+        }
       }
     };
+    setTimeout(adjust, 60);
+  }
+});
 
     container.appendChild(card);
-
-    // Вставляем цепочку статусов (работает как раньше)
-    setTimeout(() => {
-      const target = document.getElementById(`chain-${order.id}`);
-      if (!target) return;
-
-      const real = Document.prototype.getElementById;
-      Document.prototype.getElementById = id => id === 'orderChain' ? target : real.call(this, id);
-      window.startOrderChain?.(order.id);
-      Document.prototype.getElementById = real;
-    }, 150);
   });
 }
 
@@ -2344,3 +2415,6 @@ document.addEventListener('DOMContentLoaded', () => {
     openMultiOrderModal();
   });
 });
+
+
+

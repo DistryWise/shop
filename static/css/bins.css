@@ -2461,16 +2461,27 @@ html[data-theme="dark"] button[onclick="closeMultiOrderModal()"]:hover {
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 100px; /* чтобы кнопка "Загрузить ещё" не прилипала к низу */
+    padding-bottom: 100px;
+    
+    /* ——— ПОЛНОСТЬЮ СКРЫВАЕМ ПОЛОСУ ПРОКРУТКИ ——— */
+    scrollbar-width: none;           /* Firefox */
+    -ms-overflow-style: none;        /* IE и Edge */
 }
 
-/* Плавный скролл на айфонах */
-#archiveModal::-webkit-scrollbar {
-    width: 6px;
+/* Chrome, Safari, новый Edge */
+#archiveModal .smart-sheet::-webkit-scrollbar,
+#archiveModal .archive-content::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
 }
-#archiveModal::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.3);
-    border-radius: 3px;
+
+/* На всякий случай — если полоса всё-таки пытается появиться */
+#archiveModal::-webkit-scrollbar,
+#archiveModal *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
 }
 @media (max-width: 1026px) {
   .mobile-remove-btn {

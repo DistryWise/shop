@@ -447,6 +447,7 @@
 
 <!-- САМА ШТОРКА — СОВМЕСТИМА С ТВОИМ feedback.js + КРАСИВАЯ АНИМАЦИЯ -->
 <div class="mobile-feedback-sheet" id="mobileFeedbackSheet">
+  <!-- ХЕДЕР ШТОРКИ (как в iOS/Wildberries) -->
   <div class="sheet-header">
     <button class="sheet-back-btn" id="closeMobileFeedback">
       <i class="fas fa-chevron-left"></i>
@@ -456,33 +457,62 @@
       <h2>Обратная связь</h2>
     </div>
   </div>
+
+  <!-- РУЧКА ДЛЯ ПАЛЬЦА (iOS стиль) -->
   <div class="sheet-handle"></div>
 
+  <!-- ФОРМА (ЕДИНАЯ ДЛЯ ВСЕХ УСТРОЙСТВ) -->
   <form class="contact-form sheet-form" novalidate id="contactFormMobile">
+    <!-- ИМЯ (уже заполнено из хедера) -->
     <div class="sheet-field">
       <label>Ваше имя</label>
-      <input type="text" name="name" placeholder="Ваше имя..." required autocomplete="name" class="name-input">
+      <input type="text" 
+             class="name-input" 
+             name="name" 
+             placeholder="Ваше имя..." 
+             required 
+             autocomplete="name" />
     </div>
 
+    <!-- ТЕЛЕФОН -->
     <div class="sheet-field phone-field-wrapper">
       <label>Телефон <span class="required">*</span></label>
-      <input type="tel" name="phone" placeholder="+7 (___) ___-__-__" 
-             pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required>
+      <input type="tel" 
+             class="phone-input" 
+             name="phone" 
+             placeholder="+7 (___) ___-__-__" 
+             pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" 
+             required />
     </div>
 
+    <!-- EMAIL -->
     <div class="sheet-field">
       <label>Email <span class="required">*</span></label>
-      <input type="email" name="email" placeholder="your@email.com" required autocomplete="email">
+      <input type="email" 
+             name="email" 
+             placeholder="your@email.com" 
+             required 
+             autocomplete="email" />
     </div>
 
+    <!-- СООБЩЕНИЕ -->
     <div class="sheet-field">
       <label>Сообщение <span class="required">*</span></label>
-      <textarea name="message" placeholder="Опишите ваш вопрос или предложение..." rows="4" required></textarea>
+      <textarea name="message" 
+                placeholder="Опишите ваш вопрос или предложение..." 
+                rows="4" 
+                required></textarea>
     </div>
 
-    <button type="submit" class="sheet-submit-btn">
+    <!-- КНОПКА ОТПРАВКИ -->
+    <button type="submit" class="sheet-submit-btn" id="submitBtnMobile">
       <span class="btn-text">Отправить заявку</span>
-      <span class="btn-loading"><i class="fas fa-spinner fa-spin"></i> Отправка...</span>
+      <span class="btn-loading">
+        <i class="fas fa-spinner fa-spin"></i>
+      </span>
+      <span class="btn-cooldown" style="display:none;">
+        <span class="timer">30</span>с
+      </span>
     </button>
   </form>
 </div>
@@ -549,7 +579,16 @@
           <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
         </div>
       </div>
+      
+      <input type="text" 
+       name="honeypot" 
+       id="honeypot" 
+       tabindex="-1" 
+       autocomplete="off" 
+       style="position:absolute; left:-9999px; opacity:0; height:0; width:0; border:none; padding:0; margin:0;"
+       aria-hidden="true">
 
+<input type="hidden" name="fp_token" id="fp_token" value="">
       <input type="tel" id="phoneInput" placeholder="(999) 999 99 99" class="auth-input">
 
       <label class="checkbox-label required">
@@ -586,44 +625,38 @@
 </div>
 
 <!-- МОДАЛКА ОБРАТНОЙ СВЯЗИ -->
-<div class="custom-alert" id="feedbackModal" style="display:none;">
-  <div class="alert-content">
-    <button class="alert-close" id="closeFeedbackModal">×</button>
+  <div class="custom-alert" id="feedbackModal">
+    <div class="alert-content">
+      <button class="alert-close" id="closeFeedback">×</button>
 
-    <div class="alert-icon">
-      <i class="fas fa-envelope-open-text"></i>
-    </div>
-
-    <div class="alert-text">
-      <strong>Обратная связь</strong>
-      <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
-    </div>
-
-    <form class="contact-form" novalidate id="feedbackForm">
-      <input type="text" name="name" placeholder="Ваше имя" required />
-
-      <div class="phone-field-wrapper">
-        <!-- Если авторизован — показываем номер и кнопку "Изменить" -->
-        <input type="tel" 
-               placeholder="+7 (___) ___-__-__" 
-               name="phone" 
-               id="feedbackPhoneInput"
-               pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" 
-               required 
-               readonly />
-        <button type="button" class="edit-phone-btn" id="editPhoneBtn">Изменить</button>
+      <div class="alert-icon">
+        <i class="fas fa-envelope-open-text"></i>
       </div>
 
-      <input type="email" name="email" placeholder="Email" required />
-      <textarea name="message" placeholder="Ваше сообщение" required></textarea>
+      <div class="alert-text">
+        <strong>Обратная связь</strong>
+        <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
+      </div>
 
-      <button type="submit" id="feedbackSubmitBtn" class="alert-login-btn">
-        <span class="btn-text">Отправить сообщение</span>
-        <span class="btn-cooldown" style="display:none;">Отправка... <span class="timer">30</span>с</span>
-      </button>
-    </form>
+      <form class="contact-form" novalidate id="contactForm">
+        <input type="text" placeholder="Ваше имя" name="name" required />
+        
+        <div class="phone-field-wrapper">
+          <input type="tel" placeholder="+7 (___) ___-__-__" name="phone" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+
+        </div>
+        
+        <input type="email" placeholder="Email" name="email" required />
+        <textarea placeholder="Ваше сообщение" name="message" required></textarea>
+
+        <button type="submit" id="submitBtn" class="alert-login-btn">
+          <span class="btn-text">Отправить сообщение</span>
+          <span class="btn-cooldown">Отправка... <span class="timer">30</span>с</span>
+        </button>
+      </form>
+    </div>
   </div>
-</div>
+
 
 <!-- МОДАЛКА ОФОРМЛЕНИЯ ЗАКАЗА -->
 <div id="checkoutModal" class="modal" style="display:none;">
@@ -754,8 +787,7 @@
     </div>
   </div>
 </div>
-<!-- АРХИВ ЗАКАЗОВ — 100 % РАБОТАЕТ НА ВСЕХ УСТРОЙСТВАХ (2025) -->
-<!-- АРХИВ ЗАКАЗОВ — ИСПРАВЛЕННАЯ ВЕРСИЯ 2025 (без прыжков и багов) -->
+<!-- АРХИВ ЗАКАЗОВ  -->
 <div id="archiveModal" class="smart-archive">
   <div class="smart-sheet">
 
@@ -768,16 +800,16 @@
     <div class="smart-header-fixed">
       <h2 class="smart-title">Мои заказы</h2>
 
-      <!-- Табы — фиксированные, не прыгают никогда -->
+      <!-- Табы — фиксированные -->
 <div class="smart-tabs">
   <button class="tab-btn active" data-tab="active">
     Активные
   </button>
   <button class="tab-btn" data-tab="completed">
-    Завершённые
+    Отмененные
   </button>
   <button class="tab-btn" data-tab="all">
-    Все
+    Все заказы
   </button>
 </div>
 

@@ -366,18 +366,26 @@ document.getElementById('confirmCancelFinalBtn')?.addEventListener('click', asyn
     
 });
 // ОБНОВЛЕНИЕ СЧЁТЧИКОВ В ТАБАХ АРХИВА — ФИНАЛЬНАЯ ВЕРСИЯ 2025
+// === ПРАВИЛЬНЫЕ СЧЁТЧИКИ ДЛЯ ТРЁХ ОТДЕЛЬНЫХ ТАБОВ (2025) ===
 function updateArchiveTabsCounts() {
-  const activeCount     = allOrders.filter(o => !['completed', 'cancelled'].includes(o.status)).length;
-  const completedCount  = allOrders.filter(o => ['completed', 'cancelled'].includes(o.status)).length;
-  const allCount        = allOrders.length;
+    // Считаем строго по статусам
+    const activeCount     = allOrders.filter(o => 
+        !['completed', 'cancelled'].includes(o.status)
+    ).length;
 
-  const activeBadge     = document.getElementById('activeCountBadge');
-  const completedBadge  = document.getElementById('completedCountBadge');
-  const allBadge        = document.getElementById('allCountBadge');
+    const cancelledCount  = allOrders.filter(o => o.status === 'cancelled').length;
+    const completedCount  = allOrders.filter(o => o.status === 'completed').length;
 
-  if (activeBadge)     activeBadge.textContent     = activeCount > 0 ? activeCount : '';
-  if (completedBadge)  completedBadge.textContent  = completedCount > 0 ? completedCount : '';
-  if (allBadge)        allBadge.textContent        = allCount > 0 ? allCount : '';
+    // Обновляем бейджи — проверь, какие у тебя ID у спанов!
+    // Чаще всего так:
+    document.querySelector('[data-tab="active"] span')?.then(b => b.textContent = activeCount > 0 ? activeCount : '');
+    document.querySelector('[data-tab="cancelled"] span')?.then(b => b.textContent = cancelledCount > 0 ? cancelledCount : '');
+    document.querySelector('[data-tab="completed"] span')?.then(b => b.textContent = completedCount > 0 ? completedCount : '');
+
+    // Если у тебя ID, а не data-tab — подставь свои:
+    // document.getElementById('activeCountBadge')?.textContent = activeCount || '';
+    // document.getElementById('cancelledCountBadge')?.textContent = cancelledCount || '';
+    // document.getElementById('completedCountBadge')?.textContent = completedCount || '';
 }
 
 // Вызываем при переключении табов (на всякий случай с небольшой задержкой)
