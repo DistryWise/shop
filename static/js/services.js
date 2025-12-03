@@ -172,3 +172,133 @@ window.addEventListener('scroll', () => {
 sideCatalog.addEventListener('mouseenter', hideArrow);
 sideCatalog.addEventListener('mouseleave', showArrow);
 
+// =============================================================================
+// СВАЙП-ВНИЗ ЗАКРЫТИЕ ЛЮБОЙ МОДАЛКИ — РАБОТАЕТ НА ID И CLASS (2025 финальная версия)
+// =============================================================================
+(() => {
+  // Ловим ВСЕ возможные модалки: по ID и по классу
+  const modals = [
+    document.getElementById('modal'),           // твоя старая модалка
+    document.querySelector('.product-modal'),   // новая модалка из поиска
+    document.querySelector('.modal')            // если вдруг где-то так
+  ].filter(Boolean);
+
+  if (modals.length === 0) return;
+
+  modals.forEach(modal => {
+    // Ищем контент модалки — пробуем разные варианты
+    const contentSelectors = [
+      '.modal-content',
+      '.product-modal-content',
+      modal.children[0] // если контент — первый дочерний элемент
+    ];
+    const modalContent = contentSelectors
+      .map(sel => typeof sel === 'string' ? modal.querySelector(sel) : sel)
+      .find(el => el);
+
+    if (!modalContent) return;
+
+    let startY = 0;
+    let isDragging = false;
+    let isClosing = false;
+    const threshold = 160;
+
+    const closeModal = () => {
+      if (isClosing || !modal.classList.contains('active')) return;
+      isClosing = true;
+
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+
+      // Фикс клавиатуры на iOS
+      setTimeout(() => {
+        const dummy = document.createElement('div');
+        dummy.tabIndex = -1;
+        dummy.style.position = 'fixed';
+        dummy.style.top = '0';
+        dummy.style.left = '-100px';
+        document.body.appendChild(dummy);
+        dummy.focus();
+        dummy.remove();
+      }, 100);
+
+      const cleanup = () => {
+        modalContent.style.transition = '';
+        modalContent.style.transform = '';
+        modal.style.background = '';
+        isClosing = false;
+      };
+      modalContent.addEventListener('transitionend', cleanup, { once: true });
+      setTimeout(cleanup, 800);
+    };
+
+    const handleStart = (e) => {
+      if (!modal.classList.contains('active') || isClosing) return;
+
+      // Проверяем, что скролл вверху
+      const scrollable = modalContent.querySelector('.modal-info, .reviews, [style*="overflow"]') || modalContent;
+      if (scrollable.scrollTop > 15) return;
+
+      startY = e.touches?.[0].clientY || e.clientY;
+      isDragging = true;
+      modalContent.style.transition = 'none';
+    };
+
+    const handleMove = (e) => {
+      if (!isDragging) return;
+      const currentY = e.touches?.[0].clientY || e.clientY;
+      const diff = currentY - startY;
+
+      if (diff > 0) {
+        e.preventDefault();
+        modalContent.style.transform = `translateY(${diff}px)`;
+        modal.style.background = `rgba(0,0,0,${0.98 - diff * 0.0025})`;
+      }
+    };
+
+    const handleEnd = () => {
+      if (!isDragging) return;
+      isDragging = false;
+
+      const diff = (event?.changedTouches?.[0]?.clientY || event?.clientY || startY) - startY;
+
+      if (diff > threshold) {
+        closeModal();
+      } else {
+        modalContent.style.transition = 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)';
+        modalContent.style.transform = 'translateY(0)';
+        modal.style.background = 'rgba(0,0,0,0.98)';
+        setTimeout(() => modalContent.style.transition = '', 510);
+      }
+    };
+
+    // Прикрепляем события к контенту модалки
+    modalContent.addEventListener('touchstart', handleStart, { passive: true });
+    modalContent.addEventListener('touchmove', handleMove, { passive: false });
+    modalContent.addEventListener('touchend', handleEnd);
+
+    // Для мыши (тест на десктопе)
+    modalContent.addEventListener('mousedown', handleStart);
+    document.addEventListener('mousemove', e => isDragging && handleMove(e));
+    document.addEventListener('mouseup', handleEnd);
+
+    // Крестик и бэкдроп — на всякий случай
+    modal.querySelectorAll('.close, .modal-close-btn').forEach(btn => {
+      btn.addEventListener('click', closeModal);
+    });
+
+    modal.addEventListener('click', e => {
+      if (e.target === modal) closeModal();
+    });
+  });
+
+  // Esc — глобально для всех модалок
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      modals.forEach(m => m.classList.contains('active') && m.classList.remove('active'));
+      document.body.style.overflow = '';
+    }
+  });
+
+  console.log('Свайп-вниз для модалок активирован');
+})();

@@ -3229,10 +3229,6 @@ html[data-theme="dark"] .progress-label.filled { color: #fff; }
     gap: 0;
   }
 
-  /* 1. Сначала — шторка заказов (она fixed, но контент под ней) */
-  /* (ничего не трогаем — #orderChain уже fixed сверху) */
-
-
 
   /* Заголовок "Корзина" внутри итогов (если есть) */
   .mobile-summary-minimal .checkout-title,

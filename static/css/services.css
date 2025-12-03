@@ -1308,3 +1308,482 @@ body.scrolled-past-hero .top-persistent-title {
   transform: translateX(-50%) translateY(-30px);
 }
 
+/* ==========================================================================
+   МОБИЛЬНАЯ АДАПТАЦИЯ 375px → 1024px (iPhone SE, 12/13/14/15 mini/pro/max, iPad в портрете)
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  /* Убираем боковой каталог — он не влезает */
+  .side-catalog { 
+    width: 0 !important; 
+    opacity: 0; 
+    pointer-events: none; 
+  }
+  .catalog-arrow-hint { display: none !important; }
+
+  /* Уменьшаем отступы и паддинги в белой зоне */
+  .light-zone,
+  .light-zone.normal {
+    margin: 80px 20px !important;
+    padding: 100px 30px 140px !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Заголовок и сортировка */
+  .catalog-header h1 { 
+    font-size: 48px !important; 
+    letter-spacing: 12px !important; 
+    margin-bottom: 80px !important; 
+  }
+
+  .sort-panel { 
+    position: static !important; 
+    flex-direction: row !important; 
+    justify-content: center; 
+    gap: 32px; 
+    margin-bottom: 60px; 
+  }
+  .grid-controls { 
+    position: static !important; 
+    justify-content: center; 
+    margin-top: 32px; 
+  }
+
+  /* Поиск в белой зоне */
+  #lightZone .search-wrapper { 
+    margin: 0 auto 100px !important; 
+    max-width: 100% !important; 
+  }
+  #lightZone .search { 
+    font-size: 18px !important; 
+    padding: 16px 50px 16px 0 !important; 
+  }
+
+  /* Сетка карточек */
+  .grid { 
+    grid-template-columns: 1fr !important; 
+    gap: 80px !important; 
+  }
+  .grid.cols-2 { grid-template-columns: 1fr !important; }
+
+  .card { 
+    height: 80vh !important; 
+    min-height: 500px; 
+  }
+
+  /* Кнопка Load More */
+  .load-more-section { 
+    margin: 100px 0 80px !important; 
+  }
+
+  /* Кнопка выхода из белой зоны */
+  #exitWhiteZoneBtn { 
+    top: 70px !important; 
+    gap: 12px !important; 
+  }
+  .exit-text { 
+    font-size: 9px !important; 
+    letter-spacing: 6px !important; 
+  }
+  .exit-arrow { 
+    width: 36px !important; 
+    height: 36px !important; 
+  }
+}
+
+/* iPhone SE — 375–480px (самые маленькие экраны) */
+@media (max-width: 480px) {
+  .catalog-header h1 { 
+    font-size: 38px !important; 
+    letter-spacing: 8px !important; 
+  }
+
+  .light-zone,
+  .light-zone.normal {
+    margin: 60px 16px !important;
+    padding: 80px 20px 100px !important;
+  }
+
+  .card { 
+    height: 75vh !important; 
+    min-height: 440px; 
+  }
+
+  .card h3 { 
+    font-size: 24px !important; 
+    letter-spacing: 12px !important; 
+  }
+  .card p { 
+    font-size: 14px !important; 
+  }
+
+  /* Модалка на весь экран */
+  .modal-content {
+    width: 100vw !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+  }
+
+  .modal-info {
+    padding: 80px 24px 40px !important;
+  }
+  .modal-info h3 {
+    font-size: 32px !important;
+    letter-spacing: 12px !important;
+  }
+  .price { 
+    font-size: 22px !important; 
+  }
+  .order-btn { 
+    width: 100%; 
+    padding: 20px !important; 
+  }
+
+  /* Закрыть кнопку модалки */
+  .modal-close-btn {
+    top: 12px !important;
+    right: 12px !important;
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  /* Карусель рекламы */
+  .noir-island-wrapper,
+  .secondary-carousel {
+    border-radius: 0 !important;
+    margin: 120px 0 !important;
+  }
+}
+
+/* Планшеты в портрете 768–1024px */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .grid { 
+    grid-template-columns: repeat(2, 1fr) !important; 
+    gap: 80px !important; 
+  }
+  .grid.cols-2 { 
+    grid-template-columns: repeat(2, 1fr) !important; 
+  }
+
+  .catalog-header h1 { 
+    font-size: 68px !important; 
+  }
+
+  .light-zone,
+  .light-zone.normal {
+    padding: 140px 60px 180px !important;
+    margin: 100px 40px !important;
+  }
+
+  .card { 
+    height: 600px !important; 
+  }
+}
+
+/* Общие мелкие правки для всех мобильных */
+@media (max-width: 1024px) {
+  /* Убираем сильные 3D-эффекты — они тормозят на мобилках */
+  .card,
+  .modal-content,
+  .light-zone {
+    transform: none !important;
+    transition: all 0.8s cubic-bezier(0.16,1,0.3,1) !important;
+  }
+
+  .card.visible {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+  }
+
+  /* Уменьшаем тени */
+  .light-zone { 
+    box-shadow: 0 40px 80px rgba(0,0,0,0.3) !important; 
+  }
+
+  /* Скролл-индикатор прячем */
+  .scroll-indicator { 
+    display: none; 
+  }
+
+  /* Footer */
+  footer,
+  footer.normal {
+    padding: 140px 30px 100px !important;
+  }
+  footer span {
+    font-size: 10px !important;
+    letter-spacing: 12px !important;
+  }
+}
+
+/* Фикс для iOS Safari — 100vh баг */
+@supports (-webkit-touch-callout: none) {
+  .hero { height: 100dvh; }
+  .card { height: 80dvh; }
+}
+
+/* === СКРЫВАЕМ КНОПКУ "НАВЕРХ · В NOIR" ТОЛЬКО НА МОБИЛКАХ (375–1024px) === */
+@media (max-width: 1024px) {
+  #exitWhiteZoneBtn,
+  #exitWhiteZoneBtn * {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    z-index: -9999 !important;
+  }
+
+  /* На всякий случай — даже если JS добавит класс .visible */
+  #exitWhiteZoneBtn.visible,
+  body.white #exitWhiteZoneBtn {
+    display: none !important;
+  }
+}
+
+/* На десктопе (1025px+) — кнопка остаётся видимой как и было */
+@media (min-width: 1025px) {
+  #exitWhiteZoneBtn {
+    /* Оставляем все твои оригинальные стили без изменений */
+  }
+}
+
+/* ==========================================================================
+   ИСПРАВЛЕНИЕ: карточки товаров на мобильных — фото не вылезают и не накладываются
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  /* Принудительно делаем 2 колонки (или 3 на планшетах), но главное — ограничиваем размер карточек */
+  .grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 32px !important;
+    padding: 0 16px !important;
+  }
+
+  /* На планшетах 768–1024px — можно 3 колонки */
+  @media (min-width: 768px) {
+    .grid {
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 40px !important;
+    }
+  }
+
+  /* На очень узких экранах (< 480px) — всё-таки 1 колонка, иначе будет каша */
+  @media (max-width: 480px) {
+    .grid { grid-template-columns: 1fr !important; }
+  }
+
+  /* ГЛАВНОЕ: карточка теперь имеет правильный размер и НЕ растягивается */
+  .card {
+    height: auto !important;
+    min-height: unset !important;
+    aspect-ratio: 3 / 4 !important;     /* красивые пропорции */
+    width: 100% !important;
+    max-width: none !important;
+    overflow: hidden !important;
+    border-radius: 0 !important;
+  }
+
+  /* КЛЮЧЕВОЕ: фото теперь точно по размеру карточки */
+  .card img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    display: block !important;
+    transform: none !important;
+  }
+
+  /* Убираем все трансформации и ховеры, которые ломают мобильную версию */
+  .card,
+  .card.visible,
+  .card:hover,
+  .card:active {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .card:hover img,
+  .card:active img {
+    transform: none !important;
+  }
+
+  /* Оверлей с текстом — уменьшаем, чтобы влезал */
+  .card .overlay {
+    padding: 40px 24px !important;
+  }
+
+  .card h3 {
+    font-size: 20px !important;
+    letter-spacing: 10px !important;
+  }
+
+  .card p {
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+  }
+}
+
+/* ==========================================================================
+   ФИНАЛЬНОЕ УМЕНЬШЕНИЕ ТЕКСТА В КАРТОЧКАХ НА МОБИЛЬНЫХ — 2025
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+
+  /* ——— НАЗВАНИЕ ТОВАРА (h3) ——— */
+  .card h3 {
+    font-size: 18px !important;
+    letter-spacing: 8px !important;
+    margin-bottom: 8px !important;
+  }
+
+  /* ——— ЦЕНА (новый класс .price-inside-card — добавь его в HTML) ——— */
+  .card .price-inside-card {
+    font-size: 16px !important;
+    letter-spacing: 6px !important;
+    opacity: 0.9;
+    margin-top: 4px;
+  }
+
+  /* Если у тебя цена просто в <p> или <span> без класса — ловим всё подряд */
+  .card .overlay p,
+  .card .overlay span {
+    font-size: 14px !important;
+    letter-spacing: 5px !important;
+    line-height: 1.5 !important;
+    opacity: 0.85;
+  }
+
+  /* Если цена идёт вторым параграфом — ещё сильнее уменьшаем */
+  .card .overlay p:nth-child(2),
+  .card .overlay p:last-child {
+    font-size: 15px !important;
+    font-weight: 400;
+  }
+
+  /* ——— ОТСТУПЫ В ОВЕРЛЕЕ ——— */
+  .card .overlay {
+    padding: 32px 20px !important;
+    gap: 4px;
+  }
+}
+
+/* На совсем маленьких экранах (iPhone SE, <480px) — ещё чуть меньше */
+@media (max-width: 480px) {
+  .card h3 {
+    font-size: 16px !important;
+    letter-spacing: 6px !important;
+  }
+  .card .price-inside-card,
+  .card .overlay p,
+  .card .overlay span {
+    font-size: 13px !important;
+    letter-spacing: 4px !important;
+  }
+  .card .overlay {
+    padding: 28px 16px !important;
+  }
+}
+/* ==========================================================================
+   СКРЫВАЕМ GRID-CONTROLS НА ТЕЛЕФОНАХ И ПЛАНШЕТАХ (≤1024px)
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .grid-controls {
+    display: none !important;
+  }
+}
+
+/* Если вдруг у тебя где-то в JS добавляется класс .active или инлайн-стили — перебиваем их */
+@media (max-width: 1024px) {
+  .grid-controls,
+  .grid * {
+    grid-template-columns: 1fr !important; /* всегда 1 колонка на мобилках */
+    gap: 80px !important;
+  }
+
+  .grid.cols-2 {
+    grid-template-columns: 1fr !important; /* даже если JS попытается поставить 2 */
+  }
+}
+/* ==========================================================================
+   ФУТЕР — ИДЕАЛЬНЫЙ АДАПТИВ НА ТЕЛЕФОНАХ И ПЛАНШЕТАХ (2025)
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  footer,
+  footer.normal {
+    padding: 140px 40px 100px !important;
+    text-align: center;
+  }
+
+  footer span {
+    font-size: 10px !important;
+    letter-spacing: 14px !important;
+    line-height: 1.8 !important;
+    opacity: 0.6 !important;
+    display: block;
+    margin-bottom: 24px;
+  }
+
+  /* Если у тебя в футере несколько строк — они будут красиво идти друг за другом */
+  footer span:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Анимация появления — чуть мягче на мобилках */
+  footer.visible span {
+    opacity: 0.7 !important;
+    transform: translateY(0) !important;
+    transition: all 1.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* iPhone SE, Pixel маленькие и т.д. — ещё чуть компактнее */
+  footer,
+  footer.normal {
+    padding: 120px 24px 80px !important;
+  }
+
+  footer span {
+    font-size: 9px !important;
+    letter-spacing: 12px !important;
+  }
+}
+
+/* Планшеты в портрете (768–1024px) — чуть больше воздуха */
+@media (min-width: 768px) and (max-width: 1024px) {
+  footer,
+  footer.normal {
+    padding: 180px 60px 120px !important;
+  }
+
+  footer span {
+    font-size: 11px !important;
+    letter-spacing: 16px !important;
+  }
+}
+
+/* Фикс для iOS Safari (100vh баг) — футер не уезжает за экран */
+@supports (-webkit-touch-callout: none) {
+  footer {
+    padding-bottom: max(100px, env(safe-area-inset-bottom, 100px));
+  }
+}
+
+.modal.active,
+#modal.active,
+.product-modal.active {
+  overflow: hidden;
+}
+
+.modal-content,
+.product-modal-content {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
