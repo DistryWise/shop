@@ -23,7 +23,7 @@
       const sideCatalog = document.getElementById('sideCatalog');
       const grid = document.getElementById('grid');
       const modal = document.getElementById('modal');
-      const catalogList = document.querySelector('.catalog-list');
+      const catalogList = document.querySelector('#sideCatalog .catalog-list');
       const searchInput = document.getElementById('search');
       const catalogArrowHint = document.getElementById('catalogArrowHint');
 
@@ -777,13 +777,13 @@ function createCard(p) {
 
           allProducts = data;
 
-          const catalogList = document.querySelector('.catalog-list');
+          const catalogList = document.querySelector('#sideCatalog .catalog-list');
           catalogList.innerHTML = '';
 
           const allLi = document.createElement('li');
           allLi.className = 'active';
           allLi.dataset.filter = 'all';
-          allLi.innerHTML = '<a>ALL SERVICES</a>';
+          allLi.innerHTML = '<a>Сброс</a>';
           catalogList.appendChild(allLi);
 
           const categories = [...new Set(allProducts.map(p => p.category).filter(Boolean))];
@@ -1014,21 +1014,40 @@ async function openModal(id, pushHistory = true) {
       }
 
 
-function closeModal() {
+window.closeModal = function () {
+  const modal = document.getElementById('modal');
+  if (!modal) return;
+
+  // 1. Сразу делаем модалку невидимой и неактивной для кликов
+  modal.style.pointerEvents = 'none';   // ← КЛЮЧЕВАЯ СТРОКА!
+  modal.style.opacity = '0';            // ← Дополнительно — на всякий случай
+
+  // 2. Снимаем класс
   modal.classList.remove('active');
   document.body.style.overflow = '';
 
-  // Убираем хеш ТОЛЬКО если модалка реально была открыта и мы её закрываем вручную
+  // 3. Чистим хеш
   if (window.location.hash) {
     history.replaceState(null, null, window.location.pathname + window.location.search);
   }
-}
+
+  // 4. Через 100 мс — полностью сбрасываем стили (чтобы при следующем открытии всё было чисто)
+  setTimeout(() => {
+    modal.style.transition = '';
+    modal.style.transform = '';
+    modal.style.background = '';
+    modal.style.pointerEvents = '';   // ← Возвращаем обратно
+    modal.style.opacity = '';         // ← Возвращаем
+  }, 100);
+};
 
 // Крестик / оверлей / ESC
-document.querySelector('.modal-close-btn')?.addEventListener('click', closeModal);
-modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+document.querySelector('.modal-close-btn')?.addEventListener('click', window.closeModal);
+modal.addEventListener('click', e => e.target === modal && window.closeModal());
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
+  if (e.key === 'Escape' && modal?.classList.contains('active')) {
+    window.closeModal();
+  }
 });
 
 // === ПОДДЕРЖКА ПРЯМЫХ ССЫЛОК И КНОПОК НАЗАД/ВПЕРЁД ===
@@ -1232,39 +1251,44 @@ async function renderWithBanner(products) {
       }));
 
     function setupEventListeners() {
-        document.querySelector('.catalog-list').addEventListener('click', (e) => {
-            const li = e.target.closest('li');
-            if (!li || !li.dataset.filter) return;
+  // УДАЛЯЕМ СТАРЫЙ ОБРАБОТЧИК — ОН ЛОМАЕТ ВСЁ!
+  // document.querySelector('.catalog-list').addEventListener('click', ...)
 
-            // Сбрасываем активный класс
-            document.querySelectorAll('.catalog-list li').forEach(x => x.classList.remove('active'));
-            li.classList.add('active');
+  // ОДИН ЕДИНСТВЕННЫЙ УНИВЕРСАЛЬНЫЙ ОБРАБОТЧИК НА ВЕСЬ ДОКУМЕНТ
+  document.addEventListener('click', (e) => {
+    const clicked = e.target.closest('[data-filter]');
+    if (!clicked) return;
 
-            // Плавный скролл к lightZone, если sideCatalog не инвертирован и lightZone не видима
-            if (!sideCatalog.classList.contains('inverted') && !lightZone.classList.contains('active-catalog')) {
-                const lightZoneTop = lightZone.getBoundingClientRect().top + window.pageYOffset;
-                window.scrollTo({
-                    top: lightZoneTop - 50, // Небольшой отступ сверху
-                    behavior: 'smooth'
-                });
-            }
+    const filterValue = clicked.dataset.filter;
+    if (!filterValue) return;
 
-            applyFiltersAndSort();
-        });
-
-
-        document.querySelectorAll('.sort-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.sort-btn').forEach(x => x.classList.remove('active'));
-                btn.classList.add('active');
-                applyFiltersAndSort();
-            });
-        });
-
-        searchInput.addEventListener('input', () => {
-            applyFiltersAndSort();
-        });
+    // Активируем в основном каталоге
+    document.querySelectorAll('#sideCatalog .catalog-list li').forEach(li => li.classList.remove('active'));
+    const desktopItem = document.querySelector(`#sideCatalog .catalog-list [data-filter="${filterValue}"]`);
+    if (desktopItem) {
+      desktopItem.closest('li')?.classList.add('active');
     }
+
+    // Плавный скролл (как было на ПК)
+    if (!sideCatalog.classList.contains('inverted') && !lightZone.classList.contains('active-catalog')) {
+      const top = lightZone.getBoundingClientRect().top + window.pageYOffset - 50;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+
+    applyFiltersAndSort();
+  });
+
+  // Сортировка и поиск — оставляем как было
+  document.querySelectorAll('.sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.sort-btn').forEach(x => x.classList.remove('active'));
+      btn.classList.add('active');
+      applyFiltersAndSort();
+    });
+  });
+
+  searchInput.addEventListener('input', () => applyFiltersAndSort());
+}
 
       const scrollIndicator = document.querySelector('.scroll-indicator');
       if (scrollIndicator) {

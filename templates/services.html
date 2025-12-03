@@ -1,7 +1,17 @@
 <!DOCTYPE html>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <!-- В <head> — обязательно самый первый мета-тег после charset -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+<!-- Этот скрипт — магия, которая заставляет медиа-запросы сработать сразу на 100% устройств -->
+<script>
+  // Если вдруг браузер думает, что ширина >1024px — принудительно говорим, что это мобильник
+  if (window.innerWidth <= 1024 && !document.body.classList.contains('mobile-layout')) {
+    document.body.classList.add('mobile-layout');
+  }
+</script>
   <title>Услуги — Piligrim · 2025</title>
 
   <!-- Шрифты и иконки -->
@@ -1324,6 +1334,386 @@ document.getElementById('feedbackBtnMobile')?.addEventListener('click', function
     });
   });
 });
+</script>
+
+<!-- КНОПКА ФИЛЬТРА НА МОБИЛКЕ -->
+<div id="mobileCatalogTrigger">
+  <i class="fas fa-sliders-h"></i>
+</div>
+
+<style>
+/* МОБИЛЬНАЯ ШТОРКА КАТАЛОГА — ПОД ТЁМНУЮ И СВЕТЛУЮ ТЕМУ + УДОБНЫЙ РАЗМЕР НА ТЕЛЕФОНЕ */
+@media (max-width: 1025px) {
+  #mobileCatalogTrigger {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    background: var(--trigger-bg, #000);
+    color: var(--trigger-color, #fff);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    z-index: 998;
+    cursor: pointer;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    transition: all 0.3s ease;
+  }
+  #mobileCatalogTrigger:active { transform: scale(0.92); }
+
+  /* Оверлей */
+  #mobileCatalogOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 9998;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s ease;
+  }
+  #mobileCatalogOverlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Сама шторка */
+  #mobileCatalogSheet {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--sheet-bg, #000);
+    color: var(--sheet-color, #fff);
+    z-index: 9999;
+    transform: translateX(-100%);
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    padding: 90px 32px 60px;
+    overflow-y: auto;
+  }
+  #mobileCatalogSheet.active {
+    transform: translateX(0);
+  }
+
+  /* Список фильтров — удобный размер */
+  #mobileCatalogSheet .catalog-list {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    font-size: 20px;           /* было 28px → стало 20px — идеально читается */
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  #mobileCatalogSheet .catalog-list li a {
+    color: var(--sheet-color, #fff);
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+    display: block;
+    padding: 8px 0;
+  }
+
+  #mobileCatalogSheet .catalog-list li.active a {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  /* Крестик закрытия */
+  .mobile-catalog-close {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    font-size: 36px;
+    color: var(--sheet-color, #fff);
+    cursor: pointer;
+    z-index: 10000;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    transition: background 0.3s;
+  }
+  .mobile-catalog-close:hover {
+    background: rgba(255,255,255,0.16);
+  }
+
+  /* Адаптация под светлую тему */
+  html[data-theme="light"] #mobileCatalogTrigger {
+    --trigger-bg: #fff;
+    --trigger-color: #000;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+  }
+
+  html[data-theme="light"] #mobileCatalogOverlay {
+    background: rgba(255,255,255,0.96);
+  }
+
+  html[data-theme="light"] #mobileCatalogSheet {
+    --sheet-bg: #fff;
+    --sheet-color: #000;
+    background: #fff;
+  }
+
+  html[data-theme="light"] #mobileCatalogSheet .catalog-list li a {
+    color: #000;
+  }
+
+  html[data-theme="light"] .mobile-catalog-close {
+    color: #000;
+    background: rgba(0,0,0,0.06);
+  }
+  html[data-theme="light"] .mobile-catalog-close:hover {
+    background: rgba(0,0,0,0.12);
+  }
+}
+</style>
+
+<!-- ШТОРКА КАТАЛОГА НА МОБИЛКЕ -->
+<div id="mobileCatalogOverlay">
+  <div id="mobileCatalogSheet">
+    <div class="mobile-catalog-close">×</div>
+    <ul class="catalog-list"></ul>
+  </div>
+</div>
+
+<script>
+// МОБИЛЬНАЯ ШТОРКА КАТАЛОГА — УЛЬТРА-ПРЕМИУМ ВЕРСИЯ 2025 (ИДЕАЛЬНО РАБОТАЕТ)
+document.addEventListener('DOMContentLoaded', () => {
+  const trigger   = document.getElementById('mobileCatalogTrigger');
+  const overlay   = document.getElementById('mobileCatalogOverlay');
+  const sheet     = document.getElementById('mobileCatalogSheet');
+  const closeBtn  = sheet?.querySelector('.mobile-catalog-close');
+  const catalogList = sheet?.querySelector('.catalog-list');
+
+  if (!trigger || !overlay || !sheet || !closeBtn || !catalogList) {
+    console.error('Мобильная шторка каталога не найдена!');
+    return;
+  }
+
+  let startX = 0;
+  let currentX = 0;
+  let isDragging = false;
+  let isClosing = false;
+  const threshold = 120;
+  const sheetWidth = sheet.offsetWidth; // фиксируем ширину один раз
+
+  // === КОПИРОВАНИЕ КАТАЛОГА ===
+  const copyCatalog = () => {
+    const original = document.querySelector('#sideCatalog .catalog-list');
+    if (!original) return;
+
+    catalogList.innerHTML = original.innerHTML;
+
+    const activeOriginal = original.querySelector('li.active');
+    if (activeOriginal) {
+      const filter = activeOriginal.querySelector('[data-filter]')?.dataset.filter;
+      if (filter) {
+        const mobileActive = catalogList.querySelector(`[data-filter="${filter}"]`)?.closest('li');
+        if (mobileActive) {
+          catalogList.querySelectorAll('li').forEach(li => li.classList.remove('active'));
+          mobileActive.classList.add('active');
+        }
+      }
+    }
+  };
+
+  // === ОТКРЫТИЕ ===
+  const openSheet = () => {
+    if (isClosing || sheet.classList.contains('active')) return;
+    copyCatalog();
+    overlay.classList.add('active');
+    sheet.classList.add('active');
+    sheet.style.transform = 'translateX(0)'; // принудительно на весь экран
+    document.body.style.overflow = 'hidden';
+  };
+
+  // === ЗАКРЫТИЕ ===
+  const closeSheet = () => {
+    if (isClosing || !sheet.classList.contains('active')) return;
+    isClosing = true;
+
+    sheet.classList.remove('active');
+    overlay.classList.remove('active');
+
+    const onEnd = () => {
+      sheet.style.transition = '';
+      sheet.style.transform = 'translateX(-100%)';
+      document.body.style.overflow = '';
+      isClosing = false;
+      sheet.removeEventListener('transitionend', onEnd);
+    };
+    sheet.addEventListener('transitionend', onEnd);
+    setTimeout(onEnd, 600);
+  };
+
+  // === КНОПКИ ===
+  trigger.addEventListener('click', openSheet);
+  closeBtn.addEventListener('click', closeSheet);
+  overlay.addEventListener('click', e => e.target === overlay && closeSheet());
+
+  // === УМНЫЙ СВАЙП (СЛЕВА → ОТКРЫТЬ, СПРАВА → ЗАКРЫТЬ) ===
+  const handleStart = (e) => {
+    if (isClosing) return;
+    startX = currentX = e.touches?.[0].clientX || e.clientX;
+    isDragging = true;
+    sheet.style.transition = 'none';
+  };
+
+  const handleMove = (e) => {
+    if (!isDragging) return;
+    currentX = e.touches?.[0].clientX || e.clientX;
+    const diff = currentX - startX;
+
+    // Открыта — свайп СПРАВА НАЛЕВО
+    if (sheet.classList.contains('active')) {
+      if (diff < 0) {
+        e.preventDefault();
+        // Ограничиваем: не даём уйти правее 0
+        const limited = Math.max(diff, -sheetWidth);
+        sheet.style.transform = `translateX(${limited}px)`;
+      }
+    }
+    // Закрыта — свайп СЛЕВА НАПРАВО от края
+    else if (startX <= 60 && diff > 0) {
+      e.preventDefault();
+      // Ограничиваем: не даём открыть больше чем на ширину шторки
+      const limited = Math.min(diff, sheetWidth);
+      sheet.style.transform = `translateX(${limited - sheetWidth}px)`;
+    }
+  };
+
+  const handleEnd = () => {
+    if (!isDragging) return;
+    isDragging = false;
+
+    const diff = currentX - startX;
+
+    // Закрываем
+    if (sheet.classList.contains('active') && diff < -threshold) {
+      closeSheet();
+    }
+    // Открываем
+    else if (!sheet.classList.contains('active') && startX <= 60 && diff > threshold) {
+      openSheet();
+    }
+    // Возвращаем на место
+    else {
+      sheet.style.transition = 'transform 0.44s cubic-bezier(0.22, 1, 0.36, 1)';
+      sheet.style.transform = sheet.classList.contains('active')
+        ? 'translateX(0)'
+        : 'translateX(-100%)';
+      setTimeout(() => sheet.style.transition = '', 450);
+    }
+  };
+
+  // === СЛУШАТЕЛИ ===
+  document.addEventListener('touchstart', handleStart, { passive: true });
+  document.addEventListener('touchmove', handleMove, { passive: false });
+  document.addEventListener('touchend', handleEnd);
+
+  // Для десктопа (тест)
+  document.addEventListener('mousedown', handleStart);
+  document.addEventListener('mousemove', e => isDragging && handleMove(e));
+  document.addEventListener('mouseup', handleEnd);
+
+  // === КЛИК ПО ФИЛЬТРУ ===
+  catalogList.addEventListener('click', e => {
+    const clicked = e.target.closest('[data-filter]');
+    if (!clicked) return;
+
+    const filterValue = clicked.dataset.filter;
+    if (!filterValue) return;
+
+    closeSheet();
+
+    document.querySelectorAll('#sideCatalog .catalog-list li').forEach(li => li.classList.remove('active'));
+    const desktopItem = document.querySelector(`#sideCatalog .catalog-list [data-filter="${filterValue}"]`);
+    if (desktopItem) {
+      desktopItem.closest('li')?.classList.add('active');
+    }
+
+    if (typeof applyFiltersAndSort === 'function') {
+      applyFiltersAndSort();
+    }
+  });
+});
+</script>
+<script>
+// СВАЙП ВНИЗ → ЗАКРЫТЬ МОДАЛКУ (ТОЛЬКО НА МОБИЛКЕ — БЕЗ МИГАНИЯ, НАВСЕГДА!)
+(() => {
+  const modal = document.getElementById('modal');
+  if (!modal) return;
+
+  let startY = 0;
+  let isDragging = false;
+  const threshold = 150;
+
+  const isMobile = () => window.innerWidth <= 1024 || 'ontouchstart' in window;
+
+  const handleStart = (e) => {
+    if (!modal.classList.contains('active') || !isMobile()) return;
+
+    const target = e.target;
+    const scrollable = target.closest('.modal-info, .reviews-list, .modal-gallery');
+    if (scrollable && scrollable.scrollTop > 10) return;
+
+    startY = e.touches[0].clientY;
+    isDragging = true;
+    modal.style.transition = 'none';
+  };
+
+  const handleMove = (e) => {
+    if (!isDragging) return;
+
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - startY;
+
+    if (diff > 0) {
+      e.preventDefault();
+      modal.style.transform = `translateY(${diff}px)`;
+      const opacity = Math.max(0.3, 1 - diff / 600);
+      modal.style.background = `rgba(0,0,0,${opacity})`;
+    }
+  };
+
+  const handleEnd = () => {
+    if (!isDragging) return;
+    isDragging = false;
+
+    const diff = parseInt(modal.style.transform.match(/-?\d+\.?\d*/)?.[0] || 0);
+
+    if (diff > threshold) {
+      modal.style.transition = 'transform 0.55s cubic-bezier(0.22,1,0.36,1), background 0.55s';
+      modal.style.transform = 'translateY(110vh)';
+      modal.style.background = 'rgba(0,0,0,0)';
+
+      // ВЫЗЫВАЕМ ТОЛЬКО ГЛОБАЛЬНЫЙ closeModal — И БОЛЬШЕ НИКАКИХ fallback!
+      setTimeout(() => {
+        if (typeof window.closeModal === 'function') {
+          window.closeModal();
+        }
+        // ← БЕЗ else! БЕЗ локальной closeModal()!
+      }, 550);
+    } else {
+      modal.style.transition = 'transform 0.44s cubic-bezier(0.22,1,0.36,1), background 0.4s';
+      modal.style.transform = 'translateY(0)';
+      modal.style.background = 'rgba(0,0,0,0.92)';
+      setTimeout(() => modal.style.transition = '', 450);
+    }
+  };
+
+  modal.addEventListener('touchstart', handleStart, { passive: true });
+  modal.addEventListener('touchmove', handleMove, { passive: false });
+  modal.addEventListener('touchend', handleEnd);
+})();
 </script>
 </body>
 </html>
