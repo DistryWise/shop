@@ -15,7 +15,7 @@
   <link rel="stylesheet" href="/static/css/cart.css">
   <link rel="stylesheet" href="/static/css/ai.css">
   <link rel="stylesheet" href="/static/css/contacts.css">
-
+  <link rel="stylesheet" href="/static/css/bins.css">
 
 
   <style>
@@ -903,6 +903,55 @@
 #ordersCarousel::-webkit-scrollbar { display:none; }
 </style>
 
+<script>
+// === МОБИЛЬНОЕ БОКОВОЕ МЕНЮ (Sidebar) — РАБОТАЕТ НА ВСЕХ СТРАНИЦАХ ===
+document.addEventListener("DOMContentLoaded", () => {
+  const sidebar = document.getElementById('mobileSidebar');
+  const openBtn = document.getElementById('openSidebarMenu');
+  const closeBtn = document.getElementById('closeSidebar');
 
+  if (!sidebar || !openBtn) return;
+
+  // Открытие
+  openBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    sidebar.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  });
+
+  // Закрытие по кнопке ←
+  closeBtn?.addEventListener('click', () => {
+    sidebar.classList.remove('active');
+    document.body.style.overflow = '';
+  });
+
+  // Закрытие при клике вне шторки
+  document.addEventListener('click', (e) => {
+    if (sidebar.classList.contains('active') && !sidebar.contains(e.target) && !openBtn.contains(e.target)) {
+      sidebar.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  });
+
+  // Опционально: закрытие по свайпу влево (как в iOS)
+  let touchStartX = 0;
+  sidebar.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+  });
+
+  sidebar.addEventListener('touchmove', (e) => {
+    if (!touchStartX) return;
+    const touchX = e.touches[0].clientX;
+    const diff = touchStartX - touchX;
+
+    if (diff > 100) { // свайп влево больше 100px
+      sidebar.classList.remove('active');
+      document.body.style.overflow = '';
+      touchStartX = 0;
+    }
+  });
+});
+</script>
 </body>
 </html>
