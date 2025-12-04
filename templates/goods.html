@@ -1270,5 +1270,74 @@ document.getElementById('modal-order')?.addEventListener('click', async function
 });
 </script>
 
+<script>
+const sidebar = document.getElementById('mobileSidebar');
+if (sidebar) {
+  let startX = 0, isDragging = false;
+  const threshold = 80;
+
+  const close = () => {
+    sidebar.classList.remove('open');
+    document.body.classList.remove('sidebar-open');
+  };
+
+  const handleStart = e => {
+    if (!sidebar.classList.contains('open')) return;
+    startX = e.touches?.[0].clientX || e.clientX;
+    isDragging = true;
+    sidebar.style.transition = 'none';
+  };
+
+  const handleMove = e => {
+    if (!isDragging) return;
+    const x = e.touches?.[0].clientX || e.clientX;
+    const diff = x - startX;
+    if (diff < 0) {
+      e.preventDefault();
+      sidebar.style.transform = `translateX(${diff}px)`;
+    }
+  };
+
+  const handleEnd = e => {
+    if (!isDragging) return;
+    isDragging = false;
+    const currentX = e.changedTouches?.[0]?.clientX || e.clientX || startX;
+    const diff = currentX - startX;
+
+    if (diff < -threshold) {
+      sidebar.style.transition = 'transform 0.44s cubic-bezier(0.22, 1, 0.36, 1)';
+      sidebar.style.transform = 'translateX(-100%)';
+      setTimeout(() => {
+        close();
+        sidebar.style.transition = '';
+        sidebar.style.transform = '';
+      }, 450);
+    } else {
+      sidebar.style.transition = 'transform 0.38s cubic-bezier(0.2, 0.9, 0.3, 1)';
+      sidebar.style.transform = 'translateX(0)';
+      setTimeout(() => sidebar.style.transition = '', 380);
+    }
+  };
+
+  document.getElementById('openSidebarMenu')?.addEventListener('click', () => {
+    sidebar.classList.add('open');
+    document.body.classList.add('sidebar-open');
+  });
+
+  document.getElementById('closeSidebar')?.addEventListener('click', close);
+
+  document.addEventListener('touchstart', handleStart, { passive: true });
+  document.addEventListener('touchmove', handleMove, { passive: false });
+  document.addEventListener('touchend', handleEnd);
+
+  document.addEventListener('click', e => {
+    if (sidebar.classList.contains('open') && 
+        !e.target.closest('#mobileSidebar') && 
+        !e.target.closest('#openSidebarMenu')) {
+      close();
+    }
+  });
+}
+</script>
 </body>
 </html>
