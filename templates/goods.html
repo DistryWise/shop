@@ -1270,6 +1270,7 @@ document.getElementById('modal-order')?.addEventListener('click', async function
 });
 </script>
 
+<!-- ФИНАЛЬНАЯ ВЕРСИЯ 2025 — ПЕРЕБИВАЕТ contacts.js -->
 <script>
 const sidebar = document.getElementById('mobileSidebar');
 if (sidebar) {
@@ -1279,7 +1280,16 @@ if (sidebar) {
   const close = () => {
     sidebar.classList.remove('open');
     document.body.classList.remove('sidebar-open');
+    sidebar.style.transition = '';
+    sidebar.style.transform = '';
   };
+
+  document.getElementById('openSidebarMenu')?.addEventListener('click', () => {
+    sidebar.classList.add('open');
+    document.body.classList.add('sidebar-open');
+  });
+
+  document.getElementById('closeSidebar')?.addEventListener('click', close);
 
   const handleStart = e => {
     if (!sidebar.classList.contains('open')) return;
@@ -1298,33 +1308,19 @@ if (sidebar) {
     }
   };
 
-  const handleEnd = e => {
+  const handleEnd = () => {
     if (!isDragging) return;
     isDragging = false;
-    const currentX = e.changedTouches?.[0]?.clientX || e.clientX || startX;
-    const diff = currentX - startX;
-
-    if (diff < -threshold) {
-      sidebar.style.transition = 'transform 0.44s cubic-bezier(0.22, 1, 0.36, 1)';
+    sidebar.style.transition = 'transform 0.44s cubic-bezier(0.22, 1, 0.36, 1)';
+    
+    if (Math.abs(parseInt(sidebar.style.transform.match(/-?\d+/)?.[0] || 0)) > threshold) {
       sidebar.style.transform = 'translateX(-100%)';
-      setTimeout(() => {
-        close();
-        sidebar.style.transition = '';
-        sidebar.style.transform = '';
-      }, 450);
+      setTimeout(close, 450);
     } else {
-      sidebar.style.transition = 'transform 0.38s cubic-bezier(0.2, 0.9, 0.3, 1)';
       sidebar.style.transform = 'translateX(0)';
-      setTimeout(() => sidebar.style.transition = '', 380);
+      setTimeout(() => sidebar.style.transition = '', 450);
     }
   };
-
-  document.getElementById('openSidebarMenu')?.addEventListener('click', () => {
-    sidebar.classList.add('open');
-    document.body.classList.add('sidebar-open');
-  });
-
-  document.getElementById('closeSidebar')?.addEventListener('click', close);
 
   document.addEventListener('touchstart', handleStart, { passive: true });
   document.addEventListener('touchmove', handleMove, { passive: false });

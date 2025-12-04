@@ -1137,3 +1137,18 @@ header {
 
 }
 
+/* ЖЁСТКОЕ РЕШЕНИЕ — ЛОВИМ И ГАСИМ wheel СОБЫТИЕ НАД ШАПКОЙ */
+.apple-order-header,
+header,
+header.scrolled,
+.sticky-header {
+    pointer-events: auto;
+    overflow: hidden;
+}
+
+.apple-order-header,
+header,
+header.scrolled {
+    /* Отключаем прокрутку страницы, когда мышь над хедером */
+    onwheel = "return false;"  /* не работает в CSS, поэтому добавляем маленький JS ниже */
+}

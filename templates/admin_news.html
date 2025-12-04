@@ -24,7 +24,7 @@
     <div class="sidebar-menu">
         <a href="/admin" class="sidebar-item"><i class="fas fa-box"></i><span>Товары</span></a>
         <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
-        <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
+        <a href="/admin_news active" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
         <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
         <a href="/admin_dispatch" class="sidebar-item"><i class="fas fa-paper-plane"></i><span>Рассылки</span></a>
         <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
@@ -832,6 +832,25 @@ document.getElementById('editForm').onsubmit = function(e) {
 </script>
 
 <style>
+    /* КНОПКА "РАЗВЕРНУТЬ" — ПОЛНОСТЬЮ ПРОЗРАЧНАЯ В СВЕТЛОЙ ТЕМЕ */
+[data-theme="light"] .expandable .expand-btn {
+    background: transparent !important;
+    color: #0066cc !important;
+    font-weight: 600;
+    border: none !important;
+}
+
+[data-theme="light"] .expandable .expand-btn:hover {
+    color: #004499 !important;
+    background: transparent !important;
+}
+
+[data-theme="light"] .expandable.expanded .expand-btn {
+    background: transparent !important;
+    color: #0066cc !important;
+    margin-top: 1rem;
+    padding: 0;
+}
     .modal-overlay {
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
@@ -1018,7 +1037,18 @@ document.getElementById('editForm').onsubmit = function(e) {
     font-weight: normal;
 }
 </style>
+<script>
+// Гарантированно закрываем карточку при уходе со страницы
+window.addEventListener('beforeunload', () => {
+    document.getElementById('productDetail')?.classList.remove('active');
+});
 
+// При загрузке любой страницы админки — сбрасываем
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('productDetail')?.classList.remove('active');
+    document.querySelectorAll('.product-row, .product-row-active').forEach(r => r.classList.remove('active'));
+});
+</script>
 
 <script>
 document.addEventListener('click', e => {

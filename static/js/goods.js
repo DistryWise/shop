@@ -1257,40 +1257,42 @@ async function renderWithBanner(products) {
         grid.className = 'grid' + (b.dataset.cols === '2' ? ' cols-2' : '');
       }));
 
-    function setupEventListeners() {
-        document.querySelector('.catalog-list').addEventListener('click', (e) => {
-            const li = e.target.closest('li');
-            if (!li || !li.dataset.filter) return;
+function setupEventListeners() {
+  // УНИВЕРСАЛЬНЫЙ ДЕЛЕГИРОВАННЫЙ ОБРАБОТЧИК — работает везде и всегда
+  document.addEventListener('click', (e) => {
+    const clicked = e.target.closest('[data-filter]');
+    if (!clicked) return;
 
-            // Сбрасываем активный класс
-            document.querySelectorAll('.catalog-list li').forEach(x => x.classList.remove('active'));
-            li.classList.add('active');
+    const filterValue = clicked.dataset.filter;
+    if (!filterValue) return;
 
-            // Плавный скролл к lightZone, если sideCatalog не инвертирован и lightZone не видима
-            if (!sideCatalog.classList.contains('inverted') && !lightZone.classList.contains('active-catalog')) {
-                const lightZoneTop = lightZone.getBoundingClientRect().top + window.pageYOffset;
-                window.scrollTo({
-                    top: lightZoneTop - 50, // Небольшой отступ сверху
-                    behavior: 'smooth'
-                });
-            }
-
-            applyFiltersAndSort();
-        });
-
-
-        document.querySelectorAll('.sort-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.sort-btn').forEach(x => x.classList.remove('active'));
-                btn.classList.add('active');
-                applyFiltersAndSort();
-            });
-        });
-
-        searchInput.addEventListener('input', () => {
-            applyFiltersAndSort();
-        });
+    // Активируем в десктопном каталоге
+    document.querySelectorAll('#sideCatalog .catalog-list li').forEach(li => li.classList.remove('active'));
+    const desktopItem = document.querySelector(`#sideCatalog .catalog-list [data-filter="${filterValue}"]`);
+    if (desktopItem) {
+      desktopItem.closest('li')?.classList.add('active');
     }
+
+    // Плавный скролл к белой зоне (если ещё не в ней)
+    if (!sideCatalog.classList.contains('inverted') && !lightZone.classList.contains('active-catalog')) {
+      const top = lightZone.getBoundingClientRect().top + window.pageYOffset - 50;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+
+    applyFiltersAndSort();
+  });
+
+  // Сортировка и поиск — оставляем как есть
+  document.querySelectorAll('.sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.sort-btn').forEach(x => x.classList.remove('active'));
+      btn.classList.add('active');
+      applyFiltersAndSort();
+    });
+  });
+
+  searchInput.addEventListener('input', () => applyFiltersAndSort());
+}
 
       const scrollIndicator = document.querySelector('.scroll-indicator');
       if (scrollIndicator) {

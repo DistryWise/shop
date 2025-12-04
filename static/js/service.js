@@ -1251,9 +1251,7 @@ async function renderWithBanner(products) {
       }));
 
     function setupEventListeners() {
-  // УДАЛЯЕМ СТАРЫЙ ОБРАБОТЧИК — ОН ЛОМАЕТ ВСЁ!
-  // document.querySelector('.catalog-list').addEventListener('click', ...)
-
+   
   // ОДИН ЕДИНСТВЕННЫЙ УНИВЕРСАЛЬНЫЙ ОБРАБОТЧИК НА ВЕСЬ ДОКУМЕНТ
   document.addEventListener('click', (e) => {
     const clicked = e.target.closest('[data-filter]');

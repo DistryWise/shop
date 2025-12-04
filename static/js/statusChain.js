@@ -1,5 +1,10 @@
 // statuschain.js — ФИНАЛЬНАЯ ВЕРСИЯ 2025 + КРАСИВЫЙ НОМЕР ЗАКАЗА
 
+// ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+// ГЛОБАЛЬНАЯ ФУНКЦИЯ — РАБОТАЕТ ВЕЗДЕ И ВСЕГДА
+const freshImg = url => url ? `${url}?t=${Date.now()}${Math.random().toFixed(5)}` : '/static/assets/no-image.png';
+// ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+
 let pollInterval = null;
 let currentOrderId = null;
 
@@ -184,7 +189,7 @@ const chainHTML = isMobile ? `
         <div style="display:flex;gap:16px;overflow-x:auto;scrollbar-width:none;padding:8px 0;">
           ${data.items.map(item => `
             <div style="flex-shrink:0;width:100px;text-align:center;">
-              <img src="${item.image_url || '/static/assets/no-image.png'}"
+              <img src="${freshImg(item.image_url)}"
                    style="width:100px;height:100px;border-radius:24px;object-fit:cover;
                           box-shadow:0 12px 30px rgba(${shadow});"
                    onerror="this.src='/static/assets/no-image.png'">
@@ -277,7 +282,7 @@ const chainHTML = isMobile ? `
             <div style="flex-shrink:0;width:80px;text-align:center;">
               <div style="width:80px;height:80px;border-radius:18px;overflow:hidden;
                           background:${isLight?'#f5f5f7':'#111'};box-shadow:0 8px 20px rgba(${shadow});margin-bottom:8px;">
-                <img src="${item.image_url || '/static/assets/no-image.png'}"
+                <img src="${freshImg(item.image_url)}"
                      style="width:100%;height:100%;object-fit:cover;"
                      onerror="this.src='/static/assets/no-image.png'">
               </div>

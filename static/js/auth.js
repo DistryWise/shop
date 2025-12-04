@@ -765,10 +765,9 @@ const updateMobileAuthBtn = () => {
     line-height: 1.4;
   `;
 
-  toast.innerHTML = `
-    ${title}
-    ${msg ? `<br><small style="font-weight:500; opacity:0.88; font-size:0.95rem;">${msg}</small>` : ''}
-  `;
+  toast.innerHTML = window.innerWidth < 1026
+    ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">${title}${msg ? ' — ' + msg : ''}</div>`
+    : `${title}${msg ? `<br><small style="font-weight:500; opacity:0.88; font-size:0.95rem;">${msg}</small>` : ''}`;
 
   document.body.appendChild(toast);
 

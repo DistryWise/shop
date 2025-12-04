@@ -1,0 +1,617 @@
+
+/* ──────────────────────── APPLE-STYLE МОДАЛКИ 2025 ──────────────────────── */
+.apple-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 9998;
+}
+.apple-modal-backdrop.show { opacity: 1; visibility: visible; }
+
+.apple-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    width: 90%;
+    max-width: 480px;
+    background: rgba(28,28,35,0.95);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 32px 28px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    color: #fff;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 9999;
+}
+.apple-modal.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* Иконка */
+.apple-modal-icon {
+    width: 80px; height: 80px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    box-shadow: 0 0 40px rgba(0,0,0,0.4);
+}
+.apple-modal-icon.red { background: linear-gradient(135deg,#ff453a,#ff375f); }
+
+/* Поля ввода */
+.apple-modal-password input {
+    width: 100%; padding: 14px 18px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    color: #fff; font-size: 17px;
+    margin-top: 12px; outline: none;
+    transition: all 0.3s;
+}
+.apple-modal-password input:focus {
+    border-color: #007aff;
+    box-shadow: 0 0 0 3px rgba(0,122,255,0.3);
+}
+
+/* Кнопки */
+.apple-modal-actions {
+    display: flex; gap: 12px; margin-top: 24px;
+}
+.apple-modal-actions button {
+    flex: 1; padding: 14px; border-radius: 14px;
+    font-size: 17px; font-weight: 600; border: none; cursor: pointer;
+    transition: all 0.3s;
+}
+.apple-btn-cancel { background: rgba(255,255,255,0.12); color: #fff; }
+.apple-btn-danger { background: #ff453a; color: #fff; }
+.apple-modal-actions button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+/* Ошибка */
+.apple-modal-error {
+    color: #ff453a; font-weight: 500; margin: 12px 0; min-height: 20px;
+}
+
+/* ─────── СВЕТЛАЯ ТЕМА ─────── */
+[data-theme="light"] .apple-modal-backdrop {
+    background: rgba(255,255,255,0.68);
+    backdrop-filter: blur(28px);
+}
+[data-theme="light"] .apple-modal {
+    background: rgba(255,255,255,0.92);
+    border: 1px solid rgba(0,0,0,0.11);
+    color: #1d1d1f;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.16);
+}
+[data-theme="light"] .apple-modal h2,
+[data-theme="light"] .apple-modal p { color: #1d1d1f; }
+[data-theme="light"] .apple-modal-password input {
+    background: rgba(255,255,255,0.78);
+    border: 1px solid rgba(0,0,0,0.14);
+    color: #1d1d1f;
+}
+[data-theme="light"] .apple-modal-password input:focus {
+    background: #fff;
+    box-shadow: 0 0 0 3.5px rgba(0,122,255,0.24);
+}
+[data-theme="light"] .apple-btn-cancel {
+    background: rgba(120,120,128,0.18);
+    color: #1d1d1f;
+}
+[data-theme="light"] .apple-modal-icon.red {
+    box-shadow: 0 8px 32px rgba(255,68,68,0.25);
+}
+
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.2rem;
+        margin: 1.5rem 0 2rem;
+    }
+    .stat-card {
+        background: rgba(0,255,157,0.12);
+        border: 1.5px solid rgba(0,255,157,0.3);
+        border-radius: 18px;
+        padding: 1.4rem 1.8rem;
+        text-align: center;
+        backdrop-filter: blur(12px);
+        transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+        background: rgba(0,255,157,0.18);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0,255,157,0.15);
+    }
+    .stat-number {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #00ff9d;
+        margin: 0.4rem 0;
+    }
+    .stat-label {
+        font-size: 1.05rem;
+        color: var(--text-light);
+        font-weight: 500;
+    }
+    .dispatch-type-select {
+        display: flex;
+        gap: 1rem;
+        margin: 1.2rem 0;
+        flex-wrap: wrap;
+    }
+    .type-option {
+        flex: 1;
+        min-width: 180px;
+        padding: 1rem 1.4rem;
+        background: rgba(0,255,157,0.1);
+        border: 2px solid rgba(0,255,157,0.3);
+        border-radius: 14px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+    }
+    .type-option.selected {
+        background: rgba(0,255,157,0.25);
+        border-color: #00ff9d;
+        box-shadow: 0 0 20px rgba(0,255,157,0.3);
+    }
+    .type-option i {
+        font-size: 1.6rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    /* === СТАТИСТИКА — ЧИСТЫЙ БЕЛО-ЧЁРНЫЙ СТИЛЬ 2025 === */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.4rem;
+    margin: 1.8rem 0 2.2rem;
+}
+
+.stat-card {
+    background: rgba(255,255,255,0.06);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 1.6rem 1.8rem;
+    text-align: center;
+    backdrop-filter: blur(12px);
+    transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%);
+    pointer-events: none;
+    border-radius: 20px;
+}
+
+.stat-card:hover {
+    transform: translateY(-6px);
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.3);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.stat-number {
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0.5rem 0;
+    letter-spacing: -0.5px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.stat-label {
+    font-size: 1.05rem;
+    color: rgba(255,255,255,0.75);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+/* Светлая тема — идеально чёрный текст */
+[data-theme="light"] .stat-card {
+    background: rgba(0,0,0,0.04);
+    border: 1.5px solid rgba(0,0,0,0.12);
+}
+
+[data-theme="light"] .stat-card:hover {
+    background: rgba(0,0,0,0.08);
+    border-color: rgba(0,0,0,0.22);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+}
+
+[data-theme="light"] .stat-number {
+    color: #000000;
+    text-shadow: none;
+}
+
+[data-theme="light"] .stat-label {
+    color: rgba(0,0,0,0.7);
+}
+
+/* Выбор типа рассылки — тоже убираем зелень */
+.type-option {
+    background: rgba(255,255,255,0.06);
+    border: 2px solid rgba(255,255,255,0.18);
+    transition: all 0.3s ease;
+}
+
+.type-option:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.35);
+}
+
+.type-option.selected {
+    background: rgba(255,255,255,0.15);
+    border-color: #ffffff;
+    box-shadow: 0 0 25px rgba(255,255,255,0.25);
+}
+
+[data-theme="light"] .type-option {
+    background: rgba(0,0,0,0.05);
+    border-color: rgba(0,0,0,0.15);
+}
+
+[data-theme="light"] .type-option:hover {
+    background: rgba(0,0,0,0.09);
+}
+
+[data-theme="light"] .type-option.selected {
+    background: rgba(0,0,0,0.12);
+    border-color: #000000;
+    box-shadow: 0 0 25px rgba(0,0,0,0.18);
+}
+
+
+
+/* СВЕТЛАЯ ТЕМА — исправляем невидимость активного пункта */
+[data-theme="light"] .sidebar-item {
+    color: rgba(0,0,0,0.7);
+}
+
+[data-theme="light"] .sidebar-item:hover {
+    color: #000000;
+    background: rgba(0,0,0,0.07);
+}
+
+[data-theme="light"] .sidebar-item.active {
+    color: #00ff9d !important;
+    background: rgba(0,0,0,0.12);
+    border-left: 4px solid #000000;
+    font-weight: 700;
+}
+
+/* Дополнительно — иконки тоже подкрасим в светлой теме */
+[data-theme="light"] .sidebar-item i {
+    color: rgba(0,0,0,0.6);
+}
+
+[data-theme="light"] .sidebar-item.active i,
+[data-theme="light"] .sidebar-item:hover i {
+    color: #000000;
+}
+
+
+        /* === НОВАЯ ПАНЕЛЬ СПРАВА В ХЕДЕРЕ === */
+.header-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    z-index: 998;
+    transition: all 0.4s ease;
+}
+
+header.scrolled {
+    height: 70px;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(30px);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+}
+
+.home-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    color: #ccc;
+    font-weight: 500;
+    font-size: 1.05rem;
+    text-decoration: none;
+    padding: 0.7rem 1.2rem;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.12);
+    transition: all 0.3s ease;
+}
+
+.home-btn:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.16);
+    border-color: rgba(255,255,255,0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+
+.home-btn i {
+    font-size: 1.2rem;
+}
+
+/* Светлая тема — адаптация */
+[data-theme="light"] .header-container {
+    background: rgba(255,255,255,0.92);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+[data-theme="light"] header.scrolled {
+    background: rgba(255,255,255,0.98);
+}
+
+[data-theme="light"] .home-btn {
+    color: #444;
+    background: rgba(0,0,0,0.06);
+    border: 1px solid rgba(0,0,0,0.15);
+}
+
+[data-theme="light"] .home-btn:hover {
+    color: #000;
+    background: rgba(0,0,0,0.12);
+    border-color: rgba(0,0,0,0.25);
+}
+        /* Лампочка-переключатель темы */
+        .theme-toggle-hanging { position: fixed; top: 90px; right: 6%; transform: translateY(-50%); z-index: 999; pointer-events: auto; }
+        header.scrolled ~ .theme-toggle-hanging, header.scrolled + .theme-toggle-hanging { top: 76px; }
+        @media (max-width: 992px) { .theme-toggle-hanging { right: 5%; } }
+        .theme-toggle-input { display: none; }
+        .theme-toggle-label { cursor: pointer; display: flex; flex-direction: column; align-items: center; user-select: none; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+        .theme-toggle-label:hover { transform: translateY(-2px); }
+        .rope.top { width: 2px; height: 100px; background: linear-gradient(to bottom, rgba(255,255,255,0.15), rgba(255,255,255,0.35), rgba(255,255,255,0.15)); box-shadow: 0 0 6px rgba(255,255,255,0.2); position: relative; }
+        [data-theme="light"] .rope.top { background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.25), rgba(0,0,0,0.1)); box-shadow: 0 0 6px rgba(0,0,0,0.15); }
+        .rope.top::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); border-radius: 1px; animation: rope-shine 2.5s infinite ease-in-out; }
+        [data-theme="light"] .rope.top::before { background: linear-gradient(90deg, transparent, rgba(0,0,0,0.15), transparent); }
+        @keyframes rope-shine { 0%,100% { opacity: .3; } 50% { opacity: .7; } }
+        .bulb { width: 36px; height: 36px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fffbe6, #ffd700); border: 1px solid rgba(255,215,0,0.6); box-shadow: 0 0 20px rgba(255,215,0,0.4), inset 0 0 10px rgba(255,255,255,0.6), 0 4px 8px rgba(0,0,0,0.2); transition: all 1.6s cubic-bezier(0.25,0.46,0.45,0.94); }
+        .bulb::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: radial-gradient(circle at 40% 40%, #fffbe6, #ffed9e); box-shadow: inset 0 0 8px rgba(0,0,0,0.15); }
+        .bulb-light, .bulb-glow { position: absolute; border-radius: 50%; opacity: 0; transition: opacity 1s ease; }
+        .bulb-light { inset: 8px; background: radial-gradient(circle at center, rgba(255,255,150,0.9) 0%, rgba(255,235,100,0.6) 40%, transparent 70%); }
+        .bulb-glow { top: 50%; left: 50%; width: 60px; height: 60px; background: radial-gradient(circle, rgba(255,220,100,0.3) 0%, transparent 70%); transform: translate(-50%,-50%); }
+        .theme-toggle-input:checked + .theme-toggle-label .bulb-light,
+        .theme-toggle-input:checked + .theme-toggle-label .bulb-glow { opacity: 1; }
+        [data-theme="light"] .bulb { background: radial-gradient(circle at 30% 30%, #ccc, #888); border-color: rgba(0,0,0.2); box-shadow: 0 0 8px rgba(0,0,0,0.1), inset 0 0 6px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.15); }
+        [data-theme="light"] .bulb::before { background: radial-gradient(circle at 40% 40%, #ddd, #aaa); }
+        .rope.bottom { width: 2px; height: 20px; background: inherit; margin-top: -2px; }
+        .theme-toggle-label:active { transform: translateY(4px) !important; }
+
+        /* Светлая тема */
+        [data-theme="light"] { --bg: #f8f9fc; --bg-alt: #ffffff; --text: #1a1a1a; --text-light: #555555; --gray: #888888; --border: rgba(0,0,0,0.1); --card-bg: rgba(255,255,255,0.95); --card-shadow: 0 8px 32px rgba(0,0,0,0.08); --accent: #00ff9d; --accent-hover: #00cc7a; --danger: #ff4444; }
+        [data-theme="light"] body { background: var(--bg); color: var(--text); }
+        [data-theme="light"] header { background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+        [data-theme="light"] .sidebar { background: rgba(255,255,255,0.95); border-right: 1px solid var(--border); box-shadow: 8px 0 30px rgba(0,0,0,0.08); }
+        [data-theme="light"] .admin-container, [data-theme="light"] .dispatch-item { background: var(--card-bg); border: 1px solid var(--border); box-shadow: var(--card-shadow); }
+        [data-theme="light"] input, [data-theme="light"] textarea { background: var(--input-bg, rgba(255,255,255,0.9)); border: 1px solid var(--input-border, rgba(0,0,0,0.12)); color: var(--text); }
+        [data-theme="light"] .btn-primary { background: var(--accent); color: #000; }
+        [data-theme="light"] .btn-primary:hover { background: var(--accent-hover); }
+
+        /* Сворачиваемый блок подписчиков */
+        .subscribers-panel {
+            background: rgba(0,255,157,0.08);
+            border: 1px solid rgba(0,255,157,0.3);
+            border-radius: 16px;
+            margin: 2rem 0;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        .panel-header {
+            padding: 1.4rem 2rem;
+            background: rgba(0,255,157,0.15);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        .panel-content { display: none; padding: 1.5rem; }
+        .panel-content.active { display: block; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.98rem; }
+        th, td { padding: 1rem 0.8rem; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.12); }
+        [data-theme="light"] th, [data-theme="light"] td { border-bottom: 1px solid rgba(0,0,0,0.1); }
+        th { background: rgba(0,255,157,0.15); font-weight: 600; }
+        tr:hover { background: rgba(0,255,157,0.06); }
+        .sms-yes { color: #00ff9d; font-weight: bold; }
+        .sms-no { color: #ff6666; }
+        .btn-delete { background: #ff4444; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem; }
+        .btn-delete:hover { background: #ff2222; }
+
+        .pagination { display: flex; justify-content: center; gap: 0.6rem; margin-top: 1.5rem; }
+        .page-btn { padding: 0.6rem 1.1rem; background: rgba(0,255,157,0.2); border: none; border-radius: 10px; cursor: pointer; min-width: 44px; font-weight: 500; }
+        .page-btn.active { background: #00ff9d; color: black; font-weight: bold; }
+
+        /* === ВИСЯЩИЙ СВЕТИЛЬНИК-ТУМБЛЕР ТЕМЫ — ZAZA 2025 EDITION === */
+.theme-toggle-hanging {
+  position: fixed;
+  top: 90px;
+  right: 6%;
+  transform: translateY(-50%);
+  z-index: 999;
+  pointer-events: auto;
+  transition: top 0.3s ease;
+}
+
+/* Подстройка при скролле хедера */
+header.scrolled ~ .theme-toggle-hanging,
+header.scrolled + .theme-toggle-hanging,
+header.scrolled .theme-toggle-hanging {
+  top: 76px;
+}
+
+@media (max-width: 992px) {
+  .theme-toggle-hanging { right: 5%; }
+}
+
+.theme-toggle-input { display: none; }
+
+.theme-toggle-label {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.theme-toggle-label:hover { transform: translateY(-3px); }
+.theme-toggle-label:active { transform: translateY(4px) !important; }
+
+/* Верёвка сверху */
+.rope.top {
+  width: 2px;
+  height: 100px;
+  background: linear-gradient(to bottom,
+    rgba(255,255,255,0.15),
+    rgba(255,255,255,0.35),
+    rgba(255,255,255,0.15));
+  box-shadow: 0 0 8px rgba(255,255,255,0.25);
+  position: relative;
+  border-radius: 1px;
+}
+[data-theme="light"] .rope.top {
+  background: linear-gradient(to bottom,
+    rgba(0,0,0,0.08),
+    rgba(0,0,0,0.22),
+    rgba(0,0,0,0.08));
+  box-shadow: 0 0 8px rgba(0,0,0,0.12);
+}
+
+.rope.top::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  border-radius: 1px;
+  animation: rope-shine 3s infinite ease-in-out;
+}
+[data-theme="light"] .rope.top::before {
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.14), transparent);
+}
+
+@keyframes rope-shine {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
+/* Лампочка — включена (тёмная тема) */
+.bulb {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 28% 28%, #fffbe6, #ffd700);
+  border: 1.5px solid rgba(255,215,0,0.7);
+  position: relative;
+  box-shadow:
+    0 0 24px rgba(255,215,0,0.45),
+    inset 0 0 12px rgba(255,255,255,0.7),
+    0 5px 10px rgba(0,0,0,0.3);
+  transition: all 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.bulb::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 42% 42%, #fffbe6, #ffed9e);
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.18);
+}
+
+/* Свет от лампочки */
+.bulb-light,
+.bulb-glow {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  pointer-events: none;
+}
+
+.bulb-light {
+  inset: 7px;
+  background: radial-gradient(circle at center,
+    rgba(255,255,150,0.95) 0%,
+    rgba(255,235,100,0.65) 35%,
+    transparent 65%);
+}
+
+.bulb-glow {
+  top: 50%;
+  left: 50%;
+  width: 70px;
+  height: 70px;
+  background: radial-gradient(circle,
+    rgba(255,220,100,0.35) 0%,
+    transparent 70%);
+  transform: translate(-50%, -50%);
+}
+
+/* Включённая светлая тема — лампочка горит */
+.theme-toggle-input:checked + .theme-toggle-label .bulb-light,
+.theme-toggle-input:checked + .theme-toggle-label .bulb-glow {
+  opacity: 1;
+}
+
+/* Лампочка выключена (светлая тема) */
+[data-theme="light"] .bulb {
+  background: radial-gradient(circle at 30% 30%, #e0e0e0, #999999);
+  border: 1.5px solid rgba(0,0,0,0.25);
+  box-shadow:
+    0 0 10px rgba(0,0,0,0.12),
+    inset 0 0 8px rgba(0,0,0,0.1),
+    0 5px 10px rgba(0,0,0,0.18);
+}
+
+[data-theme="light"] .bulb::before {
+  background: radial-gradient(circle at 40% 40%, #f0f0f0, #bbbbbb);
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.15);
+}
+
+/* Нижняя верёвка */
+.rope.bottom {
+  width: 2px;
+  height: 22px;
+  background: inherit;
+  margin-top: -2px;
+  border-radius: 1px;
+}
+

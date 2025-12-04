@@ -276,13 +276,21 @@ def register_dispatch_routes(app):
             return f'<a href="{url_for("unsubscribe_page", token=row["unsubscribe_token"])}">Отписаться (тест)</a>'
         return "Токен не найден"
 
-    # === УДАЛЕНИЕ ПОДПИСЧИКА ===
+    # === УДАЛЕНИЕ ПОДПИСЧИКА С ПРОВЕРКОЙ ПАРОЛЯ ===
     @app.route('/api/delete_subscriber', methods=['POST'])
     def api_delete_subscriber():
         if not session.get('is_admin'):
             return jsonify({"success": False, "error": "Нет доступа"}), 403
+
         data = request.get_json()
         sub_id = data.get('id')
+        password = data.get('password', '').strip()
+
+        # ПРОВЕРЯЕМ ПАРОЛЬ!
+        if password != 'admin123':
+            logger.warning(f"Неверный пароль при удалении подписчика ID={sub_id}")
+            return jsonify({"success": False, "error": "Неверный пароль"}), 403
+
         if not sub_id:
             return jsonify({"success": False, "error": "ID не указан"}), 400
 
@@ -292,9 +300,11 @@ def register_dispatch_routes(app):
             c.execute('DELETE FROM subscribers WHERE id = ?', (sub_id,))
             if c.rowcount == 0:
                 return jsonify({"success": False, "error": "Подписчик не найден"}), 404
+            
             conn.commit()
-            logger.info(f"Админ удалил подписчика ID={sub_id}")
+            logger.info(f"Админ удалил подписчика ID={sub_id} (пароль подтверждён)")
             return jsonify({"success": True})
+            
         except Exception as e:
             logger.error(f"delete_subscriber error: {e}")
             return jsonify({"success": False, "error": "Ошибка сервера"}), 500

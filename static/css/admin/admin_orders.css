@@ -434,3 +434,310 @@
     transform: scale(1.015);
     background: rgba(255,255,255,0.12);
 }
+
+/* ==================================================================
+   СВЕТЛАЯ ТЕМА — для тумблера [data-theme="light"]
+   Полностью совместима с твоим текущим тёмным кодом
+   ================================================================== */
+
+[data-theme="light"] .main-content {
+    background: #f5f5f7;
+}
+
+/* Статистика */
+[data-theme="light"] .apple-stat {
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(32px);
+    border: 1px solid rgba(0,0,0,0.11);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.09);
+}
+[data-theme="light"] .apple-stat:hover {
+    box-shadow: 0 24px 64px rgba(0,0,0,0.16);
+    transform: translateY(-10px);
+}
+[data-theme="light"] .apple-stat-label {
+    color: rgba(0,0,0,0.7);
+}
+[data-theme="light"] .apple-stat.active {
+    border-color: #00ff95 !important;
+    box-shadow: 0 0 40px rgba(0,255,149,0.28) !important;
+}
+[data-theme="light"] .apple-stat::after,
+[data-theme="light"] .apple-stat:active::after {
+    background: rgba(0,255,149,0.18);
+}
+
+/* Поиск по центру */
+[data-theme="light"] .apple-search input {
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(32px);
+    border: 1.4px solid rgba(0,0,0,0.14);
+    color: #1d1d1f;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.11);
+}
+[data-theme="light"] .apple-search input::placeholder {
+    color: rgba(0,0,0,0.5);
+}
+[data-theme="light"] .apple-search i {
+    color: rgba(0,0,0,0.55);
+}
+[data-theme="light"] .apple-search input:focus {
+    border-color: #00ff95;
+    box-shadow: 0 0 50px rgba(0,255,149,0.32);
+    background: rgba(255,255,255,0.96);
+}
+
+/* Карточки заказов */
+[data-theme="light"] .apple-order-card {
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(40px);
+    border: 1px solid rgba(0,0,0,0.11);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+}
+[data-theme="light"] .apple-order-card:hover {
+    transform: translateY(-12px);
+    box-shadow: 0 32px 80px rgba(0,0,0,0.18);
+}
+[data-theme="light"] .apple-order-id,
+[data-theme="light"] .apple-order-meta,
+[data-theme="light"] .apple-total {
+    color: #1d1d1f;
+}
+[data-theme="light"] .apple-order-meta {
+    color: rgba(0,0,0,0.68);
+}
+[data-theme="light"] .apple-status-selector {
+    background: rgba(0,255,149,0.18);
+    color: #00cc7a;
+    border: 1px solid rgba(0,255,149,0.3);
+}
+[data-theme="light"] .apple-status-selector:hover {
+    background: rgba(0,255,149,0.28);
+}
+
+/* Цепочка статусов и товары */
+[data-theme="light"] .order-status-chain,
+[data-theme="light"] .apple-items .apple-item {
+    background: rgba(245,245,247,0.9);
+    border: 1px dashed rgba(0,0,0,0.12);
+}
+[data-theme="light"] .apple-item {
+    background: rgba(255,255,255,0.7);
+}
+[data-theme="light"] .apple-item:hover {
+    background: rgba(255,255,255,0.95);
+}
+
+/* Пустое состояние */
+[data-theme="light"] .apple-empty {
+    color: rgba(0,0,0,0.38);
+}
+[data-theme="light"] .apple-empty i {
+    opacity: 0.25;
+}
+
+/* Кнопки действий */
+[data-theme="light"] .btn-cancel {
+    background: rgba(255,149,0,0.18);
+    color: #ff9500;
+    border: 1px solid rgba(255,149,0,0.3);
+}
+[data-theme="light"] .btn-cancel:hover {
+    background: #ff9500;
+    color: white;
+}
+[data-theme="light"] .btn-delete {
+    background: rgba(255,68,68,0.18);
+    color: #ff4444;
+    border: 1px solid rgba(255,68,68,0.3);
+}
+[data-theme="light"] .btn-delete:hover {
+    background: #ff4444;
+    color: white;
+}
+
+/* Стрелка свёртывания */
+[data-theme="light"] .apple-toggle-arrow {
+    color: rgba(0,0,0,0.55);
+}
+[data-theme="light"] .apple-order-header::after {
+    background: rgba(0,0,0,0.12);
+}
+
+/* Общий текст и градиенты остаются яркими — они и в светлой теме выглядят охуенно */
+[data-theme="light"] .apple-total,
+[data-theme="light"] .apple-stat-value {
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ==================================================================
+   СВЕТЛАЯ ТЕМА ДЛЯ APPLE-МОДАЛОК (удаление / отмена / смена статуса)
+   Работает с твоим тумблером [data-theme="light"]
+   ================================================================== */
+
+[data-theme="light"] .apple-modal-backdrop {
+    background: rgba(255, 255, 255, 0.68);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+}
+
+[data-theme="light"] .apple-modal {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(0, 0, 0, 0.11);
+    box-shadow: 
+        0 25px 50px rgba(0, 0, 0, 0.16),
+        0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    color: #1d1d1f;
+}
+
+[data-theme="light"] .apple-modal h2 {
+    color: #1d1d1f;
+}
+
+[data-theme="light"] .apple-modal p {
+    color: rgba(28, 28, 30, 0.76);
+}
+
+/* Поля ввода и текстarea */
+[data-theme="light"] .apple-modal-password input,
+[data-theme="light"] .apple-modal-textarea textarea {
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    color: #1d1d1f;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+}
+
+[data-theme="light"] .apple-modal-password input::placeholder,
+[data-theme="light"] .apple-modal-textarea textarea::placeholder {
+    color: rgba(28, 28, 30, 0.48);
+}
+
+[data-theme="light"] .apple-modal-password input:focus,
+[data-theme="light"] .apple-modal-textarea textarea:focus {
+    border-color: #007aff;
+    background: #ffffff;
+    box-shadow: 
+        0 0 0 3.5px rgba(0, 122, 255, 0.24),
+        inset 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* Радиокнопки (смена статуса) */
+[data-theme="light"] .apple-status-option {
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(0, 0, 0, 0.09);
+    backdrop-filter: blur(10px);
+}
+
+[data-theme="light"] .apple-status-option:hover {
+    background: rgba(255, 255, 255, 0.96);
+    border-color: rgba(0, 0, 0, 0.16);
+}
+
+[data-theme="light"] .apple-status-option .checkmark {
+    border-color: rgba(0, 0, 0, 0.28);
+}
+
+[data-theme="light"] .apple-status-option input:checked + .checkmark {
+    background: #007aff;
+    border-color: #007aff;
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.22);
+}
+
+/* Ошибки */
+[data-theme="light"] .apple-modal-error {
+    color: #ff453a;
+}
+
+/* Кнопки в модалках */
+[data-theme="light"] .apple-btn-cancel {
+    background: rgba(120, 120, 128, 0.18);
+    color: #1d1d1f;
+}
+
+[data-theme="light"] .apple-btn-cancel:hover {
+    background: rgba(120, 120, 128, 0.28);
+}
+
+[data-theme="light"] .apple-btn-primary {
+    background: #007aff;
+    color: #fff;
+}
+
+[data-theme="light"] .apple-btn-warning {
+    background: #ff9f0a;
+    color: #fff;
+}
+
+[data-theme="light"] .apple-btn-danger {
+    background: #ff453a;
+    color: #fff;
+}
+
+[data-theme="light"] .apple-modal-actions button:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+}
+
+[data-theme="light"] .apple-modal-actions button:active {
+    transform: translateY(1px);
+}
+
+/* Иконки в круге — остаются яркими (как и должно быть в светлой теме Apple) */
+[data-theme="light"] .apple-modal-icon {
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+/* ─────────────────────── КНОПКА "ГЛАВНАЯ" В ХЕДЕРЕ ─────────────────────── */
+.home-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 18px;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    white-space: nowrap;
+}
+
+.home-btn i {
+    font-size: 1.3rem;
+    transition: transform 0.4s ease;
+}
+
+.home-btn:hover {
+    background: rgba(255,255,255,0.22);
+    border-color: rgba(255,255,255,0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.home-btn:hover i {
+    transform: scale(1.2) rotate(-8deg);
+}
+
+.home-btn:active {
+    transform: translateY(0);
+}
+
+/* ─────── СВЕТЛАЯ ТЕМА ─────── */
+[data-theme="light"] .home-btn {
+    background: rgba(255,255,255,0.88);
+    border: 1px solid rgba(0,0,0,0.14);
+    color: #1d1d1f;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+[data-theme="light"] .home-btn:hover {
+    background: rgba(255,255,255,0.98);
+    border-color: rgba(0,0,0,0.22);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.16);
+}

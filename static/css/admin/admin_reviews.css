@@ -1494,3 +1494,54 @@ header.scrolled + .theme-toggle-hanging { top: 76px; }
     font-style: italic;
     opacity: 0.8;
 }
+/* ─────────────────────── КНОПКА "ГЛАВНАЯ" В ХЕДЕРЕ ─────────────────────── */
+.home-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 18px;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    white-space: nowrap;
+}
+
+.home-btn i {
+    font-size: 1.3rem;
+    transition: transform 0.4s ease;
+}
+
+.home-btn:hover {
+    background: rgba(255,255,255,0.22);
+    border-color: rgba(255,255,255,0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.home-btn:hover i {
+    transform: scale(1.2) rotate(-8deg);
+}
+
+.home-btn:active {
+    transform: translateY(0);
+}
+
+/* ─────── СВЕТЛАЯ ТЕМА ─────── */
+[data-theme="light"] .home-btn {
+    background: rgba(255,255,255,0.88);
+    border: 1px solid rgba(0,0,0,0.14);
+    color: #1d1d1f;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+[data-theme="light"] .home-btn:hover {
+    background: rgba(255,255,255,0.98);
+    border-color: rgba(0,0,0,0.22);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.16);
+}

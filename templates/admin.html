@@ -619,6 +619,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
+<script>
+// ──────────────────────── ТУМБЛЕР ТЕМЫ — РАБОТАЕТ НА 100% ────────────────────────
+const themeToggle = document.getElementById('theme-toggle');
+const htmlEl = document.documentElement; // <html>
 
+// Читаем сохранённую тему (если есть)
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme) {
+    htmlEl.setAttribute('data-theme', savedTheme);
+    themeToggle.checked = (savedTheme === 'light');
+}
+
+// Основной обработчик
+themeToggle.addEventListener('change', () => {
+    if (themeToggle.checked) {
+        htmlEl.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+    } else {
+        htmlEl.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+    }
+});
+</script>
 </body>
 </html>

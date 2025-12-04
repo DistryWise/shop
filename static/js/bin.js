@@ -355,7 +355,7 @@ async function checkActiveOrdersLimit() {
   }
 }
 
-// === ФИНАЛЬНЫЙ УНИВЕРСАЛЬНЫЙ ОБРАБОТЧИК ОФОРМЛЕНИЯ 2025 — ПК + МОБИЛКА 100% РАБОТАЕТ ===
+
 document.addEventListener('click', function(e) {
   const btn = e.target.closest('#checkoutBtn, #mobileCheckoutBtn');
   if (!btn) return;
@@ -363,40 +363,150 @@ document.addEventListener('click', function(e) {
   e.preventDefault();
   e.stopImmediatePropagation();
 
-  const itemsCount = parseInt(document.getElementById('summaryCount')?.textContent || '0', 10);
+  const summaryEl = document.getElementById('summaryCount');
+let itemsCount = 0;
+if (summaryEl && summaryEl.textContent && summaryEl.textContent.trim() !== '') {
+  itemsCount = parseInt(summaryEl.textContent, 10);
+}
+if (isNaN(itemsCount)) itemsCount = 0;
 
-  // 1. Пустая корзина → красивый алерт
-  if (itemsCount === 0) {
-    document.querySelectorAll('#emptyCartMainAlert').forEach(el => el.remove());
-    const alert = document.createElement('div');
-    alert.id = 'emptyCartMainAlert';
-    alert.innerHTML = `
-      <div style="text-align:center;padding:2.8rem 1.8rem 2.2rem;position:relative;">
-        <i class="fas fa-shopping-bag" style="font-size:5.5rem;color:#00ff95;opacity:0.88;margin-bottom:1.6rem;display:block;"></i>
-        <h3 style="margin:0 0 1rem;font-size:2.1rem;font-weight:800;color:#fff;">Корзина пуста</h3>
-        <p style="margin:0 0 2.4rem;color:#ccc;font-size:1.22rem;line-height:1.6;max-width:420px;margin:auto;">
-          Добавьте товары или услуги, чтобы оформить заказ
-        </p>
-        <div style="display:flex;gap:1.4rem;justify-content:center;flex-wrap:wrap;">
-          <a href="/goods" class="empty-cart-btn">К товарам</a>
+// 1. Пустая корзина → универсальный алерт (ПК + мобила + обе темы — 100% работает!)
+if (itemsCount === 0) {
+  document.querySelectorAll('#emptyCartMainAlert').forEach(el => el.remove());
+
+  const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+  const isMobile = window.innerWidth <= 1026;
+
+  // ←←← ВАЖНО: используем другое имя, чтобы не сломать checkoutModal ниже!
+  const emptyAlert = document.createElement('div');
+  emptyAlert.id = 'emptyCartMainAlert';
+  emptyAlert.innerHTML = `
+    <div class="empty-cart-backdrop"></div>
+    <div class="empty-cart-sheet">
+      ${isMobile ? '<div class="empty-cart-grabber"></div>' : ''}
+      <div class="empty-cart-content">
+        <i class="fas fa-shopping-bag"></i>
+        <h3>Корзина пуста</h3>
+        <p>Добавьте товары или услуги, чтобы оформить заказ</p>
+        <div class="empty-cart-buttons">
+          <a href="/goods" class="empty-cart-btn primary">К товарам</a>
           <a href="/services" class="empty-cart-btn secondary">К услугам</a>
         </div>
-        <button onclick="this.closest('#emptyCartMainAlert')?.remove()" style="position:absolute;top:18px;right:24px;background:none;border:none;color:#fff;font-size:2.4rem;opacity:0.6;cursor:pointer;">×</button>
-      </div>`;
-    Object.assign(alert.style, {
-      position:'fixed',top:'50%',left:'50%',transform:'translate(-50%,-50%)',
-      background:'rgba(15,15,30,0.98)',backdropFilter:'blur(40px)',WebkitBackdropFilter:'blur(40px)',
-      border:'1px solid rgba(255,255,255,0.12)',borderRadius:'36px',maxWidth:'520px',width:'92%',
-      boxShadow:'0 50px 120px rgba(0,0,0,0.7)',zIndex:'999999',fontFamily:'Inter, sans-serif',
-      animation:'modalPop 0.5s cubic-bezier(0.22,0.61,0.36,1)'
-    });
-    const style = document.createElement('style');
-    style.textContent = `.empty-cart-btn{background:#00ff95;color:#000;padding:1.1rem 2.4rem;border-radius:26px;font-weight:700;text-decoration:none;font-size:1.15rem;box-shadow:0 8px 25px rgba(0,255,149,0.3);transition:all .3s;}.empty-cart-btn:hover{transform:translateY(-3px);box-shadow:0 12px 35px rgba(0,255,149,0.4);}.empty-cart-btn.secondary{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.18);backdrop-filter:blur(10px);}.empty-cart-btn.secondary:hover{background:rgba(255,255,255,0.18);}`;
-    document.head.appendChild(style);
-    document.body.appendChild(alert);
-    alert.onclick = ev => ev.target === alert && alert.remove();
-    return;
+        <button class="empty-cart-close">×</button>
+      </div>
+    </div>
+  `;
+
+  // Базовые стили
+  Object.assign(emptyAlert.style, {
+    position: 'fixed',
+    inset: '0',
+    zIndex: '999999',
+    fontFamily: 'Inter, system-ui, sans-serif',
+    pointerEvents: 'none',
+    overflow: 'hidden',
+  });
+
+  const backdrop = emptyAlert.querySelector('.empty-cart-backdrop');
+  const sheet = emptyAlert.querySelector('.empty-cart-sheet');
+  const content = emptyAlert.querySelector('.empty-cart-content');
+
+  if (isMobile) {
+    backdrop.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(12px);opacity:0;transition:opacity 0.45s ease;';
+    sheet.style.cssText = `
+      position:absolute;bottom:0;left:0;right:0;
+      background:${isDark ? '#000' : '#fff'};
+      border-radius:28px 28px 0 0;
+      box-shadow:0 -20px 60px rgba(0,0,0,0.5);
+      transform:translateY(100%);
+      transition:transform 0.6s cubic-bezier(0.22,1,0.36,1);
+      pointer-events:auto;
+    `;
+    content.style.padding = '1.5rem 1.8rem 2.5rem';
+  } else {
+    backdrop.style.cssText = 'position:absolute;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(20px);opacity:0;transition:opacity 0.55s ease;';
+    sheet.style.cssText = `
+      position:absolute;top:50%;left:50%;
+      transform:translate(-50%,-50%) scale(0.88);
+      width:92%;max-width:520px;
+      background:${isDark ? 'rgba(0,0,0,0.98)' : 'rgba(255,255,255,0.98)'};
+      border-radius:36px;
+      border:1px solid ${isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'};
+      box-shadow:${isDark ? '0 50px 120px rgba(0,0,0,0.8)' : '0 50px 120px rgba(0,0,0,0.2)'};
+      padding:2.8rem 1.8rem 2.4rem;
+      opacity:0;
+      transition:all 0.55s cubic-bezier(0.22,0.61,0.36,1);
+      pointer-events:auto;
+    `;
   }
+
+  content.style.cssText += `text-align:center;position:relative;color:${isDark ? '#fff' : '#111'};`;
+  emptyAlert.querySelector('i').style.cssText = 'font-size:5.5rem;color:#00ff95;opacity:0.88;margin-bottom:1.6rem;display:block;';
+  emptyAlert.querySelector('h3').style.cssText = 'margin:0 0 1rem;font-size:2.1rem;font-weight:800;';
+  emptyAlert.querySelector('p').style.cssText = `margin:0 0 2.4rem;font-size:1.22rem;line-height:1.6;max-width:420px;margin-left:auto;margin-right:auto;color:${isDark ? '#ccc' : '#555'};`;
+
+  if (isMobile) {
+    emptyAlert.querySelector('.empty-cart-grabber').style.cssText = 'width:40px;height:5px;background:rgba(255,255,255,0.3);border-radius:3px;margin:12px auto 4px;pointer-events:none;';
+  }
+
+  const styleEl = document.createElement('style');
+  styleEl.textContent = `
+    #emptyCartMainAlert .empty-cart-btn{display:inline-block;padding:1.1rem 2.4rem;border-radius:26px;font-weight:700;font-size:1.15rem;text-decoration:none;transition:all .3s;margin:0 .7rem;}
+    #emptyCartMainAlert .empty-cart-btn.primary{background:#00ff95;color:#000;box-shadow:0 8px 25px rgba(0,255,149,0.3);}
+    #emptyCartMainAlert .empty-cart-btn.primary:hover{transform:translateY(-3px);box-shadow:0 12px 35px rgba(0,255,149,0.4);}
+    #emptyCartMainAlert .empty-cart-btn.secondary{background:${isDark?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.06)'};color:${isDark?'#fff':'#111'};border:1px solid ${isDark?'rgba(255,255,255,0.18)':'rgba(0,0,0,0.12)'};}
+    #emptyCartMainAlert .empty-cart-btn.secondary:hover{background:${isDark?'rgba(255,255,255,0.18)':'rgba(0,0,0,0.12)'};}
+    #emptyCartMainAlert .empty-cart-close{position:absolute;top:18px;right:24px;background:none;border:none;font-size:2.4rem;cursor:pointer;opacity:0.6;color:${isDark?'#fff':'#111'};width:44px;height:44px;display:flex;align-items:center;justify-content:center;}
+    #emptyCartMainAlert .empty-cart-close:hover{opacity:1;}
+  `;
+  document.head.appendChild(styleEl);
+
+  document.body.appendChild(emptyAlert);
+
+  requestAnimationFrame(() => {
+    backdrop.style.opacity = '1';
+    emptyAlert.style.pointerEvents = 'auto';
+    if (isMobile) {
+      sheet.style.transform = 'translateY(0)';
+    } else {
+      sheet.style.transform = 'translate(-50%,-50%) scale(1)';
+      sheet.style.opacity = '1';
+    }
+  });
+
+  const close = () => {
+    backdrop.style.opacity = '0';
+    if (isMobile) {
+      sheet.style.transform = 'translateY(100%)';
+    } else {
+      sheet.style.transform = 'translate(-50%,-50%) scale(0.88)';
+      sheet.style.opacity = '0';
+    }
+    emptyAlert.addEventListener('transitionend', () => emptyAlert.remove(), { once: true });
+  };
+
+  emptyAlert.querySelector('.empty-cart-close').onclick = close;
+  backdrop.onclick = close;
+
+  if (isMobile) {
+    let startY = 0;
+    const start = e => { startY = e.touches[0].clientY; sheet.style.transition = 'none'; };
+    const move = e => {
+      const delta = e.touches[0].clientY - startY;
+      if (delta > 0) { sheet.style.transform = `translateY(${delta}px)`; e.preventDefault(); }
+    };
+    const end = () => {
+      sheet.style.transition = '';
+      if (parseFloat(sheet.style.transform.match(/[\d.]+/)?.[0] || 0) > 100) close();
+      else sheet.style.transform = 'translateY(0)';
+    };
+    sheet.addEventListener('touchstart', start, { passive: false });
+    sheet.addEventListener('touchmove', move, { passive: false });
+    sheet.addEventListener('touchend', end);
+  }
+
+  return; // ← ВАЖНО: выходим, чтобы не открывать шторку оформления
+}
 
   // 2. Лимит 3 активных заказа — железная блокировка
   if (typeof activeOrders !== 'undefined' && Array.isArray(activeOrders)) {
@@ -475,7 +585,6 @@ document.addEventListener('click', function(e) {
 
 }, true); // true = capture phase — ловит клик первым
 
-// === НОВЫЙ ФИНАЛЬНЫЙ ОБРАБОТЧИК ОФОРМЛЕНИЯ ЗАКАЗА (2025) ===
 // === НОВЫЙ ФИНАЛЬНЫЙ ОБРАБОТЧИК ОФОРМЛЕНИЯ ЗАКАЗА (2025) — ИСПРАВЛЕНО ===
 elements.confirmOrderBtn?.addEventListener('click', async () => {
   const fullName = elements.fullName.value.trim();
@@ -847,12 +956,14 @@ function renderOrders() {
     ${order.items.slice(0, 4).map(item => {
         const imgId = `archive-thumb-${order.id}-${item.item_id}`;
         const isService = item.item_type === 'service';
-        const apiUrl = isService 
-            ? `/api/service?id=${item.item_id}&t=${Date.now()}`
-            : `/api/product?id=${item.item_id}&t=${Date.now()}`;
+const apiUrl = isService 
+    ? `/api/service/${item.item_id}?t=${Date.now()}`
+    : `/api/product/${item.item_id}?t=${Date.now()}`;
 
         // Сначала ставим то, что уже есть (для архивных заказов)
-        let initialSrc = item.image_url || '/static/assets/no-image.png';
+        let initialSrc = item.image_url 
+    ? item.image_url + (item.image_url.includes('?') ? '&' : '?') + 't=' + Date.now()
+    : '/static/assets/no-image.png';
 
         // Асинхронно подгружаем реальную фотку, если её не было
         if (!item.image_url && item.item_id) {
@@ -881,11 +992,11 @@ function renderOrders() {
 
         return `
             <div class="archive-item-row">
-                <img id="${imgId}"
-                     src="${initialSrc}"
-                     class="archive-item-thumb"
-                     onerror="this.src='/static/assets/no-image.png'"
-                     loading="lazy">
+<img id="${imgId}"
+     src="${initialSrc + (initialSrc.includes('?') ? '&' : '?') + 't=' + Date.now()}"
+     class="archive-item-thumb"
+     onerror="this.onerror=null; this.src='/static/assets/no-image.png?t=' + Date.now()"
+     loading="lazy">
                 <div class="archive-item-info">
                     <div class="archive-item-name">${item.title || 'Без названия'}</div>
                     <div class="archive-item-details">
@@ -1068,34 +1179,28 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(syncButtonState, 1000);
 });
 
-// === СВАЙП ВВЕРХ С НИЖНЕЙ ЧАСТИ ЭКРАНА → ЗАКРЫТИЕ ШТОРКИ multiOrderModal (2025 стиль) ===
+// ─────── НОВЫЙ БЕЗОПАСНЫЙ СВАЙП ТОЛЬКО ДЛЯ multiOrderModal (2025) ───────
 (() => {
   const modal = document.getElementById('multiOrderModal');
   if (!modal) return;
 
-  const sheet = modal.querySelector('div[style*="background:var(--modal-bg)"]');
+  // Это именно та шторка, которую мы тянем (у тебя она с инлайновыми стилями)
+  const sheet = modal.children[0]; // первый дочерний div с background:var(--modal-bg)
   if (!sheet) return;
 
   let startY = 0;
   let isDragging = false;
-  const threshold = 100; // пикселей вверх → закрываем
-
-  // Функция: получаем текущую видимую высоту шторки
-  const getSheetBottomY = () => {
-    const rect = sheet.getBoundingClientRect();
-    return rect.bottom; // координата нижнего края шторки
-  };
+  const threshold = 120;
 
   const handleStart = (e) => {
-    if (window.innerWidth > 1026) return; // только телефоны
-    if (!modal.classList.contains('show')) return;
+    // Работает только когда шторка реально открыта
+    if (!modal.classList.contains('show') && modal.style.display !== 'flex') return;
 
     const touch = e.touches[0];
-    const sheetBottom = getSheetBottomY();
+    const sheetRect = sheet.getBoundingClientRect();
 
-    // Разрешаем начать свайп, если коснулись НИЖЕ нижнего края шторки
-    // (или совсем чуть выше — на 30px, чтобы можно было схватить за край)
-    if (touch.clientY < sheetBottom - 30) return;
+    // Разрешаем свайп только если тач в нижней половине шторки или ниже неё
+    if (touch.clientY < sheetRect.bottom - 80) return;
 
     startY = touch.clientY;
     isDragging = true;
@@ -1106,11 +1211,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const handleMove = (e) => {
     if (!isDragging) return;
 
-    const touch = e.touches[0];
-    const deltaY = startY - touch.clientY; // >0 = тянем вверх
+    const currentY = e.touches[0].clientY;
+    const delta = startY - currentY; // >0 — тянем вверх
 
-    if (deltaY > 0) {
-      sheet.style.transform = `translateY(-${deltaY}px)`;
+    if (delta > 0) {
+      sheet.style.transform = `translateY(-${delta}px)`;
       e.preventDefault();
     }
   };
@@ -1119,13 +1224,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!isDragging) return;
     isDragging = false;
 
-    const moved = parseFloat(sheet.style.transform?.replace(/[^0-9.-]/g, '') || '0');
-    const movedUp = -moved;
+    const moved = parseFloat(sheet.style.transform?.match(/-?\d+\.?\d*/)?.[0] || '0');
 
-    if (movedUp > threshold) {
-      sheet.style.transition = 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)';
+    if (-moved > threshold) {
+      // Закрываем с анимацией
+      sheet.style.transition = 'transform 0.6s cubic-bezier(0.22,1,0.36,1)';
       sheet.style.transform = 'translateY(-100%)';
-
       sheet.addEventListener('transitionend', () => {
         modal.style.display = 'none';
         modal.classList.remove('show');
@@ -1133,30 +1237,21 @@ document.addEventListener('DOMContentLoaded', () => {
         sheet.style.transition = '';
       }, { once: true });
     } else {
-      sheet.style.transition = 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)';
+      // Возвращаем обратно
+      sheet.style.transition = 'transform 0.5s cubic-bezier(0.22,1,0.36,1)';
       sheet.style.transform = 'translateY(0)';
-      setTimeout(() => sheet.style.transition = '', 500);
+      setTimeout(() => sheet.style.transition = '', 550);
     }
   };
 
-  // Слушаем по всему документу — ловим свайп даже в пустой области под шторкой
-  document.addEventListener('touchstart', handleStart, { passive: false });
-  document.addEventListener('touchmove', handleMove, { passive: false });
-  document.addEventListener('touchend', handleEnd);
+  // ←←← ВЕШАЕМ СОБЫТИЯ ТОЛЬКО НА САМУ ШТОРКУ И НА БЭКДРОП ←←←
+  modal.addEventListener('touchstart', handleStart, { passive: false });
+  modal.addEventListener('touchmove',  handleMove,  { passive: false });
+  modal.addEventListener('touchend',   handleEnd );
 
-  // Дополнительно — на саму шторку (если вдруг кто-то тянет за контент)
+  // На всякий случай — если кто-то тянет за граббер или пустую область
   sheet.addEventListener('touchstart', handleStart, { passive: false });
-
-  // Пересчитываем при изменении содержимого (например, после renderVerticalOrders)
-  const observer = new MutationObserver(() => {
-    // Просто триггерим пересчёт при любом изменении внутри шторки
-    if (isDragging) return;
-    // Ничего не делаем — getSheetBottomY() и так всегда актуальна
-  });
-  observer.observe(sheet, { childList: true, subtree: true, attributes: true });
-
 })();
-
 //СВАЙП ШТОРКИ ОФОРМИТЬ ЗАКАЗ
 (() => {
   const modal = document.getElementById('archiveModal');
@@ -1743,7 +1838,7 @@ async function updateFloatingPill() {
   badge.style.display = count > 1 ? 'flex' : 'none';
 
   main.textContent = count === 1
-    ? `Заказ №${orders[0].display_id || orders[0].id} в работе`
+    ? `Заказ ${orders[0].display_id || orders[0].id} в работе`
     : `${count} заказа в работе`;
 
   sub.textContent = count === 1
@@ -1772,8 +1867,8 @@ document.head.appendChild(style);
 function renderVerticalOrders() {
   const container = document.getElementById('ordersVerticalList');
   if (!container) return;
-  container.innerHTML = '';
 
+  container.innerHTML = '';
   if (activeOrders.length === 0) {
     container.innerHTML = `
       <div style="text-align:center;padding:80px 20px;color:var(--text-secondary);opacity:0.7;">
@@ -1787,8 +1882,6 @@ function renderVerticalOrders() {
 
   activeOrders.forEach(order => {
     const card = document.createElement('div');
-    
-    // ← Твои родные стили — всё как было!
     card.style.cssText = `
       background:rgba(255,255,255,0.09);
       border-radius:20px;
@@ -1799,12 +1892,8 @@ function renderVerticalOrders() {
       cursor:pointer;
     `;
 
-    card.onmouseenter = () => card.style.transform = 'translateY(-2px)';
-    card.onmouseleave = () => card.style.transform = '';
-
     card.innerHTML = `
-      <!-- Заголовок -->
-      <div class="order-header" style="padding:16px 18px;display:flex;align-items:center;gap:14px;">
+      <div class="order-header" style="padding:16px 18px;display:flex;align-items:center;gap:14px;user-select:none;-webkit-tap-highlight-color:transparent;">
         <div style="width:52px;height:52px;background:var(--order-icon-bg);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <i class="fas fa-truck" style="font-size:24px;color:var(--order-icon-color);"></i>
         </div>
@@ -1818,66 +1907,56 @@ function renderVerticalOrders() {
         </div>
         <i class="fas fa-chevron-down expand-icon" style="color:var(--text-secondary);font-size:20px;transition:transform 0.3s;"></i>
       </div>
-
-      <!-- Раскрывающаяся часть — ТОЧНО КАК У ТЕБЯ -->
       <div class="order-details" style="max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.22,1,0.36,1);background:var(--order-details-bg);border-top:1px solid var(--order-details-border);">
-        <div style="padding:18px 18px 22px;">
+        <div style="padding:18px;">
           <div id="chain-${order.id}"></div>
         </div>
       </div>
     `;
 
-card.querySelector('.order-header').addEventListener('click', (e) => {
-  e.stopPropagation();
-  const details = card.querySelector('.order-details');
-  const icon = card.querySelector('.expand-icon');
-  const target = document.getElementById(`chain-${order.id}`);
+    const header = card.querySelector('.order-header');
+    const details = card.querySelector('.order-details');
+    const icon = card.querySelector('.expand-icon');
+    const target = card.querySelector(`#chain-${order.id}`);
 
-  if (!target) return;
+    // УБРАЛ e.stopPropagation() — это ломал тач на мобилках!
+    header.addEventListener('click', () => {
+      const isOpen = details.dataset.open === 'true';
 
-  // Надёжное определение состояния — через data-атрибут
-  const isOpen = details.dataset.open === 'true';
+      if (isOpen) {
+        details.style.maxHeight = '0px';
+        details.dataset.open = 'false';
+        icon.style.transform = 'rotate(0deg)';
+      } else {
+        details.dataset.open = 'true';
+        icon.style.transform = 'rotate(180deg)';
 
-  if (isOpen) {
-    // ЗАКРЫВАЕМ — всегда работает
-    details.style.maxHeight = '0px';
-    details.dataset.open = 'false';
-    icon.style.transform = 'rotate(0deg)';
-  } else {
-    // ОТКРЫВАЕМ — всегда работает
-    details.dataset.open = 'true';
-    icon.style.transform = 'rotate(180deg)';
-
-    // Подмена + запуск цепочки
-    const real = Document.prototype.getElementById;
-    Document.prototype.getElementById = (id) => id === 'orderChain' ? target : real.call(this, id);
-
-    if (!target.dataset.loaded) {
-      window.startOrderChain?.(order.id);
-      target.dataset.loaded = 'true';
-    }
-
-    Document.prototype.getElementById = real;
-
-    // Открываем на безопасную высоту
-    details.style.maxHeight = '3000px';
-
-    // Подгоняем высоту каждые 80 мс, пока контент растёт
-    let attempts = 0;
-    const adjust = () => {
-      if (details.dataset.open === 'true') {  // если не закрыли за это время
-        const needed = details.scrollHeight + 90;
-        if (needed + 50 > parseFloat(details.style.maxHeight)) {
-          details.style.maxHeight = needed + 'px';
+        // Запускаем цепочку только один раз
+        if (!target.dataset.loaded) {
+          const realGet = Document.prototype.getElementById;
+          Document.prototype.getElementById = (id) => id === 'orderChain' ? target : realGet.call(this, id);
+          window.startOrderChain?.(order.id);
+          target.dataset.loaded = 'true';
+          Document.prototype.getElementById = realGet;
         }
-        if (attempts++ < 20) {
-          setTimeout(adjust, 80);
-        }
+
+        // Плавно раскрываем
+        details.style.maxHeight = '3000px';
+
+        // Подгоняем высоту под контент
+        let attempts = 0;
+        const adjustHeight = () => {
+          if (details.dataset.open === 'true') {
+            const needed = details.scrollHeight + 40;
+            if (needed > parseFloat(details.style.maxHeight || 0)) {
+              details.style.maxHeight = needed + 'px';
+            }
+            if (attempts++ < 15) setTimeout(adjustHeight, 60);
+          }
+        };
+        setTimeout(adjustHeight, 50);
       }
-    };
-    setTimeout(adjust, 60);
-  }
-});
+    });
 
     container.appendChild(card);
   });

@@ -9,6 +9,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
     <link rel="stylesheet" href="/static/css/admin/admin_orders.css">
+    <link rel="stylesheet" href="/static/css/admin/admin_goods.css">
 
     <style>
 /* Apple-style модальные окна */
@@ -216,21 +217,23 @@
 </head>
 <body>
 
-<header>
-    <a href="/" class="logo"><img src="/static/assets/logo.png" alt="Piligrim" class="logo-img"></a>
-    <div style="position:fixed;top:18px;right:28px;display:flex;gap:32px;z-index:9999;">
-        <a href="/" class="home-btn"><i class="fas fa-home"></i><span>Главная</span></a>
-        <div class="theme-toggle-hanging">
-            <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
-            <label for="theme-toggle" class="theme-toggle-label">
-                <div class="rope top"></div>
-                <div class="bulb"><div class="bulb-light"></div><div class="bulb-glow"></div></div>
-                <div class="rope bottom"></div>
-            </label>
-        </div>
-    </div>
-</header>
+    <header>
+        <a href="/" class="logo"><img src="/static/assets/logo.png" alt="ZAZA" class="logo-img"></a>
+        <nav style="margin-left: auto;"><a href="/" class="nav-link">Главная</a></nav>
+    </header>
 
+<!-- ВИСЯЩИЙ ТУМБЛЕР ТЕМЫ (ZAZA STYLE 2025) -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
 <aside class="sidebar">
     <h3 class="sidebar-title">Админка</h3>
     <div class="sidebar-menu">
@@ -736,7 +739,29 @@ function updateStats(orders) {
     renderOrders();
 });
 </script>
+<script>
+// ──────────────────────── ТУМБЛЕР ТЕМЫ — РАБОТАЕТ НА 100% ────────────────────────
+const themeToggle = document.getElementById('theme-toggle');
+const htmlEl = document.documentElement; // <html>
 
+// Читаем сохранённую тему (если есть)
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme) {
+    htmlEl.setAttribute('data-theme', savedTheme);
+    themeToggle.checked = (savedTheme === 'light');
+}
+
+// Основной обработчик
+themeToggle.addEventListener('change', () => {
+    if (themeToggle.checked) {
+        htmlEl.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+    } else {
+        htmlEl.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+    }
+});
+</script>
 
 </body>
 </html>

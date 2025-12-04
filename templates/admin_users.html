@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Shadows+Into+Light&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
+    <link rel="stylesheet" href="/static/css/admin/admin_goods.css">
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -36,6 +38,7 @@
             position: relative;
             padding-top: 90px;
         }
+        
 
         /* Хедер */
         header {
@@ -1174,7 +1177,7 @@ header.scrolled ~ body .theme-toggle-hanging { top: 76px; }
 [data-theme="light"] .action-icon:hover {
   background: rgba(255,255,255,0.98) !important;
   border-color: #111 !important;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+
   transform: translateY(-6px);
 }
 
@@ -1270,9 +1273,9 @@ select option:hover {
         <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
         <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
         <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
-        <a href="/admin_dispatch" class="sidebar-item active"><i class="fas fa-paper-plane"></i><span>Рассылки</span></a>
+        <a href="/admin_dispatch" class="sidebar-item"><i class="fas fa-paper-plane"></i><span>Рассылки</span></a>
         <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
-        <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
+        <a href="/admin_users" class="sidebar-item active"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
         <a href="/admin_reviews" class="sidebar-item"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews }}</div></span></a>
         <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders }}</div></span></a>
     </div>
