@@ -187,21 +187,73 @@
     </div>
   </div>
 </div>
-<!-- МОДАЛКА "АВТОРИЗУЙТЕСЬ" ПЕРЕД ОТПРАВКОЙ ФИДБЕКА -->
-<div class="custom-alert" id="authAlert">
-  <div class="alert-content">
-    <button class="alert-close">×</button>
-    <div class="alert-icon">
-      <i class="fas fa-user-lock"></i>
+
+  <!-- МОДАЛКА АВТОРИЗАЦИИ  -->
+<div id="authModal" class="auth-modal">
+  <div class="auth-modal-content">
+    <button class="close-modal" id="closeAuthModal">×</button>
+    <h2 class="auth-title">Вход по номеру<br><span class="mobile-only">телефона</span></h2>
+
+    <!-- ШАГ 1 — ВВОД НОМЕРА -->
+    <div id="stepPhone" class="auth-step">
+      <div class="country-selector">
+        <div class="selected-country" id="selectedCountry">
+          <span class="flag">RU</span>
+          <span class="code">+7</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="country-dropdown" id="countryDropdown">
+          <div class="country-item" data-code="+7" data-flag="RU">Россия +7</div>
+          <div class="country-item" data-code="+1" data-flag="US">USA +1</div>
+          <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
+        </div>
+      </div>
+      
+      <input type="text" 
+       name="honeypot" 
+       id="honeypot" 
+       tabindex="-1" 
+       autocomplete="off" 
+       style="position:absolute; left:-9999px; opacity:0; height:0; width:0; border:none; padding:0; margin:0;"
+       aria-hidden="true">
+
+<input type="hidden" name="fp_token" id="fp_token" value="">
+      <input type="tel" id="phoneInput" placeholder="(999) 999 99 99" class="auth-input">
+
+      <label class="checkbox-label required">
+        <input type="checkbox" id="privacyCheck">
+        <span class="custom-checkbox"></span>
+        Согласен с <a href="/policy" target="_blank" class="privacy-link">политикой конфиденциальности</a>
+      </label>
+
+      <label class="checkbox-label">
+        <input type="checkbox" id="subscribeCheck" checked>
+        <span class="custom-checkbox"></span>
+        Получать SMS с акциями и уведомлениями
+      </label>
+
+      <button id="sendCodeBtn" class="auth-btn" disabled>Получить код</button>
     </div>
-    <div class="alert-text">
-      <strong>Авторизуйтесь</strong>
-      <span>Для отправки сообщения нужно войти в аккаунт</span>
+
+    <!-- ШАГ 2 — ВВОД КОДА -->
+    <div id="stepCode" class="auth-step" style="display:none;">
+      <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
+      <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
+      <button id="verifyCodeBtn" class="auth-btn">Войти</button>
+      <button id="resendCode" class="auth-link">Отправить повторно</button>
     </div>
-    <button class="alert-login-btn" id="authBtnFeedback">Войти</button>
+
+    <!-- ШАГ 3 — УСПЕШНЫЙ ВХОД -->
+    <div id="stepSuccess" class="auth-step" style="display:none;">
+      <i class="fas fa-check-circle success-icon"></i>
+      <h3>Добро пожаловаться!</h3>
+      <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
+      <button id="closeSuccess" class="auth-btn">Продолжить</button>
+    </div>
   </div>
 </div>
-<!-- МОБИЛЬНАЯ ШТОРКА ОБРАТНОЙ СВЯЗИ (2025 стиль) -->
+
+<!-- МОБИЛЬНАЯ ШТОРКА ОБРАТНОЙ СВЯЗИ -->
  <div class="mobile-feedback-top" id="mobileFeedbackTop"></div>
 <div class="mobile-feedback-sheet" id="mobileFeedbackSheet">
 
@@ -241,6 +293,7 @@
     </button>
   </form>
 </div>
+
 <!-- ШТОРКА СЛЕВА — МЕНЮ -->
 <div class="mobile-sidebar" id="mobileSidebar">
   <div class="sidebar-top">
@@ -481,7 +534,7 @@
 <div id="authModal" class="auth-modal">
   <div class="auth-modal-content">
     <button class="close-modal" id="closeAuthModal">×</button>
-    <h2 class="auth-title">Вход по номеру телефона</h2>
+    <h2 class="auth-title">Вход по номеру<br><span class="mobile-only">телефона</span></h2>
 
     <!-- ШАГ 1 — ВВОД НОМЕРА -->
     <div id="stepPhone" class="auth-step">
@@ -518,12 +571,15 @@
     </div>
 
     <!-- ШАГ 2 — ВВОД КОДА -->
-    <div id="stepCode" class="auth-step" style="display:none;">
-      <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
-      <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
-      <button id="verifyCodeBtn" class="auth-btn">Войти</button>
-      <button id="resendCode" class="auth-link">Отправить повторно</button>
-    </div>
+   <!-- ШАГ 2 — ВВОД КОДА -->
+<div id="stepCode" class="auth-step" style="display:none;">
+  <p class="auth-info">
+    Код отправлен<br class="mobile-break">на <span id="maskedPhone"></span>
+  </p>
+  <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
+  <button id="verifyCodeBtn" class="auth-btn">Войти</button>
+  <button id="resendCode" class="auth-link">Отправить повторно</button>
+</div>
 
     <!-- ШАГ 3 — УСПЕШНЫЙ ВХОД -->
     <div id="stepSuccess" class="auth-step" style="display:none;">

@@ -4299,3 +4299,32 @@ html[data-theme="light"] #mobileSidebar .sidebar-logo-big {
   }
 }
 
+/* КРАСИВЫЙ ПЕРЕНОС "Код отправлен на" НА МАЛЕНЬКИХ ЭКРАНАХ */
+.auth-info {
+  text-align: center;
+  color: #aaa;
+  margin: 1.4rem auto 1.6rem;
+  font-size: clamp(0.88rem, 3.2vw, 0.94rem);
+  line-height: 1.48;
+  max-width: 92%;
+  padding: 0 8px;
+}
+
+/* Скрываем <br> на больших экранах, показываем на маленьких */
+.mobile-break {
+  display: none;
+}
+
+@media (max-width: 380px) {
+  .mobile-break {
+    display: inline !important;   /* ← только на iPhone SE и узких экранах */
+  }
+}
+
+
+/* На телефонах и планшетах — включаем перенос */
+@media (max-width: 1025px) {
+  .mobile-break {
+    display: inline !important;
+  }
+}

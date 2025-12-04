@@ -36,7 +36,7 @@
     <a href="/services" class="nav-link">Услуги</a>
     <a href="/news" class="nav-link">Новости</a>
     <a href="/about_company" class="nav-link">О компании</a>
-    <a href="/contacts" class="nav-link">Контакты</a>
+    <a href="/contacts" class="nav-link active">Контакты</a>
   </nav>
 
   <div class="header-right">
@@ -246,7 +246,7 @@
     </div>
   </div>
 
-<!-- МОБИЛЬНАЯ ШТОРКА ФИДБЕКА СВЕРХУ (КАК ПОИСК) -->
+<!-- МОБИЛЬНАЯ ШТОРКА ФИДБЕКА СВЕРХУ  -->
 <div class="mobile-feedback-top" id="mobileFeedbackTop">
   <div class="mobile-feedback-header">
     <button class="mobile-feedback-back" id="closeMobileFeedbackTop">←</button>
@@ -257,7 +257,7 @@
   </div>
 </div>
 
-<!-- МОБИЛЬНАЯ ШТОРКА ФИДБЕКА — ОДНА ФОРМА (2025 STYLE) -->
+<!-- МОБИЛЬНАЯ ШТОРКА ФИДБЕКА  -->
 <div class="mobile-feedback-sheet" id="mobileFeedbackSheet">
   <!-- ХЕДЕР ШТОРКИ (как в iOS/Wildberries) -->
   <div class="sheet-header">
@@ -385,11 +385,11 @@
   </div>
 </div>
 
-<!-- МОДАЛКА АВТОРИЗАЦИИ — ПОЛНОСТЬЮ РАБОЧАЯ ВЕРСИЯ -->
+  <!-- МОДАЛКА АВТОРИЗАЦИИ  -->
 <div id="authModal" class="auth-modal">
   <div class="auth-modal-content">
     <button class="close-modal" id="closeAuthModal">×</button>
-    <h2 class="auth-title">Вход по номеру телефона</h2>
+    <h2 class="auth-title">Вход по номеру<br><span class="mobile-only">телефона</span></h2>
 
     <!-- ШАГ 1 — ВВОД НОМЕРА -->
     <div id="stepPhone" class="auth-step">
@@ -405,17 +405,24 @@
           <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
         </div>
       </div>
+      
+      <input type="text" 
+       name="honeypot" 
+       id="honeypot" 
+       tabindex="-1" 
+       autocomplete="off" 
+       style="position:absolute; left:-9999px; opacity:0; height:0; width:0; border:none; padding:0; margin:0;"
+       aria-hidden="true">
 
+<input type="hidden" name="fp_token" id="fp_token" value="">
       <input type="tel" id="phoneInput" placeholder="(999) 999 99 99" class="auth-input">
 
-      <!-- Обязательное согласие -->
       <label class="checkbox-label required">
         <input type="checkbox" id="privacyCheck">
         <span class="custom-checkbox"></span>
         Согласен с <a href="/policy" target="_blank" class="privacy-link">политикой конфиденциальности</a>
       </label>
 
-      <!-- Автоматическая подписка на рассылку -->
       <label class="checkbox-label">
         <input type="checkbox" id="subscribeCheck" checked>
         <span class="custom-checkbox"></span>
@@ -436,13 +443,14 @@
     <!-- ШАГ 3 — УСПЕШНЫЙ ВХОД -->
     <div id="stepSuccess" class="auth-step" style="display:none;">
       <i class="fas fa-check-circle success-icon"></i>
-      <h3>Добро пожаловать!</h3>
+      <h3>Добро пожаловаться!</h3>
       <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
       <button id="closeSuccess" class="auth-btn">Продолжить</button>
     </div>
   </div>
 </div>
-<!-- КАРТОЧКА ТОВАРА — РАБОЧАЯ, КАК В ZAZA -->
+
+<!-- КАРТОЧКА ТОВАРА  -->
 <div class="product-modal" id="productModal">
   <div class="product-content">
     <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
@@ -472,14 +480,19 @@
 </div>
 
 <div class="loader" id="loader"></div>
-  <!-- ВСЯ ОСТАЛЬНАЯ РАЗМЕТКА — БЕЗ ИЗМЕНЕНИЙ -->
+
   <main>
     <h1 class="page-title">Контакты</h1>
     <p class="page-subtitle">Связаться с нами</p>
     <div class="contacts-wrapper">
-      <div class="contact-block"><span class="contact-label">Телефон</span><p class="contact-value"><a href="tel:+78121234567">+7 (906) 217-38-69</a></p></div>
+      <div class="contact-block"><span class="contact-label">Телефон</span><p class="contact-value"><a href="tel:+7 (906) 217-38-69">+7 (906) 217-38-69</a></p></div>
       <div class="contact-block"><span class="contact-label">Адрес</span><p class="contact-value">Калининград<br>ул. Балашовская,4</p></div>
-      <div class="contact-block"><span class="contact-label">E-mail</span><p class="contact-value"><a href="mailto:info@piligrim.ru">piligrim_service39@mail.ru</a></p></div>
+      <div class="contact-block">
+  <span class="contact-label">E-mail</span>
+  <p class="contact-value email-value">
+    <a href="mailto:piligrim_service39@mail.ru">piligrim_service39<br class="mobile-break">@mail.ru</a>
+  </p>
+</div>
       <div class="contact-block"><span class="contact-label">Время работы</span><p class="contact-value">24 / 7</p></div>
     </div>
     <div class="visit-us"><h2>VISIT US</h2><p>Мы всегда рады видеть вас в нашем магазине. Подпишитесь,чтобы быть в курсе новых событий.</p></div>

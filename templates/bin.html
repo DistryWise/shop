@@ -1,8 +1,15 @@
 <!DOCTYPE html>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
+<!-- Этот скрипт — магия, которая заставляет медиа-запросы сработать сразу на 100% устройств -->
+<script>
+  // Если вдруг браузер думает, что ширина >1024px — принудительно говорим, что это мобильник
+  if (window.innerWidth <= 1024 && !document.body.classList.contains('mobile-layout')) {
+    document.body.classList.add('mobile-layout');
+  }
+</script>
 
   <title>Корзина — Piligrim</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -559,11 +566,11 @@
    <button class="checkout-btn-fixed" id="mobileCheckoutBtn" disabled>Оформить заказ</button>
   </div>
 </main>
-  <!-- МОДАЛКА АВТОРИЗАЦИИ — ОБЯЗАТЕЛЬНО ДОЛЖНА БЫТЬ НА КАЖДОЙ СТРАНИЦЕ -->
+  <!-- МОДАЛКА АВТОРИЗАЦИИ  -->
 <div id="authModal" class="auth-modal">
   <div class="auth-modal-content">
     <button class="close-modal" id="closeAuthModal">×</button>
-    <h2 class="auth-title">Вход по номеру телефона</h2>
+    <h2 class="auth-title">Вход по номеру<br><span class="mobile-only">телефона</span></h2>
 
     <!-- ШАГ 1 — ВВОД НОМЕРА -->
     <div id="stepPhone" class="auth-step">
@@ -600,7 +607,7 @@
       <label class="checkbox-label">
         <input type="checkbox" id="subscribeCheck" checked>
         <span class="custom-checkbox"></span>
-        Подписаться на SMS и email рассылку
+        Получать SMS с акциями и уведомлениями
       </label>
 
       <button id="sendCodeBtn" class="auth-btn" disabled>Получить код</button>

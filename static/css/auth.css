@@ -56,14 +56,21 @@
 }
 
 .auth-title {
-    font-size: 1.9rem;
+    font-size: clamp(1.6rem, 6.5vw, 1.9rem);
     font-weight: 700;
     text-align: center;
-    margin-bottom: 1.8rem;
+    margin: 0 0 2rem;
+    line-height: 1.35;
+    letter-spacing: -0.3px;
+    
+    /* САМОЕ ГЛАВНОЕ — РАЗРЕШАЕМ ПЕРЕНОС */
+    white-space: normal !important;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    
     background: linear-gradient(135deg, #ffffff, #cccccc);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    letter-spacing: 0.5px;
 }
 
 .country-selector {
@@ -200,18 +207,30 @@
     transform: none;
 }
 
-/* ===== ТЕКСТ «СМС ОТПРАВЛЕНИЕМ» — ИДЕАЛЬНО НА ВСЕХ ТЕЛЕФОНАХ 2025 ===== */
 .auth-info {
     text-align: center;
     color: #aaa;
-    margin: 1.2rem auto 1.4rem;
-    font-size: 0.92rem;           /* чуть меньше — влезает везде */
-    line-height: 1.45;            /* красиво и читаемо */
-    max-width: 92%;               /* ← главное: не даём вылезти за края */
+    margin: 1.4rem auto 1.6rem;
+    font-size: clamp(0.88rem, 3.2vw, 0.94rem);
+    line-height: 1.48;
+    max-width: 92%;
     padding: 0 8px;
-    word-break: normal;           /* нормальные переносы */
-    overflow-wrap: break-word;    /* перенос длинных слов */
-    hyphens: auto;                /* опционально — красивые переносы */
+    
+    /* ВСЕГДА РАЗРЕШАЕМ ПЕРЕНОС */
+    white-space: normal !important;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+}
+
+/* Если вдруг где-то остался старый стиль — убиваем его */
+.auth-title,
+.auth-info,
+.auth-info p,
+.auth-info span {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: anywhere !important;
 }
 
 /* Светлая тема — чуть темнее текст */
@@ -853,34 +872,69 @@ html[data-theme="light"] .auth-info {
   font-size: 13px;
 }
 
-/* ТЕКСТ + ССЫЛКА — САМОЕ ГЛАВНОЕ */
-.checkbox-label span:not(.custom-checkbox) {
-  display: inline-block;
-  white-space: nowrap;          /* ← 100% в одну строку */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: calc(100% - 36px); /* минус ширина чекбокса + gap */
+/* ЧЕКБОКСЫ — КАК У ТЕБЯ БЫЛО + ПЕРЕНОС ТОЛЬКО НА ОЧЕНЬ УЗКИХ ЭКРАНАХ */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 15px 0 11px;
+  font-size: 0.94rem;
+  color: #ddd;
+  cursor: pointer;
+  user-select: none;
+  line-height: 1.4;
+  width: 100%;
+  flex-wrap: nowrap;           /* ← на всех нормальных экранах — одна строка */
+  white-space: nowrap;
 }
 
-/* Ссылка — красиво и без переносов */
+.checkbox-label.required {
+  color: #fff;
+  font-weight: 500;
+}
+
+/* ТЕКСТ — САМОЕ ГЛАВНОЕ: НА УЗКИХ ЭКРАНАХ ПЕРЕНОСИТСЯ */
+.checkbox-label span:not(.custom-checkbox) {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 36px);
+  min-width: 0;                    /* ← ЭТО ГЛАВНОЕ — ДАЁТ ТЕКСТУ СЖИМАТЬСЯ */
+}
+
+/* Ссылка — тоже не должна вылезать */
 .privacy-link {
   color: #ffffff;
   text-decoration: underline;
   font-weight: 600;
   margin-left: -4px;
-  white-space: nowrap;          /* ← ещё одна страховка */
+  white-space: nowrap;
 }
 
 .privacy-link:hover {
   color: #a8ffcb;
 }
 
-/* На очень узких экранах (если вдруг) — уменьшаем шрифт, но НЕ переносим */
-@media (max-width: 360px) {
+/* КРИТИЧНО: НА САМЫХ МАЛЕНЬКИХ ЭКРАНАХ — РАЗРЕШАЕМ ПЕРЕНОС */
+@media (max-width: 380px) {
+  .checkbox-label {
+    flex-wrap: wrap;           /* ← ВКЛЮЧАЕМ ПЕРЕНОС */
+    white-space: normal;       /* ← РАЗРЕШАЕМ ПЕРЕНОС */
+    align-items: flex-start;   /* ← выравнивание по верху */
+  }
+
+  .checkbox-label span:not(.custom-checkbox) {
+    white-space: normal;
+    max-width: 100%;
+    margin-top: 4px;
+  }
+
   .checkbox-label {
     font-size: 0.89rem;
     gap: 9px;
   }
+
   .custom-checkbox {
     width: 18px;
     height: 18px;

@@ -1024,16 +1024,32 @@ async function openModal(id, pushHistory = true) {
       }
 
 
-function closeModal() {
+window.closeModal = function () {
+  const modal = document.getElementById('modal');
+  if (!modal) return;
+
+  // 1. Сразу делаем модалку невидимой и неактивной для кликов
+  modal.style.pointerEvents = 'none';   // ← КЛЮЧЕВАЯ СТРОКА!
+  modal.style.opacity = '0';            // ← Дополнительно — на всякий случай
+
+  // 2. Снимаем класс
   modal.classList.remove('active');
   document.body.style.overflow = '';
 
-  // Убираем хеш ТОЛЬКО если модалка реально была открыта и мы её закрываем вручную
+  // 3. Чистим хеш
   if (window.location.hash) {
     history.replaceState(null, null, window.location.pathname + window.location.search);
   }
-}
 
+  // 4. Через 100 мс — полностью сбрасываем стили (чтобы при следующем открытии всё было чисто)
+  setTimeout(() => {
+    modal.style.transition = '';
+    modal.style.transform = '';
+    modal.style.background = '';
+    modal.style.pointerEvents = '';   // ← Возвращаем обратно
+    modal.style.opacity = '';         // ← Возвращаем
+  }, 100);
+};
 // Крестик / оверлей / ESC
 document.querySelector('.modal-close-btn')?.addEventListener('click', closeModal);
 modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });

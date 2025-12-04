@@ -1,7 +1,15 @@
 <!DOCTYPE html>
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+<!-- Этот скрипт — магия, которая заставляет медиа-запросы сработать сразу на 100% устройств -->
+<script>
+  // Если вдруг браузер думает, что ширина >1024px — принудительно говорим, что это мобильник
+  if (window.innerWidth <= 1024 && !document.body.classList.contains('mobile-layout')) {
+    document.body.classList.add('mobile-layout');
+  }
+</script>
   <title>Товары — Piligrim · 2025</title>
 
   <!-- Шрифты и иконки -->
@@ -9,18 +17,13 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap" rel="stylesheet">
 
-  <!-- Основные стили страницы услуг -->
+  <!-- Основные стили страницы  -->
   <link rel="stylesheet" href="/static/css/services.css">
-
-  <!-- Стили хедера, поиска, корзины, авторизации, AI и т.д. — ТОЧНО как на about_company -->
   <link rel="stylesheet" href="/static/css/search.css">
   <link rel="stylesheet" href="/static/css/auth.css">
   <link rel="stylesheet" href="/static/css/cart.css">
   <link rel="stylesheet" href="/static/css/ai.css">
   <link rel="stylesheet" href="/static/css/contacts.css">
-
-  <!-- ЛОАДЕР + КУРСОР + ОСНОВНЫЕ СТИЛИ (точно как в about_company.css) -->
-  
 
 </head>
 <body>
@@ -28,23 +31,24 @@
   <!-- ЛОАДЕР -->
   <div class="loader" id="pageLoader"></div>
 
+  <!-- ==================== ПОЛНЫЙ ХЕДЕР  ==================== -->
+ <header class="main-header desktop-only">
+  <a href="/" class="logo">
+    <img src="/static/assets/logo.png" alt="Piligrim" class="logo-img">
+  </a>
 
+  <nav class="desktop-nav">
+    <a href="/" class="nav-link">Главная</a>
+    <a href="/goods" class="nav-link active">Товары</a>
+    <a href="/services" class="nav-link">Услуги</a>
+    <a href="/news" class="nav-link">Новости</a>
+    <a href="/about_company" class="nav-link">О компании</a>
+    <a href="/contacts" class="nav-link">Контакты</a>
+  </nav>
 
-  <!-- КАСТОМНЫЙ КУРСОР (из contacts) -->
-  <div class="custom-cursor"></div>
-
-  <!-- ==================== ПОЛНЫЙ ХЕДЕР ИЗ КОНТАКТОВ (с авторизацией, корзиной, обратной связью) ==================== -->
-  <header>
-    <a href="/" class="logo"><img src="/static/assets/logo.png" alt="Piligrim" class="logo-img"></a>
-    <nav>
-      <a href="/" class="nav-link">Главная</a>
-      <a href="/goods" class="nav-link active">Товары</a>
-      <a href="/services" class="nav-link">Услуги</a>
-      <a href="/news" class="nav-link">Новости</a>
-      <a href="/about_company" class="nav-link">О компании</a>
-      <a href="/contacts" class="nav-link">Контакты</a>
-    </nav>
+  <div class="header-right">
     <div class="header-icons">
+      <!-- Поиск -->
       <div class="search-wrapper">
         <div class="search-container">
           <div class="search-icon"><i class="fas fa-search"></i></div>
@@ -53,26 +57,61 @@
         </div>
         <div id="autocompleteList" class="autocomplete-list"></div>
       </div>
+
+      <!-- Вход -->
       <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
-      
-      <div style="position: relative;">
+
+      <!-- Корзина — мини-дропдаун (как на contacts.html) -->
+      <div class="cart-wrapper">
         <button class="icon-btn" id="cartBtn">
           <i class="fas fa-shopping-bag"></i>
           <span class="cart-count" id="cartCount">0</span>
         </button>
-        <div id="miniCartDropdown">
-          <div class="mini-cart-header"><div class="mini-cart-title">Корзина</div></div>
-          <div class="mini-cart-items" id="miniCartItems"><div class="mini-cart-empty">Корзина пуста</div></div>
+
+        <div id="miniCartDropdown" class="mini-cart-dropdown">
+          <div class="mini-cart-header">
+            <div class="mini-cart-title">Корзина</div>
+          </div>
+          <div class="mini-cart-items" id="miniCartItems">
+            <div class="mini-cart-empty">Корзина пуста</div>
+          </div>
           <div class="mini-cart-footer">
-            <div class="mini-cart-total" id="miniCartTotal">Итого: 0.00 ₽</div>
+            <div class="mini-cart-total" id="miniCartTotal">Итого: 0 ₽</div>
             <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
           </div>
         </div>
       </div>
 
+      <!-- ПОДДЕРЖКА — ОДИН ID НА ВСЁМ САЙТЕ! -->
       <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
     </div>
-  </header>
+  </div>
+  
+</header>
+
+<!-- МОБИЛЬНАЯ НИЖНЯЯ ПАНЕЛЬ -->
+<nav class="mobile-bottom-bar">
+  <button class="bottom-bar-btn" id="mobileSearchBtn" data-label="Поиск">
+    <i class="fas fa-search"></i>
+  </button>
+
+  <button class="bottom-bar-btn" id="mobileAuthBtn" data-label="Вход">
+    <i class="fas fa-user"></i>
+  </button>
+
+  <button class="bottom-bar-btn active" id="openSidebarMenu" data-label="Меню">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <button class="bottom-bar-btn" id="mobileCartBtn" data-label="Корзина">
+    <i class="fas fa-shopping-bag"></i>
+    <span class="cart-count" id="mobileCartCount">0</span>
+  </button>
+
+  <button class="bottom-bar-btn" id="feedbackBtnMobile" data-label="Поддержка">
+    <i class="fas fa-envelope"></i>
+  </button>
+</nav>
 
   <!-- МОДАЛКА ОБРАТНОЙ СВЯЗИ -->
   <div class="custom-alert" id="feedbackModal">
@@ -107,11 +146,11 @@
     </div>
   </div>
 
-<!-- МОДАЛКА АВТОРИЗАЦИИ — ПОЛНОСТЬЮ РАБОЧАЯ ВЕРСИЯ -->
+  <!-- МОДАЛКА АВТОРИЗАЦИИ  -->
 <div id="authModal" class="auth-modal">
   <div class="auth-modal-content">
     <button class="close-modal" id="closeAuthModal">×</button>
-    <h2 class="auth-title">Вход по номеру телефона</h2>
+    <h2 class="auth-title">Вход по номеру<br><span class="mobile-only">телефона</span></h2>
 
     <!-- ШАГ 1 — ВВОД НОМЕРА -->
     <div id="stepPhone" class="auth-step">
@@ -127,17 +166,24 @@
           <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
         </div>
       </div>
+      
+      <input type="text" 
+       name="honeypot" 
+       id="honeypot" 
+       tabindex="-1" 
+       autocomplete="off" 
+       style="position:absolute; left:-9999px; opacity:0; height:0; width:0; border:none; padding:0; margin:0;"
+       aria-hidden="true">
 
+<input type="hidden" name="fp_token" id="fp_token" value="">
       <input type="tel" id="phoneInput" placeholder="(999) 999 99 99" class="auth-input">
 
-      <!-- Обязательное согласие -->
       <label class="checkbox-label required">
         <input type="checkbox" id="privacyCheck">
         <span class="custom-checkbox"></span>
         Согласен с <a href="/policy" target="_blank" class="privacy-link">политикой конфиденциальности</a>
       </label>
 
-      <!-- Автоматическая подписка на рассылку -->
       <label class="checkbox-label">
         <input type="checkbox" id="subscribeCheck" checked>
         <span class="custom-checkbox"></span>
@@ -158,13 +204,14 @@
     <!-- ШАГ 3 — УСПЕШНЫЙ ВХОД -->
     <div id="stepSuccess" class="auth-step" style="display:none;">
       <i class="fas fa-check-circle success-icon"></i>
-      <h3>Добро пожаловать!</h3>
+      <h3>Добро пожаловаться!</h3>
       <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
       <button id="closeSuccess" class="auth-btn">Продолжить</button>
     </div>
   </div>
 </div>
-<!-- КАРТОЧКА ТОВАРА — РАБОЧАЯ, КАК В ZAZA -->
+
+<!-- КАРТОЧКА ТОВАРА  -->
 <div class="product-modal" id="productModal">
   <div class="product-content">
     <!-- Крестик закрытия -->
@@ -213,7 +260,6 @@
 </div>
 
 
-  
   <div class="white-overlay" id="whiteOverlay"></div>
 
   <section class="hero" id="hero">
@@ -245,21 +291,22 @@
       </button>
     </div>
     <div class="catalog-header"><h1>Товары</h1></div>
-<div class="search-wrapper" style="max-width:1100px;margin:0 auto 180px;position:relative;">
-      <div class="search-container" style="position:relative;max-width:900px;margin:0 auto;">
-        
-        <input type="text" 
-               class="search" 
-               id="search" 
-               placeholder="Поиск..." 
-               style="width:100%;background:transparent;border:none;border-bottom:3px solid #000;font-family:'Inter',sans-serif;font-weight:300;font-size:22px;letter-spacing:4px;color:#000;text-align:center;padding:20px 60px 20px 0;outline:none;box-sizing:border-box;"
-               autocomplete="off">
+<!-- ПОИСК В БЕЛОЙ ЗОНЕ — БЕЗОПАСНЫЕ КЛАССЫ, НЕ ПЕРЕСЕКАЮТСЯ С search.css -->
+<div class="hero-search-wrapper" style="max-width:1100px;margin:0 auto 180px;position:relative;">
+  <div class="hero-search-container" style="position:relative;max-width:900px;margin:0 auto;">
+    
+    <input type="text" 
+           class="hero-search" 
+           id="search" 
+           placeholder="Поиск..." 
+           style="width:100%;background:transparent;border:none;border-bottom:3px solid #000;font-family:'Inter',sans-serif;font-weight:300;font-size:22px;letter-spacing:4px;color:#000;text-align:center;padding:20px 60px 20px 0;outline:none;box-sizing:border-box;"
+           autocomplete="off">
 
-<div class="search-icon" style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:40px;height:40px;opacity:0.35;transition:all .8s cubic-bezier(.16,1,.3,1);pointer-events:none;">
-  <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTEiIGN5PSIxMSIgcj0iNyIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjIuNCIvPgo8cGF0aCBkPSJNMTYuNSAxNi41TDIwLjUgMjAuNSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPg==" alt="поиск" style="width:100%;height:100%;display:block;">
-</div>
-      </div>
+    <div class="hero-search-icon" style="position:absolute;right:0;top:50%;transform:translateY(-50%);width:40px;height:40px;opacity:0.35;transition:all .8s cubic-bezier(.16,1,.3,1);pointer-events:none;">
+      <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTEiIGN5PSIxMSIgcj0iNyIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjIuNCIvPgo8cGF0aCBkPSJNMTYuNSAxNi41TDIwLjUgMjAuNSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPg==" alt="поиск" style="width:100%;height:100%;display:block;">
     </div>
+  </div>
+</div>
     <div class="grid" id="grid"></div>
     <div id="adBannerSection" class="noir-island-wrapper">
       <div class="secondary-carousel">
@@ -274,7 +321,7 @@
   </div>
 
   <!-- МОДАЛКА -->
-<!-- МОДАЛКА (ОДНА НА ВЕСЬ САЙТ — И НА УСЛУГИ, И НА ТОВАРЫ) -->
+
 <div class="modal" id="modal">
   <button class="modal-close-btn" aria-label="Закрыть">
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
@@ -299,7 +346,7 @@
         <span class="value">0.0</span>
         <span class="count">(0)</span>
       </div>
-      <button class="order-btn" id="modal-order">ЗАКАЗАТЬ</button>
+      <button class="order-btn" id="modal-order">В КОРЗИНУ</button>
       <div class="reviews-section">
         <h4>ОТЗЫВЫ</h4>
         <div class="reviews" id="modal-reviews"></div>
@@ -310,7 +357,7 @@
 </div>
 
   <footer id="footer">
-    <span>© 2025 Piligrim · NO ADDRESS · NO PHONE</span>
+    <span>© 2025 Piligrim · +7 (906) 217-38-69 · piligrim_service39@mail.ru</span>
   </footer>
 
   <!-- УВЕДОМЛЕНИЯ -->
@@ -318,7 +365,7 @@
 
 
 
-<!-- КРАСИВАЯ КНОПКА ВЫХОДА ИЗ БЕЛОЙ ЗОНЫ — ФИНАЛЬНАЯ ВЕРСИЯ 2025 -->
+<!-- КНОПКА ВЫХОДА ИЗ БЕЛОЙ ЗОНЫ  -->
 <div id="exitWhiteZoneBtn">
   <span class="exit-text">НАВЕРХ · В NOIR</span>
   <div class="exit-arrow">
@@ -328,6 +375,274 @@
   </div>
 </div>
 
+<!-- КНОПКА ФИЛЬТРА НА МОБИЛКЕ -->
+<div id="mobileCatalogTrigger">
+  <i class="fas fa-sliders-h"></i>
+</div>
+
+<!-- ШТОРКА КАТАЛОГА -->
+<div id="mobileCatalogOverlay">
+  <div id="mobileCatalogSheet">
+    <div class="mobile-catalog-close">×</div>
+    <ul class="catalog-list"></ul>
+  </div>
+</div>
+<!-- Поиск для планшетов (ноутбуки 768–1024px) -->
+<div class="tablet-search-full" id="tabletSearchSheet">
+  <div class="tablet-search-backdrop"></div>
+  <div class="tablet-search-header-full">
+    <button class="tablet-search-back" id="closeTabletSearch">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <div class="tablet-search-input-wrapper-full">
+      <i class="fas fa-search"></i>
+      <input type="text" id="tabletSearchInput" placeholder="Поиск по каталогу..." autocomplete="off">
+      <button class="tablet-search-clear" id="tabletSearchClear">×</button>
+    </div>
+  </div>
+  <div class="tablet-search-empty" id="tabletEmptyState">
+    <i class="fas fa-search"></i>
+    <p>Начните вводить запрос...</p>
+  </div>
+  <div id="tabletAutocompleteList" class="tablet-autocomplete-list-full"></div>
+</div>
+
+<!-- Мобильный поиск (шторка снизу) -->
+<div class="mobile-search-sheet" id="mobileSearchSheet">
+  <div class="mobile-search-header">
+    <div class="sheet-handle"></div>
+    <button class="mobile-search-back" id="closeMobileSearchTop">←</button>
+    <div class="mobile-search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input type="text" class="mobile-search-input" id="mobileSearchInput" placeholder="Поиск по каталогу..." autocomplete="off">
+      <button class="mobile-search-clear" id="mobileSearchClear">×</button>
+    </div>
+  </div>
+
+  <div class="mobile-search-results-content" id="mobileSearchResults">
+    <div class="search-empty-state" id="mobileEmptyState">
+      <div class="empty-icon"><i class="fas fa-search"></i></div>
+      <div class="empty-title">Введите название товара</div>
+      <div class="empty-subtitle">Например: iPhone 16, кроссовки Nike, кофеварка</div>
+    </div>
+    <div id="mobileAutocompleteList" class="mobile-autocomplete-list"></div>
+  </div>
+</div>
+
+<!-- Мобильная корзина (шторка) -->
+<div class="mobile-cart-sheet" id="mobileCartSheet">
+  <div class="sheet-backdrop" id="mobileCartBackdrop"></div>
+  <div class="sheet-container">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="cart-header-icon">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="cart-count" id="mobileCartHeaderCount">0</span>
+      </div>
+      <h3>Корзина</h3>
+      <button class="sheet-close-btn" id="mobileCloseCart">×</button>
+    </div>
+    <div class="sheet-items" id="mobileMiniCartItems">
+      <div style="padding:3rem 1.5rem;text-align:center;color:#888;">
+        <i class="fas fa-shopping-bag" style="font-size:3rem;margin-bottom:1rem;opacity:0.3;"></i>
+        <p>Корзина пуста</p>
+      </div>
+    </div>
+    <div class="sheet-total">
+      Итого: <strong id="mobileMiniCartTotal">0 ₽</strong>
+    </div>
+    <div class="sheet-footer">
+      <button class="checkout-btn-full" id="mobileGoToCartBtn">
+        Перейти к оформлению
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Алерт «Авторизуйтесь» перед отправкой сообщения -->
+<div class="custom-alert" id="authAlert">
+  <div class="alert-content">
+    <button class="alert-close">×</button>
+    <div class="alert-icon">
+      <i class="fas fa-user-lock"></i>
+    </div>
+    <div class="alert-text">
+      <strong>Авторизуйтесь</strong>
+      <span>Для отправки сообщения нужно войти в аккаунт</span>
+    </div>
+    <button class="alert-login-btn" id="authBtnFeedback">Войти</button>
+  </div>
+</div>
+
+<!-- Мобильная обратная связь (шторка 2025) -->
+<div class="mobile-feedback-top" id="mobileFeedbackTop"></div>
+<div class="mobile-feedback-sheet" id="mobileFeedbackSheet">
+  <div class="sheet-header">
+    <button class="sheet-back-btn" id="closeMobileFeedback">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <div class="sheet-title-wrapper">
+      <i class="fas fa-envelope-open-text"></i>
+      <h2>Обратная связь</h2>
+    </div>
+  </div>
+  <div class="sheet-handle"></div>
+  
+  <form class="contact-form sheet-form" novalidate id="contactFormMobile">
+    <div class="sheet-field">
+      <label>Ваше имя</label>
+      <input type="text" class="name-input" name="name" placeholder="Ваше имя..." required autocomplete="name" />
+    </div>
+    <div class="sheet-field phone-field-wrapper">
+      <label>Телефон <span class="required">*</span></label>
+      <input type="tel" class="phone-input" name="phone" placeholder="+7 (___) ___-__-__" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+    </div>
+    <div class="sheet-field">
+      <label>Email <span class="required">*</span></label>
+      <input type="email" name="email" placeholder="your@email.com" required autocomplete="email" />
+    </div>
+    <div class="sheet-field">
+      <label>Сообщение <span class="required">*</span></label>
+      <textarea name="message" placeholder="Опишите ваш вопрос или предложение..." rows="4" required></textarea>
+    </div>
+    <button type="submit" class="sheet-submit-btn" id="submitBtnMobile">
+      <span class="btn-text">Отправить заявку</span>
+      <span class="btn-loading"><i class="fas fa-spinner fa-spin"></i></span>
+      <span class="btn-cooldown" style="display:none;"><span class="timer">30</span>с</span>
+    </button>
+  </form>
+</div>
+
+<!-- Боковое меню (свайп влево) -->
+<div class="mobile-sidebar" id="mobileSidebar">
+  <div class="sidebar-top">
+    <button class="sidebar-close" id="closeSidebar">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <img src="/static/assets/logo.png" alt="Piligrim" class="sidebar-logo-big">
+  </div>
+
+  <nav class="sidebar-nav-modern">
+    <div class="nav-divider top"></div>
+    <a href="/" class="sidebar-link-modern">Главная</a>
+    <a href="/goods" class="sidebar-link-modern active">Товары</a>
+    <a href="/services" class="sidebar-link-modern">Услуги</a>
+    <a href="/news" class="sidebar-link-modern">Новости</a>
+    <a href="/about_company" class="sidebar-link-modern">О компании</a>
+    <a href="/contacts" class="sidebar-link-modern">Контакты</a>
+    <div class="nav-divider bottom"></div>
+  </nav>
+
+  <div class="sidebar-bottom-theme">
+    <div class="sidebar-theme-toggle">
+      <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+      <label for="theme-toggle" class="theme-toggle-label">
+        <i class="fas fa-moon"></i>
+        <i class="fas fa-sun"></i>
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- AI-ассистент (иконка внизу справа) -->
+<div id="ai-assistant">
+  <svg viewBox="0 0 100 100" class="ai-robot" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f5d78a"/>
+        <stop offset="100%" stop-color="#d4af37"/>
+      </linearGradient>
+      <linearGradient id="suitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#2d2d2d"/>
+        <stop offset="100%" stop-color="#1a1a1a"/>
+      </linearGradient>
+    </defs>
+    <circle cx="50" cy="35" r="18" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+    <circle cx="44" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="56" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="45.5" cy="31" r="1.8" fill="#fff"/>
+    <circle cx="57.5" cy="31" r="1.8" fill="#fff"/>
+    <circle cx="46" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+    <circle cx="58" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+    <path d="M30 52 L28 98 L72 98 L70 52 Q62 58 50 58 Q38 58 30 52 Z" fill="url(#suitGrad)" stroke="#000" stroke-width="2"/>
+    <path d="M50 52 L42 64 L42 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+    <path d="M50 52 L58 64 L58 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+    <path d="M50 58 L46 72 L50 78 L54 72 Z" fill="#8b1e1e"/>
+    <polygon points="46,72 50,78 54,72" fill="#5c1212"/>
+    <circle cx="50" cy="70" r="2.5" fill="#333"/>
+    <circle cx="50" cy="78" r="2.5" fill="#333"/>
+    <circle cx="50" cy="86" r="2.5" fill="#333"/>
+    <rect x="24" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+    <rect x="64" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+    <g transform="translate(12, 68)">
+      <rect x="0" y="0" width="28" height="36" rx="4" fill="#fff" stroke="#111" stroke-width="2"/>
+      <rect x="2" y="2" width="24" height="30" rx="2" fill="#f0f0f0"/>
+      <text x="14" y="11" font-family="Arial, sans-serif" font-size="5.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+      <line x1="4" y1="15" x2="24" y2="15" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="19" x2="24" y2="19" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="23" x2="22" y2="23" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="27" x2="20" y2="27" stroke="#333" stroke-width="0.8"/>
+    </g>
+    <path d="M42 24 Q46 20 50 24" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.6"/>
+  </svg>
+</div>
+
+<!-- AI чат -->
+<div id="ai-chat" class="ai-chat-modal">
+  <div class="ai-chat-header">
+    <div class="ai-chat-title">
+      <svg width="32" height="32" viewBox="0 0 100 100" style="margin-right:10px;">
+        <use href="#goldGrad"/>
+        <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+        <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="39" cy="40" r="2.5" fill="#fff"/>
+        <circle cx="63" cy="40" r="2.5" fill="#fff"/>
+        <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <g transform="translate(8, 62)">
+          <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
+          <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+        </g>
+        <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
+      </svg>
+      <span>Юрист AI</span>
+    </div>
+    <div class="ai-header-buttons">
+      <button class="ai-btn-minimize" onclick="toggleAIChatSize()" title="На весь экран">
+        <i class="fas fa-expand-arrows-alt"></i>
+      </button>
+      <button class="ai-btn-close" onclick="closeAIChat()" title="Закрыть">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+  <div class="ai-chat-body">
+    <div class="ai-chat-messages"></div>
+    <div class="ai-chat-input">
+      <input type="text" id="ai-input" placeholder="Задайте юридический вопрос..." 
+             onkeypress="if(event.key==='Enter' && this.value.trim()) { sendAIMessage(this.value); this.value=''; }">
+      <button onclick="const inp = document.getElementById('ai-input'); if(inp.value.trim()) { sendAIMessage(inp.value); inp.value=''; }" title="Отправить">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Лампочка переключения темы -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
+
+<!-- Кнопка наверх -->
+<a href="#" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
 <script src="static/js/goods.js"></script>
 <script src="/static/js/search.js"></script>
 <script src="/static/js/auth.js"></script>
@@ -396,6 +711,239 @@
 
 <!-- === КРАСИВЫЕ ТОСТЫ + КОРЗИНА + ЗАЩИТА ОТ СПАМА (2025 FINAL) === -->
 <div id="my-toast-container"></div>
+
+<script>
+// МОБИЛЬНАЯ ШТОРКА КАТАЛОГА — УЛЬТРА-ПРЕМИУМ ВЕРСИЯ 2025 (ИДЕАЛЬНО РАБОТАЕТ)
+document.addEventListener('DOMContentLoaded', () => {
+  const trigger   = document.getElementById('mobileCatalogTrigger');
+  const overlay   = document.getElementById('mobileCatalogOverlay');
+  const sheet     = document.getElementById('mobileCatalogSheet');
+  const closeBtn  = sheet?.querySelector('.mobile-catalog-close');
+  const catalogList = sheet?.querySelector('.catalog-list');
+
+  if (!trigger || !overlay || !sheet || !closeBtn || !catalogList) {
+    console.error('Мобильная шторка каталога не найдена!');
+    return;
+  }
+
+  let startX = 0;
+  let currentX = 0;
+  let isDragging = false;
+  let isClosing = false;
+  const threshold = 120;
+  const sheetWidth = sheet.offsetWidth; // фиксируем ширину один раз
+
+  // === КОПИРОВАНИЕ КАТАЛОГА ===
+  const copyCatalog = () => {
+    const original = document.querySelector('#sideCatalog .catalog-list');
+    if (!original) return;
+
+    catalogList.innerHTML = original.innerHTML;
+
+    const activeOriginal = original.querySelector('li.active');
+    if (activeOriginal) {
+      const filter = activeOriginal.querySelector('[data-filter]')?.dataset.filter;
+      if (filter) {
+        const mobileActive = catalogList.querySelector(`[data-filter="${filter}"]`)?.closest('li');
+        if (mobileActive) {
+          catalogList.querySelectorAll('li').forEach(li => li.classList.remove('active'));
+          mobileActive.classList.add('active');
+        }
+      }
+    }
+  };
+
+  // === ОТКРЫТИЕ ===
+  const openSheet = () => {
+    if (isClosing || sheet.classList.contains('active')) return;
+    copyCatalog();
+    overlay.classList.add('active');
+    sheet.classList.add('active');
+    sheet.style.transform = 'translateX(0)'; // принудительно на весь экран
+    document.body.style.overflow = 'hidden';
+  };
+
+  // === ЗАКРЫТИЕ ===
+  const closeSheet = () => {
+    if (isClosing || !sheet.classList.contains('active')) return;
+    isClosing = true;
+
+    sheet.classList.remove('active');
+    overlay.classList.remove('active');
+
+    const onEnd = () => {
+      sheet.style.transition = '';
+      sheet.style.transform = 'translateX(-100%)';
+      document.body.style.overflow = '';
+      isClosing = false;
+      sheet.removeEventListener('transitionend', onEnd);
+    };
+    sheet.addEventListener('transitionend', onEnd);
+    setTimeout(onEnd, 600);
+  };
+
+  // === КНОПКИ ===
+  trigger.addEventListener('click', openSheet);
+  closeBtn.addEventListener('click', closeSheet);
+  overlay.addEventListener('click', e => e.target === overlay && closeSheet());
+
+  // === УМНЫЙ СВАЙП (СЛЕВА → ОТКРЫТЬ, СПРАВА → ЗАКРЫТЬ) ===
+  const handleStart = (e) => {
+    if (isClosing) return;
+    startX = currentX = e.touches?.[0].clientX || e.clientX;
+    isDragging = true;
+    sheet.style.transition = 'none';
+  };
+
+  const handleMove = (e) => {
+    if (!isDragging) return;
+    currentX = e.touches?.[0].clientX || e.clientX;
+    const diff = currentX - startX;
+
+    // Открыта — свайп СПРАВА НАЛЕВО
+    if (sheet.classList.contains('active')) {
+      if (diff < 0) {
+        e.preventDefault();
+        // Ограничиваем: не даём уйти правее 0
+        const limited = Math.max(diff, -sheetWidth);
+        sheet.style.transform = `translateX(${limited}px)`;
+      }
+    }
+    // Закрыта — свайп СЛЕВА НАПРАВО от края
+    else if (startX <= 60 && diff > 0) {
+      e.preventDefault();
+      // Ограничиваем: не даём открыть больше чем на ширину шторки
+      const limited = Math.min(diff, sheetWidth);
+      sheet.style.transform = `translateX(${limited - sheetWidth}px)`;
+    }
+  };
+
+  const handleEnd = () => {
+    if (!isDragging) return;
+    isDragging = false;
+
+    const diff = currentX - startX;
+
+    // Закрываем
+    if (sheet.classList.contains('active') && diff < -threshold) {
+      closeSheet();
+    }
+    // Открываем
+    else if (!sheet.classList.contains('active') && startX <= 60 && diff > threshold) {
+      openSheet();
+    }
+    // Возвращаем на место
+    else {
+      sheet.style.transition = 'transform 0.44s cubic-bezier(0.22, 1, 0.36, 1)';
+      sheet.style.transform = sheet.classList.contains('active')
+        ? 'translateX(0)'
+        : 'translateX(-100%)';
+      setTimeout(() => sheet.style.transition = '', 450);
+    }
+  };
+
+  // === СЛУШАТЕЛИ ===
+  document.addEventListener('touchstart', handleStart, { passive: true });
+  document.addEventListener('touchmove', handleMove, { passive: false });
+  document.addEventListener('touchend', handleEnd);
+
+  // Для десктопа (тест)
+  document.addEventListener('mousedown', handleStart);
+  document.addEventListener('mousemove', e => isDragging && handleMove(e));
+  document.addEventListener('mouseup', handleEnd);
+
+  // === КЛИК ПО ФИЛЬТРУ ===
+  catalogList.addEventListener('click', e => {
+    const clicked = e.target.closest('[data-filter]');
+    if (!clicked) return;
+
+    const filterValue = clicked.dataset.filter;
+    if (!filterValue) return;
+
+    closeSheet();
+
+    document.querySelectorAll('#sideCatalog .catalog-list li').forEach(li => li.classList.remove('active'));
+    const desktopItem = document.querySelector(`#sideCatalog .catalog-list [data-filter="${filterValue}"]`);
+    if (desktopItem) {
+      desktopItem.closest('li')?.classList.add('active');
+    }
+
+    if (typeof applyFiltersAndSort === 'function') {
+      applyFiltersAndSort();
+    }
+  });
+});
+</script>
+
+<script>
+// СВАЙП ВНИЗ → ЗАКРЫТЬ МОДАЛКУ (ТОЛЬКО НА МОБИЛКЕ — БЕЗ МИГАНИЯ, НАВСЕГДА!)
+(() => {
+  const modal = document.getElementById('modal');
+  if (!modal) return;
+
+  let startY = 0;
+  let isDragging = false;
+  const threshold = 150;
+
+  const isMobile = () => window.innerWidth <= 1024 || 'ontouchstart' in window;
+
+  const handleStart = (e) => {
+    if (!modal.classList.contains('active') || !isMobile()) return;
+
+    const target = e.target;
+    const scrollable = target.closest('.modal-info, .reviews-list, .modal-gallery');
+    if (scrollable && scrollable.scrollTop > 10) return;
+
+    startY = e.touches[0].clientY;
+    isDragging = true;
+    modal.style.transition = 'none';
+  };
+
+  const handleMove = (e) => {
+    if (!isDragging) return;
+
+    const currentY = e.touches[0].clientY;
+    const diff = currentY - startY;
+
+    if (diff > 0) {
+      e.preventDefault();
+      modal.style.transform = `translateY(${diff}px)`;
+      const opacity = Math.max(0.3, 1 - diff / 600);
+      modal.style.background = `rgba(0,0,0,${opacity})`;
+    }
+  };
+
+  const handleEnd = () => {
+    if (!isDragging) return;
+    isDragging = false;
+
+    const diff = parseInt(modal.style.transform.match(/-?\d+\.?\d*/)?.[0] || 0);
+
+    if (diff > threshold) {
+      modal.style.transition = 'transform 0.55s cubic-bezier(0.22,1,0.36,1), background 0.55s';
+      modal.style.transform = 'translateY(110vh)';
+      modal.style.background = 'rgba(0,0,0,0)';
+
+      // ВЫЗЫВАЕМ ТОЛЬКО ГЛОБАЛЬНЫЙ closeModal — И БОЛЬШЕ НИКАКИХ fallback!
+      setTimeout(() => {
+        if (typeof window.closeModal === 'function') {
+          window.closeModal();
+        }
+        // ← БЕЗ else! БЕЗ локальной closeModal()!
+      }, 550);
+    } else {
+      modal.style.transition = 'transform 0.44s cubic-bezier(0.22,1,0.36,1), background 0.4s';
+      modal.style.transform = 'translateY(0)';
+      modal.style.background = 'rgba(0,0,0,0.92)';
+      setTimeout(() => modal.style.transition = '', 450);
+    }
+  };
+
+  modal.addEventListener('touchstart', handleStart, { passive: true });
+  modal.addEventListener('touchmove', handleMove, { passive: false });
+  modal.addEventListener('touchend', handleEnd);
+})();
+</script>
 
 <style>
   #my-toast-container {
@@ -477,7 +1025,11 @@ button[disabled].spam-blocked::after {
   background: rgba(20, 20, 20, 0.96) !important;
 }
 </style>
-
+<script>
+  if (window.innerWidth <= 1024 && !document.body.classList.contains('mobile-layout')) {
+    document.body.classList.add('mobile-layout');
+  }
+</script>
 <script>
 // === ТОСТЫ ===
 function toast(message, type = 'success') {
@@ -680,7 +1232,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
-
 <script>
 // Заменяем полностью этот скрипт внизу страницы
 document.getElementById('modal-order')?.addEventListener('click', async function() {
@@ -718,5 +1269,6 @@ document.getElementById('modal-order')?.addEventListener('click', async function
   }
 });
 </script>
+
 </body>
 </html>

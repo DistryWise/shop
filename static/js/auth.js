@@ -585,7 +585,7 @@ authBtnFresh.innerHTML = `
     if (data.success) {
       localStorage.setItem(SAVED_PHONE_KEY, JSON.stringify({ countryCode, phoneDigits }));
       goToCodeStep(fullPhone);
-      showToast('Код отправлен!', 'Проверьте SMS');
+      showToast('<span style="white-space:nowrap; font-size:1.02rem; font-weight:600; letter-spacing:0.5px">Код отправлен! Проверьте SMS</span>');
     } else {
       showToast('Ошибка', data.error || 'Попробуйте позже', true);
     }
