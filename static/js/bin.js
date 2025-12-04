@@ -2059,54 +2059,63 @@ document.getElementById('multiOrderModal').addEventListener('click', e => {
 
 // Перехват оформления заказа
 window.startOrderChain = async function(orderId) {
-  let order = null;
-
-  // 1. Сначала пробуем твой старый роут (на локалке он есть — будет работать)
   try {
-    const res = await fetch(`/api/order/${orderId}?t=${Date.now()}`);
-    if (res.ok) {
-      order = await res.json();
+    // ПРАВИЛЬНЫЙ роут — с _status!
+    const res = await fetch(`/api/order_status/${orderId}?t=${Date.now()}`, { cache: 'no-store' });
+    
+    if (!res.ok) throw new Error('Not found');
+    
+    const order = await res.json();
+
+    // Добавляем в активные заказы
+    if (!activeOrders.find(o => o.id === orderId)) {
+      activeOrders.unshift({
+        id: orderId,
+        display_id: order.display_id || `№${orderId}`,
+        status: order.status || 'pending',
+        total_str: order.total_str || '0 ₽',
+        created_at: new Date().toISOString(),
+        items: order.items || []
+      });
+      if (activeOrders.length > 3) activeOrders.pop();
+      updateFloatingPill();
+      renderVerticalOrders();
     }
-  } catch (e) {}
 
-  // 2. Если не получилось — берём из общего списка заказов (на render.com точно есть)
-  if (!order) {
-    try {
-      const res = await fetch('/api/user_orders?t=' + Date.now());
-      if (res.ok) {
-        const orders = await res.json();
-        order = orders.find(o => o.id == orderId || (o.display_id && o.display_id.includes(orderId)));
-      }
-    } catch (e) {}
-  }
+    // Показываем красивую цепочку в раскрывашке
+    const target = document.getElementById(`chain-${orderId}`);
+    if (target && !target.dataset.loaded) {
+      const statusLabel = {
+        pending: 'Принят',
+        confirmed: 'Подтверждён',
+        processing: 'В обработке',
+        shipping: 'В доставке',
+        completed: 'Выполнен',
+        cancelled: 'Отменён'
+      }[order.status] || 'В работе';
 
-  // 3. Если заказ так и не нашли — выходим молча
-  if (!order) {
-    console.warn('Заказ не найден:', orderId);
-    return;
-  }
-
-  // Обновляем activeOrders
-  if (!activeOrders.find(o => o.id === order.id)) {
-    activeOrders.unshift(order);
-    if (activeOrders.length > 3) activeOrders.pop();
-    updateFloatingPill();
-    renderVerticalOrders();
-  }
-
-  // Показываем хотя бы базовую инфу в раскрывашке
-  const target = document.getElementById(`chain-${orderId}`);
-  if (target && !target.dataset.loaded) {
-    target.innerHTML = `
-      <div style="padding:20px;text-align:center;color:#aaa;">
-        <div style="font-size:15px;margin-bottom:8px;">Статус заказа</div>
-        <div style="font-weight:600;color:#00ff95;">${order.status || 'в обработке'}</div>
-        <div style="font-size:13px;margin-top:12px;color:#777;">
-          Создан: ${new Date(order.created_at).toLocaleDateString('ru-RU')}
+      target.innerHTML = `
+        <div style="padding:20px;text-align:center;">
+          <div style="font-size:16px;margin-bottom:12px;color:#aaa;">Статус заказа</div>
+          <div style="font-size:24px;font-weight:800;color:#00ff95;margin-bottom:16px;">
+            ${statusLabel}
+          </div>
+          ${order.cancel_reason ? `<div style="color:#ff6b6b;margin-top:12px;"><strong>Причина отмены:</strong><br>${order.cancel_reason}</div>` : ''}
+          <div style="margin-top:20px;font-size:14px;color:#888;">
+            Заказ создан: ${new Date(order.created_at || Date.now()).toLocaleDateString('ru-RU')}
+          </div>
         </div>
-      </div>
-    `;
-    target.dataset.loaded = 'true';
+      `;
+      target.dataset.loaded = 'true';
+    }
+
+  } catch (err) {
+    console.warn('Не удалось загрузить статус заказа', orderId);
+    const target = document.getElementById(`chain-${orderId}`);
+    if (target && !target.dataset.loaded) {
+      target.innerHTML = '<div style="padding:20px;text-align:center;color:#ff6b6b;">Ошибка загрузки</div>';
+      target.dataset.loaded = 'true';
+    }
   }
 };
 
