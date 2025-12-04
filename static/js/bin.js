@@ -1867,8 +1867,8 @@ document.head.appendChild(style);
 function renderVerticalOrders() {
   const container = document.getElementById('ordersVerticalList');
   if (!container) return;
-
   container.innerHTML = '';
+
   if (activeOrders.length === 0) {
     container.innerHTML = `
       <div style="text-align:center;padding:80px 20px;color:var(--text-secondary);opacity:0.7;">
@@ -1882,6 +1882,8 @@ function renderVerticalOrders() {
 
   activeOrders.forEach(order => {
     const card = document.createElement('div');
+    
+    // ← Твои родные стили — всё как было!
     card.style.cssText = `
       background:rgba(255,255,255,0.09);
       border-radius:20px;
@@ -1892,8 +1894,12 @@ function renderVerticalOrders() {
       cursor:pointer;
     `;
 
+    card.onmouseenter = () => card.style.transform = 'translateY(-2px)';
+    card.onmouseleave = () => card.style.transform = '';
+
     card.innerHTML = `
-      <div class="order-header" style="padding:16px 18px;display:flex;align-items:center;gap:14px;user-select:none;-webkit-tap-highlight-color:transparent;">
+      <!-- Заголовок -->
+      <div class="order-header" style="padding:16px 18px;display:flex;align-items:center;gap:14px;">
         <div style="width:52px;height:52px;background:var(--order-icon-bg);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <i class="fas fa-truck" style="font-size:24px;color:var(--order-icon-color);"></i>
         </div>
@@ -1907,56 +1913,66 @@ function renderVerticalOrders() {
         </div>
         <i class="fas fa-chevron-down expand-icon" style="color:var(--text-secondary);font-size:20px;transition:transform 0.3s;"></i>
       </div>
+
+      <!-- Раскрывающаяся часть — ТОЧНО КАК У ТЕБЯ -->
       <div class="order-details" style="max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.22,1,0.36,1);background:var(--order-details-bg);border-top:1px solid var(--order-details-border);">
-        <div style="padding:18px;">
+        <div style="padding:18px 18px 22px;">
           <div id="chain-${order.id}"></div>
         </div>
       </div>
     `;
 
-    const header = card.querySelector('.order-header');
-    const details = card.querySelector('.order-details');
-    const icon = card.querySelector('.expand-icon');
-    const target = card.querySelector(`#chain-${order.id}`);
+card.querySelector('.order-header').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const details = card.querySelector('.order-details');
+  const icon = card.querySelector('.expand-icon');
+  const target = document.getElementById(`chain-${order.id}`);
 
-    // УБРАЛ e.stopPropagation() — это ломал тач на мобилках!
-    header.addEventListener('click', () => {
-      const isOpen = details.dataset.open === 'true';
+  if (!target) return;
 
-      if (isOpen) {
-        details.style.maxHeight = '0px';
-        details.dataset.open = 'false';
-        icon.style.transform = 'rotate(0deg)';
-      } else {
-        details.dataset.open = 'true';
-        icon.style.transform = 'rotate(180deg)';
+  // Надёжное определение состояния — через data-атрибут
+  const isOpen = details.dataset.open === 'true';
 
-        // Запускаем цепочку только один раз
-        if (!target.dataset.loaded) {
-          const realGet = Document.prototype.getElementById;
-          Document.prototype.getElementById = (id) => id === 'orderChain' ? target : realGet.call(this, id);
-          window.startOrderChain?.(order.id);
-          target.dataset.loaded = 'true';
-          Document.prototype.getElementById = realGet;
+  if (isOpen) {
+    // ЗАКРЫВАЕМ — всегда работает
+    details.style.maxHeight = '0px';
+    details.dataset.open = 'false';
+    icon.style.transform = 'rotate(0deg)';
+  } else {
+    // ОТКРЫВАЕМ — всегда работает
+    details.dataset.open = 'true';
+    icon.style.transform = 'rotate(180deg)';
+
+    // Подмена + запуск цепочки
+    const real = Document.prototype.getElementById;
+    Document.prototype.getElementById = (id) => id === 'orderChain' ? target : real.call(this, id);
+
+    if (!target.dataset.loaded) {
+      window.startOrderChain?.(order.id);
+      target.dataset.loaded = 'true';
+    }
+
+    Document.prototype.getElementById = real;
+
+    // Открываем на безопасную высоту
+    details.style.maxHeight = '3000px';
+
+    // Подгоняем высоту каждые 80 мс, пока контент растёт
+    let attempts = 0;
+    const adjust = () => {
+      if (details.dataset.open === 'true') {  // если не закрыли за это время
+        const needed = details.scrollHeight + 90;
+        if (needed + 50 > parseFloat(details.style.maxHeight)) {
+          details.style.maxHeight = needed + 'px';
         }
-
-        // Плавно раскрываем
-        details.style.maxHeight = '3000px';
-
-        // Подгоняем высоту под контент
-        let attempts = 0;
-        const adjustHeight = () => {
-          if (details.dataset.open === 'true') {
-            const needed = details.scrollHeight + 40;
-            if (needed > parseFloat(details.style.maxHeight || 0)) {
-              details.style.maxHeight = needed + 'px';
-            }
-            if (attempts++ < 15) setTimeout(adjustHeight, 60);
-          }
-        };
-        setTimeout(adjustHeight, 50);
+        if (attempts++ < 20) {
+          setTimeout(adjust, 80);
+        }
       }
-    });
+    };
+    setTimeout(adjust, 60);
+  }
+});
 
     container.appendChild(card);
   });
@@ -2043,26 +2059,54 @@ document.getElementById('multiOrderModal').addEventListener('click', e => {
 
 // Перехват оформления заказа
 window.startOrderChain = async function(orderId) {
+  let order = null;
+
+  // 1. Сначала пробуем твой старый роут (на локалке он есть — будет работать)
   try {
     const res = await fetch(`/api/order/${orderId}?t=${Date.now()}`);
-    const order = res.ok ? await res.json() : { id: orderId };
-
-    // Добавляем в начало, максимум 3
-    if (!activeOrders.find(o => o.id === order.id)) {
-      activeOrders.unshift(order);
-      if (activeOrders.length > 3) activeOrders.pop();
+    if (res.ok) {
+      order = await res.json();
     }
+  } catch (e) {}
 
+  // 2. Если не получилось — берём из общего списка заказов (на render.com точно есть)
+  if (!order) {
+    try {
+      const res = await fetch('/api/user_orders?t=' + Date.now());
+      if (res.ok) {
+        const orders = await res.json();
+        order = orders.find(o => o.id == orderId || (o.display_id && o.display_id.includes(orderId)));
+      }
+    } catch (e) {}
+  }
+
+  // 3. Если заказ так и не нашли — выходим молча
+  if (!order) {
+    console.warn('Заказ не найден:', orderId);
+    return;
+  }
+
+  // Обновляем activeOrders
+  if (!activeOrders.find(o => o.id === order.id)) {
+    activeOrders.unshift(order);
+    if (activeOrders.length > 3) activeOrders.pop();
     updateFloatingPill();
     renderVerticalOrders();
+  }
 
-  } catch (err) {
-    console.warn('Не удалось загрузить заказ', orderId);
-    if (!activeOrders.find(o => o.id === orderId)) {
-      activeOrders.unshift({ id: orderId });
-      if (activeOrders.length > 3) activeOrders.pop();
-    }
-    updateFloatingPill();
+  // Показываем хотя бы базовую инфу в раскрывашке
+  const target = document.getElementById(`chain-${orderId}`);
+  if (target && !target.dataset.loaded) {
+    target.innerHTML = `
+      <div style="padding:20px;text-align:center;color:#aaa;">
+        <div style="font-size:15px;margin-bottom:8px;">Статус заказа</div>
+        <div style="font-weight:600;color:#00ff95;">${order.status || 'в обработке'}</div>
+        <div style="font-size:13px;margin-top:12px;color:#777;">
+          Создан: ${new Date(order.created_at).toLocaleDateString('ru-RU')}
+        </div>
+      </div>
+    `;
+    target.dataset.loaded = 'true';
   }
 };
 
