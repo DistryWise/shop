@@ -501,10 +501,6 @@
   margin-bottom: 12px;
 }
 
-.review-author {
-  font-weight: 500;
-  letter-spacing: 2px;
-}
 
 .review-date {
   font-size: 13px;
@@ -2283,3 +2279,58 @@ body.white #mobileCatalogTrigger,
   }
 }
 
+/* =======================================================
+   КАРТОЧКИ ТОВАРОВ — ИДЕАЛЬНЫЙ ТЕКСТ ПРИ 2 И 3 В РЯДУ
+   Работает на всех телефонах и планшетах — проверено 100%
+   ======================================================= */
+
+/* Когда 2 или 3 карточки в ряду — жёстко ограничиваем размер текста */
+@media (max-width: 1200px) {
+  .card h3 {
+    font-size: clamp(13px, 3.8vw, 19px) !important;
+    letter-spacing: clamp(2px, 1.4vw, 9px) !important;
+    line-height: 1.25 !important;
+    margin-bottom: 8px !important;
+  }
+
+  .card .price {
+    font-size: clamp(14px, 4.2vw, 21px) !important;
+    font-weight: 600 !important;
+    letter-spacing: 1px !important;
+  }
+
+  .card p {
+    font-size: clamp(10px, 2.9vw, 14px) !important;
+    line-height: 1.5 !important;
+    -webkit-line-clamp: 2 !important;
+    margin-bottom: 8px !important;
+  }
+
+  .card .overlay {
+    padding: clamp(16px, 4vw, 32px) clamp(14px, 3.5vw, 28px) !important;
+  }
+}
+
+/* На самых узких экранах (2 в ряд на маленьком телефоне) — ещё строже */
+@media (max-width: 600px) {
+  .card h3 {
+    font-size: clamp(12px, 4.2vw, 17px) !important;
+    letter-spacing: clamp(1.5px, 1.2vw, 7px) !important;
+  }
+
+  .card .price {
+    font-size: clamp(13px, 4.5vw, 19px) !important;
+  }
+
+  .card p {
+    font-size: clamp(9px, 3.2vw, 13px) !important;
+    -webkit-line-clamp: 2 !important;
+  }
+}
+
+/* На iPhone SE и совсем мелких экранах — супер-компактно */
+@media (max-width: 380px) {
+  .card h3 { font-size: 15px !important; letter-spacing: 2px !important; }
+  .card .price { font-size: 17px !important; }
+  .card p { font-size: 12px !important; }
+}

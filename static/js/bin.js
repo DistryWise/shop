@@ -1368,50 +1368,80 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${rub.toLocaleString('ru-RU')}.${kop} ₽`;
   };
 
-  // ЭТО БЫЛО ПРОПУЩЕНО — СЕЙЧАС ВСЁ РАБОТАЕТ!
-  const updateQuantity = async (id, type, change) => {
-    const item = currentCartItems.find(i => i.id == id && (i.type || 'product') === type);
-    if (!item) return;
+const updateQuantity = async (id, type, change) => {
+    const isLoggedIn = !!sessionStorage.getItem('user_id');
 
-    const newQty = item.quantity + change;
-    if (newQty < 0) return;
+    if (isLoggedIn) {
+        // Только авторизованные шлют запрос на сервер
+        const item = currentCartItems.find(i => i.id == id && (i.type || 'product') === type);
+        if (!item) return;
+        const newQty = item.quantity + change;
+        if (newQty < 0) return;
 
-    try {
-      const res = await fetch('/api/cart/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          [type === 'service' ? 'service_id' : 'product_id']: id,
-          quantity: newQty > 0 ? newQty : 0
-        })
-      });
+        try {
+            const res = await fetch('/api/cart/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    [type === 'service' ? 'service_id' : 'product_id']: id,
+                    quantity: newQty > 0 ? newQty : 0
+                })
+            });
 
-      if (res.ok) {
-        await loadCart(); // универсальная функция из cart.js — обновит всё
-      }
-    } catch (err) {
-      console.error('Ошибка обновления количества:', err);
+            if (res.ok) await loadCart();
+        } catch (err) {
+            console.error(err);
+        }
+    } else {
+        // ГОСТЬ — работаем только с localStorage, как в cart.js
+        let clientCart = JSON.parse(localStorage.getItem('clientCart') || '[]');
+        const item = clientCart.find(i => i.id == id && i.type === type);
+        if (!item) return;
+
+        const newQty = item.quantity + change;
+        if (newQty <= 0) {
+            clientCart = clientCart.filter(i => !(i.id == id && i.type === type));
+        } else {
+            item.quantity = newQty;
+        }
+        localStorage.setItem('clientCart', JSON.stringify(clientCart));
+
+        // После изменения — просто перезагружаем корзину через loadCart() из cart.js
+        if (typeof loadCart === 'function') {
+            await loadCart(); // ← это обновит и мини-корзину, и /bin через cartUpdated
+        }
     }
-  };
+};
 
-  const removeFromCart = async (id, type) => {
-    try {
-      const res = await fetch('/api/cart/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          [type === 'service' ? 'service_id' : 'product_id']: id,
-          quantity: 0
-        })
-      });
+const removeFromCart = async (id, type) => {
+    const isLoggedIn = !!sessionStorage.getItem('user_id');
 
-      if (res.ok) {
-        await loadCart();
-      }
-    } catch (err) {
-      console.error('Ошибка удаления:', err);
+    if (isLoggedIn) {
+        // Только авторизованные идут на сервер
+        try {
+            const res = await fetch('/api/cart/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    [type === 'service' ? 'service_id' : 'product_id']: id,
+                    quantity: 0
+                })
+            });
+            if (res.ok) await loadCart();
+        } catch (err) {
+            console.error(err);
+        }
+    } else {
+        // ГОСТЬ — просто удаляем из localStorage
+        let clientCart = JSON.parse(localStorage.getItem('clientCart') || '[]');
+        clientCart = clientCart.filter(i => !(i.id == id && i.type === type));
+        localStorage.setItem('clientCart', JSON.stringify(clientCart));
+
+        if (typeof loadCart === 'function') {
+            await loadCart(); // ← обновит всё через событие cartUpdated
+        }
     }
-  };
+};
 
   // КНОПКИ ТЕПЕРЬ РАБОТАЮТ!
   const handleCartClick = (e) => {
@@ -1708,10 +1738,6 @@ document.addEventListener('click', e => {
   }
 }, true);
 
-// Опционально: можно добавить визуальный таймер в шапку или корзину
-
-
-
 
 // Кнопка закрытия цепочки (с очисткой поллинга)
 document.getElementById('orderChainToggle')?.addEventListener('click', () => {
@@ -1721,9 +1747,6 @@ document.getElementById('orderChainToggle')?.addEventListener('click', () => {
         window.pollInterval = null;
     }
 });
-
-
-
 
   // Автоматом показываем красивую пустоту, если архив пуст
   document.addEventListener('DOMContentLoaded', () => {
@@ -1744,8 +1767,6 @@ document.getElementById('orderChainToggle')?.addEventListener('click', () => {
     const observer = new MutationObserver(checkEmpty);
     if (ordersList) observer.observe(ordersList, { childList: true, subtree: true });
   });
-
-
 
 // ГОРЯЧИЙ ФИКС 2025: делаем так, чтобы старый statuschain.js работал с новой разметкой
 document.addEventListener('DOMContentLoaded', () => {
@@ -1773,9 +1794,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 });
-
-
-
 
 // === ФИНАЛЬНАЯ ВЕРТИКАЛЬНАЯ ВЕРСИЯ 2025 — КРАСИВО, ЧИТАЕМО, БЕЗ ГОРИЗОНТАЛЬНОГО СКРОЛЛА ===
 let activeOrders = [];

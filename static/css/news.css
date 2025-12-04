@@ -1545,3 +1545,145 @@ footer {
     height: 60px;
   }
 }
+/* ================================================
+   КАРТОЧКИ НОВОСТЕЙ — ИДЕАЛЬНАЯ МОБИЛЬНАЯ АДАПТАЦИЯ
+   Работает на всех экранах: от 320px до 768px
+   Никаких обрезанных картинок и вылезающего текста
+   ================================================ */
+
+@media (max-width: 992px) {
+  .news-card {
+    height: auto !important;
+    min-height: 420px;
+    flex-direction: column;
+  }
+
+  .news-card-image {
+    position: relative !important;
+    width: 100% !important;
+    height: 48vh !important;
+    min-height: 280px;
+    max-height: 360px;
+    object-fit: cover;
+  }
+
+  .news-card-content {
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    padding: 2rem 1.8rem 2.4rem;
+    width: 100%;
+    text-align: center;
+  }
+
+  .news-card-content h3 {
+    font-size: 1.9rem !important;
+    line-height: 1.25;
+    margin-bottom: 0.8rem;
+    letter-spacing: 1px;
+  }
+
+  .news-card-excerpt {
+    font-size: 1.05rem !important;
+    line-height: 1.65;
+    max-width: 100% !important;
+    opacity: 0.9;
+    margin-bottom: 1.4rem;
+  }
+
+  .news-card-date {
+    font-size: 0.88rem;
+    letter-spacing: 2px;
+    margin-bottom: 0.8rem;
+  }
+
+  .news-card-link {
+    font-size: 0.98rem;
+    padding: 0.6rem 0;
+  }
+
+  /* Убираем градиент — он больше не нужен */
+  .news-card::before {
+    display: none;
+  }
+}
+
+/* Экстра-мелкие экраны (iPhone SE, 320–380px) */
+@media (max-width: 480px) {
+  .news-card {
+    min-height: 380px;
+    border-radius: 18px;
+  }
+
+  .news-card-image {
+    height: 44vh !important;
+    min-height: 240px;
+  }
+
+  .news-card-content {
+    padding: 1.8rem 1.4rem 2rem;
+  }
+
+  .news-card-content h3 {
+    font-size: 1.7rem !important;
+    letter-spacing: 0.8px;
+  }
+
+  .news-card-excerpt {
+    font-size: 1rem !important;
+  }
+}
+
+/* Планшеты 768–992px — чуть компактнее */
+@media (min-width: 769px) and (max-width: 992px) {
+  .news-card {
+    min-height: 460px;
+  }
+  .news-card-image {
+    height: 50vh;
+  }
+}
+
+/* =====================================================
+   НОВОСТИ — ИДЕАЛЬНЫЙ ЗАГОЛОВОК БЕЗ ПЕРЕНОСОВ НА МОБИЛКЕ
+   Работает на всех телефонах: iPhone SE → 15 Pro, Android
+   ===================================================== */
+
+@media (max-width: 992px) {
+  .news-title {
+    font-size: clamp(2.8rem, 11vw, 5rem) !important;
+    letter-spacing: clamp(4px, 1.8vw, 12px) !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;        /* ← Главная строчка: запрещаем перенос */
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    padding: 0 1rem;                       /* чтобы не вылезало за экран */
+    box-sizing: border-box;
+  }
+
+  .news-subtitle {
+    font-size: clamp(1rem, 4.2vw, 1.3rem) !important;
+    line-height: 1.5 !important;
+    padding: 0 1.5rem;
+    box-sizing: border-box;
+    /* Если и подзаголовок ломается — можно тоже запретить перенос: */
+    /* white-space: nowrap; */
+    /* overflow: hidden; */
+    /* text-overflow: ellipsis; */
+  }
+
+  /* Блок с заголовком и подзаголовком — чуть меньше отступы, чтобы не прилипало */
+  .news-intro {
+    margin-bottom: 8rem !important;
+    padding: 0 1rem;
+  }
+}
+
+/* Очень узкие экраны (iPhone SE и подобные) */
+@media (max-width: 480px) {
+  .news-title {
+    font-size: clamp(2.4rem, 12vw, 4rem) !important;
+    letter-spacing: clamp(3px, 1.5vw, 8px) !important;
+  }
+}

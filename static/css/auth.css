@@ -1461,3 +1461,24 @@ html[data-theme="light"] #authBtn.logged-in:hover .avatar-circle {
   opacity: 1 !important;
 }
 
+/* ФИКС: убираем лишний letter-spacing из body внутри модалки авторизации */
+#authModal,
+#authModal * {
+  letter-spacing: normal !important;
+}
+
+/* Если хочешь оставить лёгкий spacing только там, где он предусмотрен дизайном — делай так: */
+#authModal .auth-title {           /* «Вход по номеру телефона» */
+  letter-spacing: 4px;
+}
+#authModal .auth-btn {             /* кнопка «Получить код» */
+  letter-spacing: 6px;
+}
+#authModal .checkbox-label,
+#authModal .auth-link {
+  letter-spacing: 1.2px;
+}
+#authModal input,
+#authModal .country-item {
+  letter-spacing: 0.5px;
+}

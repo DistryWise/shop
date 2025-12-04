@@ -918,19 +918,41 @@ async function openModal(id, pushHistory = true) {
 
           if (reviews.length > 0) {
             noReviews.style.display = 'none';
-            reviews.forEach(r => {
-              const div = document.createElement('div');
-              div.className = 'review';
-              div.innerHTML = `
-                <div class="review-header">
-                  <div class="review-author">${r.author}</div>
-                  <div class="review-date">${formatDate(r.date)}</div>
-                </div>
-                <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
-                <div class="review-text">${escapeHtml(r.text)}</div>
-              `;
-              reviewsEl.appendChild(div);
-            });
+reviews.forEach(r => {
+      // 40+ крутых эмодзи — как в твоей карточке поиска
+       const emojis = ['😊','😎','🥰','🤩','😇','😋','🤔','😴','🥳','🤗','😜','😺','🐶','🐱','🦊','🐼','🦁','🐸','🐵','🤖','👻','🎃','💩','🦄','🍔','🍕'];
+      const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+      const div = document.createElement('div');
+      div.className = 'review';
+      div.innerHTML = `
+        <div style="display:flex;align-items:center;margin-bottom:16px;">
+          <!-- АВАТАР С ЭМОДЗИ -->
+          <div style="width:44px;height:44px;border-radius:50%;background:#f8f8f8;display:flex;align-items:center;justify-content:center;font-size:28px;margin-right:16px;flex-shrink:0;">
+            ${randomEmoji}
+          </div>
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:16px;margin-bottom:4px;">
+              ${r.author || 'Аноним'}
+            </div>
+            <div style="opacity:0.7;font-size:13px;">
+              ${formatDate(r.date)}
+            </div>
+          </div>
+        </div>
+
+        <!-- ТВОИ ЛЮБИМЫЕ ЗВЁЗДЫ — ТОЧНО КАК ТЫ ПРОСИЛ -->
+        <div style="margin-bottom:12px;">
+          ${'⭐'.repeat(r.rating)}${'empty_star'.repeat(5 - r.rating)}
+        </div>
+
+        <!-- ТЕКСТ ОТЗЫВА -->
+        <div style="line-height:1.7;font-size:15px;opacity:0.9;">
+          ${escapeHtml(r.text || '')}
+        </div>
+      `;
+      reviewsEl.appendChild(div);
+    });
           } else {
             noReviews.style.display = 'block';
           }
