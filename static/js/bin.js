@@ -2060,62 +2060,25 @@ document.getElementById('multiOrderModal').addEventListener('click', e => {
 // Перехват оформления заказа
 window.startOrderChain = async function(orderId) {
   try {
-    // ПРАВИЛЬНЫЙ роут — с _status!
-    const res = await fetch(`/api/order_status/${orderId}?t=${Date.now()}`, { cache: 'no-store' });
-    
-    if (!res.ok) throw new Error('Not found');
-    
-    const order = await res.json();
+    const res = await fetch(`/api/order/${orderId}?t=${Date.now()}`);
+    const order = res.ok ? await res.json() : { id: orderId };
 
-    // Добавляем в активные заказы
-    if (!activeOrders.find(o => o.id === orderId)) {
-      activeOrders.unshift({
-        id: orderId,
-        display_id: order.display_id || `№${orderId}`,
-        status: order.status || 'pending',
-        total_str: order.total_str || '0 ₽',
-        created_at: new Date().toISOString(),
-        items: order.items || []
-      });
+    // Добавляем в начало, максимум 3
+    if (!activeOrders.find(o => o.id === order.id)) {
+      activeOrders.unshift(order);
       if (activeOrders.length > 3) activeOrders.pop();
-      updateFloatingPill();
-      renderVerticalOrders();
     }
 
-    // Показываем красивую цепочку в раскрывашке
-    const target = document.getElementById(`chain-${orderId}`);
-    if (target && !target.dataset.loaded) {
-      const statusLabel = {
-        pending: 'Принят',
-        confirmed: 'Подтверждён',
-        processing: 'В обработке',
-        shipping: 'В доставке',
-        completed: 'Выполнен',
-        cancelled: 'Отменён'
-      }[order.status] || 'В работе';
-
-      target.innerHTML = `
-        <div style="padding:20px;text-align:center;">
-          <div style="font-size:16px;margin-bottom:12px;color:#aaa;">Статус заказа</div>
-          <div style="font-size:24px;font-weight:800;color:#00ff95;margin-bottom:16px;">
-            ${statusLabel}
-          </div>
-          ${order.cancel_reason ? `<div style="color:#ff6b6b;margin-top:12px;"><strong>Причина отмены:</strong><br>${order.cancel_reason}</div>` : ''}
-          <div style="margin-top:20px;font-size:14px;color:#888;">
-            Заказ создан: ${new Date(order.created_at || Date.now()).toLocaleDateString('ru-RU')}
-          </div>
-        </div>
-      `;
-      target.dataset.loaded = 'true';
-    }
+    updateFloatingPill();
+    renderVerticalOrders();
 
   } catch (err) {
-    console.warn('Не удалось загрузить статус заказа', orderId);
-    const target = document.getElementById(`chain-${orderId}`);
-    if (target && !target.dataset.loaded) {
-      target.innerHTML = '<div style="padding:20px;text-align:center;color:#ff6b6b;">Ошибка загрузки</div>';
-      target.dataset.loaded = 'true';
+    console.warn('Не удалось загрузить заказ', orderId);
+    if (!activeOrders.find(o => o.id === orderId)) {
+      activeOrders.unshift({ id: orderId });
+      if (activeOrders.length > 3) activeOrders.pop();
     }
+    updateFloatingPill();
   }
 };
 

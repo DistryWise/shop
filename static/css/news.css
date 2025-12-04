@@ -27,13 +27,7 @@
     ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.35); }
 
-    .custom-cursor {
-      position: fixed; width: 12px; height: 12px; background: #fff;
-      border-radius: 50%; pointer-events: none; z-index: 9999;
-      transform: translate(-50%, -50%); mix-blend-mode: difference;
-      transition: transform 0.12s ease;
-    }
-    body, a, button { cursor: none !important; }
+
 
     /* === ХЕДЕР === */
     header { 
@@ -405,8 +399,7 @@ header.scrolled + .theme-toggle-hanging { top: 76px; }
 [data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); }
 [data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.3); }
 
-/* Курсор */
-[data-theme="light"] .custom-cursor { background: #000; }
+
 
 /* Хедер */
 [data-theme="light"] header {
@@ -1094,23 +1087,7 @@ html[data-theme="light"] .cart-count {
   color: #fff !important;
 }
 
-/* === КУРСОР В СВЕТЛОЙ ТЕМЕ — ТОЧНО КАК В CONTACTS.CSS === */
-html[data-theme="light"] .custom-cursor,
-[data-theme="light"] .custom-cursor {
-  background: #000 !important;
-  mix-blend-mode: normal !important;
-  opacity: 0.88;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.32);
-  transition: transform 0.14s ease, opacity 0.3s ease, box-shadow 0.3s ease;
-}
 
-html[data-theme="light"] .custom-cursor.hover,
-[data-theme="light"] .custom-cursor:hover {
-  transform: translate(-50%, -50%) scale(2.8) !important;
-  opacity: 1;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.45);
-  background: #000 !important;
-}
 /* ============================================= */
 /* КРЕСТИК В МОДАЛКЕ НОВОСТЕЙ — ЧЁРНЫЙ В СВЕТЛОЙ ТЕМЕ */
 /* ============================================= */

@@ -638,19 +638,7 @@
       const loader = document.getElementById('pageLoader');
       setTimeout(() => loader.classList.add('hidden'), 900);
 
-      // Кастомный курсор
-      const cursor = document.querySelector('.custom-cursor');
-      if(cursor){
-        document.body.style.cursor = 'none';
-        document.addEventListener('mousemove', e => {
-          cursor.style.left = e.clientX + 'px';
-          cursor.style.top = e.clientY + 'px';
-        });
-        document.querySelectorAll('a, button, input, textarea, [onclick], .clickable, .nav-link').forEach(el => {
-          el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
-          el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
-        });
-      }
+
 
       // Хедер + кнопка наверх
       const header = document.querySelector('header');
