@@ -268,6 +268,9 @@ verifyCodeBtn.onclick = async () => {
         window.dispatchEvent(new CustomEvent('authChanged', { detail: { authenticated: true, phone: cleanPhone, userId: data.user.id } }));
         document.dispatchEvent(new Event('authChanged'));
         document.dispatchEvent(new Event('authSuccess'));
+
+        
+
         setTimeout(() => { updateAuthBtn(); updateMobileAuthBtn(); }, 300);
       };
       notifyAuthChange();
@@ -467,6 +470,7 @@ const handleCodeInput = () => {
 
   // ОБНОВЛЕНИЕ КНОПКИ: ВОЙТИ / ВЫЙТИ + СЛУЧАЙНЫЕ ЭМОДЗИ
 
+  
 const updateAuthBtn = () => {
   if (currentUser) {
     authBtnFresh.classList.add('logged-in');

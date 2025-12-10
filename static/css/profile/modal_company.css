@@ -1,0 +1,1347 @@
+/* ============================================================= */
+/* ПРОФИЛЬ — МОДАЛКИ РЕДАКТИРОВАНИЯ (ДЕСКТОП + МОБИЛЬНАЯ ШТОРКА)  */
+/* ============================================================= */
+
+/* Общий бэкдроп — ИСПРАВЛЕНО */
+.piligrim-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  z-index: 9998;
+}
+
+.profile-edit-modal.active .piligrim-modal-backdrop {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ============================================================= */
+/* ДЕСКТОПНАЯ МОДАЛКА — ПО ЦЕНТРУ ЭКРАНА (от 1024px)             */
+/* ============================================================= */
+@media (min-width: 1024px) {
+  .piligrim-modal-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    width: 90%;
+    max-width: 960px;
+    max-height: 92vh;
+    background: #fff;
+    border-radius: 28px;
+    box-shadow: 0 32px 90px rgba(0, 0, 0, 0.25);
+    overflow-y: auto;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 9999;
+  }
+
+  .profile-edit-modal.active .piligrim-modal-content {
+    opacity: 1;
+    pointer-events: all;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* ============================================================= */
+/* МОБИЛЬНАЯ ШТОРКА — СНИЗУ (до 1023px)                         */
+/* ============================================================= */
+@media (max-width: 1023px) {
+  .piligrim-modal-content {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 95vh;
+    background: #fff;
+    border-radius: 28px 28px 0 0;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+    transform: translateY(100%);
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 9999;
+    overflow-y: auto;
+  }
+
+  .profile-edit-modal.active .piligrim-modal-content {
+    transform: translateY(0);
+  }
+}
+
+/* Скрытие скроллбара (везде) */
+.piligrim-modal-content {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.piligrim-modal-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================================= */
+/* ВНУТРЕННИЕ СТИЛИ ФОРМЫ (общие)                                */
+/* ============================================================= */
+.piligrim-modal-header {
+  padding: 28px 40px 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.piligrim-modal-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.piligrim-close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #999;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.piligrim-close-btn:hover {
+  background: #f0f0f0;
+  color: #000;
+}
+
+.piligrim-edit-form {
+  padding: 40px;
+}
+
+/* Гриды */
+.piligrim-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+@media (max-width: 1023px) {
+  .piligrim-form-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  .piligrim-edit-form,
+  .piligrim-modal-header {
+    padding: 32px 24px;
+  }
+  
+  .piligrim-modal-header {
+    padding: 24px 24px 16px;
+  }
+}
+
+/* Поля формы */
+.piligrim-field {
+  margin-bottom: 24px;
+}
+
+.piligrim-field label {
+  display: block;
+  font-weight: 600;
+  font-size: 15px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.piligrim-field input,
+.piligrim-field select,
+.piligrim-field textarea {
+  width: 100%;
+  padding: 16px 18px;
+  border: 2px solid #e5e5e5;
+  border-radius: 16px;
+  font-size: 16px;
+  font-family: 'Inter', sans-serif;
+  transition: border 0.2s;
+}
+
+.piligrim-field input:focus,
+.piligrim-field select:focus {
+  outline: none;
+  border-color: #000;
+}
+
+/* Чекбоксы */
+.piligrim-checkbox-label {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.piligrim-checkbox-label input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.piligrim-checkmark {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  margin-right: 12px;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.piligrim-checkbox-label input:checked ~ .piligrim-checkmark {
+  background: #000;
+  border-color: #000;
+}
+
+.piligrim-checkmark:after {
+  content: "✔";
+  position: absolute;
+  color: white;
+  font-size: 16px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.2s;
+}
+
+.piligrim-checkbox-label input:checked ~ .piligrim-checkmark:after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Кнопки внизу */
+.piligrim-modal-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid #eee;
+}
+
+.piligrim-btn {
+  padding: 14px 28px;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+}
+
+.piligrim-btn.outline {
+  background: transparent;
+  border: 2px solid #ddd;
+  color: #333;
+}
+
+.piligrim-btn.outline:hover {
+  border-color: #000;
+  background: #f9f9f9;
+}
+
+.piligrim-btn.solid {
+  background: #000;
+  color: white;
+  border: none;
+}
+
+.piligrim-btn.solid:hover {
+  background: #111;
+}
+
+/* ============================================================= */
+/* АВАТАРКА В МОДАЛКЕ — ИДЕАЛЬНО ПО ЦЕНТРУ, КРАСИВО, АДАПТИВНО   */
+/* ============================================================= */
+.piligrim-avatar-upload {
+  padding: 40px 40px 48px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+  background: linear-gradient(to bottom, #fafafa 0%, #ffffff 100%);
+  margin: -40px -40px 48px -40px;
+  border-radius: 28px 28px 0 0;
+}
+
+@media (max-width: 1023px) {
+  .piligrim-avatar-upload {
+    padding: 32px 24px 40px;
+    margin: -32px -24px 40px -24px;
+  }
+}
+
+/* Обёртка для центрирования */
+.avatar-preview-wrapper {
+  display: inline-block;
+  position: relative;
+}
+
+/* Сам аватар — строго круглый, с правильным object-fit */
+.avatar-preview {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 6px solid #fff;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.16);
+  background: #fff;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.avatar-preview:hover {
+  transform: scale(1.04);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.22);
+}
+
+/* Картинка внутри — всегда по центру и не растянутая */
+.avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;     /* сохраняем пропорции логотипа */
+  object-position: center;
+  background: #f8f8f8;
+  display: block;
+}
+
+/* Оверлей при наведении — идеально по центру */
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.68);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.32s ease;
+  backdrop-filter: blur(1px);
+}
+
+.avatar-preview:hover .avatar-overlay {
+  opacity: 1;
+}
+
+/* Иконка камеры — строго по центру */
+.avatar-overlay i {
+  font-size: 36px;
+  color: white;
+  margin-bottom: 8px;
+}
+
+/* Текст под камерой — тоже по центру */
+.avatar-overlay span {
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+/* Подсказки и кнопки под аватаркой */
+.avatar-actions {
+  margin: 20px 0 12px;
+}
+
+.avatar-hint {
+  font-size: 13.5px;
+  color: #777;
+  line-height: 1.5;
+}
+/* ============================================================= */
+/* ВЫЕЗЖАЮЩИЕ СЕЛЕКТОРЫ (DRAWER / BOTTOM SHEET)                 */
+/* ============================================================= */
+
+/* Триггер — выглядит как обычное поле */
+.select-trigger {
+  width: 100%;
+  padding: 16px 18px;
+  background: #ffffff;
+  border: 2px solid #e5e5e5;
+  border-radius: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+
+  font-size: 16px;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.select-trigger:hover {
+  border-color: #c0c0c0;
+}
+
+.select-trigger:active,
+.select-trigger:focus-within {
+  border-color: #000;
+  outline: none;
+}
+
+.select-value {
+  color: #1a1a1a;
+  font-weight: 500;
+}
+
+.select-trigger i {
+  color: #888;
+  font-size: 18px;
+  transition: transform 0.3s;
+}
+
+.drawer-overlay.active .select-trigger i {
+  transform: rotate(180deg);
+}
+
+/* Оверлей шторки */
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.35s ease;
+}
+
+.drawer-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Сама шторка снизу */
+.drawer-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 28px 28px 0 0;
+  max-height: 85vh;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.18);
+  transform: translateY(100%);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+
+.drawer-overlay.active .drawer-bottom {
+  transform: translateY(0);
+}
+
+/* Заголовок шторки */
+.drawer-header {
+  padding: 20px 24px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+  position: relative;
+  font-weight: 600;
+  font-size: 18px;
+  background: #fafafa;
+}
+
+.drawer-close {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 26px;
+  color: #777;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.drawer-close:hover {
+  background: #f0f0f0;
+  color: #000;
+}
+
+/* Список опций */
+.drawer-options {
+  padding: 8px 0;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.drawer-option {
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.drawer-option:hover {
+  background: #f8f9fa;
+}
+
+.drawer-option.active {
+  background: #f0f7ff;
+  color: #0066cc;
+  font-weight: 600;
+}
+
+.drawer-option i {
+  font-size: 20px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.drawer-option.active i {
+  opacity: 1;
+}
+
+/* Адаптация под десктоп — шторка по центру как модалка */
+@media (min-width: 1024px) {
+  .drawer-bottom {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, 60%) scale(0.95);
+    width: 90%;
+    max-width: 520px;
+    border-radius: 24px;
+    box-shadow: none;
+  }
+
+  .drawer-overlay.active .drawer-bottom {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Крестик удаления — правый верхний угол аватарки */
+.avatar-remove-btn {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 36px;
+  height: 36px;
+  background: #d32f2f;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4);
+  z-index: 10;
+  transition: all 0.2s ease;
+  opacity: 0;
+  transform: scale(0.8);
+  pointer-events: none;
+}
+
+.avatar-preview-wrapper:hover .avatar-remove-btn {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: all;
+}
+
+.avatar-remove-btn:hover {
+  background: #b71c1c;
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(211, 47, 47, 0.5);
+}
+
+.avatar-remove-btn:active {
+  transform: scale(0.95);
+}
+@media (max-width: 1023px) {
+.piligrim-modal-content {
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+width: 100%;
+height: 100vh;
+max-height: 100vh;
+background: #fff;
+border-radius: 28px 28px 0 0;
+box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+transform: translateY(100%);
+transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+z-index: 100000;
+overflow-y: auto;
+}
+.piligrim-modal-backdrop {
+z-index: 99999;
+}
+.profile-edit-modal.active .piligrim-modal-content {
+transform: translateY(0);
+}
+.piligrim-form-grid {
+grid-template-columns: 1fr;
+gap: 24px;
+}
+.piligrim-edit-form,
+.piligrim-modal-header {
+padding: 32px 24px;
+}
+.piligrim-modal-header {
+padding: 24px 24px 16px;
+}
+.piligrim-avatar-upload {
+padding: 32px 24px 40px;
+margin: -32px -24px 40px -24px;
+}
+.piligrim-modal-actions {
+display: flex;
+gap: 16px;
+margin-top: 40px;
+padding-top: 24px;
+border-top: 1px solid #eee;
+flex-wrap: nowrap;
+align-items: center;
+justify-content: space-between;
+}
+.piligrim-btn {
+padding: 12px 24px;
+border-radius: 16px;
+font-weight: 600;
+font-size: 15px;
+cursor: pointer;
+transition: all 0.2s;
+flex: 1;
+min-width: auto;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+max-width: 48%;
+}
+.piligrim-field input,
+.piligrim-field select,
+.piligrim-field textarea {
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+font-size: clamp(12px, 4vw, 16px);
+}
+.piligrim-field label {
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+font-size: clamp(12px, 3.5vw, 15px);
+}
+}
+
+@media (max-width: 1023px) {
+.piligrim-modal-content {
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+width: 100%;
+height: 100vh;
+max-height: 100vh;
+background: #fff;
+border-radius: 28px 28px 0 0;
+box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+transform: translateY(100%);
+transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+z-index: 100000;
+overflow-y: auto;
+}
+.piligrim-modal-backdrop {
+z-index: 99999;
+}
+.profile-edit-modal.active .piligrim-modal-content {
+transform: translateY(0);
+}
+.piligrim-form-grid {
+grid-template-columns: 1fr;
+gap: 24px;
+}
+.piligrim-edit-form,
+.piligrim-modal-header {
+padding: 32px 24px;
+}
+.piligrim-modal-header {
+padding: 24px 24px 16px;
+position: relative;
+}
+.piligrim-close-btn {
+position: absolute;
+top: 12px;
+right: 12px;
+font-size: 22px;
+width: 36px;
+height: 36px;
+}
+.piligrim-avatar-upload {
+padding: 32px 24px 40px;
+margin: -32px -24px 40px -24px;
+}
+.piligrim-modal-actions {
+display: flex;
+gap: 16px;
+margin-top: 40px;
+padding-top: 24px;
+border-top: 1px solid #eee;
+flex-wrap: nowrap;
+align-items: center;
+justify-content: space-between;
+}
+.piligrim-btn {
+padding: 12px 24px;
+border-radius: 16px;
+font-weight: 600;
+font-size: 15px;
+cursor: pointer;
+transition: all 0.2s;
+flex: 1;
+min-width: auto;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+max-width: 48%;
+}
+.piligrim-btn.solid::after {
+content: 'Сохранить';
+}
+.piligrim-btn.solid {
+content: ''; /* Чтобы скрыть оригинальный текст */
+}
+.piligrim-field input,
+.piligrim-field select,
+.piligrim-field textarea {
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+font-size: clamp(12px, 4vw, 16px);
+}
+.piligrim-field label {
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+font-size: clamp(12px, 3.5vw, 15px);
+}
+.piligrim-modal-header h2 {
+text-align: center;
+white-space: normal;
+hyphens: auto;
+word-break: break-word;
+max-width: 80%;
+margin: 0 auto;
+line-height: 1.3;
+font-size: clamp(18px, 6vw, 24px);
+}
+.avatar-hint {
+text-align: center;
+white-space: normal;
+hyphens: auto;
+word-break: break-word;
+max-width: 90%;
+margin: 0 auto;
+line-height: 1.4;
+font-size: clamp(11px, 3.5vw, 13.5px);
+}
+}
+
+@media (max-width: 1023px) {
+.piligrim-modal-content {
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+width: 100%;
+height: 100vh;
+max-height: 100vh;
+background: #fff;
+border-radius: 28px 28px 0 0;
+box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+transform: translateY(100%);
+transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+z-index: 100000;
+overflow-y: auto;
+}
+body.dark .piligrim-modal-content {
+background: #1a1a1a;
+}
+.piligrim-modal-backdrop {
+z-index: 99999;
+}
+.profile-edit-modal.active .piligrim-modal-content {
+transform: translateY(0);
+}
+.piligrim-form-grid {
+grid-template-columns: 1fr;
+gap: 24px;
+}
+.piligrim-edit-form,
+.piligrim-modal-header {
+padding: 32px 24px;
+}
+.piligrim-modal-header {
+padding: 24px 24px 16px;
+position: relative;
+border-bottom-color: #333;
+}
+body.dark .piligrim-modal-header {
+border-bottom-color: #333;
+}
+.piligrim-close-btn {
+position: absolute;
+top: 12px;
+right: 12px;
+font-size: 22px;
+width: 36px;
+height: 36px;
+color: #999;
+}
+body.dark .piligrim-close-btn {
+color: #777;
+}
+.piligrim-close-btn:hover {
+background: #f0f0f0;
+color: #000;
+}
+body.dark .piligrim-close-btn:hover {
+background: #333;
+color: #fff;
+}
+.piligrim-avatar-upload {
+padding: 32px 24px 40px;
+margin: -32px -24px 40px -24px;
+background: linear-gradient(to bottom, #fafafa 0%, #ffffff 100%);
+border-bottom-color: #eee;
+}
+body.dark .piligrim-avatar-upload {
+background: linear-gradient(to bottom, #222 0%, #1a1a1a 100%);
+border-bottom-color: #333;
+}
+.piligrim-modal-actions {
+display: flex;
+gap: 16px;
+margin-top: 40px;
+padding-top: 24px;
+border-top: 1px solid #eee;
+flex-wrap: nowrap;
+align-items: center;
+justify-content: space-between;
+}
+body.dark .piligrim-modal-actions {
+border-top-color: #333;
+}
+.piligrim-btn {
+padding: 12px 24px;
+border-radius: 16px;
+font-weight: 600;
+font-size: 15px;
+cursor: pointer;
+transition: all 0.2s;
+flex: 1;
+min-width: auto;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+max-width: 48%;
+position: relative;
+}
+.piligrim-btn.outline {
+border-color: #ddd;
+color: #333;
+}
+body.dark .piligrim-btn.outline {
+border-color: #444;
+color: #ccc;
+}
+.piligrim-btn.outline:hover {
+border-color: #000;
+background: #f9f9f9;
+}
+body.dark .piligrim-btn.outline:hover {
+border-color: #fff;
+background: #333;
+}
+.piligrim-btn.solid {
+background: #000;
+color: transparent !important;
+}
+body.dark .piligrim-btn.solid {
+background: #333;
+color: transparent !important;
+}
+.piligrim-btn.solid:hover {
+background: #111;
+}
+body.dark .piligrim-btn.solid:hover {
+background: #444;
+}
+.piligrim-btn.solid::before,
+body.dark .piligrim-btn.solid::before {
+content: 'Сохранить';
+position: absolute;
+left: 50%;
+top: 50%;
+transform: translate(-50%, -50%);
+color: white;
+font-size: clamp(13px, 4vw, 15px);
+font-weight: 600;
+white-space: nowrap;
+}
+.piligrim-field label {
+color: #333;
+font-size: clamp(12px, 3.5vw, 15px);
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+body.dark .piligrim-field label {
+color: #ccc;
+}
+.piligrim-field input,
+.piligrim-field select,
+.piligrim-field textarea {
+background: #fff;
+border-color: #e5e5e5;
+color: #000;
+font-size: clamp(12px, 4vw, 16px);
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+body.dark .piligrim-field input,
+body.dark .piligrim-field select,
+body.dark .piligrim-field textarea {
+background: #222;
+border-color: #444;
+color: #fff;
+}
+.piligrim-field input:focus,
+.piligrim-field select:focus {
+border-color: #000;
+}
+body.dark .piligrim-field input:focus,
+body.dark .piligrim-field select:focus {
+border-color: #fff;
+}
+.piligrim-modal-header h2 {
+text-align: center;
+white-space: normal;
+hyphens: auto;
+word-break: break-word;
+max-width: 80%;
+margin: 0 auto;
+line-height: 1.3;
+font-size: clamp(18px, 6vw, 24px);
+color: #000;
+}
+body.dark .piligrim-modal-header h2 {
+color: #fff;
+}
+.avatar-hint {
+text-align: center;
+white-space: normal;
+hyphens: auto;
+word-break: break-word;
+max-width: 90%;
+margin: 0 auto;
+line-height: 1.4;
+font-size: clamp(11px, 3.5vw, 13.5px);
+color: #777;
+}
+body.dark .avatar-hint {
+color: #999;
+}
+}
+
+
+    /* === КРАСИВЫЕ ТОСТЫ В СТИЛЕ САЙТА === */
+.toast-container {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+  font-family: 'Inter', sans-serif;
+}
+
+.toast {
+  min-width: 320px;
+  max-width: 480px;
+  padding: 16px 24px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(12px);
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: toastIn 0.5s forwards;
+}
+
+.toast.success {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.95), rgba(22, 163, 74, 0.95));
+  border-color: rgba(74, 222, 128, 0.4);
+}
+
+.toast.error {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95));
+  border-color: rgba(252, 165, 165, 0.4);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast i {
+  font-size: 20px;
+}
+
+@keyframes toastIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+  /* Гарантия правильного поведения модалок редактирования */
+#piligrimEditModal,
+#contactEditModal {
+  display: none !important;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+}
+
+#piligrimEditModal.active,
+#contactEditModal.active {
+  display: flex !important;
+  pointer-events: all;
+}
+
+#piligrimEditModal .piligrim-modal-content,
+#contactEditModal .piligrim-modal-content {
+  width: 100%;
+  max-width: 560px;
+  background: var(--bg, #fff);
+  border-radius: 24px 24px 0 0;
+  transform: translateY(100%);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#piligrimEditModal.active .piligrim-modal-content,
+#contactEditModal.active .piligrim-modal-content {
+  transform: translateY(0);
+}
+.piligrim-modal-backdrop {
+  border-radius: 24px 24px 0 0 !important;
+  background: rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+
+/* ЧИСТЫЙ APPLE-МИНИМАЛИЗМ 2025 — НИЧЕГО ЛИШНЕГО */
+/* Делай блюр ещё слабее — меняй только эти значения */
+.minimal-empty-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ←←← ВОТ ТУТ МЕНЯЕМ: было blur(12px), стало blur(6px) + ещё меньше затемнения */
+  background: rgba(255, 255, 255, 0.72);        /* было 0.78 → стало 0.72 */
+  backdrop-filter: blur(6px) saturate(120%);    /* было 12px → стало 6px */
+  -webkit-backdrop-filter: blur(6px) saturate(120%);
+}
+
+.minimal-empty-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
+}
+
+
+.minimal-empty-card {
+  text-align: center;
+  padding: 80px 40px;
+  max-width: 540px;
+  width: 90%;
+  
+  /* Полупрозрачная карточка — почти невидима, но есть объём */
+  
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border-radius: 26px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  
+  transform: translateY(24px) scale(0.96);
+  opacity: 0;
+  animation: minimalFadeIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards 0.1s;
+}
+
+.minimal-empty-card h3 {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.9px;
+  margin: 0 0 16px 0;
+  color: #000;
+  line-height: 1.2;
+}
+
+.minimal-subtitle {
+  font-size: 18px;
+  line-height: 1.65;
+  color: #555;
+  margin: 0 0 44px 0;
+  font-weight: 400;
+}
+
+/* Кнопка — максимально спокойная, как в macOS */
+.minimal-action-btn {
+  background: rgba(0, 0, 0, 0.86);
+  color: white;
+  border: none;
+  padding: 16px 40px;
+  border-radius: 16px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 300px;
+  backdrop-filter: blur(20px);
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+}
+
+.minimal-action-btn:hover {
+  background: #000;
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24);
+}
+
+.minimal-action-btn:active {
+  transform: translateY(-1px);
+}
+
+@keyframes minimalFadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Мобильная версия */
+@media (max-width: 640px) {
+  .minimal-empty-card {
+    padding: 64px 32px;
+    border-radius: 22px;
+  }
+  .minimal-empty-card h3 {
+    font-size: 28px;
+  }
+  .minimal-action-btn {
+    min-width: 100%;
+    font-size: 17px;
+  }
+}
+
+/* ============================================================= */
+/* ФИКС ДЕСКТОПНОЙ ВЕРСИИ — ПЕРЕБЬЁТ ВСЁ МОБИЛЬНОЕ НА ПК        */
+/* ВСТАВЬ В КОНЕЦ ФАЙЛА — ПОСЛЕДНИЕ ПРАВИЛА ВСЕГДА ПОБЕЖДАЮТ     */
+/* ============================================================= */
+@media (min-width: 1024px) {
+
+  /* Главный контейнер — flex по центру */
+  #piligrimEditModal,
+  #contactEditModal {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    pointer-events: none;
+  }
+  #piligrimEditModal.active,
+  #contactEditModal.active {
+    pointer-events: all;
+  }
+
+  /* Бэкдроп — нормальный */
+  .piligrim-modal-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.55) !important;
+    backdrop-filter: blur(10px) !important;
+    opacity: 0 !important;
+    transition: opacity 0.4s ease !important;
+    border-radius: 0 !important;
+    z-index: 9998 !important;
+  }
+  .profile-edit-modal.active .piligrim-modal-backdrop {
+    opacity: 1 !important;
+  }
+
+  /* Контент модалки — по центру, не шторка! */
+  .piligrim-modal-content {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) scale(0.95) !important;
+    width: 90% !important;
+    max-width: 960px !important;
+    max-height: 92vh !important;
+    height: auto !important;
+    bottom: auto !important;
+    border-radius: 28px !important;
+    box-shadow: 0 32px 90px rgba(0, 0, 0, 0.25) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: all 0.45s cubic-bezier(0.22, 1, 0.36, 1) !important;
+    z-index: 9999 !important;
+    overflow-y: auto !important;
+  }
+
+  .profile-edit-modal.active .piligrim-modal-content {
+    opacity: 1 !important;
+    pointer-events: all !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+  }
+
+  /* Убираем все мобильные костыли */
+  .piligrim-modal-content,
+  #piligrimEditModal .piligrim-modal-content,
+  #contactEditModal .piligrim-modal-content {
+    transform: translate(-50%, -50%) scale(0.95) !important;
+    border-radius: 28px !important;
+  }
+  .profile-edit-modal.active .piligrim-modal-content,
+  #piligrimEditModal.active .piligrim-modal-content,
+  #contactEditModal.active .piligrim-modal-content {
+    transform: translate(-50%, -50%) scale(1) !important;
+  }
+}
+
+/* ============================================================= */
+/* EMAIL MODAL — МОБИЛЬНАЯ ВЕРСИЯ 2025 — ФИНАЛЬНО, ПЕРЕНОС ПО СЛОВАМ */
+/* ТОЧНО КАК В ПРОФИЛЕ — БЕЗ ПЕРЕНОСА ПО СЛОГАМ! */
+/* ============================================================= */
+@media (max-width: 1023px) {
+
+  /* Самая высокая модалка + безопасная зона */
+  #emailModal {
+    z-index: 2147483647 !important;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+
+  /* Шторка с закруглениями и сверху, и снизу + нормальная высота */
+  .email-modal-card {
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    max-height: 88dvh;
+    border-radius: 28px !important;           /* ← и сверху, и снизу */
+    overflow: hidden;
+    transform: translateY(100%);
+    transition: transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+    background: rgba(255,255,255,0.94);
+    backdrop-filter: blur(28px);
+  }
+
+  #emailModal.active .email-modal-card {
+    transform: translateY(0);
+  }
+
+  /* Главный текст — ПЕРЕНОС ТОЧНО КАК У ТЕБЯ В ПРОФИЛЕ */
+  .email-modal-header p {
+    font-size: 1.04rem;
+    line-height: 1.65;
+    margin: 0 auto 36px;
+    max-width: 92%;
+    color: #555;
+
+    /* ← ЭТО КОПИЯ ТОГО, ЧТО У ТЕБЯ РАБОТАЕТ ВЕЗДЕ → */
+    white-space: normal !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+    -webkit-hyphens: auto !important;
+    overflow-wrap: anywhere !important;      /* ← самый надёжный способ */
+  }
+
+  /* На всякий случай — тоже самое для остальных абзацев */
+  .email-modal-body p,
+  .email-modal-footer small {
+    white-space: normal !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+    -webkit-hyphens: auto !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  /* Заголовки тоже */
+  .email-modal-header h2,
+  .email-modal-body h2 {
+    white-space: normal !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+  }
+
+  /* Остальные стили (отступы, размеры) — как было */
+  .email-modal-header   { padding: 36px 32px 8px; text-align: center; }
+  .email-modal-header h2 { font-size: 1.9rem; line-height: 1.3; margin: 0 0 16px; font-weight: 700; }
+  .email-modal-body     { padding: 0 32px 44px; }
+  .email-modal-body h2  { font-size: 1.68rem; line-height: 1.35; margin-bottom: 12px; font-weight: 600; }
+  .email-modal-body p   { font-size: 1rem; line-height: 1.62; margin-bottom: 32px; color: #666; }
+  .email-input-wrapper input { padding: 18px 22px; font-size: 1.08rem; border-radius: 20px; }
+  .email-submit-btn     { padding: 18px; font-size: 1.08rem; border-radius: 20px; margin-top: 12px; }
+  .email-modal-footer small { font-size: 0.88rem; line-height: 1.5; color: #999; }
+
+  /* iPhone SE и меньше */
+  @media (max-width: 380px) {
+    .email-modal-header   { padding: 32px 24px 8px; }
+    .email-modal-body     { padding: 0 24px 40px; }
+    .email-modal-header h2 { font-size: 1.78rem; }
+    .email-modal-header p { font-size: 1rem; line-height: 1.7; max-width: 94%; }
+  }
+}

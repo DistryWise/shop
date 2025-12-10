@@ -4,12 +4,143 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Отзывы — Админка | ZAZA</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <script>
+// Глобальное хранилище актуального токена
+window.csrfToken = "{{ csrf_token() }}";
+
+// Автоматически обновляем токен при любом успешном ответе от сервера
+function updateCsrfTokenFromResponse(data) {
+    if (data.csrf_token) {
+        window.csrfToken = data.csrf_token;
+        document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', data.csrf_token);
+    }
+}
+
+// Перехватываем ВСЕ fetch-запросы (POST, PUT, DELETE и т.д.)
+const { fetch: origFetch } = window;
+window.fetch = async (...args) => {
+    let [resource, config] = args;
+    
+    // Только для мутирующих методов
+    if (config && ['POST','PUT','DELETE','PATCH'].includes((config.method || 'GET').toUpperCase())) {
+        config = config || {};
+        config.headers = config.headers || {};
+        config.headers['X-CSRF-Token'] = window.csrfToken;
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+        
+        // Если отправляем FormData — не трогаем Content-Type (браузер сам поставит с boundary)
+        if (!(config.body instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
+        }
+    }
+
+    const response = await origFetch(resource, config);
+    
+    // Автоматически обновляем токен после любого успешного JSON-ответа
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        try {
+            const data = await response.clone().json();
+            updateCsrfTokenFromResponse(data);
+        } catch (e) { /* не JSON — игнорируем */ }
+    }
+
+    return response;
+};
+  </script>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Shadows+Into+Light&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
-    <link rel="stylesheet" href="/static/css/admin/admin_goods.css">
+<style>
+    /* === ФИНАЛЬНЫЙ ФИКС ДЛЯ СВЕТЛОЙ ТЕМЫ — 100% КРАСИВО === */
+
+    /* 1. Отзывы стали видимыми в светлой теме */
+    html[data-theme="light"] .review-item,
+    html[data-theme="light"] .review-header,
+    html[data-theme="light"] .review-meta,
+    html[data-theme="light"] .review-user,
+    html[data-theme="light"] .review-date,
+    html[data-theme="light"] .review-product,
+    html[data-theme="light"] .review-text,
+    html[data-theme="light"] .review-rating .star {
+        color: #1c1c1e !important;
+        opacity: 1 !important;
+    }
+
+    html[data-theme="light"] .review-item {
+        background: rgba(255,255,255,0.95) !important;
+        border: 1px solid rgba(0,0,0,0.08) !important;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.08) !important;
+    }
+
+    /* 2. Убираем зелёный цвет в карточке товара/услуги в отзыве */
+    html[data-theme="light"] .review-product i,
+    html[data-theme="dark"] .review-product i {
+        color: #888 !important;
+    }
+
+    /* 3. Звёздочки — красиво в светлой теме */
+    html[data-theme="light"] .review-rating .star.filled {
+        color: #ffb302 !important;
+        text-shadow: 0 0 8px rgba(255,179,2,0.4) !important;
+    }
+
+    html[data-theme="light"] .review-rating .star:not(.filled) {
+        color: #d0d0d0 !important;
+    }
+
+    /* 4. Текст отзыва — читаемый */
+    html[data-theme="light"] .review-text {
+        color: #333 !important;
+    }
+
+    /* 5. Кнопки действий (редактировать/удалить) */
+    html[data-theme="light"] .action-btn {
+        background: rgba(0,0,0,0.06) !important;
+        color: #555 !important;
+    }
+
+    html[data-theme="light"] .action-btn:hover {
+        background: rgba(0,0,0,0.12) !important;
+    }
+
+    /* 6. Убираем зелёный акцент у "Товары" в создании отзыва (если хочешь) */
+    html[data-theme="light"] .items-grid .item-option i.fa-box {
+        color: #888 !important;
+    }
+
+    /* 7. Финальный фикс — всё видно и красиво */
+    html[data-theme="light"] * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    html[data-theme="light"] .review-product {
+        color: #000 !important;
+        font-weight: 600 !important;
+        text-shadow: 0 1px 1px rgba(255,255,255,0.6) !important;
+    }
+    /* === МОДАЛКА ТОВАРА — ВИДИМО В СВЕТЛОЙ ТЕМЕ === */
+    html[data-theme="light"] #itemModal h3#modalItemTitle,
+    html[data-theme="light"] #itemModal #modalItemDesc,
+    html[data-theme="light"] #itemModal #modalItemPrice {
+        color: #1c1c1e !important;
+        opacity: 1 !important;
+    }
+
+    html[data-theme="light"] #itemModal .item-modal-header,
+    html[data-theme="light"] #itemModal .item-modal-content {
+        background: rgba(255,255,255,0.96) !important;
+        border: 1px solid rgba(0,0,0,0.08) !important;
+    }
+
+    /* Иконка товара/услуги — тоже видно */
+    html[data-theme="light"] #itemModal .item-modal-icon i {
+        color: #007aff !important;
+    }
+</style>
 
 </head>
 <body>
@@ -52,43 +183,41 @@
     <!-- Поиск -->
     <input type="text" id="searchInput" class="search-input" placeholder="Поиск по телефону, товару, тексту..." autocomplete="off">
 
-    <!-- Фильтр по оценке -->
-    <div class="custom-select">
-        <div class="custom-select-trigger">
-            <span class="custom-select-text">Все оценки</
-
-span>
-            <i class="fas fa-chevron-down custom-select-arrow"></i>
-        </div>
-        <div class="custom-select-options">
-            <div class="custom-select-option" data-value="">Все оценки</div>
-            <div class="custom-select-option" data-value="5">5 звёзд</div>
-            <div class="custom-select-option" data-value="4">4 звезды</div>
-            <div class="custom-select-option" data-value="3">3 звезды</div>
-            <div class="custom-select-option" data-value="2">2 звезды</div>
-            <div class="custom-select-option" data-value="1">1 звезда</div>
-        </div>
-        <input type="hidden" id="ratingFilter" value="">
+<!-- ФИЛЬТР ПО ОЦЕНКЕ -->
+<div class="custom-select">
+    <div class="custom-select-trigger">
+        <span class="custom-select-text">Все оценки</span>
+        <i class="fas fa-chevron-down custom-select-arrow"></i>
     </div>
 
-    <input type="date" id="dateFrom" style="display:none;">
-    <input type="date" id="dateTo" style="display:none;">
-
-    <!-- Фильтр по дате — теперь в той же строке! -->
-    <div class="custom-select">
-        <div class="custom-select-trigger">
-            <span class="custom-select-text">За всё время</span>
-            <i class="fas fa-chevron-down custom-select-arrow"></i>
-        </div>
-        <div class="custom-select-options">
-            <div class="custom-select-option" data-value="">За всё время</div>
-            <div class="custom-select-option" data-value="today">Сегодня</div>
-            <div class="custom-select-option" data-value="7days">Последние 7 дней</div>
-            <div class="custom-select-option" data-value="30days">Последние 30 дней</div>
-            <div class="custom-select-option" data-value="custom">Выбрать период...</div>
-        </div>
-        <input type="hidden" id="dateFilter" value="">
+    <!-- ВЫНЕСЕНО НА ОДИН УРОВЕНЬ! -->
+    <div class="custom-select-options">
+        <div class="custom-select-option" data-value="">Все оценки</div>
+        <div class="custom-select-option" data-value="5">5 звёзд</div>
+        <div class="custom-select-option" data-value="4">4 звезды</div>
+        <div class="custom-select-option" data-value="3">3 звезды</div>
+        <div class="custom-select-option" data-value="2">2 звезды</div>
+        <div class="custom-select-option" data-value="1">1 звезда</div>
     </div>
+    <input type="hidden" id="ratingFilter" value="">
+</div>
+
+<!-- ФИЛЬТР ПО ДАТЕ -->
+<div class="custom-select">
+    <div class="custom-select-trigger">
+        <span class="custom-select-text">За всё время</span>
+        <i class="fas fa-chevron-down custom-select-arrow"></i>
+    </div>
+
+    <div class="custom-select-options">
+        <div class="custom-select-option" data-value="">За всё время</div>
+        <div class="custom-select-option" data-value="today">Сегодня</div>
+        <div class="custom-select-option" data-value="7days">Последние 7 дней</div>
+        <div class="custom-select-option" data-value="30days">Последние 30 дней</div>
+        <div class="custom-select-option" data-value="custom">Выбрать период...</div>
+    </div>
+    <input type="hidden" id="dateFilter" value="">
+</div>
 </div>
 
 
@@ -577,29 +706,45 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ======================== 6. КАСТОМНЫЕ СЕЛЕКТЫ ========================
+// === КАСТОМНЫЕ СЕЛЕКТЫ — ИСПРАВЛЕННАЯ ВЕРСИЯ ===
 document.addEventListener('click', e => {
     const trigger = e.target.closest('.custom-select-trigger');
     const option  = e.target.closest('.custom-select-option');
-    const select  = e.target.closest('.custom-select');
+    const selectWrapper = e.target.closest('.custom-select');
 
+    // 1. Клик по триггеру — открываем/закрываем текущий селект
     if (trigger) {
-        document.querySelectorAll('.custom-select').forEach(s => {
-            if (s !== trigger.parentElement) s.classList.remove('open');
-        });
-        trigger.parentElement.classList.toggle('open');
-    }
-    else if (option) {
-        const parent = option.closest('.custom-select');
-        const textEl = parent.querySelector('.custom-select-text');
-        const hiddenId = parent.querySelector('input[type="hidden"]')?.id || 'ratingFilter';
-        const hidden = document.getElementById(hiddenId);
+        const currentSelect = trigger.closest('.custom-select');
+        const isOpen = currentSelect.classList.contains('open');
 
-        textEl.textContent = option.textContent.trim();
-        hidden.value = option.dataset.value || '';
-        parent.classList.remove('open');
-        applyFilters();
+        // Закрываем все селекты
+        document.querySelectorAll('.custom-select').forEach(s => s.classList.remove('open'));
+
+        // Если кликнули по уже открытому — просто закроем, иначе откроем
+        if (!isOpen) {
+            currentSelect.classList.add('open');
+        }
+        return;
     }
-    else if (!select) {
+
+    // 2. Клик по опции — выбираем значение
+    if (option) {
+        const parent = option.closest('.custom-select');
+        if (!parent) return;
+
+        const textEl = parent.querySelector('.custom-select-text');
+        const hiddenInput = parent.querySelector('input[type="hidden"]');
+        
+        textEl.textContent = option.textContent.trim();
+        if (hiddenInput) hiddenInput.value = option.dataset.value || '';
+
+        parent.classList.remove('open');
+        applyFilters(); // сразу применяем фильтр
+        return;
+    }
+
+    // 3. Клик ВНЕ любого селекта — закрываем все
+    if (!selectWrapper) {
         document.querySelectorAll('.custom-select').forEach(s => s.classList.remove('open'));
     }
 });
@@ -753,29 +898,23 @@ function prepareEditWithPassword() {
     openModal('passwordModal');
 }
 
-// ЕДИНСТВЕННАЯ РАБОЧАЯ ФУНКЦИЯ — БОЛЬШЕ НИЧЕГО НЕ НУЖНО
 async function reviewAction(action, payload = {}, password) {
-    const data = {
-        action,
-        password,
-        ...payload
-    };
+    const data = { action, password, ...payload };
 
     const res = await fetch('/admin_reviews', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'   // ← ЭТО ГЛАВНОЕ!
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     });
 
-    if (!res.ok) {
-        const text = await res.text();
-        console.error('Server responded with:', res.status, text);
-        throw new Error(`HTTP ${res.status}`);
+    const result = await res.json();
+
+    // ←←← ГЛАВНОЕ: проверяем success, а не res.ok ←←←
+    if (!result.success) {
+        throw new Error(result.message || 'Неизвестная ошибка');
     }
 
-    return await res.json();
+    return result;
 }
 
 async function confirmPasswordAction() {
@@ -799,13 +938,13 @@ async function confirmPasswordAction() {
                 rating: window.pendingEditData.rating,
                 text: window.pendingEditData.text
             }, password);
-        }
-        else if (window.pendingDeleteData) {
+
+        } else if (window.pendingDeleteData) {
             result = await reviewAction('delete_review', {
                 review_id: window.pendingDeleteData.id
             }, password);
-        }
-        else if (window.pendingReviewData) {
+
+        } else if (window.pendingReviewData) {
             result = await reviewAction('create_review', {
                 item_type: window.pendingReviewData.type,
                 item_id: window.pendingReviewData.id,
@@ -818,22 +957,20 @@ async function confirmPasswordAction() {
         if (result?.success) {
             location.reload();
         } else {
-            error.textContent = result?.message || 'Неверный пароль';
+            error.textContent = result?.message || 'Ошибка';
             error.style.display = 'block';
         }
     } catch (err) {
-        console.error(err);
-        error.textContent = 'Ошибка сервера';
+        error.textContent = err.message || 'Ошибка сервера';
         error.style.display = 'block';
     } finally {
+        document.getElementById('global_password').value = '';
         delete window.pendingEditData;
         delete window.pendingDeleteData;
         delete window.pendingReviewData;
-        document.getElementById('global_password').value = '';
         closeModal('passwordModal');
     }
 }
-
 function openDeleteModal(id) {
     window.pendingDeleteData = { id };
     document.getElementById('password_error').style.display = 'none';

@@ -66,8 +66,8 @@ def flash_and_redirect(message: str, category: str = 'success'):
 
 
 def get_upload_dir() -> Path:
-    """Безопасно получаем путь к папке загрузок"""
-    upload_dir = Path(current_app.root_path) / UPLOAD_FOLDER_GOODS
+    # Надёжный путь — всегда от корня проекта
+    upload_dir = Path.cwd() / 'static' / 'uploads' / 'goods'
     upload_dir.mkdir(parents=True, exist_ok=True)
     return upload_dir.resolve()
 
@@ -149,24 +149,22 @@ def admin():
                 return json_response(False, msg, 403) if is_ajax else flash_and_redirect(msg, 'error')
 
             # === Всегда используем request.form и request.files ===
-            data = request.form.to_dict()
-            files = request.files
-            action = data.get('action')
+            action = request.form.get('action')
 
             # === ДОБАВЛЕНИЕ ===
             if action == 'add':
-                title = data.get('title', '').strip()
-                category = data.get('category', '').strip()
-                price_cents = parse_price(data.get('price_rub'))
-                description = data.get('description', '').strip() or None
-                brand = data.get('brand', '').strip() or None
-                in_stock = 1 if data.get('in_stock') in ('on', '1', 'true', 'True') else 0
-                stock = max(-1, int(data.get('stock', -1)))
+                title = request.form.get('title', '').strip()
+                category = request.form.get('category', '').strip()
+                price_cents = parse_price(request.form.get('price_rub'))
+                description = (request.form.getlist('full_desc') or [''])[-1].strip()
+                brand = request.form.get('brand', '').strip() or None
+                in_stock = 1 if request.form.get('in_stock') in ('on', '1', 'true', 'True') else 0
+                stock = max(-1, int(request.form.get('stock', -1)))
 
                 if not title or not category or price_cents is None:
                     return json_response(False, "Заполните обязательные поля") if is_ajax else flash_and_redirect("Ошибка", 'error')
 
-                uploaded = save_uploaded_images(files.getlist('images'))
+                uploaded = save_uploaded_images(request.files.getlist('images[]'), max_images=4)
                 if not uploaded:
                     return json_response(False, "Добавьте хотя бы одно фото") if is_ajax else flash_and_redirect("Добавьте фото", 'error')
 
@@ -181,31 +179,31 @@ def admin():
 
             # === РЕДАКТИРОВАНИЕ ===
             elif action == 'edit':
-                pid = data.get('product_id')
+                pid = request.form.get('product_id')
                 if not pid or not pid.isdigit():
                     return json_response(False, "Неверный ID") if is_ajax else flash_and_redirect("Ошибка", 'error')
 
-                title = data.get('title', '').strip()
-                category = data.get('category', '').strip()
-                price_cents = parse_price(data.get('price_rub'))
-                description = data.get('description', '').strip() or None
-                brand = data.get('brand', '').strip() or None
-                in_stock = 1 if data.get('in_stock') in ('on', '1', 'true', 'True') else 0
-                stock = max(-1, int(data.get('stock', -1)))
+                title = request.form.get('title', '').strip()
+                category = request.form.get('category', '').strip()
+                price_cents = parse_price(request.form.get('price_rub'))
+                description = (request.form.getlist('full_desc') or [''])[-1].strip()
+                brand = request.form.get('brand', '').strip() or None
+                in_stock = 1 if request.form.get('in_stock') in ('on', '1', 'true', 'True') else 0
+                stock = max(-1, int(request.form.get('stock', -1)))
 
                 if not title or not category or price_cents is None:
                     return json_response(False, "Заполните обязательные поля") if is_ajax else flash_and_redirect("Ошибка", 'error')
 
-                # Какие изображения оставить
-                keep_json = data.get('keep_images', '[]')
+                # ВОТ ТУТ ВСЁ ИСПРАВЛЕНО — ТОЛЬКО request.form!
+                keep_json = request.form.get('keep_images', '[]')
                 try:
                     keep_list = json.loads(keep_json)
                 except:
                     keep_list = []
 
-                new_uploaded = save_uploaded_images(files.getlist('images'), max_images=10)
+                new_uploaded = save_uploaded_images(request.files.getlist('images[]'), max_images=4)
 
-                # Удаляем старые ненужные
+                # Удаляем старые
                 old_row = conn.execute('SELECT image_filenames FROM products WHERE id = ?', (pid,)).fetchone()
                 old_imgs = json.loads(old_row['image_filenames'] or '[]') if old_row else []
 
@@ -213,7 +211,7 @@ def admin():
                     if img not in keep_list:
                         safe_unlink(img)
 
-                final_imgs = [img for img in old_imgs if img in keep_list] + new_uploaded
+                final_imgs = keep_list + new_uploaded
 
                 conn.execute('''
                     UPDATE products SET
@@ -221,14 +219,14 @@ def admin():
                         image_filenames=?, in_stock=?, stock=?
                     WHERE id=?
                 ''', (title, price_cents, description, category, brand,
-                      json.dumps(final_imgs), in_stock, stock, int(pid)))
+                    json.dumps(final_imgs), in_stock, stock, int(pid)))
                 conn.commit()
 
                 return json_response(True, "Товар обновлён!") if is_ajax else flash_and_redirect("Товар обновлён!")
 
             # === УДАЛЕНИЕ ===
             elif action == 'delete':
-                pid = data.get('product_id')
+                pid = request.form.get('product_id')
                 if not pid or not pid.isdigit():
                     return json_response(False, "Неверный ID") if is_ajax else flash_and_redirect("Ошибка", 'error')
 
@@ -246,11 +244,21 @@ def admin():
                 return json_response(False, "Неизвестное действие") if is_ajax else flash_and_redirect("Ошибка", 'error')
 
         # === GET — список товаров ===
+
         rows = conn.execute('SELECT * FROM products ORDER BY id DESC').fetchall()
         for row in rows:
             p = dict(row)
-            imgs = json.loads(p.get('image_filenames') or '[]')
+            
+            # ГЛАВНОЕ ИСПРАВЛЕНИЕ — РАСПАРСИТЬ JSON ИЗ БД!
+            try:
+                imgs = json.loads(p.get('image_filenames') or '[]')
+            except (json.JSONDecodeError, TypeError) as e:
+                print(f"Ошибка парсинга image_filenames: {e}, raw: {p.get('image_filenames')}")
+                imgs = []
+            
+            p['image_filenames'] = imgs  # ← теперь это список!
             p['image_urls'] = [f"/static/uploads/goods/{img}" for img in imgs]
+            
             products.append(p)
 
     except Exception as e:

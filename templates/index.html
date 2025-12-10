@@ -2,6 +2,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <script>
+// Глобальное хранилище актуального токена
+window.csrfToken = "{{ csrf_token() }}";
+
+// Автоматически обновляем токен при любом успешном ответе от сервера
+function updateCsrfTokenFromResponse(data) {
+    if (data.csrf_token) {
+        window.csrfToken = data.csrf_token;
+        document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', data.csrf_token);
+    }
+}
+
+// Перехватываем ВСЕ fetch-запросы (POST, PUT, DELETE и т.д.)
+const { fetch: origFetch } = window;
+window.fetch = async (...args) => {
+    let [resource, config] = args;
+    
+    // Только для мутирующих методов
+    if (config && ['POST','PUT','DELETE','PATCH'].includes((config.method || 'GET').toUpperCase())) {
+        config = config || {};
+        config.headers = config.headers || {};
+        config.headers['X-CSRF-Token'] = window.csrfToken;
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+        
+        // Если отправляем FormData — не трогаем Content-Type (браузер сам поставит с boundary)
+        if (!(config.body instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
+        }
+    }
+
+    const response = await origFetch(resource, config);
+    
+    // Автоматически обновляем токен после любого успешного JSON-ответа
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        try {
+            const data = await response.clone().json();
+            updateCsrfTokenFromResponse(data);
+        } catch (e) { /* не JSON — игнорируем */ }
+    }
+
+    return response;
+};
+  </script>
+
   
   <title>Piligrim — Premium Elegance</title>
 
@@ -203,52 +249,61 @@
     <p class="success-subtitle">Вы успешно вошли как <span id="welcomePhone"></span></p>
     <div class="success-emoji">party-popper</div>
     </div>
-    <!-- === РАБОЧАЯ APPLE КАРТОЧКА БЕЗ ЗАГЛУШЕК === -->
-    <div class="product-modal" id="productModal">
-      <div class="product-content">
-        
-        <!-- КАРТИНКА -->
-        <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
+<!-- КАРТОЧКА ТОВАРА  -->
+<div class="product-modal" id="productModal">
+  <div class="product-content">
+    <!-- Крестик закрытия -->
+    <button class="close-modal" onclick="closeProductModal()">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M6 6L22 22M6 22L22 6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+      </svg>
+    </button>
 
-        <!-- ИНФО -->
-        <div class="product-info">
-          <h3 id="productTitle" class="product-title">Загрузка...</h3>
-          
-          <!-- ОЦЕНКА -->
-          <div class="product-rating">
-            <div class="stars"></div>
-            <span id="productReviewsCount" class="reviews-count">—</span>
-          </div>
+    <!-- Основной контейнер -->
+    <div class="product-main">
+      <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
 
-          <!-- ЦЕНА -->
-          <div id="productPrice" class="product-price">—</div>
+      <div class="product-info">
+        <h3 id="productTitle" class="product-title">Загрузка...</h3>
 
-          <!-- ОПИСАНИЕ -->
-          <div id="productDescription" class="product-description">Загрузка описания...</div>
+        <div id="productStockInfo" 
+     style="margin: 12px 0 8px; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            line-height: 1.4;">
+</div>
 
-          <!-- КНОПКА КУПИТЬ -->
-          <button id="addToCartModal" class="add-to-cart-btn">
-            <i class="fas fa-shopping-cart"></i> Купить
-          </button>
+        <!-- Рейтинг и отзывы -->
+        <div class="product-rating">
+          <div class="stars"></div>
+          <span id="productReviewsCount" class="reviews-count">—</span>
+        </div>
 
-          <!-- ОТЗЫВЫ -->
-          <div class="product-reviews">
-            <h4 class="reviews-title">Отзывы покупателей</h4>
-            <div class="reviews-list">
-              <div style="text-align:center;padding:2rem;color:#888;">
-                <i class="far fa-star" style="font-size:2.5rem;margin-bottom:0.5rem;display:block;"></i>
-                <p>Загрузка отзывов...</p>
-              </div>
+        <div id="productPrice" class="product-price">—</div>
+
+        <div id="productDescription" class="product-description">Загрузка описания...</div>
+
+        <!-- Кнопка "В корзину" -->
+        <button id="addToCartModal" class="add-to-cart-btn">
+          <i class="fas fa-shopping-cart"></i> В корзину
+        </button>
+
+        <!-- ОТЗЫВЫ — ТОЧНО КАК В НОВОСТЯХ -->
+        <div class="product-reviews">
+          <h4 class="reviews-title">Отзывы покупателей</h4>
+          <div class="reviews-list" id="productReviewsList">
+            <div style="text-align:center;padding:3rem;color:#888;">
+              <i class="far fa-star" style="font-size:3rem;margin-bottom:1rem;display:block;opacity:0.6;"></i>
+              <p>Отзывов пока нет</p>
+              <small style="opacity:0.7;">Будьте первым!</small>
             </div>
           </div>
         </div>
-
-        <!-- КРЕСТИК -->
-        <div class="close-modal">
-          <i class="fas fa-times"></i>
-        </div>
       </div>
     </div>
+  </div>
+</div>
+
    <div id="stepSuccess" class="success-step" style="display:none;">
     <i class="fas fa-check-circle success-icon"></i>
     <h3 class="success-title">Добро пожаловать!</h3>
@@ -566,7 +621,26 @@
     <a href="/delivery">Доставка и оплата</a>
   </div>
 </footer>
-
+<!-- МОДАЛКА ДЛЯ ВВОДА EMAIL -->
+<div id="emailModal" class="custom-alert" style="display:none;">
+  <div class="alert-content" style="max-width:420px;">
+    <button class="alert-close" id="closeEmailModal">×</button>
+    <div class="alert-icon">
+      <i class="fas fa-envelope"></i>
+    </div>
+    <div class="alert-text">
+      <strong>Укажите email</strong>
+      <span>Для получения рассылки введите ваш адрес электронной почты</span>
+    </div>
+    <form id="emailForm">
+      <input type="email" id="emailInput" placeholder="you@example.com" required 
+             style="width:100%; padding:14px; margin:16px 0; border-radius:12px; border:1px solid #ddd; font-size:1rem;">
+      <button type="submit" class="alert-login-btn" style="width:100%; padding:14px; margin-top:8px;">
+        Сохранить и включить рассылку
+      </button>
+    </form>
+  </div>
+</div>
   <script src="/static/js/search.js"></script>
   <script src="/static/js/auth.js" defer></script>
   <script src="/static/js/cart.js" defer></script>

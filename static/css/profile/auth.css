@@ -1,0 +1,324 @@
+
+  /* === БЛОКИРОВКА ДОСТУПА — ПОЛНОСТЬЮ АДАПТИВНО ДЛЯ ВСЕХ ТЕЛЕФОНОВ (iPhone SE и меньше) === */
+  #authRequiredOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.96);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    padding: 1rem;
+    box-sizing: border-box;
+  }
+
+  #authRequiredOverlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .auth-required-modal {
+    background: rgba(15, 15, 20, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1.5px solid rgba(255, 255, 255, 0.12);
+    border-radius: 32px;
+    padding: 2.8rem 2rem;
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    box-shadow: 
+      0 50px 120px rgba(0, 0, 0, 0.7),
+      0 0 80px rgba(255, 107, 107, 0.15);
+    animation: modalPop 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .auth-required-modal::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.06), transparent);
+    pointer-events: none;
+    border-radius: 32px;
+  }
+
+  .auth-required-icon {
+    font-size: clamp(3.8rem, 12vw, 5.2rem);
+    background: linear-gradient(135deg, #ff6b6b, #ff3b3b);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.2rem;
+    display: block;
+    animation: float 5s ease-in-out infinite;
+  }
+
+  .auth-required-modal h2 {
+    font-size: clamp(1.6rem, 6vw, 2.1rem);
+    font-weight: 800;
+    margin: 0 0 0.8rem;
+    background: linear-gradient(90deg, #ffffff, #cccccc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .auth-required-modal p {
+    font-size: clamp(0.95rem, 4vw, 1.15rem);
+    color: #bbbbbb;
+    margin: 0 0 2rem;
+    line-height: 1.5;
+    font-weight: 400;
+  }
+
+  .auth-required-btn {
+    background: linear-gradient(135deg, #ff5252, #ff3b3b);
+    color: white;
+    border: none;
+    padding: clamp(0.9rem, 4vw, 1.2rem) 1.5rem;
+    border-radius: 24px;
+    font-size: clamp(1rem, 4.2vw, 1.2rem);
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 12px 32px rgba(255, 82, 82, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .auth-required-btn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 50px rgba(255, 82, 82, 0.5);
+  }
+
+  .auth-required-footer {
+    margin-top: 2rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .auth-required-footer small {
+    font-size: clamp(0.8rem, 3.5vw, 0.95rem);
+    color: #888;
+    font-weight: 500;
+  }
+
+  /* АНИМАЦИИ */
+  @keyframes modalPop {
+    0% { transform: scale(0.75) translateY(60px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  /* СВЕТЛАЯ ТЕМА — тоже адаптивная */
+  html:not([data-theme="dark"]) .auth-required-modal {
+    background: rgba(255, 255, 255, 0.96);
+    border-color: rgba(0, 0, 0, 0.12);
+    box-shadow: 0 50px 120px rgba(0, 0, 0, 0.22);
+  }
+
+  html:not([data-theme="dark"]) .auth-required-modal::before {
+    background: linear-gradient(135deg, rgba(0,0,0,0.03), transparent);
+  }
+
+  html:not([data-theme="dark"]) .auth-required-modal h2 {
+    background: linear-gradient(90deg, #000000, #333333);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  html:not([data-theme="dark"]) .auth-required-modal p {
+    color: #555;
+  }
+
+  html:not([data-theme="dark"]) .auth-required-footer {
+    border-top-color: rgba(0,0,0,0.1);
+  }
+
+  html:not([data-theme="dark"]) .auth-required-footer small {
+    color: #666;
+  }
+
+  /* ДОПОЛНИТЕЛЬНО: на совсем маленьких экранах (iPhone SE 1gen — 320px) */
+  @media (max-width: 360px) {
+    .auth-required-modal {
+      padding: 2.4rem 1.6rem;
+      border-radius: 28px;
+    }
+    
+    .auth-required-btn {
+      padding: 1rem 1.2rem;
+      border-radius: 20px;
+    }
+  }
+
+  /* === БЛОКИРОВКА — КРАСИВО, КАК НА ПК, НО АДАПТИВНО (ФИНАЛ) === */
+.auth-required-modal h2,
+.auth-required-modal p {
+  /* ЭТО ГЛАВНОЕ — ЗАПРЕЩАЕМ ПЕРЕНОС ПО СЛОГАМ */
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
+  -moz-hyphens: none !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+}
+
+/* === ФИНАЛЬНАЯ АДАПТАЦИЯ БЛОКИРОВКИ — ВСЁ В ОДНОМ МЕСТЕ (БЕЗ КОНФЛИКТОВ) === */
+/* === ФИНАЛЬНАЯ АДАПТАЦИЯ БЛОКИРОВКИ + ПОДДЕРЖКА ССЫЛКИ (ТОЧКА) === */
+@media (max-width: 1024px) {
+  .auth-required-modal {
+    padding: 2.6rem 1.8rem;
+    max-width: 380px;
+  }
+
+  .auth-required-modal h2 {
+    font-size: clamp(24px, 6.8vw, 34px) !important;
+    line-height: 1.18 !important;
+  }
+
+  .auth-required-modal p {
+    font-size: clamp(14px, 4.1vw, 17px) !important;
+    line-height: 1.52 !important;
+  }
+
+  .auth-required-btn {
+    font-size: clamp(15px, 4.4vw, 18px) !important;
+    padding: clamp(14px, 4.2vw, 18px) 20px !important;
+    line-height: 1.2 !important;
+  }
+
+  /* ← ВАЖНО: теперь адаптируем и small, и ссылку внутри него → */
+  .auth-required-footer small,
+  .auth-required-footer small .support-link {
+    font-size: clamp(12px, 3.5vw, 14px) !important;
+    line-height: 1.45 !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .auth-required-modal {
+    padding: 2.4rem 1.6rem;
+  }
+
+  .auth-required-modal h2            { font-size: 24px !important; }
+  .auth-required-modal p             { font-size: 14.5px !important; }
+  .auth-required-btn                 { font-size: 15.5px !important; padding: 15px 20px !important; }
+  .auth-required-footer small,
+  .auth-required-footer small .support-link { font-size: 12.5px !important; }
+}
+
+/* Запрещаем переносы по слогам везде */
+.auth-required-modal h2,
+.auth-required-modal p,
+.auth-required-btn,
+.auth-required-footer small,
+.auth-required-footer small .support-link {
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
+  -moz-hyphens: none !important;
+  word-break: normal !important;
+}
+
+/* Стили для ссылки — красиво и в тему */
+.support-link {
+  color: #ff6b6b !important;
+  text-decoration: none !important;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.support-link:hover {
+  text-decoration: underline !important;
+  color: #ff5252 !important;
+}
+
+/* На мобильных — только при тапе */
+@media (hover: none) {
+  .support-link:hover {
+    text-decoration: none !important;
+  }
+  .support-link:active {
+    opacity: 0.7;
+  }
+}
+
+.support-link {
+  color: #ff6b6b !important;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.support-link:hover {
+  text-decoration: underline !important;
+  color: #ff5252 !important;
+}
+
+/* На мобильных — тап по ссылке без подчёркивания до касания */
+@media (hover: none) {
+  .support-link:hover {
+    text-decoration: none !important;
+  }
+  .support-link:active {
+    opacity: 0.7;
+  }
+}
+
+/* ФИНАЛЬНОЕ РЕШЕНИЕ — AI-ПОМОЩНИК И ЛАМПОЧКА ТЕМЫ БЛЮРЯТСЯ ПРИ БЛОКИРОВКЕ */
+#authRequiredOverlay.active ~ #ai-assistant,
+#authRequiredOverlay.active ~ #ai-chat,
+#authRequiredOverlay.active ~ .theme-toggle-hanging {
+  filter: blur(32px) !important;
+  -webkit-filter: blur(32px) !important;
+  transition: filter 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* АДАПТИВНЫЙ БЛЮР ПОД ТЕМУ — ЧЁРНЫЙ В ТЁМНОЙ, СВЕТЛЫЙ В СВЕТЛОЙ */
+#authRequiredOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  padding: 1rem;
+  box-sizing: border-box;
+  pointer-events: none; /* важно! */
+}
+
+/* Тёмная тема — чёрный полупрозрачный + сильный блюр */
+html[data-theme="dark"] #authRequiredOverlay,
+html:not([data-theme]) #authRequiredOverlay {
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+}
+
+/* Светлая тема — белый полупрозрачный + мягкий блюр */
+html[data-theme="light"] #authRequiredOverlay {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+}
+
+#authRequiredOverlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
+}
+

@@ -4,6 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Новости — Админка | Piligrim</title>
+      <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <script>
+// Глобальное хранилище актуального токена
+window.csrfToken = "{{ csrf_token() }}";
+
+// Автоматически обновляем токен при любом успешном ответе от сервера
+function updateCsrfTokenFromResponse(data) {
+    if (data.csrf_token) {
+        window.csrfToken = data.csrf_token;
+        document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', data.csrf_token);
+    }
+}
+
+// Перехватываем ВСЕ fetch-запросы (POST, PUT, DELETE и т.д.)
+const { fetch: origFetch } = window;
+window.fetch = async (...args) => {
+    let [resource, config] = args;
+    
+    // Только для мутирующих методов
+    if (config && ['POST','PUT','DELETE','PATCH'].includes((config.method || 'GET').toUpperCase())) {
+        config = config || {};
+        config.headers = config.headers || {};
+        config.headers['X-CSRF-Token'] = window.csrfToken;
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+        
+        // Если отправляем FormData — не трогаем Content-Type (браузер сам поставит с boundary)
+        if (!(config.body instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
+        }
+    }
+
+    const response = await origFetch(resource, config);
+    
+    // Автоматически обновляем токен после любого успешного JSON-ответа
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        try {
+            const data = await response.clone().json();
+            updateCsrfTokenFromResponse(data);
+        } catch (e) { /* не JSON — игнорируем */ }
+    }
+
+    return response;
+};
+  </script>
+
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
@@ -11,6 +57,126 @@
     <link rel="stylesheet" href="/static/css/fonts/inter.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+
+    <style>
+/* ─────── КНОПКА "ОТМЕНА" — ВСЕГДА ВИДНА, С СЕРОЙ РАМКОЙ ─────── */
+#editModal .btn-zaza-secondary,
+#passwordModal .cancel-btn {
+    background: transparent !important;
+    color: #cccccc !important;           /* светло-серый текст */
+    border: 2px solid #666666 !important; /* чёткая серая рамка */
+    padding: 0.85rem 1.8rem !important;
+    border-radius: 18px !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    min-width: 130px;
+    transition: all 0.25s ease !important;
+    box-shadow: none !important;
+}
+
+/* Hover — чуть светлее и с тенью */
+#editModal .btn-zaza-secondary:hover,
+#passwordModal .cancel-btn:hover {
+    background: #333333 !important;
+    color: #ffffff !important;
+    border-color: #888888 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3) !important;
+}
+
+/* ─────── СВЕТЛАЯ ТЕМА — ТОТ ЖЕ СТИЛЬ, НО СВЕТЛЕЕ ─────── */
+[data-theme="light"] #editModal .btn-zaza-secondary,
+[data-theme="light"] #passwordModal .cancel-btn {
+    color: #444444 !important;           /* тёмно-серый текст */
+    border: 2px solid #aaaaaa !important; /* серая рамка */
+    background: transparent !important;
+}
+
+[data-theme="light"] #editModal .btn-zaza-secondary:hover,
+[data-theme="light"] #passwordModal .cancel-btn:hover {
+    background: #f5f5f5 !important;
+    color: #000000 !important;
+    border-color: #666666 !important;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15) !important;
+}
+/* Супер-читаемая светлая модалка редактирования */
+[data-theme="light"] #editModal .modal {
+    background: #fdfdfd;
+    color: #1a1a1a;
+    border: 1px solid #e0e0e0;
+}
+
+[data-theme="light"] #editModal h3 {
+    color: #111;
+}
+
+[data-theme="light"] #editModal input,
+[data-theme="light"] #editModal textarea {
+    background: #ffffff;
+    border: 1px solid #d0d0d0;
+    color: #111;
+}
+
+[data-theme="light"] #editModal input::placeholder,
+[data-theme="light"] #editModal textarea::placeholder {
+    color: #888;
+}
+
+[data-theme="light"] #editModal .drop-zone {
+    background: #f8f9fa;
+    border: 2px dashed #bbb;
+    color: #444;
+}
+
+[data-theme="light"] #editModal .drop-zone span {
+    color: #00cc7a;
+}
+
+/* === МОДАЛКА ПАРОЛЯ — СВЕТЛАЯ ТЕМА === */
+[data-theme="light"] #passwordModal .modal {
+    background: #ffffff;
+    color: #222;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+[data-theme="light"] #passwordModal h3 {
+    color: #111;
+}
+
+[data-theme="light"] #passwordModal p {
+    color: #555;
+}
+
+[data-theme="light"] #passwordModal input#adminPassword {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    color: #222;
+}
+
+[data-theme="light"] #passwordModal input#adminPassword::placeholder {
+    color: #888;
+}
+
+[data-theme="light"] #passwordModal #passwordError {
+    color: #e74c3c;
+    background: #ffeaea;
+    border-color: #fabbbb;
+}
+
+[data-theme="light"] #passwordModal .cancel-btn {
+    background: #eee;
+    color: #333;
+}
+
+[data-theme="light"] #passwordModal .cancel-btn:hover {
+    background: #ddd;
+}
+
+/* Если хочешь ещё чуть контраста */
+[data-theme="light"] .modal h3 {
+    font-weight: 600;
+}
+    </style>
 </head>
 <body>
 
@@ -335,7 +501,7 @@ fetch('/api/check_admin').then(r => r.json()).then(d => { if (!d.is_admin) locat
         openPasswordModal();
     };
 
-    async function executePendingAction() {
+async function executePendingAction() {
     const pwd = document.getElementById('adminPassword').value.trim();
     const err = document.getElementById('passwordError');
     const btn = document.querySelector('#passwordModal .btn-primary');
@@ -357,21 +523,22 @@ fetch('/api/check_admin').then(r => r.json()).then(d => { if (!d.is_admin) locat
         formData.append('news_id', pendingNewsId);
     }
 
-    // === РЕДАКТИРОВАНИЕ — используем уже готовый editFormData ===
+    // РЕДАКТИРОВАНИЕ — ДОБАВЛЯЕМ ПАРОЛЬ В editFormData!
     if (pendingAction === 'edit' && editFormData) {
-        formData = editFormData; // ← сюда уже всё собрано: порядок, новые файлы, delete_images
-    }
-
-    // === ДОБАВЛЕНИЕ ===
+        editFormData.append('password', pwd);  // ← ЭТО САМОЕ ГЛАВНОЕ!
+        formData = editFormData;
+    } 
+    // ДОБАВЛЕНИЕ
     else if (pendingAction === 'add') {
-        const addForm = document.getElementById('addForm');
-        for (let [k, v] of new FormData(addForm).entries()) {
-            if (k !== 'action') formData.append(k, v);
+        const tempForm = new FormData(document.getElementById('addForm'));
+        for (let [key, value] of tempForm.entries()) {
+            if (key !== 'action' && key !== 'images') {
+                formData.append(key, value);
+            }
         }
-        const addInput = document.getElementById('addFileInput');
-        if (addInput?.files?.length) {
-            Array.from(addInput.files).forEach(f => formData.append('images', f));
-        }
+        addSelectedFiles.forEach(file => {
+            formData.append('images', file);
+        });
     }
 
     try {
@@ -390,7 +557,7 @@ fetch('/api/check_admin').then(r => r.json()).then(d => { if (!d.is_admin) locat
             );
             setTimeout(() => location.reload(), 1200);
         } else {
-            throw new Error(d.error || 'Ошибка');
+            throw new Error(d.error || 'Неизвестная ошибка');
         }
     } catch (e) {
         console.error(e);
@@ -408,8 +575,15 @@ function closeModal(id) {
     document.getElementById(id).classList.remove('active');
     
     if (id === 'editModal') {
+        // Очищаем только при полном закрытии (отмена или сохранение)
+        editAllImages.forEach(item => {
+            if (item.type === 'new' && item.previewUrl) {
+                URL.revokeObjectURL(item.previewUrl); // ← отзываем только previewUrl!
+            }
+        });
+        editAllImages = [];
         const input = document.getElementById('editFileInput');
-        if (input) input.value = ''; // ← обязательно!
+        if (input) input.value = '';
     }
 }
 
@@ -450,9 +624,6 @@ function closeModal(id) {
     }
 
 
-    function closeModal(id) {
-        document.getElementById(id).classList.remove('active');
-    }
 
     // Фильтр
     function filterProducts() {
@@ -604,231 +775,107 @@ function closeModal(id) {
     filterProducts();
 </script>
 <script>
-// === ФИНАЛЬНАЯ 100% РАБОЧАЯ ВЕРСИЯ ФОТО ДЛЯ НОВОСТЕЙ ===
-const MAX_PHOTOS = 4;
-let editAllImages = []; // Все фото при редактировании: старые + новые
+    let addSelectedFiles = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     const addZone = document.getElementById('addDropZone');
     const addInput = document.getElementById('addFileInput');
     const addPreview = document.getElementById('addPreview');
 
-    function updateAddPreview() {
+    
+    const renderPreview = () => {
         addPreview.innerHTML = '';
-        const files = Array.from(addInput.files).slice(0, 4);
-        
-        files.forEach((file, i) => {
+
+        addSelectedFiles.forEach((file, index) => {  // ← ИСПРАВЛЕНО: index) а не index =>
             const reader = new FileReader();
             reader.onload = e => {
                 const div = document.createElement('div');
                 div.className = 'image-item';
+                div.draggable = true;
+                div.dataset.index = index;
+
                 div.innerHTML = `
                     <img src="${e.target.result}" style="width:110px;height:110px;object-fit:cover;border-radius:12px;">
-                    ${i === 0 ? '<div class="main-badge">Главная</div>' : ''}
-                    <button type="button" class="image-remove" onclick="this.parentElement.remove(); updateAddFiles()">×</button>
+                    ${index === 0 ? '<div class="main-badge">Главная</div>' : ''}
+                    <button type="button" class="image-remove">×</button>
                 `;
+
+                div.querySelector('.image-remove').onclick = ev => {
+                    ev.stopPropagation();
+                    addSelectedFiles.splice(index, 1);
+                    renderPreview();
+                };
+
+                // Drag & Drop
+                div.addEventListener('dragstart', ev => {
+                    ev.dataTransfer.setData('text/plain', index);
+                    div.classList.add('dragging');
+                });
+
+                div.addEventListener('dragend', () => {
+                    div.classList.remove('dragging');
+                });
+
+                div.addEventListener('dragover', ev => {
+                    ev.preventDefault();
+                });
+
+                div.addEventListener('drop', ev => {
+                    ev.preventDefault();
+                    const fromIndex = parseInt(ev.dataTransfer.getData('text/plain'));
+                    if (fromIndex === index) return;
+
+                    const [moved] = addSelectedFiles.splice(fromIndex, 1);
+                    addSelectedFiles.splice(index, 0, moved);
+                    renderPreview();
+                });
+
                 addPreview.appendChild(div);
             };
             reader.readAsDataURL(file);
         });
-    }
 
-    window.updateAddFiles = function() {
-        const current = Array.from(addInput.files);
-        const remaining = Array.from(addPreview.querySelectorAll('img')).map(img => {
-            const idx = Array.from(addPreview.querySelectorAll('img')).indexOf(img);
-            return current[idx];
-        }).filter(Boolean);
-        const dt = new DataTransfer();
-        remaining.forEach(f => dt.items.add(f));
-        addInput.files = dt.files;
+        if (addSelectedFiles.length === 0) {
+            addPreview.innerHTML = '<p style="color:#888; padding:1rem;">Фото не выбраны</p>';
+        }
     };
 
     addZone.onclick = () => addInput.click();
-    addInput.onchange = updateAddPreview;
+    addInput.onchange = () => {
+        Array.from(addInput.files).forEach(file => {
+            if (addSelectedFiles.length < 4 && file.type.startsWith('image/')) {
+                addSelectedFiles.push(file);
+            }
+        });
+        addInput.value = '';
+        renderPreview();
+    };
 
     addZone.ondragover = e => { e.preventDefault(); addZone.classList.add('dragover'); };
     addZone.ondragleave = () => addZone.classList.remove('dragover');
     addZone.ondrop = e => {
         e.preventDefault();
         addZone.classList.remove('dragover');
-        addInput.files = e.dataTransfer.files;
-        updateAddPreview();
+        Array.from(e.dataTransfer.files).forEach(file => {
+            if (addSelectedFiles.length < 4 && file.type.startsWith('image/')) {
+                addSelectedFiles.push(file);
+            }
+        });
+        renderPreview();
     };
 
-    flatpickr('.flatpickr', { locale: "ru", dateFormat: "d F Y", allowInput: true });
+    const style = document.createElement('style');
+    style.textContent = `
+        .drop-zone.dragover { border-color: #00ff9d; background: rgba(0,255,157,0.15); }
+        .image-item { position: relative; cursor: move; user-select: none; transition: opacity 0.2s; }
+        .image-item.dragging { opacity: 0.5; transform: scale(0.95); z-index: 10; }
+        .image-remove { position:absolute; top:-10px; right:-10px; width:32px; height:32px; background:#ff4444; color:#fff; border:none; border-radius:50%; font-size:20px; cursor:pointer; }
+        .main-badge { position:absolute; top:6px; left:6px; background:#00ff9d; color:#000; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:bold; }
+    `;
+    document.head.appendChild(style);
+
+    renderPreview();
 });
-
-
-function openEditModal(btn) {
-    const d = btn.dataset;
-    document.getElementById('edit_id').value = d.id;
-    document.getElementById('edit_title').value = d.title.replace(/&quot;/g, '"');
-    document.getElementById('edit_category').value = d.category || '';
-    document.getElementById('edit_short_desc').value = d.short_desc.replace(/&quot;/g, '"');
-    document.getElementById('edit_full_desc').value = (d.full_desc || '').replace(/&quot;/g, '"');
-    
-    const dateInput = document.getElementById('edit_date');
-    if (dateInput._flatpickr) {
-        dateInput._flatpickr.setDate(d.date);
-    } else {
-        dateInput.value = d.date;
-    }
-
-    // Сброс состояния
-    editAllImages = [];
-    document.getElementById('editCurrentPreview').innerHTML = '';
-    document.querySelector('input[name="delete_images"]')?.remove();
-
-    // Загрузка существующих фото
-    let images = [];
-    try { images = JSON.parse(d.images || '[]'); } catch(e) {}
-    images.forEach(name => editAllImages.push({ type: 'existing', name }));
-
-    renderAllEditPhotos();
-
-    // ← ВОТ ЭТА СТРОКА БЫЛА ПОТЕРЯНА!
-    document.getElementById('editModal').classList.add('active');
-}
-
-function renderAllEditPhotos() {
-    const preview = document.getElementById('editCurrentPreview');
-    preview.innerHTML = '';
-    
-    editAllImages.forEach((item, i) => {
-        const div = document.createElement('div');
-        div.className = 'image-item';
-        div.draggable = true;
-        div.dataset.index = i;
-
-        const src = item.type === 'existing' 
-            ? `/static/uploads/news/${item.name}` 
-            : URL.createObjectURL(item.file);
-
-        div.innerHTML = `
-            <img src="${src}" style="width:140px;height:140px;object-fit:cover;border-radius:16px;">
-            ${i === 0 ? '<div class="main-badge">Главная</div>' : ''}
-            <button type="button" class="image-remove" onclick="removeEditPhoto(${i})">×</button>
-        `;
-
-        // Drag & Drop
-        div.addEventListener('dragstart', e => {
-            e.dataTransfer.setData('index', i);
-            div.classList.add('dragging');
-        });
-        div.addEventListener('dragover', e => e.preventDefault());
-        div.addEventListener('drop', e => {
-            e.preventDefault();
-            const from = parseInt(e.dataTransfer.getData('index'));
-            if (from === i) return;
-            const [moved] = editAllImages.splice(from, 1);
-            editAllImages.splice(i, 0, moved);
-            renderAllEditPhotos();
-        });
-        div.addEventListener('dragend', () => div.classList.remove('dragging'));
-
-        preview.appendChild(div);
-    });
-
-    if (editAllImages.length === 0) {
-        preview.innerHTML = '<p style="color:#888; font-style:italic; text-align:center; width:100%; padding:2rem;">Нет фото. Добавьте новые ниже ↓</p>';
-    }
-}
-
-window.removeEditPhoto = function(index) {
-    if (!confirm('Удалить фото?')) return;
-    
-    const item = editAllImages[index];
-    if (item.type === 'existing') {
-        let input = document.querySelector('input[name="delete_images"]');
-        if (!input) {
-            input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'delete_images';
-            document.getElementById('editForm').appendChild(input);
-        }
-        const deleted = input.value ? JSON.parse(input.value) : [];
-        deleted.push(item.name);
-        input.value = JSON.stringify(deleted);
-    }
-    editAllImages.splice(index, 1);
-    renderAllEditPhotos();
-};
-
-document.getElementById('editDropZone').addEventListener('click', e => {
-    if (!e.target.closest('.image-remove')) {
-        document.getElementById('editFileInput').click();
-    }
-});
-
-document.getElementById('editFileInput').addEventListener('change', function() {
-    const files = Array.from(this.files).filter(f => f.type.startsWith('image/'));
-
-    for (const file of files) {
-        if (editAllImages.length >= MAX_PHOTOS) break;
-
-        // ← КРИТИЧЕСКИ ВАЖНО: создаём НОВЫЙ File объект!
-        const newFile = new File([file], file.name, {
-            type: file.type,
-            lastModified: file.lastModified
-        });
-
-        editAllImages.push({
-            type: 'new',
-            file: newFile  // ← свежий, живой объект File
-        });
-    }
-
-    // ← ОБЯЗАТЕЛЬНО очищаем input после выбора!
-    this.value = '';
-
-    renderAllEditPhotos();
-
-    if (editAllImages.length >= MAX_PHOTOS) {
-        showAlert('Максимум 4 фото', 'info');
-    }
-});
-
-// === ПЕРЕХВАТ ОТПРАВКИ ФОРМЫ РЕДАКТИРОВАНИЯ
-let editFormData = null;
-
-document.getElementById('editForm').onsubmit = function(e) {
-    e.preventDefault();
-    if (!validateForm(this)) return;
-
-    const fd = new FormData();
-    fd.append('action', 'edit');
-    fd.append('news_id', document.getElementById('edit_id').value);
-    fd.append('title', document.getElementById('edit_title').value.trim());
-    fd.append('category', document.getElementById('edit_category').value.trim());
-    fd.append('date', document.getElementById('edit_date').value);
-    fd.append('short_desc', document.getElementById('edit_short_desc').value.trim());
-    fd.append('full_desc', document.getElementById('edit_full_desc').value);
-
-    // Удалённые старые фото
-    const delInput = document.querySelector('input[name="delete_images"]');
-    if (delInput && delInput.value) {
-        fd.append('delete_images', delInput.value);
-    }
-
-    const order = editAllImages.map((item, index) => {
-        if (item.type === 'existing') {
-            return item.name;
-        } else {
-            const uniqueName = `new_${Date.now()}_${index}_${item.file.name}`;
-            fd.append('images', item.file, uniqueName);
-            return uniqueName; // ← ВОТ ЭТО ВСЁ ИСПРАВЛЯЕТ
-        }
-    });
-    fd.append('images_order', JSON.stringify(order));
-
-        editFormData = fd;
-        pendingAction = 'edit';
-        pendingNewsId = document.getElementById('edit_id').value;
-        openPasswordModal();
-    };
-
-
 </script>
 
 <style>
@@ -1077,5 +1124,188 @@ document.addEventListener('click', e => {
     }
 });
 </script>
+
+<script>
+let editAllImages = [];
+let editFormData = null;
+
+function openEditModal(btn) {
+    const d = btn.dataset;
+    document.getElementById('edit_id').value = d.id;
+    document.getElementById('edit_title').value = d.title.replace(/&quot;/g, '"');
+    document.getElementById('edit_category').value = d.category || '';
+    document.getElementById('edit_short_desc').value = d.short_desc.replace(/&quot;/g, '"');
+    document.getElementById('edit_full_desc').value = (d.full_desc || '').replace(/&quot;/g, '"');
+
+    const dateInput = document.getElementById('edit_date');
+    if (dateInput._flatpickr) dateInput._flatpickr.setDate(d.date);
+    else dateInput.value = d.date;
+
+    editAllImages = [];
+    document.getElementById('editCurrentPreview').innerHTML = '';
+    document.querySelector('input[name="delete_images"]')?.remove();
+
+    let images = [];
+    try { images = JSON.parse(d.images || '[]'); } catch(e) {}
+    images.forEach(name => editAllImages.push({ type: 'existing', name }));
+
+    renderAllEditPhotos();
+    document.getElementById('editModal').classList.add('active');
+}
+
+function renderAllEditPhotos() {
+    const preview = document.getElementById('editCurrentPreview');
+    preview.innerHTML = '';
+
+    editAllImages.forEach((item, i) => {
+        const div = document.createElement('div');
+        div.className = 'image-item';
+        div.draggable = true;
+        div.dataset.index = i;
+
+        // Создаём img вручную — это главное!
+        const img = document.createElement('img');
+        img.style.cssText = 'width:140px;height:140px;object-fit:cover;border-radius:16px;background:#222;';
+
+        if (item.type === 'existing') {
+            img.src = `/static/uploads/news/${item.name}?t=${Date.now()}`;
+        } else if (item.type === 'new') {
+            img.src = item.previewUrl; // ← data:image/... — работает везде
+        }
+
+        div.appendChild(img);
+
+        if (i === 0) {
+            const badge = document.createElement('div');
+            badge.className = 'main-badge';
+            badge.textContent = 'Главная';
+            div.appendChild(badge);
+        }
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'image-remove';
+        removeBtn.textContent = '×';
+        removeBtn.onclick = e => {
+            e.stopPropagation();
+            if (confirm('Удалить фото?')) {
+                if (item.type === 'existing') {
+                    let input = document.querySelector('input[name="delete_images"]');
+                    if (!input) {
+                        input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'delete_images';
+                        document.getElementById('editForm').appendChild(input);
+                    }
+                    const arr = input.value ? JSON.parse(input.value) : [];
+                    arr.push(item.name);
+                    input.value = JSON.stringify(arr);
+                }
+                editAllImages.splice(i, 1);
+                renderAllEditPhotos();
+            }
+        };
+        div.appendChild(removeBtn);
+
+        // Drag & Drop
+        div.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', i));
+        div.addEventListener('dragover', e => e.preventDefault());
+        div.addEventListener('drop', e => {
+            e.preventDefault();
+            const from = parseInt(e.dataTransfer.getData('text/plain'));
+            if (from === i) return;
+            const [moved] = editAllImages.splice(from, 1);
+            editAllImages.splice(i, 0, moved);
+            renderAllEditPhotos();
+        });
+        div.addEventListener('dragend', () => div.classList.remove('dragging'));
+
+        preview.appendChild(div);
+    });
+
+    if (editAllImages.length === 0) {
+        preview.innerHTML = '<p style="color:#888;text-align:center;padding:2rem;">Нет фото</p>';
+    }
+}
+
+function addImageToEdit(file) {
+    if (editAllImages.length >= 4) {
+        alert('Максимум 4 фото!');
+        return;
+    }
+    if (!file.type.startsWith('image/') || file.size === 0) return;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+        editAllImages.push({
+            type: 'new',
+            file: file,
+            previewUrl: e.target.result  // ← data:image/jpeg;base64,... — работает в innerHTML!
+        });
+        renderAllEditPhotos();
+    };
+    reader.readAsDataURL(file);
+}
+
+// Все способы добавления
+document.getElementById('editDropZone').addEventListener('click', e => {
+    if (!e.target.closest('.image-remove')) {
+        document.getElementById('editFileInput').click();
+    }
+});
+
+document.getElementById('editFileInput').addEventListener('change', () => {
+    Array.from(document.getElementById('editFileInput').files).forEach(addImageToEdit);
+    document.getElementById('editFileInput').value = '';
+});
+
+document.getElementById('editModal').addEventListener('paste', e => {
+    const items = e.clipboardData?.items || [];
+    for (const item of items) {
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+            const file = item.getAsFile();
+            if (file) {
+                const previewUrl = URL.createObjectURL(file);
+                editAllImages.push({ type: 'new', file, previewUrl });
+            }
+        }
+    }
+    if (items.length > 0) e.preventDefault();
+    renderAllEditPhotos();
+});
+
+// Отправка
+document.getElementById('editForm').onsubmit = function(e) {
+    e.preventDefault();
+
+    const fd = new FormData();
+    fd.append('action', 'edit');
+    fd.append('news_id', document.getElementById('edit_id').value);
+    fd.append('title', document.getElementById('edit_title').value.trim());
+    fd.append('date', document.getElementById('edit_date').value);
+    fd.append('short_desc', document.getElementById('edit_short_desc').value.trim());
+    fd.append('full_desc', document.getElementById('edit_full_desc').value);
+    fd.append('category', document.getElementById('edit_category').value.trim());
+
+    const delInput = document.querySelector('input[name="delete_images"]');
+    if (delInput && delInput.value) fd.append('delete_images', delInput.value);
+
+    const order = editAllImages.map((item, i) => 
+        item.type === 'existing' ? item.name : `__new_${i}__`
+    );
+
+    editAllImages.forEach(item => {
+        if (item.type === 'new') fd.append('images', item.file);
+    });
+
+    fd.append('images_order', JSON.stringify(order));
+
+    editFormData = fd;
+    pendingAction = 'edit';
+    pendingNewsId = document.getElementById('edit_id').value;
+    openPasswordModal();
+};
+</script>
+
 </body>
 </html>

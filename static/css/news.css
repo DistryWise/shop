@@ -1687,3 +1687,113 @@ footer {
     letter-spacing: clamp(3px, 1.5vw, 8px) !important;
   }
 }
+/* ===================================================== */
+/* ФИНАЛЬНЫЙ ПАТЧ 2025 — ПЕРЕНОСЫ + CLAMP() ВЕЗДЕ       */
+/* Добавь в конец news.css — перебьёт всё старое        */
+/* ===================================================== */
+
+/* 1. ИНТРО — ЗАГОЛОВОК И ПОДЗАГОЛОВОК */
+.news-title {
+  font-size: clamp(2.4rem, 8.5vw, 5rem) !important;
+  line-height: 1.18 !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
+  letter-spacing: clamp(-0.02em, 0.3vw, 0.02em) !important;
+}
+
+.news-subtitle {
+  font-size: clamp(1.05rem, 4.3vw, 1.38rem) !important;
+  line-height: 1.68 !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
+  max-width: 90% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Кнопка "Скролл к новостям" */
+.scroll-trigger {
+  font-size: clamp(0.98rem, 4.1vw, 1.22rem) !important;
+  padding: clamp(0.9rem, 4.5vw, 1.3rem) clamp(2.2rem, 8vw, 3.4rem) !important;
+  white-space: nowrap !important;
+}
+
+/* 2. КАРТОЧКИ НОВОСТЕЙ — ЗАГОЛОВКИ И ОПИСАНИЯ */
+.news-card-content h3 {
+  font-size: clamp(1.55rem, 6.2vw, 2.35rem) !important;
+  line-height: 1.26 !important;
+  margin: 0 !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
+
+.news-card-excerpt {
+  font-size: clamp(0.98rem, 4.1vw, 1.16rem) !important;
+  line-height: 1.68 !important;
+  color: #aaa !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 3 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
+}
+
+.news-card-date {
+  font-size: clamp(0.82rem, 3.4vw, 0.94rem) !important;
+  letter-spacing: 0.14em !important;
+}
+
+/* 3. МОДАЛКА НОВОСТИ — ВСЁ ВНУТРИ */
+.final-title {
+  font-size: clamp(2.6rem, 9.5vw, 5.8rem) !important;
+  line-height: 1.12 !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
+  letter-spacing: clamp(-0.03em, 0.2vw, -0.01em) !important;
+}
+
+.final-date {
+  font-size: clamp(0.88rem, 3.6vw, 1.02rem) !important;
+  letter-spacing: clamp(0.18em, 1.2vw, 0.28em) !important;
+}
+
+.final-lead {
+  font-size: clamp(1.28rem, 5.2vw, 1.92rem) !important;
+  line-height: 1.72 !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
+  max-width: 92% !important;
+  margin: 0 auto clamp(2.5rem, 7vw, 4.5rem) !important;
+}
+
+.final-body,
+.final-body p {
+  font-size: clamp(1.08rem, 4.6vw, 1.32rem) !important;
+  line-height: 1.88 !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
+}
+
+/* Дополнительно — если где-то ещё жёсткие px */
+.news-modal-title,
+.final-modal h1,
+.final-modal h2,
+.final-modal h3 {
+  font-size: clamp(2.2rem, 8vw, 3.8rem) !important;
+  line-height: 1.2 !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
+}
+
+/* Убираем возможные обрезания на самых узких экранах */
+@media (max-width: 380px) {
+  .news-title { font-size: clamp(2.2rem, 10vw, 4.2rem) !important; }
+  .final-title { font-size: clamp(2.4rem, 11vw, 4.8rem) !important; }
+  .news-subtitle { max-width: 96% !important; }
+  .final-lead { max-width: 96% !important; }
+}

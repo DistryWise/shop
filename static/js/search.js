@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Закрытие по стрелке назад
-    document.getElementById('closemobileSearchSheet')?.addEventListener('click', () => {
+    document.getElementById('closeMobileSearchTop')?.addEventListener('click', () => {
       mobileSearchSheet.classList.remove('active');
       mobileSearchInput.value = '';
       mobileClearBtn.style.opacity = '0';
@@ -127,7 +127,6 @@ document.addEventListener('click', (e) => {
   // МОБИЛКА ≤1024px — шторка сверху
   if (width <= 1024) {
     mobileSearchSheet.classList.add('active');
-    mobileSearchResults.style.display = 'block';
     document.body.style.overflow = 'hidden';
     mobileEmptyState.style.display = 'block';
     mobileAutocomplete.innerHTML = '';
@@ -226,42 +225,80 @@ const query = activeInput?.value.trim() || '';
   // === ПОИСК ПО ТОВАРАМ И УСЛУГАМ ===
 const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+// === УМНЫЙ ПОИСК БЕЗ УЧЁТА РЕГИСТРА + МОМЕНТАЛЬНАЯ РАБОТА (2025 — ЛУЧШЕЕ РЕШЕНИЕ) ===
 const fetchSuggestions = async (query) => {
   if (!query.trim()) {
-    autocompleteList.classList.remove('active');
-    if (mobileAutocomplete) {
-      mobileAutocomplete.innerHTML = '';
-      mobileEmptyState.style.display = 'block';
-    }
+    // Очистка при пустом запросе
+    [autocompleteList, mobileAutocomplete, tabletAutocomplete].forEach(list => {
+      if (list) list.innerHTML = '';
+    });
+    [mobileEmptyState, document.getElementById('tabletEmptyState')].forEach(el => {
+      if (el) el.style.display = 'block';
+    });
+    autocompleteList?.classList.remove('active');
+    tabletAutocomplete?.classList.remove('active');
     return;
   }
 
+  // Скрываем "пусто" сразу
   if (mobileEmptyState) mobileEmptyState.style.display = 'none';
+  document.getElementById('tabletEmptyState')?.style.setProperty('display', 'none');
 
   try {
-    const [prodRes, servRes] = await Promise.all([
-      fetch(`/api/products?search=${encodeURIComponent(query)}`),
-      fetch(`/api/services?search=${encodeURIComponent(query)}`)
-    ]);
+    // === ЗАГРУЖАЕМ ВСЕ ТОВАРЫ И УСЛУГИ ОДИН РАЗ (кешируем) ===
+    if (!window.allSearchData) {
+      const [prodRes, servRes] = await Promise.all([
+        fetch('/api/products?limit=5000').catch(() => ({ ok: false })),
+        fetch('/api/services?limit=5000').catch(() => ({ ok: false }))
+      ]);
 
-    const products = prodRes.ok ? await prodRes.json() : [];
-    const services = servRes.ok ? await servRes.json() : [];
+      const products = prodRes.ok ? await prodRes.json() : [];
+      const services = servRes.ok ? await servRes.json() : [];
 
-    const all = [
-      ...products.map(p => ({ ...p, type: 'product' })),
-      ...services.map(s => ({ ...s, type: 'service' }))
-    ].slice(0, 10);
+      window.allSearchData = [
+        ...products.map(p => ({ 
+          ...p, 
+          type: 'product', 
+          searchText: (p.title || '').toLowerCase() 
+        })),
+        ...services.map(s => ({ 
+          ...s, 
+          type: 'service', 
+          searchText: (s.title || '').toLowerCase() 
+        }))
+      ];
 
-    const highlight = (text) => text.replace(new RegExp(`(${escapeRegExp(query)})`, 'gi'), '<strong>$1</strong>');
+      console.log('Поиск проиндексирован:', window.allSearchData.length, 'элементов');
+    }
 
-    const html = all.length === 0
-      ? `<div style="text-align:center;padding:80px;color:#888;">Ничего не найдено</div>`
-      : all.map(item => `
+    // === ФИЛЬТРАЦИЯ ЛОКАЛЬНО — МОМЕНТАЛЬНО + БЕЗ УЧЁТА РЕГИСТРА ===
+    const lowerQuery = query.toLowerCase().trim();
+    const matches = window.allSearchData
+      .filter(item => item.searchText.includes(lowerQuery))
+      .slice(0, 12);
+
+    // === ПОДСВЕТКА СОВПАДЕНИЯ (с учётом регистра в запросе, но без него в поиске) ===
+    const highlight = (text) => {
+      if (!query.trim()) return text;
+      const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+      return text.replace(regex, '<strong>$1</strong>');
+    };
+
+    // === ГЕНЕРАЦИЯ HTML (тот же, что был у тебя) ===
+    const html = matches.length === 0
+      ? `<div style="text-align:center;padding:80px 20px;color:#888;font-size:1rem;line-height:1.5;">
+           <i class="fas fa-search" style="font-size:3rem;opacity:0.3;margin-bottom:1rem;display:block;"></i>
+           Ничего не найдено по запросу<br><small style="opacity:0.7;">«${query}»</small>
+         </div>`
+      : matches.map(item => `
           <div class="autocomplete-item" onclick="selectAutocomplete(${item.id}, '${item.type}')">
-            <img src="${item.image_urls?.[0] || item.image_url || '/static/assets/no-image.png'}"
-                 onerror="this.src='/static/assets/no-image.png'" loading="lazy">
+            <img src="${(Array.isArray(item.image_urls) && item.image_urls[0]) 
+              ? item.image_urls[0] 
+              : (item.image_url || '/static/assets/no-image.png')}"
+                 onerror="this.src='/static/assets/no-image.png'"
+                 loading="lazy" alt="${item.title || ''}">
             <div class="item-info">
-              <div class="item-title">${highlight(item.title)}</div>
+              <div class="item-title">${highlight(item.title || 'Без названия')}</div>
               <div class="item-type">${item.type === 'product' ? 'Товар' : 'Услуга'}</div>
             </div>
             <small>${formatPrice(item.price_str || item.price_cents || item.price)}</small>
@@ -271,44 +308,26 @@ const fetchSuggestions = async (query) => {
           </div>
         `).join('');
 
-    // === ВЫВОДИМ В ПРАВИЛЬНОЕ МЕСТО В ЗАВИСИМОСТИ ОТ УСТРОЙСТВА ===
+    // === ВЫВОДИМ В НУЖНЫЙ КОНТЕЙНЕР ===
     const device = getDevice();
 
     if (device === 'mobile' && mobileAutocomplete) {
       mobileAutocomplete.innerHTML = html;
-      mobileEmptyState.style.display = 'none';
-    }
-    else if (device === 'tablet' && tabletAutocomplete) {
+    } else if (device === 'tablet' && tabletAutocomplete) {
       tabletAutocomplete.innerHTML = html;
-      const emptyState = document.getElementById('tabletEmptyState');
-      if (emptyState) emptyState.style.display = 'none';
       tabletAutocomplete.classList.add('active');
-    }
-    else {
-      // десктоп
+    } else {
       autocompleteList.innerHTML = html;
       autocompleteList.classList.add('active');
     }
 
   } catch (e) {
-    console.error('Ошибка поиска:', e);
-    const err = `<div style="text-align:center;padding:80px;color:#ff3b30;">Ошибка сервера</div>`;
+    console.error('Критическая ошибка поиска:', e);
+    const err = `<div style="text-align:center;padding:80px;color:#ff3b30;">Ошибка загрузки данных</div>`;
 
-    const device = getDevice();
-
-    if (device === 'mobile' && mobileAutocomplete) {
-      mobileAutocomplete.innerHTML = err;
-      mobileEmptyState.style.display = 'none';
-    }
-    else if (device === 'tablet' && tabletAutocomplete) {
-      tabletAutocomplete.innerHTML = err;
-      document.getElementById('tabletEmptyState')?.style.setProperty('display', 'none');
-      tabletAutocomplete.classList.add('active');
-    }
-    else {
-      autocompleteList.innerHTML = err;
-      autocompleteList.classList.add('active');
-    }
+    [autocompleteList, mobileAutocomplete, tabletAutocomplete].forEach(list => {
+      if (list) list.innerHTML = err;
+    });
   }
 };
 
@@ -389,6 +408,49 @@ window.openProductModal = async (id, type = 'product') => {
     if (!res.ok) throw new Error(`Товар не найден (${res.status})`);
 
     const item = await res.json();
+
+    // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+// === КОЛИЧЕСТВО — ТОЛЬКО ДЛЯ ТОВАРОВ, И ТОЧНОЕ! ===
+const stockInfo = document.getElementById('productStockInfo');
+const addBtn = document.getElementById('addToCartModal');
+
+if (stockInfo && addBtn) {
+  // Скрываем блок, если это услуга
+  if (type === 'service') {
+    stockInfo.style.display = 'none';
+    addBtn.disabled = false;
+    addBtn.style.opacity = '';
+    addBtn.style.pointerEvents = '';
+  } 
+  // Показываем только для товаров
+  else if (type === 'product') {
+    stockInfo.style.display = 'block';
+
+    let text = 'В наличии · Много';
+    let color = '#27ae60';
+
+    // Точное количество
+    if (item.stock === 0) {
+      text = 'Нет в наличии';
+      color = '#e74c3c';
+      addBtn.disabled = true;
+      addBtn.style.opacity = '0.5';
+      addBtn.style.pointerEvents = 'none';
+    }
+    else if (item.stock > 0 && item.stock <= 20) {
+      text = `В наличии · ${item.stock} шт.`;
+      color = item.stock <= 5 ? '#e74c3c' : '#e67e22';
+    }
+    // item.stock === -1 или null/undefined — значит "много"
+    else if (item.stock === -1 || item.stock == null || item.stock === undefined) {
+      text = 'В наличии · Много';
+      color = '#27ae60';
+    }
+
+    stockInfo.textContent = text;
+    stockInfo.style.color = color;
+  }
+}
 
     // === ОТЗЫВЫ ===
     let revData = { avg_rating: 0, review_count: 0, reviews: [] };
@@ -762,3 +824,5 @@ modal.querySelector('#productReviewsCount').textContent =
   window.openMobileSearch = openSheet;
   window.closeMobileSearch = closeSheet;
 })();
+
+

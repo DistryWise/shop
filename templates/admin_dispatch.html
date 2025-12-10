@@ -10,6 +10,430 @@
     <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
     <link rel="stylesheet" href="/static/css/admin/admin_goods.css">
     <link rel="stylesheet" href="/static/css/admin/admin_dispatch.css">
+      <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <script>
+// Глобальное хранилище актуального токена
+window.csrfToken = "{{ csrf_token() }}";
+
+// Автоматически обновляем токен при любом успешном ответе от сервера
+function updateCsrfTokenFromResponse(data) {
+    if (data.csrf_token) {
+        window.csrfToken = data.csrf_token;
+        document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', data.csrf_token);
+    }
+}
+
+// Перехватываем ВСЕ fetch-запросы (POST, PUT, DELETE и т.д.)
+const { fetch: origFetch } = window;
+window.fetch = async (...args) => {
+    let [resource, config] = args;
+    
+    // Только для мутирующих методов
+    if (config && ['POST','PUT','DELETE','PATCH'].includes((config.method || 'GET').toUpperCase())) {
+        config = config || {};
+        config.headers = config.headers || {};
+        config.headers['X-CSRF-Token'] = window.csrfToken;
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+        
+        // Если отправляем FormData — не трогаем Content-Type (браузер сам поставит с boundary)
+        if (!(config.body instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
+        }
+    }
+
+    const response = await origFetch(resource, config);
+    
+    // Автоматически обновляем токен после любого успешного JSON-ответа
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        try {
+            const data = await response.clone().json();
+            updateCsrfTokenFromResponse(data);
+        } catch (e) { /* не JSON — игнорируем */ }
+    }
+
+    return response;
+};
+  </script>
+
+
+    <style>
+        /* ─────────────────────────────── СВЕТЛАЯ ТЕМА — МОДАЛКА УДАЛЕНИЯ ─────────────────────────────── */
+[data-theme="light"] #deleteConfirmModal {
+    background: #ffffff !important;
+}
+
+[data-theme="light"] #deleteConfirmModal .modal {
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    border-radius: 20px;
+}
+
+[data-theme="light"] #deleteConfirmModal h3,
+[data-theme="light"] #deleteConfirmModal h3 i {
+    color: #d32f2f !important;
+}
+
+[data-theme="light"] #deleteConfirmText {
+    color: #333333 !important;
+}
+
+[data-theme="light"] #deletePassword {
+    background: #f8f9fa !important;
+    color: #000000 !important;
+    border: 2px solid #ddd !important;
+    border-radius: 12px;
+}
+
+[data-theme="light"] #deletePassword::placeholder {
+    color: #888 !important;
+}
+
+[data-theme="light"] #deletePasswordError {
+    color: #d32f2f !important;
+    background: #ffebee !important;
+    border: 1px solid #ffcdd2 !important;
+}
+
+/* КНОПКА УДАЛИТЬ — КРАСНАЯ, КАК ДОЛЖНА БЫТЬ! */
+[data-theme="light"] #deleteConfirmModal .btn-zaza-danger {
+    background: #d32f2f !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 0.9rem 1.8rem !important;
+    border-radius: 14px !important;
+    font-weight: 600 !important;
+    font-size: 1.05rem;
+    box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+    transition: all 0.2s ease;
+}
+
+[data-theme="light"] #deleteConfirmModal .btn-zaza-danger:hover {
+    background: #b71c1c !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(211, 47, 47, 0.4);
+}
+
+[data-theme="light"] #deleteConfirmModal .btn-zaza-danger:active {
+    transform: translateY(0);
+}
+
+/* Кнопка Отмена — аккуратная серая */
+[data-theme="light"] #deleteConfirmModal button[onclick="closeModal('deleteConfirmModal')"] {
+    background: #e0e0e0 !important;
+    color: #333 !important;
+    padding: 0.9rem 1.8rem !important;
+    border-radius: 14px !important;
+    border: none !important;
+    font-weight: 500;
+}
+
+[data-theme="light"] #deleteConfirmModal button[onclick="closeModal('deleteConfirmModal')"]:hover {
+    background: #d0d0d0 !important;
+}
+        #subsBody tr.clickable-row {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+#subsBody tr.clickable-row:hover {
+    background: rgba(255,255,255,0.06);
+}
+#subsBody tr.selected {
+    background: rgba(100, 200, 255, 0.18) !important;
+    outline: 2px solid var(--accent);
+}
+.subscriber-actions button {
+    background: rgba(255,255,255,0.08);
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.2s;
+}
+.subscriber-actions button:hover {
+    background: rgba(255,255,255,0.15);
+    transform: scale(1.1);
+}
+.subscriber-actions button.delete { color: #ff6b6b; }
+.subscriber-actions button:first-child { color: var(--accent); }
+/* ВЫДЕЛЕНИЕ СТРОК */
+#subsBody tr {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+#subsBody tr:hover {
+    background: rgba(255,255,255,0.05);
+}
+#subsBody tr.selected {
+    background: rgba(100, 200, 255, 0.18) !important;
+    outline: 2px solid var(--accent);
+}
+
+/* ИКОНКИ В ШТОРКЕ */
+.subscriber-actions button {
+    background: rgba(255,255,255,0.08);
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.2s;
+}
+.subscriber-actions button:hover {
+    background: rgba(255,255,255,0.15);
+    transform: scale(1.1);
+}
+.subscriber-actions button.delete { 
+    color: #ff6b6b; 
+}
+.subscriber-actions button:first-child { 
+    color: var(--accent); 
+}
+/* ВЫДЕЛЕНИЕ СТРОК */
+#subsBody tr {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+#subsBody tr:hover {
+    background: rgba(255,255,255,0.05);
+}
+#subsBody tr.selected {
+    background: rgba(100, 200, 255, 0.18) !important;
+    outline: 2px solid var(--accent);
+}
+
+/* ИКОНКИ В ШТОРКЕ */
+.subscriber-actions button {
+    background: rgba(255,255,255,0.08);
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.2s;
+}
+.subscriber-actions button:hover {
+    background: rgba(255,255,255,0.15);
+    transform: scale(1.1);
+}
+.subscriber-actions button.delete { 
+    color: #ff6b6b; 
+}
+.subscriber-actions button:first-child { 
+    color: var(--accent); 
+}
+/* СВЕТЛАЯ ТЕМА — ТОЛЬКО МОДАЛЬНОЕ ОКНО УДАЛЕНИЯ */
+[data-theme="light"] #deleteConfirmModal {
+    background: #ffffff !important;
+    border: 3px solid #000000 !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+
+[data-theme="light"] #deleteConfirmModal .modal {
+    background: #ffffff !important;
+    color: #000000 !important;
+}
+
+[data-theme="light"] #deleteConfirmModal h3,
+[data-theme="light"] #deleteConfirmText,
+[data-theme="light"] #deletePassword::placeholder {
+    color: #000000 !important;
+}
+
+[data-theme="light"] #deletePassword {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 2px solid #000000 !important;
+}
+
+[data-theme="light"] #deletePasswordError {
+    color: #000000 !important;
+    background: #ffffff !important;
+    border: 1px solid #000000 !important;
+}
+
+/* Кнопка "Удалить" — красная, но в светлой теме — чёрная с красной обводкой */
+[data-theme="light"] #deleteConfirmModal .btn-zaza-danger {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 3px solid #000000 !important;
+    font-weight: bold;
+}
+
+[data-theme="light"] #deleteConfirmModal .btn-zaza-danger:hover {
+    background: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* Кнопка "Отмена" */
+[data-theme="light"] #deleteConfirmModal button[onclick="closeModal('deleteConfirmModal')"] {
+    background: #000000 !important;
+    color: #ffffff !important;
+}
+/* ─────────────────────── КНОПКИ ВЫБОРА — ТОЧНО В ПРАВОМ УГЛУ, МАЛЕНЬКИЕ ─────────────────────── */
+
+/* Кнопки — маленькие и аккуратные */
+.btn-select-small {
+    padding: 0.45rem 0.9rem;
+    border-radius: 9px;
+    font-size: 0.86rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 80px;
+    text-align: center;
+}
+
+/* "Выбрать" */
+#startSelectionBtn {
+    background: rgba(255,255,255,0.14);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+#startSelectionBtn:hover {
+    background: rgba(255,255,255,0.25);
+    transform: translateY(-1px);
+}
+
+/* Массовые действия */
+#bulkActions {
+    display: flex;
+    gap: 0.7rem;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: all 0.25s ease;
+    pointer-events: none;
+}
+
+#bulkActions.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+}
+
+/* Удалить выбранные */
+#deleteSelectedBtn {
+    background: #4e9fff;
+    color: white;
+}
+
+#deleteSelectedBtn:hover {
+    background: #3a8bff;
+}
+
+/* Удалить все */
+.btn-select-small.danger {
+    background: #e53935;
+    color: white;
+}
+
+.btn-select-small.danger:hover {
+    background: #c62828;
+}
+
+/* Отмена */
+.btn-select-small.cancel {
+    background: rgba(255,255,255,0.1);
+    color: #ccc;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.btn-select-small.cancel:hover {
+    background: rgba(255,255,255,0.2);
+    color: white;
+}
+
+/* ─────────────────────── СВЕТЛАЯ ТЕМА — ЧИСТО, БЕЗ РАМОК ─────────────────────── */
+[data-theme="light"] #startSelectionBtn {
+    background: #000 !important;
+    color: #fff !important;
+    border: 2px solid #000;
+}
+
+[data-theme="light"] #startSelectionBtn:hover {
+    background: #111 !important;
+}
+
+[data-theme="light"] #deleteSelectedBtn {
+    background: #0066ff !important;
+}
+
+[data-theme="light"] #deleteSelectedBtn:hover {
+    background: #0052cc !important;
+}
+
+[data-theme="light"] .btn-select-small.danger {
+    background: #d32f2f !important;
+}
+
+[data-theme="light"] .btn-select-small.danger:hover {
+    background: #b71c1c !important;
+}
+
+[data-theme="light"] .btn-select-small.cancel {
+    background: #f0f0f0 !important;
+    color: #333 !important;
+    border: 2px solid #000 !important;
+}
+
+[data-theme="light"] .btn-select-small.cancel:hover {
+    background: #e0e0e0 !important;
+}
+/* ЖЁСТКО ПРИЖИМАЕМ В ПРАВЫЙ ВЕРХНИЙ УГОЛ */
+.panel-content .selection-controls {
+    position: absolute;        /* вырываем из потока */
+    top: 12px;                 /* отступ от верха панели */
+    right: 16px;               /* отступ от правого края */
+    z-index: 10;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Чтобы таблица не наезжала под кнопки */
+.panel-content {
+    position: relative;       /* важно! чтобы absolute внутри работал от панели */
+    padding-top: 60px !important;  /* место под кнопки сверху */
+}
+
+/* Массовые действия — появляются справа от кнопки "Выбрать" */
+#bulkActions {
+    display: flex;
+    gap: 10px;
+    opacity: 0;
+    transform: translateX(15px);
+    transition: all 0.28s ease;
+    pointer-events: none;
+}
+
+#bulkActions.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+}
+
+/* Кнопки — без лишнего */
+.btn-select-small {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+    </style>
 </head>
 <body>
 
@@ -17,7 +441,7 @@
         <a href="/" class="logo"><img src="/static/assets/logo.png" alt="ZAZA" class="logo-img"></a>
         <nav style="margin-left: auto;"><a href="/" class="nav-link">Главная</a></nav>
     </header>
-    
+
         <!-- ЛАМПОЧКА -->
         <div class="theme-toggle-hanging">
             <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
@@ -30,7 +454,7 @@
                 <div class="rope bottom"></div>
             </label>
         </div>
-    </div>
+
 <!-- В <head> добавь это (если ещё нет) -->
 
 
@@ -54,10 +478,17 @@
         <h1 class="section-title">Рассылки</h1>
 
     <div class="subscribers-panel">
-        <div class="panel-header" onclick="togglePanel(this)">
-            <span>Подписчики рассылки (<span id="totalSubs">0</span>)</span>
-            <i class="fas fa-chevron-down"></i>
-        </div>
+<div class="panel-header" onclick="togglePanel(this)">
+    <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:1rem;">
+        <span style="flex:1;">
+            Подписчики рассылки (<span id="totalSubs">0</span>)
+        </span>
+
+
+
+        <i class="fas fa-chevron-down panel-chevron"></i>
+    </div>
+</div>
 
         <!-- КРАСИВАЯ СТАТИСТИКА -->
         <div class="stats-grid">
@@ -75,7 +506,32 @@
             </div>
         </div>
 
-        <div class="panel-content">
+<div class="panel-content">
+    <!-- КНОПКИ В ПРАВОМ УГЛУ — НАД ТАБЛИЦЕЙ -->
+<!-- КНОПКИ ВЫБОРА — ПРИЖАТЫ К ПРАВОМУ КРАЮ НА ЛЮБОМ ЭКРАНЕ -->
+<div class="selection-controls">
+    <!-- Кнопка "Выбрать" — всегда видна, прижата вправо -->
+    <button class="btn-select-small" id="startSelectionBtn" onclick="event.stopPropagation(); enterSelectionMode()">
+        <i class="fas fa-check-square" style="margin-right: 6px;"></i> Выбрать
+    </button>
+
+    <!-- Массовые действия — появляются только в режиме выбора -->
+    <div class="bulk-actions" id="bulkActions">
+        <button class="btn-select-small" id="deleteSelectedBtn" onclick="event.stopPropagation(); prepareBulkDelete()">
+            <i class="fas fa-trash-alt" style="margin-right: 6px;"></i>
+            Удалить выбранные (<span id="selectedCount">0</span>)
+        </button>
+        <button class="btn-select-small danger" onclick="event.stopPropagation(); prepareDeleteAll()">
+            <i class="fas fa-trash" style="margin-right: 6px;"></i> Удалить все
+        </button>
+        <button class="btn-select-small cancel" onclick="event.stopPropagation(); exitSelectionMode()">
+            <i class="fas fa-times" style="margin-right: 6px;"></i> Отмена
+        </button>
+    </div>
+</div>
+
+    <table>
+        <!-- ... твоя таблица ... -->
             <table>
                 <thead>
                     <tr>
@@ -234,7 +690,19 @@
         </button>
     </div>
 </div>
-
+<div id="deleteConfirmModal" class="modal-overlay" onclick="if(event.target===this) closeModal('deleteConfirmModal')">
+    <div class="modal">
+        <button class="modal-close" onclick="closeModal('deleteConfirmModal')">×</button>
+        <h3><i class="fas fa-exclamation-triangle" style="color:#ff4444;"></i> Подтвердите удаление</h3>
+        <p id="deleteConfirmText" style="margin:1.5rem 0; color:#ddd; line-height:1.6;"></p>
+        <input type="password" id="deletePassword" placeholder="Пароль администратора" autofocus autocomplete="off" style="width:100%;padding:1rem;background:#222;border:1px solid #444;border-radius:12px;color:#fff;">
+        <div class="flash error" id="deletePasswordError" style="display:none;margin-top:0.5rem;"></div>
+        <div style="margin-top:2rem;display:flex;gap:1rem;">
+            <button class="btn-zaza-danger" onclick="executeDispatchDelete()">Удалить</button>
+            <button style="background:#444;color:#fff;padding:0.7rem 1.3rem;border-radius:12px;border:none;cursor:pointer;" onclick="closeModal('deleteConfirmModal')">Отмена</button>
+        </div>
+    </div>
+</div>
 <script src="/static/js/admin/admin_dispatch.js"></script>
 
 </body>

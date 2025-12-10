@@ -207,10 +207,70 @@ def register_dispatch_routes(app):
         return render_template('unsubscribed.html', success=success, message=message)
 
     # === АДМИНКА ===
-    @app.route('/admin_dispatch')
+    # === АДМИНКА + УДАЛЕНИЕ ПОДПИСЧИКОВ (одиночное, выборочное, всех) ===
+    @app.route('/admin_dispatch', methods=['GET', 'POST'])
     def admin_dispatch():
         if not session.get('is_admin'):
             return redirect('/')
+
+        # === POST — УДАЛЕНИЕ ПОДПИСЧИКОВ ===
+        if request.method == 'POST':
+            data = request.get_json() or {}
+            password = data.get('password', '').strip()
+
+            # Проверка пароля
+            if password != 'admin123':  # ← поменяй на свой, если нужно
+                logger.warning("Неверный пароль при попытке удаления подписчиков")
+                return jsonify({"success": False, "message": "Неверный пароль"}), 403
+
+            conn = get_dispatch_conn()
+            try:
+                c = conn.cursor()
+                deleted_count = 0
+
+                # 1. Удаление всех
+                if data.get('delete_all_subscribers'):
+                    c.execute('DELETE FROM subscribers')
+                    deleted_count = c.rowcount
+                    logger.info(f"Админ удалил ВСЕХ подписчиков ({deleted_count} шт.)")
+
+                # 2. Удаление по списку ID
+                elif data.get('subscriber_ids'):
+                    ids = data['subscriber_ids']
+                    if not isinstance(ids, list) or not ids:
+                        return jsonify({"success": False, "message": "Пустой список ID"}), 400
+
+                    placeholders = ','.join('?' * len(ids))
+                    c.execute(f'DELETE FROM subscribers WHERE id IN ({placeholders})', ids)
+                    deleted_count = c.rowcount
+                    logger.info(f"Админ удалил {deleted_count} подписчиков по ID: {ids[:10]}{'...' if len(ids)>10 else ''}")
+
+                # 3. Удаление одного (для обратной совместимости)
+                elif data.get('id'):
+                    sub_id = data['id']
+                    c.execute('DELETE FROM subscribers WHERE id = ?', (sub_id,))
+                    if c.rowcount == 0:
+                        return jsonify({"success": False, "message": "Подписчик не найден"}), 404
+                    deleted_count = 1
+                    logger.info(f"Админ удалил подписчика ID={sub_id}")
+
+                else:
+                    return jsonify({"success": False, "message": "Не указано действие"}), 400
+
+                conn.commit()
+                return jsonify({
+                    "success": True,
+                    "message": f"Удалено подписчиков: {deleted_count}"
+                })
+
+            except Exception as e:
+                logger.error(f"Ошибка при удалении подписчиков: {e}")
+                conn.rollback()
+                return jsonify({"success": False, "message": "Ошибка сервера"}), 500
+            finally:
+                conn.close()
+
+        # === GET — Отображение страницы ===
         subs = get_subscribers(active_only=False)
         stats = get_stats()
 
@@ -224,11 +284,12 @@ def register_dispatch_routes(app):
             total_reviews = conn_main.execute('SELECT COUNT(*) FROM reviews').fetchone()[0]
             total_feedback = conn_feedback.execute('SELECT COUNT(*) FROM feedback').fetchone()[0]
         except Exception as e:
-            logger.error(f"Ошибка получения общей статистики в admin_dispatch: {e}")
+            logger.error(f"Ошибка получения статистики: {e}")
             total_users = total_orders = total_reviews = total_feedback = 0
         finally:
             conn_main.close()
             conn_feedback.close()
+
         return render_template(
             'admin_dispatch.html',
             subscribers=subs,
@@ -236,7 +297,8 @@ def register_dispatch_routes(app):
             total_users=total_users,
             total_orders=total_orders,
             total_reviews=total_reviews,
-            total_feedback=total_feedback
+            total_feedback=total_feedback,
+            total_dispatches=len(subs)  # если нужно
         )
 
     # === ЭКСПОРТ CSV ===
@@ -332,7 +394,15 @@ def register_dispatch_routes(app):
                 ORDER BY subscribed_at DESC
             ''').fetchall()
             
-            result = [dict(row) for row in subs]
+            result = []
+            for row in subs:
+                item = dict(row)
+                # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+                # ГЛАВНОЕ ИСПРАВЛЕНИЕ — ПРИВОДИМ К ЧИСЛУ!
+                item['sms_consent'] = int(item.get('sms_consent', 0) or 0)
+                item['is_active'] = int(item.get('is_active', 1) or 1)
+                # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+                result.append(item)
             return jsonify({"success": True, "subscribers": result})
         except Exception as e:
             logger.error(f"get_subscribers error: {e}")
@@ -398,10 +468,12 @@ def register_dispatch_routes(app):
                     update_fields.append('phone = ?')
                     update_values.append(phone)
 
-                # Обновляем SMS-согласие
-                if existing['sms_consent'] != sms_consent:
-                    update_fields.append('sms_consent = ?')
-                    update_values.append(sms_consent)
+                if sms_consent == 1:
+                    if existing['sms_consent'] == 0:
+                        update_fields.append('sms_consent = ?')
+                        update_values.append(1)
+                else:
+                    pass
 
                 # Всегда обновляем токен (безопасность)
                 update_fields.append('unsubscribe_token = ?')
@@ -459,3 +531,5 @@ def register_dispatch_routes(app):
 
         finally:
             conn.close()
+
+    

@@ -286,7 +286,7 @@ hotspot.addEventListener('click', () => {
   fetch('/api/landing/click', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ kind: 'services', slide: i, url: h.url })
+    body: JSON.stringify({ kind: 'products', slide: i, url: h.url })
   });
 
   // Если ссылка на нашу услугу — открываем модалку, а не новую вкладку
@@ -298,8 +298,8 @@ hotspot.addEventListener('click', () => {
         history.replaceState(null, null, `#${slug}`);
         handleHashOnLoad();
       } else {
-        // Если не на /services — переходим нормально
-        window.location.href = `/services#${slug}`;
+
+       window.location.href = `/goods#${slug}`;
       }
     }
   } else {
@@ -530,7 +530,7 @@ async function loadSecondaryCarousel() {
           fetch('/api/landing/click', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ kind: 'services', slide: i, url: h.url })
+            body: JSON.stringify({ kind: 'products', slide: i, url: h.url })
           }).catch(() => {});
           window.open(h.url, '_blank', 'noopener,noreferrer');
         });
@@ -608,7 +608,7 @@ function createCard(p) {
     imgUrl = p.image_urls[0];  // ← БОЛЬШЕ НИЧЕГО НЕ ДЕЛАЙ!
   }
 
-  const desc = p.full_desc || p.short_desc || 'Описание отсутствует';
+  const desc = p.description || p.full_desc || p.short_desc || 'Описание отсутствует';
 
   card.innerHTML = `
     <img src="${imgUrl}" alt="${p.title}" 
@@ -769,60 +769,86 @@ function createCard(p) {
       }
 
     async function loadProducts() {
-    try {
-        // БЫЛО: const res = await fetch('/api/services');
-        const res = await fetch('/api/products');  // ← ИЗМЕНИЛ
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  try {
+    const res = await fetch('/api/products');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        const data = await res.json();
-        if (!Array.isArray(data)) throw new Error('API вернул не массив');
+    const rawData = await res.json();
+    if (!Array.isArray(rawData)) throw new Error('API вернул не массив');
 
-        allProducts = data;
+    // ГЛАВНОЕ ИСПРАВЛЕНИЕ: фильтруем товары с нулевым остатком
+    allProducts = rawData.filter(product => {
+      // Скрываем только если stock строго равен 0
+      // Всё остальное (null, undefined, -1, >0) — показываем
+      return product.stock !== 0;
+    });
 
+    console.log(`Загружено товаров: ${allProducts.length} из ${rawData.length} (скрыто с stock=0: ${rawData.length - allProducts.length})`);
 
-          const catalogList = document.querySelector('.catalog-list');
-          catalogList.innerHTML = '';
+    // Если после фильтрации ничего не осталось — показываем заглушку
+    if (allProducts.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:200px 40px;font-size:28px;letter-spacing:12px;color:#000;opacity:0.4;">
+          ТОВАРЫ ЗАКОНЧИЛИСЬ
+        </div>`;
+      return;
+    }
 
-          const allLi = document.createElement('li');
-          allLi.className = 'active';
-          allLi.dataset.filter = 'all';
-          allLi.innerHTML = '<a>ALL</a>';
-          catalogList.appendChild(allLi);
+    // === СТРОИМ КАТАЛОГ (только из доступных товаров) ===
+    const catalogList = document.querySelector('.catalog-list');
+    catalogList.innerHTML = '';
 
-          const categories = [...new Set(allProducts.map(p => p.category).filter(Boolean))];
+    // ALL
+    const allLi = document.createElement('li');
+    allLi.className = 'active';
+    allLi.dataset.filter = 'all';
+    allLi.innerHTML = '<a>ALL</a>';
+    catalogList.appendChild(allLi);
 
-          if (categories.length === 0) {
-            console.warn('В API нет поля "category" — каталог будет пустым');
-            const fallbackCats = [...new Set(allProducts.map(p => {
-              const words = (p.title || '').trim().split(' ');
-              return words.length > 1 ? words[0].toUpperCase() : 'UNCATEGORIZED';
-            }))];
-            fallbackCats.forEach(cat => {
-              const li = document.createElement('li');
-              li.dataset.filter = cat;
-              li.innerHTML = `<a>${cat}</a>`;
-              catalogList.appendChild(li);
-            });
-          } else {
-            categories.forEach(cat => {
-              const li = document.createElement('li');
-              li.dataset.filter = cat;
-              li.innerHTML = `<a>${cat.toUpperCase()}</a>`;
-              catalogList.appendChild(li);
-            });
-          }
+    // Собираем категории только из товаров в наличии
+    let categories = [...new Set(allProducts.map(p => p.category).filter(Boolean))];
 
-          renderInitialCards();
-          setupEventListeners();
-          if (window.location.hash) {
-            setTimeout(handleHashOnLoad, 800);  // 200 мс — чтобы карточки успели отрисоваться и анимироваться
-          }
-        } catch (err) {
-          console.error('ОШИБКА ЗАГРУЗКИ:', err);
-          grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:200px;color:#000;">Ошибка: ${err.message}</div>`;
-        }
-      }
+    // Если категорий нет — делаем fallback по первому слову в названии
+    if (categories.length === 0) {
+      console.warn('Категории не найдены — используем fallback по названию');
+      const fallback = [...new Set(
+        allProducts.map(p => {
+          const words = (p.title || '').trim().split(' ');
+          return words.length > 1 ? words[0].toUpperCase() : 'UNCATEGORIZED';
+        })
+      )];
+      fallback.forEach(cat => {
+        const li = document.createElement('li');
+        li.dataset.filter = cat;
+        li.innerHTML = `<a>${cat}</a>`;
+        catalogList.appendChild(li);
+      });
+    } else {
+      categories.forEach(cat => {
+        const li = document.createElement('li');
+        li.dataset.filter = cat;
+        li.innerHTML = `<a>${cat.toUpperCase()}</a>`;
+        catalogList.appendChild(li);
+      });
+    }
 
+    // Рендерим карточки
+    renderInitialCards();
+    setupEventListeners();
+
+    // Если в URL есть #slug — открываем модалку
+    if (window.location.hash) {
+      setTimeout(handleHashOnLoad, 800);
+    }
+
+  } catch (err) {
+    console.error('ОШИБКА ЗАГРУЗКИ ТОВАРОВ:', err);
+    grid.innerHTML = `
+      <div style="grid-column:1/-1;text-align:center;padding:200px;color:#000;">
+        Ошибка загрузки каталога<br><small>${err.message}</small>
+      </div>`;
+  }
+}
 async function openModal(id, pushHistory = true) {
   try {
     let productId = id;
@@ -839,6 +865,35 @@ async function openModal(id, pushHistory = true) {
     const res = await fetch(endpoint);
     if (!res.ok) throw new Error('404');
     const p = await res.json();
+
+    const stockInfo = document.getElementById('productStockInfo');
+    if (stockInfo) {
+        // ВАЖУХ — САМОЕ ГЛАВНОЕ! Очищаем перед обновлением
+        stockInfo.textContent = '';
+        stockInfo.style.color = '';
+        stockInfo.style.fontWeight = '';
+
+        if (p.stock === undefined || p.stock === null) {
+            stockInfo.textContent = 'Много в наличии';
+            stockInfo.style.color = '#27ae60';
+        } else if (p.stock === -1 || p.stock > 100) {
+            stockInfo.textContent = 'Много в наличии';
+            stockInfo.style.color = '#27ae60';
+        } else if (p.stock > 0) {
+            stockInfo.textContent = `Осталось: ${p.stock} шт.`;
+            stockInfo.style.color = p.stock <= 10 ? '#e74c3c' : '#e67e22';
+            stockInfo.style.fontWeight = '600';
+        } else {
+            stockInfo.textContent = 'Нет в наличии';
+            stockInfo.style.color = '#e74c3c';
+            const addBtn = document.getElementById('addToCartModal');
+            if (addBtn) {
+                addBtn.disabled = true;
+                addBtn.style.opacity = '0.5';
+                addBtn.style.pointerEvents = 'none';
+            }
+        }
+    }
 
     // === УНИВЕРСАЛЬНО ДЛЯ ТОВАРОВ И УСЛУГ ===
     const images = (p.image_urls || []).length > 0 
@@ -881,6 +936,7 @@ async function openModal(id, pushHistory = true) {
     modal.dataset.currentType = isGoodsPage ? 'product' : 'service';
     // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 
+    await loadReviews(productId);
     // URL с хешем
     if (pushHistory) {
       const slug = (p.slug || p.title || p.name || 'product')
@@ -900,7 +956,7 @@ async function openModal(id, pushHistory = true) {
 
         try {
           // БЫЛО: const res = await fetch(`/api/service_reviews/${serviceId}`);
-    const res = await fetch(`/api/product_reviews/${productId}`);  // ← ИЗМЕНИЛ
+    const res = await fetch(`/api/reviews/${productId}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     
@@ -919,7 +975,7 @@ async function openModal(id, pushHistory = true) {
           if (reviews.length > 0) {
             noReviews.style.display = 'none';
 reviews.forEach(r => {
-      // 40+ крутых эмодзи — как в твоей карточке поиска
+
        const emojis = ['😊','😎','🥰','🤩','😇','😋','🤔','😴','🥳','🤗','😜','😺','🐶','🐱','🦊','🐼','🦁','🐸','🐵','🤖','👻','🎃','💩','🦄','🍔','🍕'];
       const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
 
@@ -942,9 +998,12 @@ reviews.forEach(r => {
         </div>
 
         <!-- ТВОИ ЛЮБИМЫЕ ЗВЁЗДЫ — ТОЧНО КАК ТЫ ПРОСИЛ -->
-        <div style="margin-bottom:12px;">
-          ${'⭐'.repeat(r.rating)}${'empty_star'.repeat(5 - r.rating)}
-        </div>
+<!-- КРАСИВЫЕ ЗВЁЗДОЧКИ — ОДНА И ТА ЖЕ ★, НО СЕРАЯ ИЛИ ЗОЛОТАЯ -->
+<div class="review-rating">
+    ${Array(5).fill().map((_, i) => 
+        `<span class="star ${i < r.rating ? 'filled' : ''}">★</span>`
+    ).join('')}
+</div>
 
         <!-- ТЕКСТ ОТЗЫВА -->
         <div style="line-height:1.7;font-size:15px;opacity:0.9;">
@@ -1138,11 +1197,12 @@ function handleHashOnLoad() {
           const sort = document.querySelector('.sort-btn.active')?.dataset.sort || 'default';
 
           let filtered = allProducts.filter(p => {
-              const matchesCategory = filter === 'all' || p.category === filter;
-              const searchText = `${p.title} ${p.full_desc || ''} ${p.short_desc || ''} ${p.price || ''}`.toLowerCase();
-              const matchesSearch = !query || searchText.includes(query);
-              return matchesCategory && matchesSearch;
-          });
+  if (p.stock === 0) return false; // дополнительная страховка
+  const matchesCategory = filter === 'all' || p.category === filter;
+  const searchText = `${p.title} ${p.full_desc || ''} ${p.short_desc || ''} ${p.price || ''}`.toLowerCase();
+  const matchesSearch = !query || searchText.includes(query);
+  return matchesCategory && matchesSearch;
+});
 
           console.log('applyFiltersAndSort: filter:', filter, 'filtered count:', filtered.length); // Отладка
 
@@ -1340,20 +1400,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const hash = window.location.hash.substring(1);
 
     // Если мы УЖЕ на странице /services — просто открываем модалку (НИКАКИХ редиректов)
-    if (window.location.pathname === '/services' || window.location.pathname === '/services/') {
+    if (window.location.pathname === '/goods' || window.location.pathname === '/goods/') {
       setTimeout(() => handleHashOnLoad(), 1000);
       return;
     }
 
     // Если мы НЕ на /services и пришли ИЗНУТРИ сайта — переходим на /services#hash
     if (document.referrer && document.referrer.includes(window.location.origin)) {
-      window.location.href = `/services#${hash}`;
+      window.location.href = `/goods#${hash}`;
       return;
     }
 
     // Если мы НЕ на /services и пришли СНАРУЖИ — открываем в новой вкладке
     if (!document.referrer || !document.referrer.includes(window.location.origin)) {
-      window.open(`/services#${hash}`, '_blank', 'noopener,noreferrer');
+      window.open(`/goodss#${hash}`, '_blank', 'noopener,noreferrer');
       // Можно закрыть текущую вкладку, если это был редирект-страница
       // window.close();
       return;
@@ -1370,7 +1430,7 @@ document.addEventListener('click', e => {
   const url = hotspot.dataset.url || hotspot.href || '';
   const isOurServiceLink = url.includes('/goods#') || url.startsWith('#');
 
-  if (isOurServiceLink && window.location.pathname.includes('/services')) {
+ if (isOurServiceLink && window.location.pathname.includes('/goods')) {
     e.preventDefault(); // ← КРИТИЧНО! Блокируем переход
 
     const hash = url.split('#')[1];

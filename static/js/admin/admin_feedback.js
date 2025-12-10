@@ -111,32 +111,45 @@ async function executeDelete() {
     const password = document.getElementById('deletePassword').value.trim();
     const errorEl = document.getElementById('deletePasswordError');
     errorEl.style.display = 'none';
+
     if (!password) {
         errorEl.textContent = 'Введите пароль';
         errorEl.style.display = 'block';
         return;
     }
 
-    const fd = new FormData();
-    fd.append('action', 'delete_feedback');
-    fd.append('password', password);
-    fd.append('ajax', '1');  // ← обязательно!
-    if (deleteMode !== 'all') fd.append('ids', JSON.stringify(deleteIds));
-    else fd.append('delete_all', '1');
+    // ←←← ВОТ ЭТА ЧАСТЬ ИЗМЕНЕНА — отправляем чистый JSON, а не FormData
+    const payload = {
+        password: password
+    };
+
+    if (deleteMode === 'all') {
+        payload.delete_all = true;
+    } else {
+        payload.ids = deleteIds;  // ← уже массив чисел, не нужно JSON.stringify
+    }
 
     try {
-        const r = await fetch('/admin_feedback', { method: 'POST', body: fd });
+        const r = await fetch('/admin_feedback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(payload)
+        });
+
         const d = await r.json();
 
         if (d.success) {
             showToast(d.message || 'Удалено успешно!', 'success');
             setTimeout(() => location.reload(), 1200);
         } else {
-            errorEl.textContent = d.message || 'Ошибка';
+            errorEl.textContent = d.message || 'Ошибка удаления';
             errorEl.style.display = 'block';
         }
     } catch (err) {
-        console.error(err);
+        console.error('Ошибка удаления:', err);
         errorEl.textContent = 'Ошибка сервера';
         errorEl.style.display = 'block';
     }

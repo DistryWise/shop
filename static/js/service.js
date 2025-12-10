@@ -932,9 +932,12 @@ reviews.forEach(r => {
         </div>
 
         <!-- ТВОИ ЛЮБИМЫЕ ЗВЁЗДЫ — ТОЧНО КАК ТЫ ПРОСИЛ -->
-        <div style="margin-bottom:12px;">
-          ${'⭐'.repeat(r.rating)}${'empty_star'.repeat(5 - r.rating)}
-        </div>
+<!-- КРАСИВЫЕ ЗВЁЗДОЧКИ — ОДНА И ТА ЖЕ ★, НО СЕРАЯ ИЛИ ЗОЛОТАЯ -->
+<div class="review-rating">
+    ${Array(5).fill().map((_, i) => 
+        `<span class="star ${i < r.rating ? 'filled' : ''}">★</span>`
+    ).join('')}
+</div>
 
         <!-- ТЕКСТ ОТЗЫВА -->
         <div style="line-height:1.7;font-size:15px;opacity:0.9;">

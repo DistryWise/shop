@@ -1773,3 +1773,345 @@ html[data-theme="light"] .cart-count {
   filter: brightness(0) drop-shadow(0 0 40px rgba(0,0,0,0.8)) !important;
 }
 
+/* ============================================================= */
+/* FAQ — ИДЕАЛЬНАЯ АДАПТАЦИЯ 2025: clamp + перенос + 2–3 строки   */
+/* Работает на .faq-card (новый стиль) и старых .faq-item        */
+/* ============================================================= */
+@media (max-width: 1024px) {
+
+  /* Заголовок "Часто задаваемые вопросы" */
+  #faq .section-title {
+    font-size: clamp(2.3rem, 8.2vw, 5.2rem) !important;
+    line-height: 1.18 !important;
+    letter-spacing: 0.03em !important;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  /* Сама сетка — на узких экранах всегда в столбик */
+  .faq-grid {
+    grid-template-columns: 1fr !important;
+    gap: clamp(1.1rem, 4vw, 1.6rem) !important;
+    padding: 0 clamp(0.8rem, 4vw, 1.5rem);
+  }
+
+  /* Карточка целиком */
+  .faq-card,
+  .faq-item {
+    padding: clamp(1.6rem, 5.5vw, 2.4rem) !important;
+    border-radius: clamp(1.4rem, 4vw, 2rem) !important;
+  }
+
+  /* ВОПРОС — максимум 2 строки, красивый перенос */
+  .faq-card .question,
+  .faq-question {
+    font-size: clamp(1.12rem, 4.9vw, 1.42rem) !important;
+    line-height: 1.38 !important;
+    font-weight: 600 !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Знак + / − — тоже масштабируем */
+  .faq-card .question::after,
+  .faq-question::after {
+    font-size: clamp(1.8rem, 6.5vw, 2.2rem) !important;
+    margin-left: clamp(0.6rem, 3vw, 1rem);
+  }
+
+  /* ОТВЕТ — максимум 6 строк (чтобы не растягивался на весь экран) */
+  .faq-card .answer,
+  .faq-answer {
+    font-size: clamp(0.98rem, 4.3vw, 1.08rem) !important;
+    line-height: 1.68 !important;
+    color: rgba(255,255,255,0.88) !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+
+    display: -webkit-box !important;
+    -webkit-line-clamp: 6 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    transition: all 0.6s ease !important;
+  }
+
+  /* Когда открыт — убираем обрезку */
+  .faq-card.active .answer,
+  .faq-item.active .faq-answer {
+    -webkit-line-clamp: unset !important;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  /* Поисковая строка */
+  .faq-search {
+    max-width: 96% !important;
+    margin: clamp(1.4rem, 5vw, 2rem) auto !important;
+    border-radius: 16px !important;
+  }
+
+  .faq-search input {
+    font-size: clamp(0.98rem, 4.4vw, 1.1rem) !important;
+    padding: clamp(0.9rem, 4vw, 1.1rem) 1.4rem !important;
+  }
+}
+
+/* Экстра-узкие экраны (iPhone SE, 320px и меньше) */
+@media (max-width: 380px) {
+  .faq-card .question,
+  .faq-question {
+    font-size: clamp(1.05rem, 5.2vw, 1.3rem) !important;
+  }
+  .faq-card .answer,
+  .faq-answer {
+    font-size: clamp(0.94rem, 4.5vw, 1.02rem) !important;
+  }
+  .faq-card,
+  .faq-item {
+    padding: clamp(1.4rem, 6vw, 2rem) !important;
+  }
+}
+
+/* Светлая тема — чтобы текст не терялся */
+[data-theme="light"] .faq-card .answer,
+[data-theme="light"] .faq-answer {
+  color: #333 !important;
+}
+[data-theme="light"] .faq-card.active .answer,
+[data-theme="light"] .faq-item.active .faq-answer {
+  color: #333 !important;
+}
+
+/* ============================================= */
+/* ФИНАЛЬНАЯ МОБИЛЬНАЯ АДАПТАЦИЯ — ДЕКАБРЬ 2025 (300px – 1023px) */
+/* Один блок — всё внутри. Больше ничего не трогаем выше */
+/* ============================================= */
+@media (max-width: 1023px) {
+
+  /* Отступы страницы + мобильный заголовок "Личный кабинет" */
+  .profile-fullscreen-container {
+    padding: clamp(4rem, 14vw, 7rem) clamp(0.8rem, 5vw, 2rem) clamp(6rem, 15vw, 8rem) !important;
+  }
+
+  .profile-fullscreen-container::before {
+    content: "Личный кабинет";
+    display: block;
+    text-align: center;
+    font-size: clamp(1.5rem, 6.8vw, 2.1rem);
+    font-weight: 700;
+    color: #000;
+    padding: clamp(1rem, 4vw, 1.6rem) 1rem clamp(0.6rem, 3vw, 1rem);
+    margin-bottom: clamp(0.5rem, 2vw, 1.5rem);
+  }
+  html[data-theme="dark"] .profile-fullscreen-container::before { color: #fff; }
+
+  /* Аватар */
+  .profile-hero .company-avatar {
+    width: clamp(90px, 28vw, 140px) !important;
+    height: clamp(90px, 28vw, 140px) !important;
+  }
+  .profile-hero .company-name   { font-size: clamp(1.7rem, 7.8vw, 2.6rem); text-align: center; }
+  .profile-hero .company-inn    { font-size: clamp(0.95rem, 4.2vw, 1.3rem); text-align: center; }
+
+  /* Заголовки секций */
+  .section-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    text-align: center;
+  }
+  .section-header h3 {
+    font-size: clamp(1.3rem, 6.2vw, 1.7rem);
+    text-align: center;
+  }
+
+  /* Реквизиты — подписи максимум 2 строки */
+  .requisite-label {
+    font-size: clamp(0.84rem, 3.9vw, 0.96rem) !important;
+    line-height: 1.38 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+  }
+  .requisite-value {
+    font-size: clamp(1.08rem, 4.9vw, 1.35rem);
+    line-height: 1.45;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  /* Настройки — текст не переносится, тумблер строго справа */
+  .setting-item {
+    gap: clamp(1rem, 5vw, 2rem);
+    justify-content: space-between;
+    align-items: center;
+  }
+  .setting-label,
+  .setting-item > *:not(.toggle-switch) {
+    font-size: clamp(0.98rem, 4.5vw, 1.25rem) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    flex: 1;
+    min-width: 0;
+    padding-right: 0.5rem;
+  }
+  .toggle-switch {
+    flex-shrink: 0 !important;
+    width: clamp(50px, 14vw, 56px) !important;
+    height: clamp(30px, 8.5vw, 34px) !important;
+  }
+  .toggle-slider:before {
+    width: clamp(24px, 7vw, 28px) !important;
+    height: clamp(24px, 7vw, 28px) !important;
+  }
+  input:checked + .toggle-slider:before {
+    transform: translateX(clamp(18px, 5.5vw, 23px)) !important;
+  }
+
+  /* Разделы — иконки в ровном столбике */
+  .profile-link {
+    display: grid !important;
+    grid-template-columns: 34px 1fr !important;
+    gap: clamp(0.9rem, 4.5vw, 1.3rem);
+    padding: clamp(1.1rem, 5vw, 1.7rem) clamp(1rem, 5.5vw, 1.8rem);
+    font-size: clamp(0.98rem, 4.7vw, 1.22rem);
+  }
+  .profile-link i {
+    font-size: clamp(1.3rem, 5.8vw, 1.55rem);
+    width: 34px;
+    text-align: center;
+  }
+
+  /* Кнопка выхода */
+  .logout-btn {
+    font-size: clamp(0.94rem, 4.5vw, 1.1rem) !important;
+    padding: clamp(0.85rem, 5.2vw, 1.1rem) clamp(2.2rem, 9vw, 3.5rem) !important;
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 96%;
+  }
+
+  /* Дата регистрации */
+  #regDate {
+    font-size: clamp(1.25rem, 6.2vw, 1.55rem) !important;
+  }
+}
+
+/* Самые узкие экраны (iPhone SE и ниже) */
+@media (max-width: 360px) {
+  .profile-fullscreen-container { padding-left: 0.7rem; padding-right: 0.7rem; }
+  .profile-link { grid-template-columns: 30px 1fr; }
+  .profile-link i { width: 30px; }
+  .toggle-switch { width: 48px !important; height: 29px !important; }
+}
+
+/* ============================================================= */
+/* ФИНАЛЬНЫЙ ФИКС: "Обратная связь" — идеальный clamp на ВСЕХ экранах */
+/* Работает от 300px до 8K, никогда не вылезает, красиво переносится     */
+/* ============================================================= */
+
+/* 1. БАЗОВЫЙ РАЗМЕР НА ДЕСКТОПЕ — теперь тоже через clamp! */
+#contact .section-title,
+#faq .section-title {
+  font-size: clamp(2.8rem, 6.5vw, 5.8rem) !important;   /* от 44.8px до 92.8px */
+  line-height: 1.15 !important;
+  letter-spacing: 0.02em !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
+  text-align: center !important;
+  max-width: 100% !important;
+  padding: 0 1rem !important;
+  margin: clamp(4vh, 8vw, 12vh) auto clamp(2.5rem, 5vw, 4rem) !important;
+}
+
+/* 2. На мобильных и планшетах — ещё мягче сжатие */
+@media (max-width: 1024px) {
+  #contact .section-title,
+  #faq .section-title {
+    font-size: clamp(2.4rem, 8.2vw, 5.2rem) !important;   /* от 38.4px до 83.2px */
+    line-height: 1.18 !important;
+  }
+}
+
+/* 3. На самых узких экранах (iPhone SE, 320px) — гарантированно влезает */
+@media (max-width: 480px) {
+  #contact .section-title,
+  #faq .section-title {
+    font-size: clamp(2.1rem, 9vw, 4.2rem) !important;
+    padding: 0 0.8rem !important;
+  }
+}
+
+/* 4. Страховка: если где-то остался жёсткий размер — убиваем */
+.section-title,
+#contact .section-title,
+#faq .section-title {
+  font-size: clamp(2.4rem, 7vw, 5.5rem) !important;   /* глобальная защита */
+}
+
+/* ===================================================== */
+/* ФИНАЛЬНЫЙ ФИКС ПОЛЯ ТЕЛЕФОНА В ФОРМЕ ОБРАТНОЙ СВЯЗИ    */
+/* Работает на всех мобильных + iOS не зумит + курсор не прыгает */
+/* ===================================================== */
+.contact-form input[type="tel"] {
+  /* Запрещаем любой зум на iOS */
+  font-size: 16px !important;
+  -webkit-text-size-adjust: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Убираем все трансформации с формы и её обёртки на мобильных */
+@media (max-width: 1024px) {
+  .form-wrapper,
+  .contact-form {
+    transform: none !important;
+    scale: none !important;
+  }
+}
+
+/* Жёстко фиксируем высоту строки и выравнивание текста */
+.contact-form input[type="tel"],
+.phone-field-wrapper input {
+  height: 56px !important;
+  line-height: 56px !important;
+  padding: 0 1.6rem !important;
+  text-align: left !important;
+  letter-spacing: normal !important;
+  
+  /* Самое важное — отключаем странные мобильные стили */
+  -webkit-user-modify: read-write-plaintext-only;
+  caret-color: #fff;
+}
+
+/* Убиваем автозум на iOS раз и навсегда */
+@supports (-webkit-touch-callout: none) {
+  .contact-form input[type="tel"] {
+    font-size: 16px !important;
+  }
+}
+
+/* Дополнительная страховка: если кто-то всё же поставил transform */
+@media (max-width: 768px) {
+  .contact-wrapper * {
+    transform: none !important;
+  }
+  
+  .contact-form input[type="tel"] {
+    min-height: 56px !important;
+    max-height: 56px !important;
+  }
+}

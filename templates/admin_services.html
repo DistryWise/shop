@@ -9,6 +9,219 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
     <link rel="stylesheet" href="/static/css/admin/admin_goods.css">
+      <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <script>
+// Глобальное хранилище актуального токена
+window.csrfToken = "{{ csrf_token() }}";
+
+// Автоматически обновляем токен при любом успешном ответе от сервера
+function updateCsrfTokenFromResponse(data) {
+    if (data.csrf_token) {
+        window.csrfToken = data.csrf_token;
+        document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', data.csrf_token);
+    }
+}
+
+// Перехватываем ВСЕ fetch-запросы (POST, PUT, DELETE и т.д.)
+const { fetch: origFetch } = window;
+window.fetch = async (...args) => {
+    let [resource, config] = args;
+    
+    // Только для мутирующих методов
+    if (config && ['POST','PUT','DELETE','PATCH'].includes((config.method || 'GET').toUpperCase())) {
+        config = config || {};
+        config.headers = config.headers || {};
+        config.headers['X-CSRF-Token'] = window.csrfToken;
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+        
+        // Если отправляем FormData — не трогаем Content-Type (браузер сам поставит с boundary)
+        if (!(config.body instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
+        }
+    }
+
+    const response = await origFetch(resource, config);
+    
+    // Автоматически обновляем токен после любого успешного JSON-ответа
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        try {
+            const data = await response.clone().json();
+            updateCsrfTokenFromResponse(data);
+        } catch (e) { /* не JSON — игнорируем */ }
+    }
+
+    return response;
+};
+  </script>
+
+    <style>
+/* ===================================================== */
+/* СВЕТЛАЯ ТЕМА — УСЛУГИ (admin_services.html)         */
+/* ===================================================== */
+
+[data-theme="light"] {
+    /* Основной фон страницы */
+    background: #f5f7fa !important;
+    color: #1a1a1a !important;
+}
+
+/* Заголовки */
+[data-theme="light"] .section-title,
+[data-theme="light"] h1,
+[data-theme="light"] h3 {
+    color: #111 !important;
+}
+
+/* Таблица услуг */
+[data-theme="light"] .products-table {
+    background: #ffffff !important;
+    border: 1px solid #e0e0e0 !important;
+}
+
+[data-theme="light"] .products-table th {
+    background: #f0f2f5 !important;
+    color: #333 !important;
+}
+
+[data-theme="light"] .products-table td {
+    border-bottom: 1px solid #eee !important;
+    color: #222 !important;
+}
+
+[data-theme="light"] .price-cell {
+    font-weight: 700 !important;
+    font-size: 1.1em !important;
+    color: #d32f2f !important; /* красная цена — всегда видно */
+}
+
+/* Карточка услуги при клике (product-detail) */
+[data-theme="light"] #productDetail {
+    background: rgba(255,255,255,0.98) !important;
+    backdrop-filter: blur(20px);
+}
+
+[data-theme="light"] #productDetail .detail-info {
+    background: #fff;
+    color: #111 !important;
+}
+
+[data-theme="light"] #detailPrice {
+    color: #c62828 !important;
+    font-size: 1.8em !important;
+    font-weight: 700 !important;
+}
+
+/* Модалка редактирования услуги */
+[data-theme="light"] #editModal .modal {
+    background: #ffffff !important;
+    color: #111111 !important;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.18);
+}
+
+[data-theme="light"] #editModal h3 {
+    color: #000 !important;
+}
+
+[data-theme="light"] #editModal input,
+[data-theme="light"] #editModal textarea {
+    background: #f8f9fa !important;
+    border: 1px solid #ccc !important;
+    color: #111 !important;
+}
+
+[data-theme="light"] #editModal input::placeholder,
+[data-theme="light"] #editModal textarea::placeholder {
+    color: #777 !important;
+}
+
+[data-theme="light"] #editModal label {
+    color: #333 !important;
+    font-weight: 600;
+}
+
+/* Зона загрузки фото */
+[data-theme="light"] .drop-zone {
+    background: #f8f9fa !important;
+    border: 2px dashed #bbb !important;
+    color: #444 !important;
+}
+
+[data-theme="light"] .drop-zone:hover {
+    border-color: #00ff9d !important;
+    background: #e8fff8 !important;
+}
+
+[data-theme="light"] .drop-zone p span {
+    color: #00cc7a !important;
+}
+
+/* Кнопки в модалке */
+[data-theme="light"] #editModal .btn-zaza-primary {
+    background: #00ff9d !important;
+    color: #000 !important;
+}
+
+[data-theme="light"] #editModal .btn-zaza-secondary {
+    background: transparent !important;
+    color: #555 !important;
+    border: 2px solid #aaa !important;
+}
+
+[data-theme="light"] #editModal .btn-zaza-secondary:hover {
+    background: #f0f0f0 !important;
+    color: #000 !important;
+    border-color: #666 !important;
+}
+
+/* Модалка пароля */
+[data-theme="light"] #passwordModal .modal {
+    background: #ffffff !important;
+    color: #111 !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+[data-theme="light"] #passwordModal input#adminPassword {
+    background: #f8f9fa !important;
+    border: 1px solid #ccc !important;
+    color: #111 !important;
+}
+
+[data-theme="light"] #passwordModal input#adminPassword::placeholder {
+    color: #888 !important;
+}
+
+[data-theme="light"] #passwordModal .cancel-btn {
+    background: transparent !important;
+    color: #555 !important;
+    border: 2px solid #aaa !important;
+}
+
+[data-theme="light"] #passwordModal .cancel-btn:hover {
+    background: #f0f0f0 !important;
+    color: #000 !important;
+}
+
+/* Кнопки действий в таблице */
+[data-theme="light"] .action-btn {
+    background: #f8f9fa !important;
+    color: #444 !important;
+}
+
+[data-theme="light"] .action-btn:hover {
+    background: #e0e0e0 !important;
+    color: #000 !important;
+}
+
+/* Текст в карточке услуги (когда кликаешь на строку) */
+[data-theme="light"] .detail-info * {
+    color: #111 !important;
+}
+
+[data-theme="light"] #detailPrice {
+    color: #d32f2f !important;
+}
+</style>
 
     <style>
 @import url('/static/css/fonts/inter.css');

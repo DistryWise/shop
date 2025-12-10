@@ -1,191 +1,970 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pendants-HQ | Элитная Коллекция Украшений</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/svg.css">
-    <style>
-        /* === ОСНОВНЫЕ СТИЛИ ДЛЯ 3D-ЭФФЕКТА === */
-        #bottomLayer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            z-index: 5;
-            opacity: 0;
-            transform: translateY(120px) translateZ(-150px) rotateX(20deg);
-            transform-style: preserve-3d;
-            transition: none !important;
-            pointer-events: none;
-            will-change: transform, opacity;
-        }
+<!-- НИЖНЯЯ ПАНЕЛЬ — ТОЛЬКО НА МОБИЛЬНЫХ -->
+<nav class="mobile-bottom-bar">
+  <button class="bottom-bar-btn" id="mobileSearchBtn" data-label="Поиск">
+    <i class="fas fa-search"></i>
+  </button>
 
-        #bottomLayer * {
-            pointer-events: auto;
-        }
+  <button class="bottom-bar-btn" id="mobileAuthBtn" data-label="Вход">
+    <i class="fas fa-user"></i>
+  </button>
 
-        #bottomLayer footer {
-            background: #000;
-            color: #e0e0e0;
-            padding: 60px 20px;
-            text-align: center;
-            border-radius: 80px 80px 0 0;
-            box-shadow: 
-                0 -80px 200px rgba(0,0,0,0.9),
-                0 -160px 400px rgba(0,0,0,0.85);
-        }
+    <button class="bottom-bar-btn active" id="openSidebarMenu" data-label="Меню">
+  <i class="fas fa-bars"></i>
 
-        #bottomLayer, #mainLayer, #topLayer {
-    will-change: transform, opacity, filter;
-    backface-visibility: hidden;
-    transform: translateZ(0);
-}
+</button>
 
-        /* Убираем transition у слоёв, которыми управляет JS */
-        #mainLayer, #topLayer {
-            transition: none !important;
-        }
-    </style>
-</head>
-<body>
+  <button class="bottom-bar-btn" id="mobileCartBtn" data-label="Корзина">
+    <i class="fas fa-shopping-bag"></i>
+    <span class="cart-count" id="mobileCartCount">0</span>
+  </button>
 
-    <div id="master3D"></div>
+  <button class="bottom-bar-btn" id="feedbackBtnMobile" data-label="Поддержка">
+    <i class="fas fa-envelope"></i>
+  </button>
+</nav>
+<!-- ПОЛНОЭКРАННАЯ ШТОРКА ПОИСКА ДЛЯ НОУТБУКОВ/ПЛАНШЕТОВ -->
+<div class="tablet-search-full" id="tabletSearchSheet">
+  <div class="tablet-search-backdrop"></div>
+  <div class="tablet-search-header-full">
+    <button class="tablet-search-back" id="closeTabletSearch">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <div class="tablet-search-input-wrapper-full">
+      <i class="fas fa-search"></i>
+      <input type="text" id="tabletSearchInput" placeholder="Поиск по каталогу..." autocomplete="off">
+      <button class="tablet-search-clear" id="tabletSearchClear">×</button>
+    </div>
+  </div>
+  <div class="tablet-search-empty" id="tabletEmptyState">
+    <i class="fas fa-search"></i>
+    <p>Начните вводить запрос...</p>
+  </div>
+  <div id="tabletAutocompleteList" class="tablet-autocomplete-list-full"></div>
+</div>
 
-    <!-- КАРУСЕЛЬ (видимая, fixed, улетает при скролле) -->
-    <div id="topLayer">
-        <section class="carousel" id="carousel">
-            <div class="carousel-inner" id="main-carousel-inner">
-                <div class="carousel-slide active">
-                    <img src="" alt="1" id="main-slide-1">
-                    <div class="carousel-caption"></div>
-                </div>
-                <div class="carousel-slide">
-                    <img src="" alt="2" id="main-slide-2">
-                    <div class="carousel-caption"></div>
-                </div>
-                <div class="carousel-slide">
-                    <img src="" alt="3" id="main-slide-3">
-                    <div class="carousel-caption"></div>
-                </div>
-            </div>
-            <div class="carousel-indicators">
-                <span class="indicator active" onclick="currentSlide(1)"></span>
-                <span class="indicator" onclick="currentSlide(2)"></span>
-                <span class="indicator" onclick="currentSlide(3)"></span>
-            </div>
-            <div class="scroll-down" onclick="scrollToProducts()">
-                <svg viewBox="0 0 24 24" width="76" height="76" fill="white">
-                    <path d="M12 16l-6-6h12l-6 6z"/>
-                </svg>
-            </div>
-        </section>
+<div class="mobile-search-sheet" id="mobileSearchSheet">
+  <!-- Хедер с ручкой и строкой поиска -->
+  <div class="mobile-search-header">
+    <!-- Ручка сверху (как в iOS) -->
+    <div class="sheet-handle"></div>
+
+    <!-- Кнопка назад + строка поиска -->
+    <button class="mobile-search-back" id="closeMobileSearchTop">←</button>
+    <div class="mobile-search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input 
+        type="text" 
+        class="mobile-search-input" 
+        id="mobileSearchInput" 
+        placeholder="Поиск по каталогу..." 
+        autocomplete="off"
+      >
+      <button class="mobile-search-clear" id="mobileSearchClear">×</button>
+    </div>
+  </div>
+
+  <!-- Контент: либо пустое состояние, либо результаты -->
+  <div class="mobile-search-results-content" id="mobileSearchResults">
+    
+    <!-- ПУСТОЕ СОСТОЯНИЕ — "Введите название товара" -->
+    <div class="search-empty-state" id="mobileEmptyState">
+      <div class="empty-icon">
+        <i class="fas fa-search"></i>
+      </div>
+      <div class="empty-title">Введите название товара</div>
+      <div class="empty-subtitle">
+        Например: iPhone 16, кроссовки Nike, кофеварка
+      </div>
     </div>
 
-    <!-- ФОН: КАРУСЕЛЬ → ФУТЕР (плавная смена) -->
-    <div id="backgroundLayer">
-        <div id="bgCarousel"></div>
-        <div id="bgFooter"></div>
+    <!-- Сюда будут вставляться результаты поиска -->
+    <div id="mobileAutocompleteList" class="mobile-autocomplete-list"></div>
+  </div>
+</div>
+
+<!-- МОБИЛЬНАЯ ШТОРКА КОРЗИНЫ -->
+<div class="mobile-cart-sheet" id="mobileCartSheet">
+  <div class="sheet-backdrop" id="mobileCartBackdrop"></div>
+  <div class="sheet-container">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="cart-header-icon">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="cart-count" id="mobileCartHeaderCount">0</span>
+      </div>
+      <h3>Корзина</h3>
+      <button class="sheet-close-btn" id="mobileCloseCart">×</button>
     </div>
+    <div class="sheet-items" id="mobileMiniCartItems">
+      <div style="padding:3rem 1.5rem;text-align:center;color:#888;">
+        <i class="fas fa-shopping-bag" style="font-size:3rem;margin-bottom:1rem;opacity:0.3;"></i>
+        <p>Корзина пуста</p>
+      </div>
+    </div>
+    <div class="sheet-total">
+      Итого: <strong id="mobileMiniCartTotal">0 ₽</strong>
+    </div>
+    <div class="sheet-footer">
+      <button class="checkout-btn-full" id="mobileGoToCartBtn">
+        Перейти к оформлению
+      </button>
+    </div>
+  </div>
+</div>
+<!-- Алерт «Авторизуйтесь» перед отправкой сообщения -->
+<div class="custom-alert" id="authAlert">
+  <div class="alert-content">
+    <button class="alert-close">×</button>
+    <div class="alert-icon">
+      <i class="fas fa-user-lock"></i>
+    </div>
+    <div class="alert-text">
+      <strong>Авторизуйтесь</strong>
+      <span>Для отправки сообщения нужно войти в аккаунт</span>
+    </div>
+    <button class="alert-login-btn" id="authBtnFeedback">Войти</button>
+  </div>
+</div>
+  <!-- МОДАЛКА АВТОРИЗАЦИИ  -->
+<div id="authModal" class="auth-modal">
+  <div class="auth-modal-content">
+    <button class="close-modal" id="closeAuthModal">×</button>
+    <h2 class="auth-title">Вход по номеру<br><span class="mobile-only">телефона</span></h2>
 
-    <!-- ОСНОВНОЙ КОНТЕНТ -->
-    <div class="scroll-container">
-        <div class="scroll-content">
-
-            <!-- ОСНОВНОЙ КОНТЕНТ (налетает сверху) -->
-            <div id="mainLayer">
-                <div id="mainLayerShadow"></div>
-                <div id="flyShadow"></div>
-
-                <section class="filter-section">
-                    <div class="filter-controls">
-                        <button class="sort-btn">Сортировка</button>
-                    </div>
-                    <div class="filter-buttons">
-                        <button class="filter-btn active" data-filter="all">Все</button>
-                        <button class="filter-main-btn">Фильтры</button>
-                        <div class="filter-dropdown">
-                            <ul id="product-list"></ul>
-                        </div>
-                    </div>
-                </section>
-                
-                <div style="padding: 100px 5% 80px; background-color: #ebeaea; text-align: center;">
-                    <div style="position: relative; display: inline-block; width: 100%; max-width: 720px;">
-                        <input type="text" id="searchInput" placeholder="Найти шедевр..." autocomplete="off"
-                               style="width: 100%; padding: 18px 24px 18px 56px; border: none; border-bottom: 2px solid rgba(0,0,0,0.15); background: rgba(255,255,255,0.78); backdrop-filter: blur(20px); font-size: 1.35rem; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.08);">
-                        <i class="fas fa-search" style="position: absolute; left: 22px; top: 50%; transform: translateY(-50%); color: #666;"></i>
-                    </div>
-                    <div class="divider-section" style="margin-top: 80px;">
-                        <div class="divider-line"></div>
-                        <p class="divider-caption">ИДЕАЛЬНЫЕ РЕШЕНИЯ</p>
-                    </div>
-                </div>
-
-                <section class="products-section" id="products-section">
-                    <div class="products-grid" id="productsGrid1"></div>
-                </section>
-
-                <section class="secondary-carousel">
-                    <div class="carousel-inner">
-                        <div class="carousel-slide active">
-                            <img src="" alt="1" id="services-slide-1">
-                        </div>
-                        <div class="carousel-slide">
-                            <img src="" alt="2" id="services-slide-2">
-                        </div>
-                        <div class="carousel-slide">
-                            <img src="" alt="3" id="services-slide-3">
-                        </div>
-                    </div>
-                    <div class="carousel-indicators">
-                        <span class="indicator active" onclick="currentSlideSecondary(1)"></span>
-                        <span class="indicator" onclick="currentSlideSecondary(2)"></span>
-                        <span class="indicator" onclick="currentSlideSecondary(3)"></span>
-                    </div>
-                </section>
-
-                <section class="products-section" id="productsGrid2Section">
-                    <div class="products-grid" id="productsGrid2"></div>
-                </section>
-
-                <section class="load-more-section">
-                    <button class="load-more-btn">Загрузить еще</button>
-                </section>
-            </div>
-            <!-- КОНЕЦ #mainLayer -->
-
-
-
+    <!-- ШАГ 1 — ВВОД НОМЕРА -->
+    <div id="stepPhone" class="auth-step">
+      <div class="country-selector">
+        <div class="selected-country" id="selectedCountry">
+          <span class="flag">RU</span>
+          <span class="code">+7</span>
+          <i class="fas fa-chevron-down"></i>
         </div>
-                   <!-- ФУТЕР — В КОНЦЕ .scroll-content (анимация выезда) -->
-            <div id="bottomLayer">
-                <footer>
-                    <div class="footer-content">
-                        <div class="footer-logo">
-                            <h3>Pendants-HQ</h3>
-                            <p>Изысканные украшения для вечности</p>
-                        </div>
-                    </div>
-                    <div class="footer-bottom">
-                        <p>© 2025 Pendants-HQ. Все права защищены.</p>
-                    </div>
-                </footer>
+        <div class="country-dropdown" id="countryDropdown">
+          <div class="country-item" data-code="+7" data-flag="RU">Россия +7</div>
+          <div class="country-item" data-code="+1" data-flag="US">USA +1</div>
+          <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
+        </div>
+      </div>
+      
+      <input type="text" 
+       name="honeypot" 
+       id="honeypot" 
+       tabindex="-1" 
+       autocomplete="off" 
+       style="position:absolute; left:-9999px; opacity:0; height:0; width:0; border:none; padding:0; margin:0;"
+       aria-hidden="true">
+
+<input type="hidden" name="fp_token" id="fp_token" value="">
+      <input type="tel" id="phoneInput" placeholder="(999) 999 99 99" class="auth-input">
+
+      <label class="checkbox-label required">
+        <input type="checkbox" id="privacyCheck">
+        <span class="custom-checkbox"></span>
+        Согласен с <a href="/policy" target="_blank" class="privacy-link">политикой конфиденциальности</a>
+      </label>
+
+      <label class="checkbox-label">
+        <input type="checkbox" id="subscribeCheck" checked>
+        <span class="custom-checkbox"></span>
+        Получать SMS с акциями и уведомлениями
+      </label>
+
+      <button id="sendCodeBtn" class="auth-btn" disabled>Получить код</button>
+    </div>
+
+    <!-- ШАГ 2 — ВВОД КОДА -->
+    <div id="stepCode" class="auth-step" style="display:none;">
+      <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
+      <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
+      <button id="verifyCodeBtn" class="auth-btn">Войти</button>
+      <button id="resendCode" class="auth-link">Отправить повторно</button>
+    </div>
+
+    <!-- ШАГ 3 — УСПЕШНЫЙ ВХОД -->
+    <div id="stepSuccess" class="auth-step" style="display:none;">
+      <i class="fas fa-check-circle success-icon"></i>
+      <h3>Добро пожаловаться!</h3>
+      <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
+      <button id="closeSuccess" class="auth-btn">Продолжить</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОБИЛЬНАЯ ШТОРКА ОБРАТНОЙ СВЯЗИ -->
+ <div class="mobile-feedback-top" id="mobileFeedbackTop"></div>
+<div class="mobile-feedback-sheet" id="mobileFeedbackSheet">
+
+
+  <div class="sheet-header">
+    <button class="sheet-back-btn" id="closeMobileFeedback">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <div class="sheet-title-wrapper">
+      <i class="fas fa-envelope-open-text"></i>
+      <h2>Обратная связь</h2>
+    </div>
+  </div>
+  <div class="sheet-handle"></div>
+  
+  <form class="contact-form sheet-form" novalidate id="contactFormMobile">
+    <div class="sheet-field">
+      <label>Ваше имя</label>
+      <input type="text" class="name-input" name="name" placeholder="Ваше имя..." required autocomplete="name" />
+    </div>
+    <div class="sheet-field phone-field-wrapper">
+      <label>Телефон <span class="required">*</span></label>
+      <input type="tel" class="phone-input" name="phone" placeholder="+7 (___) ___-__-__" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+    </div>
+    <div class="sheet-field">
+      <label>Email <span class="required">*</span></label>
+      <input type="email" name="email" placeholder="your@email.com" required autocomplete="email" />
+    </div>
+    <div class="sheet-field">
+      <label>Сообщение <span class="required">*</span></label>
+      <textarea name="message" placeholder="Опишите ваш вопрос или предложение..." rows="4" required></textarea>
+    </div>
+    <button type="submit" class="sheet-submit-btn" id="submitBtnMobile">
+      <span class="btn-text">Отправить заявку</span>
+      <span class="btn-loading"><i class="fas fa-spinner fa-spin"></i></span>
+      <span class="btn-cooldown" style="display:none;"><span class="timer">30</span>с</span>
+    </button>
+  </form>
+</div>
+
+<!-- ШТОРКА СЛЕВА — МЕНЮ -->
+<div class="mobile-sidebar" id="mobileSidebar">
+  <div class="sidebar-top">
+    <button class="sidebar-close" id="closeSidebar">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <img src="/static/assets/logo.png" alt="Piligrim" class="sidebar-logo-big">
+  </div>
+
+  <nav class="sidebar-nav-modern">
+    <div class="nav-divider top"></div>
+    <a href="/" class="sidebar-link-modern">Главная</a>
+    <a href="/goods" class="sidebar-link-modern">Товары</a>
+    <a href="/services" class="sidebar-link-modern">Услуги</a>
+    <a href="/news" class="sidebar-link-modern">Новости</a>
+    <a href="/about_company" class="sidebar-link-modern active">О компании</a>
+    <a href="/contacts" class="sidebar-link-modern">Контакты</a>
+    <div class="nav-divider bottom"></div>
+  </nav>
+
+  <div class="sidebar-bottom-theme">
+    <div class="sidebar-theme-toggle">
+      <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+      <label for="theme-toggle" class="theme-toggle-label">
+        <i class="fas fa-moon"></i>
+        <i class="fas fa-sun"></i>
+      </label>
+    </div>
+  </div>
+</div>
+
+
+ <footer>
+  <div class="footer-left">
+    © 2025 Piligrim. Все права защищены.
+  </div>
+  
+  <div class="footer-center">
+    <img src="/static/assets/logo.png" alt="Piligrim">
+  </div>
+  
+  <div class="footer-right">
+    <a href="/privacy">Политика конфиденциальности</a>
+    <a href="/terms">Условия использования</a>
+    <a href="/delivery">Доставка и оплата</a>
+  </div>
+</footer>
+
+<!-- КАРТОЧКА ТОВАРА  -->
+<div class="product-modal" id="productModal">
+  <div class="product-content">
+    <!-- Крестик закрытия -->
+    <button class="close-modal" onclick="closeProductModal()">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M6 6L22 22M6 22L22 6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <!-- Основной контейнер -->
+    <div class="product-main">
+      <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
+
+      <div class="product-info">
+        <h3 id="productTitle" class="product-title">Загрузка...</h3>
+
+        <div id="productStockInfo" 
+     style="margin: 12px 0 8px; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            line-height: 1.4;">
+</div>
+
+        <!-- Рейтинг и отзывы -->
+        <div class="product-rating">
+          <div class="stars"></div>
+          <span id="productReviewsCount" class="reviews-count">—</span>
+        </div>
+
+        <div id="productPrice" class="product-price">—</div>
+
+        <div id="productDescription" class="product-description">Загрузка описания...</div>
+
+        <!-- Кнопка "В корзину" -->
+        <button id="addToCartModal" class="add-to-cart-btn">
+          <i class="fas fa-shopping-cart"></i> В корзину
+        </button>
+
+        <!-- ОТЗЫВЫ — ТОЧНО КАК В НОВОСТЯХ -->
+        <div class="product-reviews">
+          <h4 class="reviews-title">Отзывы покупателей</h4>
+          <div class="reviews-list" id="productReviewsList">
+            <div style="text-align:center;padding:3rem;color:#888;">
+              <i class="far fa-star" style="font-size:3rem;margin-bottom:1rem;display:block;opacity:0.6;"></i>
+              <p>Отзывов пока нет</p>
+              <small style="opacity:0.7;">Будьте первым!</small>
             </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <!-- КОНЕЦ .scroll-container -->
+  </div>
+</div>
 
-    <!-- МОДАЛКА -->
-    <div class="modal-backdrop" id="modalBackdrop"></div>
-    <div class="modal" id="productModal">
-        <span class="modal-close" onclick="closeModal()">x</span>
-        <div class="modal-body" id="modalBody"></div>
-        <div class="modal-reviews" id="modalReviews"></div>
+<!-- === AI АССИСТЕНТ — ИКОНКА И МОДАЛКА (из zaza.html, не в ai.css) === -->
+<div id="ai-assistant">
+  <svg viewBox="0 0 100 100" class="ai-robot" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f5d78a"/>
+        <stop offset="100%" stop-color="#d4af37"/>
+      </linearGradient>
+      <linearGradient id="suitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#2d2d2d"/>
+        <stop offset="100%" stop-color="#1a1a1a"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Голова робота (золотая) -->
+    <circle cx="50" cy="35" r="18" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+
+    <!-- Глаза -->
+    <circle cx="44" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="56" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="45.5" cy="31" r="1.8" fill="#fff"/>
+    <circle cx="57.5" cy="31" r="1.8" fill="#fff"/>
+
+    <!-- Светящиеся акценты в глазах -->
+    <circle cx="46" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+    <circle cx="58" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+
+    <!-- Туловище — пиджак -->
+    <path d="M30 52 L28 98 L72 98 L70 52 
+             Q62 58 50 58 Q38 58 30 52 Z" 
+          fill="url(#suitGrad)" stroke="#000" stroke-width="2"/>
+
+    <!-- Лацканы пиджака -->
+    <path d="M50 52 L42 64 L42 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+    <path d="M50 52 L58 64 L58 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+
+    <!-- Галстук -->
+    <path d="M50 58 L46 72 L50 78 L54 72 Z" fill="#8b1e1e"/>
+    <polygon points="46,72 50,78 54,72" fill="#5c1212"/>
+
+    <!-- Пуговицы пиджака -->
+    <circle cx="50" cy="70" r="2.5" fill="#333"/>
+    <circle cx="50" cy="78" r="2.5" fill="#333"/>
+    <circle cx="50" cy="86" r="2.5" fill="#333"/>
+
+    <!-- Руки -->
+    <rect x="24" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+    <rect x="64" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+
+    <!-- Планшет с Конституцией в левой руке -->
+    <g transform="translate(12, 68)">
+      <rect x="0" y="0" width="28" height="36" rx="4" fill="#fff" stroke="#111" stroke-width="2"/>
+      <rect x="2" y="2" width="24" height="30" rx="2" fill="#f0f0f0"/>
+      <text x="14" y="11" font-family="Arial, sans-serif" font-size="5.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+      <line x1="4" y1="15" x2="24" y2="15" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="19" x2="24" y2="19" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="23" x2="22" y2="23" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="27" x2="20" y2="27" stroke="#333" stroke-width="0.8"/>
+    </g>
+
+    <!-- Блеск на голове -->
+    <path d="M42 24 Q46 20 50 24" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.6"/>
+  </svg>
+</div>
+
+<!-- === AI ЧАТ МОДАЛЬНЫЙ (ТОТ ЖЕ СТИЛЬ) === -->
+<div id="ai-chat" class="ai-chat-modal">
+  <div class="ai-chat-header">
+    <div class="ai-chat-title">
+      <svg width="32" height="32" viewBox="0 0 100 100" style="margin-right:10px;">
+        <use href="#goldGrad"/>
+        <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+        <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="39" cy="40" r="2.5" fill="#fff"/>
+        <circle cx="63" cy="40" r="2.5" fill="#fff"/>
+        <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <g transform="translate(8, 62)">
+          <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
+          <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+        </g>
+        <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
+      </svg>
+      <span>Юрист AI</span>
     </div>
+    <div class="ai-header-buttons">
+      <button class="ai-btn-minimize" onclick="toggleAIChatSize()" title="На весь экран">
+        <i class="fas fa-expand-arrows-alt"></i>
+      </button>
+      <button class="ai-btn-close" onclick="closeAIChat()" title="Закрыть">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+  <div class="ai-chat-body">
+    <div class="ai-chat-messages"></div>
+    <div class="ai-chat-input">
+      <input type="text" id="ai-input" placeholder="Задайте юридический вопрос..." 
+             onkeypress="if(event.key==='Enter' && this.value.trim()) { sendAIMessage(this.value); this.value=''; }">
+      <button onclick="const inp = document.getElementById('ai-input'); if(inp.value.trim()) { sendAIMessage(inp.value); inp.value=''; }" title="Отправить">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>
+<!-- ТУМБЛЕР ТЕМЫ — ВИСЯЩАЯ ЛАМПОЧКА -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
 
-    <script src="/static/js/svg.js"></script>
+<script>
+// ФИНАЛЬНАЯ ВЕРСИЯ ТЁМНОЙ ТЕМЫ — ВСЁ РАБОТАЕТ ПРАВИЛЬНО (2025)
+// checked = true → ТЁМНАЯ тема (как и должно быть!)
+(() => {
+  const STORAGE_KEY = 'theme';
+  const ATTR = 'data-theme';
 
-</body>
-</html>
+  // Применяем тему и синхронизируем ВСЕ тумблеры
+  const applyTheme = (theme) => {
+    document.documentElement.setAttribute(ATTR, theme);
+    localStorage.setItem(STORAGE_KEY, theme);
+
+    // ТЁМНАЯ тема → checked = true (включено)
+    const isDark = theme === 'dark';
+
+    // Все тумблеры: профиль, лампочка, мобильное меню
+    document.querySelectorAll('#darkModeToggle, #theme-toggle, .theme-toggle-hanging input, .mobile-sidebar input[type="checkbox"]').forEach(el => {
+      if (el) el.checked = isDark;
+    });
+  };
+
+  // Определяем текущую тему
+  const getCurrentTheme = () => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return saved;
+
+    const attr = document.documentElement.getAttribute(ATTR);
+    if (attr === 'light' || attr === 'dark') return attr;
+
+    // По умолчанию — системная
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  };
+
+  // Инициализация
+  document.addEventListener('DOMContentLoaded', () => {
+    applyTheme(getCurrentTheme());
+
+    // Любой тумблер переключает тему
+    document.addEventListener('change', (e) => {
+      const toggle = e.target;
+      if (toggle.matches('#darkModeToggle, #theme-toggle, .theme-toggle-hanging input, .mobile-sidebar input[type="checkbox"]')) {
+        const makeDark = toggle.checked;
+        applyTheme(makeDark ? 'dark' : 'light');
+      }
+    });
+
+    // Авто-подстройка под системную тему (если пользователь ничего не выбирал)
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        applyTheme(e.matches ? 'dark' : 'light');
+      }
+    });
+  });
+})();
+</script>
+
+<script>
+// ПОДГРУЗКА ДАННЫХ КОМПАНИИ + В МОДАЛКУ РЕДАКТИРОВАНИЯ — БЕЗ ПЕРЕЗАГРУЗКИ (2025)
+(() => {
+  // === ГЛОБАЛЬНАЯ ФУНКЦИЯ ЗАГРУЗКИ И ОБНОВЛЕНИЯ ВСЕХ ДАННЫХ ===
+  window.loadAndUpdateCompanyData = async () => {
+    try {
+      const res = await fetch('/api/company');
+      if (!res.ok) throw new Error('Failed');
+      const data = await res.json();
+
+      // === 1. Обновляем данные на основной странице ===
+      const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value || '—';
+      };
+
+      setText('companyName', data.companyName);
+      setText('inn', data.inn);
+      setText('fullName', data.fullName);
+      setText('ogrn', data.ogrn);
+      setText('kpp', data.kpp);
+      setText('okpo', data.okpo);
+      setText('okved', data.okved);
+      setText('legalAddress', data.legalAddress);
+      setText('actualAddress', data.actualAddress || data.legalAddress);
+      setText('activity', data.activity);
+      setText('budget', data.budget);
+      setText('director', data.director);
+      setText('regDate', data.regDate);
+      setText('companyStatusBadge', data.companyStatus || 'Действующая');
+      setText('taxSystemBadge', data.taxSystem || 'ОСНО (плательщик НДС)');
+
+      const heroName = document.querySelector('.profile-hero .company-name');
+      if (heroName) heroName.textContent = data.companyName?.trim() || 'Загрузка...';
+
+      // Аватар на странице
+      const profileAvatar = document.getElementById('profilePageAvatar');
+      const profilePlaceholder = document.getElementById('profilePagePlaceholder');
+      if (data.avatar && !data.avatar.includes('default-company-avatar')) {
+        profileAvatar.src = data.avatar + '?t=' + Date.now();
+        profileAvatar.style.display = 'block';
+        profilePlaceholder.style.display = 'none';
+      } else {
+        profileAvatar.style.display = 'none';
+        profilePlaceholder.style.display = 'flex';
+      }
+
+      // === 2. Обновляем данные В МОДАЛКЕ РЕДАКТИРОВАНИЯ ===
+      const form = document.getElementById('piligrimEditForm');
+      if (form) {
+        const setInput = (name, value) => {
+          const input = form.querySelector(`[name="${name}"]`);
+          if (input) input.value = value || '';
+        };
+
+        setInput('fullName', data.fullName);
+        setInput('companyName', data.companyName);
+        setInput('inn', data.inn);
+        setInput('ogrn', data.ogrn);
+        setInput('kpp', data.kpp);
+        setInput('okpo', data.okpo);
+        setInput('okved', data.okved);
+        setInput('legalAddress', data.legalAddress);
+        setInput('actualAddress', data.actualAddress);
+        setInput('activity', data.activity);
+        setInput('budget', data.budget);
+        setInput('director', data.director);
+        setInput('companyStatus', data.companyStatus);
+        setInput('taxSystem', data.taxSystem);
+
+        // Аватар в модалке
+        const modalAvatar = document.getElementById('currentAvatar');
+        const modalPlaceholder = document.getElementById('avatarPlaceholder');
+        const removeBtn = document.getElementById('removeAvatar');
+
+        if (data.avatar && !data.avatar.includes('default-company-avatar')) {
+          modalAvatar.src = data.avatar + '?t=' + Date.now();
+          modalAvatar.style.display = 'block';
+          modalPlaceholder.style.display = 'none';
+          removeBtn.style.display = 'flex';
+        } else {
+          modalAvatar.src = '';
+          modalAvatar.style.display = 'none';
+          modalPlaceholder.style.display = 'flex';
+          removeBtn.style.display = 'none';
+        }
+      }
+
+      console.log('Данные компании обновлены — и на странице, и в модалке');
+    } catch (err) {
+      console.error('Ошибка загрузки данных компании:', err);
+    }
+  };
+
+  // === 1. При успешном входе — сразу подгружаем данные ===
+  document.addEventListener('authSuccess', () => {
+    console.log('Вход успешен — подгружаем данные компании...');
+    setTimeout(window.loadAndUpdateCompanyData, 700);
+  });
+
+  // === 2. При загрузке страницы — если уже авторизован ===
+  document.addEventListener('DOMContentLoaded', () => {
+    const isLoggedIn = !!(
+      sessionStorage.getItem('phone') ||
+      localStorage.getItem('phone') ||
+      sessionStorage.getItem('user_id')
+    );
+
+    if (isLoggedIn) {
+      setTimeout(window.loadAndUpdateCompanyData, 800);
+    }
+  });
+
+  // === 3. При открытии модалки редактирования — обновляем форму ===
+  document.getElementById('editCompanyBtn')?.addEventListener('click', () => {
+    setTimeout(window.loadAndUpdateCompanyData, 300); // небольшая задержка для анимации
+  });
+
+  // === 4. После сохранения в модалке — тоже обновляем (на всякий случай) ===
+  document.getElementById('piligrimEditForm')?.addEventListener('submit', (e) => {
+    // После успешного POST (в твоём коде уже есть loadData())
+    // Но на всякий случай — дублируем
+    setTimeout(() => {
+      if (e.target.closest('form')?.querySelector('[type="submit"]')?.textContent.includes('сохранен')) {
+        window.loadAndUpdateCompanyData();
+      }
+    }, 1000);
+  });
+})();
+</script>
+
+<!-- ОТДЕЛЬНЫЙ СКРИПТ ТОЛЬКО ДЛЯ ТУМБЛЕРОВ — 100% РАБОТАЕТ -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const smsToggle     = document.getElementById('smsSubscribe');
+  const emailToggle   = document.getElementById('emailSubscribe');
+  const emailModal    = document.getElementById('emailModal');
+  const emailForm     = document.getElementById('emailForm');
+  const emailInput    = document.getElementById('emailInput');
+  const closeEmailBtn = document.getElementById('closeEmailModal');
+  const modalTitle    = emailModal.querySelector('h2');
+  const submitBtnText = emailForm.querySelector('.btn-text');
+
+  if (!emailToggle || !emailModal) return;
+
+  let currentEmail = '';           // подтверждённый email
+  let modalOpenedByToggle = false; // флаг: модалка открыта тумблером
+
+  // === Загрузка состояния ===
+  const loadState = async () => {
+    try {
+      const res = await fetch('/api/company');
+      const data = await res.json();
+      smsToggle.checked = !!data.smsSubscribe;
+      emailToggle.checked = !!data.emailSubscribe;
+      currentEmail = data.email || '';
+    } catch (e) {
+      console.error('Ошибка загрузки', e);
+    }
+  };
+  loadState();
+
+  // === Сохранение подписок ===
+  const save = async () => {
+    await fetch('/api/toggle_subscriptions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        smsSubscribe: smsToggle.checked ? 1 : 0,
+        emailSubscribe: emailToggle.checked ? 1 : 0
+      })
+    }).catch(() => {
+      alert('Ошибка сети');
+      loadState();
+    });
+  };
+
+  // === ЭФФЕКТЫ (ОСТАВЛЯЕМ ТОЛЬКО ЗДЕСЬ!) ===
+  const shake = (el) => {
+    const label = el.closest('.toggle-switch');
+    if (!label) return;
+    label.style.transition = 'transform 0.12s cubic-bezier(0.34,1.56,0.64,1)';
+    label.style.transform = 'scale(0.92)';
+    setTimeout(() => label.style.transform = '', 180);
+  };
+
+  const getCenter = (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width/2, y: r.top + r.height/2 };
+  };
+
+  // ВАЖНО: функции successSparkle и sadPuff берём из твоего глобального скрипта эффектов
+  // (который у тебя уже есть внизу страницы)
+  const triggerEffect = (toggle, success) => {
+    shake(toggle);
+    const { x, y } = getCenter(toggle);
+    if (success) {
+      if (typeof successSparkle === 'function') successSparkle(x, y);
+    } else {
+      if (typeof sadPuff === 'function') sadPuff(x, y);
+    }
+  };
+
+  // === SMS ===
+  smsToggle.addEventListener('change', () => {
+    save();
+    triggerEffect(smsToggle, smsToggle.checked);
+  });
+
+  // === EMAIL — ГЛАВНАЯ ЛОГИКА ===
+  emailToggle.addEventListener('change', () => {
+    if (emailToggle.checked) {
+      modalOpenedByToggle = true;
+      emailModal.classList.add('active');
+
+      if (currentEmail) {
+        modalTitle.textContent = 'Изменить email для рассылки';
+        submitBtnText.textContent = 'Сохранить новый email';
+        emailInput.value = currentEmail;
+      } else {
+        modalTitle.textContent = 'Получайте акции и новости';
+        submitBtnText.textContent = 'Подписаться';
+        emailInput.value = '';
+      }
+
+      setTimeout(() => emailInput.focus(), 300);
+      emailInput.select();
+    } else {
+      // Выключаем — сразу
+      currentEmail = '';
+      save();
+      triggerEffect(emailToggle, false);
+    }
+  });
+
+  // === УСПЕШНОЕ СОХРАНЕНИЕ EMAIL ===
+  emailForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = emailInput.value.trim();
+
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      emailInput.classList.add('error');
+      setTimeout(() => emailInput.classList.remove('error'), 2000);
+      return;
+    }
+
+    const btn = emailForm.querySelector('.email-submit-btn');
+    const text = btn.querySelector('.btn-text');
+    const loading = btn.querySelector('.btn-loading');
+    btn.disabled = true;
+    text.style.opacity = '0';
+    loading.style.display = 'inline-block';
+
+    try {
+      const res = await fetch('/api/set_email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        currentEmail = email;
+        modalOpenedByToggle = false;
+
+        emailModal.classList.remove('active');
+        save();
+
+        triggerEffect(emailToggle, true); // оставляем тряску (если хочешь)
+        // + кидаем событие для эффекта
+        document.dispatchEvent(new CustomEvent('emailSubscribeSuccess'));
+
+        const emailField = document.querySelector('#contactEmail');
+        if (emailField) emailField.textContent = email;
+      } else {
+        throw new Error();
+      }
+    } catch {
+      alert('Ошибка сохранения email');
+      if (!currentEmail) emailToggle.checked = false;
+    } finally {
+      btn.disabled = false;
+      text.style.opacity = '1';
+      loading.style.display = 'none';
+    }
+  });
+
+  // === ЗАКРЫТИЕ МОДАЛКИ ===
+  const closeModal = () => {
+    emailModal.classList.remove('active');
+
+    if (modalOpenedByToggle && !currentEmail) {
+      emailToggle.checked = false;
+    }
+    modalOpenedByToggle = false;
+  };
+
+  closeEmailBtn.onclick = closeModal;
+  emailModal.onclick = (e) => {
+    if (e.target === emailModal) closeModal();
+  };
+
+  // Убираем красную рамку
+  emailInput.addEventListener('input', () => emailInput.classList.remove('error'));
+});
+</script>
+
+<script>
+// iOS-эффект 2025: золотой огонёк при включении, дымок при выключении — ВСЁ РАБОТАЕТ
+(() => {
+  // Золотой огонёк — как в iOS при успешном действии
+  function successSparkle(x, y) {
+    for (let i = 0; i < 22; i++) {
+      const spark = document.createElement('div');
+      spark.style.cssText = `
+        position: fixed;
+        left: ${x}px;
+        top: ${y}px;
+        width: 8px;
+        height: 8px;
+        background: radial-gradient(circle, #FFD700, #FFA500 60%, transparent);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 99999;
+        box-shadow: 0 0 14px #FFD700;
+        transform: translate(-50%, -50%) scale(0);
+      `;
+      document.body.appendChild(spark);
+
+      const angle = (i / 22) * Math.PI * 2;
+      const velocity = 4 + Math.random() * 6;
+      let posX = 0, posY = 0, scale = 0, opacity = 1;
+
+      const start = performance.now();
+      const duration = 600;
+
+      function frame() {
+        const elapsed = performance.now() - start;
+        const progress = elapsed / duration;
+
+        if (progress >= 1) {
+          spark.remove();
+          return;
+        }
+
+        posX = Math.cos(angle) * velocity * progress * 30;
+        posY = Math.sin(angle) * velocity * progress * 30 - progress * 20;
+        scale = progress * 2;
+        opacity = 1 - progress * 1.2;
+
+        spark.style.transform = `translate(${posX}px, ${posY}px) translate(-50%, -50%) scale(${scale})`;
+        spark.style.opacity = opacity;
+
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+  }
+
+  // Серый дымок при выключении
+  function sadPuff(x, y) {
+    for (let i = 0; i < 12; i++) {
+      const puff = document.createElement('div');
+      puff.style.cssText = `
+        position: fixed;
+        left: ${x}px;
+        top: ${y}px;
+        width: 7px;
+        height: 7px;
+        background: #bbb;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 99999;
+        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(0);
+      `;
+      document.body.appendChild(puff);
+
+      let scale = 0, opacity = 0.8, dy = 0;
+
+      const anim = () => {
+        scale += 0.08;
+        dy -= 2.5;
+        opacity -= 0.025;
+
+        if (opacity <= 0) {
+          puff.remove();
+          return;
+        }
+
+        puff.style.transform = `translate(-50%, -50%) translate(0, ${dy}px) scale(${scale})`;
+        puff.style.opacity = opacity;
+
+        requestAnimationFrame(anim);
+      };
+      setTimeout(anim, i * 50);
+    }
+  }
+
+  // Тряска тумблера + вибрация
+  function shake(toggle) {
+    const label = toggle.closest('.toggle-switch');
+    label.style.transition = 'transform 0.12s cubic-bezier(0.34,1.56,0.64,1)';
+    label.style.transform = 'scale(0.92)';
+    setTimeout(() => label.style.transform = '', 180);
+
+    if (navigator.vibrate) {
+      navigator.vibrate([40, 60, 80]);
+    }
+  }
+
+  // Получаем центр тумблера
+  function getCenter(el) {
+    const rect = el.getBoundingClientRect();
+    return {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2
+    };
+  }
+
+  window.addEventListener('load', () => {
+  const smsToggle = document.getElementById('smsSubscribe');
+  const emailToggle = document.getElementById('emailSubscribe');
+
+  // SMS — как и было
+  smsToggle?.addEventListener('change', (e) => {
+    shake(e.target);
+    const { x, y } = getCenter(e.target);
+    e.target.checked ? successSparkle(x, y) : sadPuff(x, y);
+  });
+
+  // ВОТ ЭТОТ БЛОК — ГЛАВНОЕ ДОБАВЛЕНИЕ!
+  // Ловим успешную подписку на email → пускаем огонёк
+  document.addEventListener('emailSubscribeSuccess', () => {
+    if (emailToggle && emailToggle.checked) {
+      shake(emailToggle);
+      const { x, y } = getCenter(emailToggle);
+      successSparkle(x, y);
+    }
+  });
+
+  // Дымок при выключении email-рассылки (сразу, без модалки)
+  emailToggle?.addEventListener('change', (e) => {
+    if (!e.target.checked) {
+      shake(e.target);
+      const { x, y } = getCenter(e.target);
+      sadPuff(x, y);
+    }
+  });
+
+  // Тестовый огонёк для SMS (можно оставить)
+  setTimeout(() => {
+    if (smsToggle?.checked) {
+      const { x, y } = getCenter(smsToggle);
+      successSparkle(x, y);
+    }
+  }, 1500);
+});
+})();
+</script>

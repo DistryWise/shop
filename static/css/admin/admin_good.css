@@ -1,0 +1,560 @@
+
+        /* ===================================================== */
+/* СВЕТЛАЯ ТЕМА — ПОЛНАЯ ПОДДЕРЖКА ДЛЯ admin_services   */
+/* ===================================================== */
+/* ПОЛНОЕ ИСПРАВЛЕНИЕ: строка при клике в светлой теме — белый фон + чёрный текст */
+[data-theme="light"] .product-row.active,
+[data-theme="light"] .product-row.active td,
+[data-theme="light"] .product-row.active td *,
+[data-theme="light"] .product-row.active .action-btn,
+[data-theme="light"] .product-row.active .price-cell,
+[data-theme="light"] .product-row.active .stock-badge {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #1a1a1a !important; /* основной цвет текста в светлой теме */
+}
+
+/* Цена — остаётся яркой */
+[data-theme="light"] .product-row.active .price-cell {
+    color: #e91e63 !important;
+    font-weight: 800 !important;
+}
+
+/* Кнопки действий — не становятся белыми */
+[data-theme="light"] .product-row.active .action-btn {
+    background: #f1f3f7 !important;
+    color: #444 !important;
+    border: 1px solid #ddd !important;
+}
+
+/* Иконки в кнопках — тоже видимые */
+[data-theme="light"] .product-row.active .action-btn i {
+    color: #444 !important;
+}
+
+/* ВООБЩЕ НИКАКОГО выделения при клике — только как при hover */
+[data-theme="light"] .product-row.active {
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    outline: none !important;
+}
+
+/* При наведении — как и было (лёгкий фон) */
+[data-theme="light"] .product-row:hover {
+    background: #f8fffd !important;
+}
+
+/* Если курсор уже на строке и она активна — всё равно только hover-эффект */
+[data-theme="light"] .product-row.active:hover {
+    background: #f8fffd !important;
+}
+[data-theme="light"] {
+    background: #f8f9fc !important;
+    color: #1a1a1a !important;
+}
+
+/* Заголовки */
+[data-theme="light"] .section-title,
+[data-theme="light"] h1,
+[data-theme="light"] h3,
+[data-theme="light"] .modal h3 {
+    color: #111 !important;
+    font-weight: 600;
+}
+
+/* Фон карточек и таблиц */
+[data-theme="light"] .card,
+[data-theme="light"] .products-table,
+[data-theme="light"] .add-form-wrapper,
+[data-theme="light"] .modal {
+    background: #ffffff !important;
+    border: 1px solid #e1e5ea !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06) !important;
+}
+
+/* Таблица */
+[data-theme="light"] .products-table th {
+    background: #f5f7fa !important;
+    color: #333 !important;
+    border-bottom: 2px solid #e1e5ea !important;
+}
+
+[data-theme="light"] .products-table td {
+    border-bottom: 1px solid #eef0f4 !important;
+    color: #222 !important;
+}
+
+[data-theme="light"] .products-table tr:hover {
+    background: #f8fffd !important;
+}
+
+/* Цена — всегда яркая и заметная */
+[data-theme="light"] .price-cell,
+[data-theme="light"] #detailPrice {
+    color: #e91e63 !important;
+    font-weight: 800 !important;
+    font-size: 1.15em !important;
+    letter-spacing: 0.5px;
+}
+
+/* Кнопки действий */
+[data-theme="light"] .action-btn {
+    background: #f1f3f7 !important;
+    color: #444 !important;
+    border: 1px solid #ddd !important;
+}
+
+[data-theme="light"] .action-btn:hover {
+    background: #e3e6f0 !important;
+    color: #000 !important;
+}
+
+/* Зона загрузки фото */
+[data-theme="light"] .drop-zone {
+    background: #f8f9fa !important;
+    border: 2px dashed #aab !important;
+    color: #444 !important;
+    transition: all 0.3s;
+}
+
+[data-theme="light"] .drop-zone:hover,
+[data-theme="light"] .drop-zone.dragover {
+    border-color: #00ff9d !important;
+    background: #e8fff8 !important;
+}
+
+/* Превью изображений */
+[data-theme="light"] .image-item {
+    position: relative;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+[data-theme="light"] .image-item img {
+    display: block;
+}
+
+[data-theme="light"] .main-badge {
+    background: #00ff9d !important;
+    color: #000 !important;
+}
+
+[data-theme="light"] .image-remove {
+    background: rgba(0,0,0,0.6) !important;
+    color: white !important;
+}
+
+
+/* Основные кнопки */
+[data-theme="light"] .btn-zaza-primary {
+    background: #00ff9d !important;
+    color: #000 !important;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0, 255, 157, 0.3);
+}
+
+[data-theme="light"] .btn-zaza-primary:hover {
+    background: #00cc7a !important;
+    transform: translateY(-1px);
+}
+
+/* Второстепенные кнопки */
+[data-theme="light"] .btn-zaza-secondary,
+[data-theme="light"] .cancel-btn {
+    background: transparent !important;
+    color: #555 !important;
+    border: 2px solid #bbb !important;
+}
+
+[data-theme="light"] .btn-zaza-secondary:hover,
+[data-theme="light"] .cancel-btn:hover {
+    background: #f0f0f0 !important;
+    border-color: #888 !important;
+    color: #000 !important;
+}
+
+/* Модальное окно пароля — чистое и красивое */
+[data-theme="light"] #passwordModal .modal {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.18) !important;
+    max-width: 420px;
+}
+
+[data-theme="light"] #passwordModal input#adminPassword {
+    background: #f8f9fa !important;
+    border: 1.5px solid #ced4da !important;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 1rem;
+}
+
+[data-theme="light"] #passwordError {
+    color: #e91e63 !important;
+    font-size: 0.9rem;
+    margin-top: 8px;
+}
+
+/* Модальное окно редактирования */
+[data-theme="light"] #editModal .modal {
+    background: #ffffff !important;
+    border-radius: 18px !important;
+    box-shadow: 0 30px 100px rgba(0,0,0,0.2) !important;
+    max-width: 900px;
+    padding: 2rem;
+}
+
+[data-theme="light"] #editModal label {
+    color: #333 !important;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+/* Флеш-сообщения */
+[data-theme="light"] .flash.success {
+    background: #d4edda !important;
+    color: #155724 !important;
+    border: 1px solid #c3e6cb;
+}
+
+[data-theme="light"] .flash.error {
+    background: #f8d7da !important;
+    color: #721c24 !important;
+    border: 1px solid #f5c6cb;
+}
+
+/* Карточка детализации услуги */
+[data-theme="light"] #productDetail {
+    background: rgba(255,255,255,0.97) !important;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 20px 80px rgba(0,0,0,0.15);
+}
+
+[data-theme="light"] #detailPrice {
+    color: #e91e63 !important;
+    font-size: 2.1em !important;
+    font-weight: 800 !important;
+}
+
+/* Тултипы и мелкие элементы */
+[data-theme="light"] .zaza-toast {
+    background: #333 !important;
+    color: white !important;
+}
+
+[data-theme="light"] .zaza-toast.success {
+    background: #00cc7a !important;
+}
+
+[data-theme="light"] .zaza-toast.error {
+    background: #e91e63 !important;
+}
+
+/* ===================================================== */
+/* КАСТОМНЫЙ ЧЕКБОКС — ВИДЕН В ТЁМНОЙ И СВЕТЛОЙ ТЕМЕ     */
+/* ===================================================== */
+
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    user-select: none;
+    margin: 0.5rem 0;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.checkmark {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    background: transparent;
+    border: 2.5px solid;
+    border-radius: 6px;
+    transition: all 0.25s ease;
+    flex-shrink: 0;
+}
+
+/* Цвет рамки чекбокса — адаптивно под тему */
+[data-theme="dark"] .checkmark {
+    border-color: #777;
+}
+
+[data-theme="light"] .checkmark {
+    border-color: #aaa;
+}
+
+/* При наведении */
+.checkbox-wrapper:hover .checkmark {
+    border-color: #00ff9d !important;
+    box-shadow: 0 0 8px rgba(0, 255, 157, 0.3);
+}
+
+/* Когда чекбокс отмечен — фон и галочка */
+.checkbox-wrapper input[type="checkbox"]:checked + .checkmark {
+    background: #00ff9d;
+    border-color: #00ff9d;
+}
+
+/* Галочка — всегда чёрная, чтобы была видна на зелёном фоне */
+.checkbox-wrapper input[type="checkbox"]:checked + .checkmark::after {
+    content: "✓";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(4deg);
+    font-size: 16px;
+    font-weight: 900;
+    color: #000;
+    line-height: 1;
+}
+
+/* Фокус для доступности */
+.checkbox-wrapper input[type="checkbox"]:focus-visible + .checkmark {
+    outline: 2px solid #00ff9d;
+    outline-offset: 2px;
+}
+
+/* Дополнительно: если хочешь анимацию появления галочки */
+.checkbox-wrapper input[type="checkbox"]:checked + .checkmark::after {
+    animation: checkPop 0.2s ease-out;
+}
+
+@keyframes checkPop {
+    0% { transform: translate(-50%, -50%) scale(0) rotate(45deg); }
+    70% { transform: translate(-50%, -50%) scale(1.1) rotate(-5deg); }
+    100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+}
+
+/* ===================================================== */
+/* ФИНАЛЬНЫЙ ЧЕКБОКС — ГАРАНТИРОВАННО ВИДЕН В ЛЮБОЙ ТЕМЕ */
+/* Перебивает ВСЁ, даже упрямые старые стили               */
+/* ===================================================== */
+
+.checkbox-wrapper {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    cursor: pointer !important;
+    font-size: 1rem !important;
+    user-select: none !important;
+    padding: 8px 0 !important;
+    position: relative !important;
+}
+
+/* Скрываем нативный чекбокс */
+.checkbox-wrapper input[type="checkbox"] {
+    position: absolute !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Сам квадрат — ГЛАВНЫЙ ГЕРОЙ */
+.checkbox-wrapper .checkmark {
+    position: relative !important;
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    min-height: 26px !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
+    transition: all 0.25s ease !important;
+    flex-shrink: 0 !important;
+
+    /* ВАЖНО: перебиваем любые старые стили */
+    background: transparent !important;
+    border: 3px solid !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important;
+}
+
+/* Цвет рамки по теме */
+[data-theme="dark"] .checkbox-wrapper .checkmark {
+    border-color: #777 !important;
+    background: #2a2a2a !important;
+}
+
+[data-theme="light"] .checkbox-wrapper .checkmark {
+    border-color: #888 !important;
+    background: #ffffff !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.12) !important;
+}
+
+/* При наведении */
+.checkbox-wrapper:hover .checkmark {
+    border-color: #00ff9d !important;
+    box-shadow: 0 0 14px rgba(0, 255, 157, 0.5) !important;
+    transform: scale(1.08) !important;
+}
+
+/* Когда отмечен */
+.checkbox-wrapper input[type="checkbox"]:checked + .checkmark {
+    background: #00ff9d !important;
+    border-color: #00ff9d !important;
+    box-shadow: 0 0 16px rgba(0, 255, 157, 0.6) !important;
+}
+
+/* ГАЛКА — ТОЛСТАЯ, ЧЁТКАЯ, ЧЁРНАЯ */
+.checkbox-wrapper input[type="checkbox"]:checked + .checkmark::after {
+    content: "✓" !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    font-size: 19px !important;
+    font-weight: 900 !important;
+    color: #000 !important;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4) !important;
+    line-height: 1 !important;
+}
+
+
+/* Наличие — как в тёмной теме, но светлые */
+[data-theme="light"] .detail-info p:last-of-type span {
+    display: inline-block;
+    padding: 8px 18px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 0.98rem;
+    margin-left: 14px;
+    backdrop-filter: blur(10px);
+}
+
+[data-theme="light"] .detail-info p:last-of-type span:first-of-type {
+    background: rgba(0, 255, 157, 0.15);
+    color: #00cc7a;
+    border: 1.5px solid rgba(0, 255, 157, 0.3);
+}
+
+[data-theme="light"] .detail-info p:last-of-type span:last-of-type {
+    background: rgba(255, 59, 92, 0.15);
+    color: #e02848;
+    border: 1.5px solid rgba(255, 59, 92, 0.3);
+}
+
+/* Описание — как в тёмной, но светлое */
+[data-theme="light"] .detail-desc {
+    margin: 2rem 0;
+    padding: 1.8rem 2rem;
+    background: #f8f9fa;
+    border-radius: 18px;
+    border-left: 5px solid #00ff9d;
+    color: #333 !important;
+    line-height: 1.9;
+    font-size: 1.1rem;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    backdrop-filter: blur(8px);
+}
+
+/* Кнопка редактирования — точно как в тёмной теме */
+[data-theme="light"] .detail-info .btn-zaza-primary {
+    margin-top: 2rem;
+    padding: 16px 36px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    border-radius: 18px;
+    box-shadow: 0 12px 35px rgba(0, 255, 157, 0.4);
+    transition: all 0.3s ease;
+}
+
+[data-theme="light"] .detail-info .btn-zaza-primary:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 50px rgba(0, 255, 157, 0.5);
+}
+
+/* Адаптивность */
+@media (max-width: 992px) {
+    [data-theme="light"] .detail-grid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+        text-align: center;
+    }
+    [data-theme="light"] .detail-images img {
+        max-width: 300px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 600px) {
+    [data-theme="light"] .detail-info h3 { font-size: 1.9rem; }
+    [data-theme="light"] .detail-price { font-size: 2.3rem !important; }
+    [data-theme="light"] .detail-desc { padding: 1.5rem; }
+}
+.image-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+    padding: 8px;
+    min-height: 80px;
+}
+
+.image-item {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #444;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    cursor: move;
+    transition: all 0.2s;
+}
+
+.image-item:hover {
+    transform: scale(1.05);
+    border-color: #00ff9d;
+}
+
+.image-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-item .remove-img {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 14px;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.image-item .main-badge {
+    position: absolute;
+    bottom: 6px;
+    left: 6px;
+    background: #00ff9d;
+    color: #000;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: 8px;
+    z-index: 2;
+    display: none;
+}
+
+/* Для текущих фото (не новых) — тоже стили */
+#editCurrentPreview .image-item {
+    cursor: move;
+}
+

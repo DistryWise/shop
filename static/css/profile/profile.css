@@ -1,0 +1,1914 @@
+
+    .profile-page { padding: 6rem 2rem 4rem; max-width: 920px; margin: 0 auto; position: relative; }
+.page-title { font-size: 2.8rem; font-weight: 700; margin-bottom: 0.5rem; }
+.page-subtitle { font-size: 1.1rem; color: #888; margin-bottom: 3rem; }
+
+.edit-profile-btn {
+  position: absolute; top: 6rem; right: 2rem;
+  background: none; border: none; font-size: 1.1rem; color: #000;
+  cursor: pointer; display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 1rem; border-radius: 12px; transition: all 0.25s;
+}
+.edit-profile-btn:hover { background: rgba(0,0,0,0.05); }
+
+.company-avatar {
+  width: 120px; height: 120px; border-radius: 50%; background: #f2f2f2;
+  margin: 0 auto 3rem; position: relative; display: flex; align-items: center; justify-content: center;
+  font-size: 3.5rem; color: #aaa; overflow: hidden;
+}
+.avatar-placeholder i { opacity: 0.6; }
+.avatar-change-btn { position: absolute; bottom: 0; right: 0; background: #000; color: #fff;
+  width: 40px; height: 40px; border-radius: 50%; border: none; font-size: 1.1rem; }
+
+.requisites-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem 3rem;
+}
+.requisite-item { display: flex; flex-direction: column; gap: 0.5rem; }
+.requisite-label { font-size: 0.95rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+.requisite-value { font-size: 1.25rem; font-weight: 500; word-break: break-word; }
+.requisite-value a { color: inherit; text-decoration: none; }
+.requisite-value a:hover { text-decoration: underline; }
+
+.badge { padding: 0.35rem 0.8rem; border-radius: 1rem; font-size: 0.85rem; font-weight: 600; }
+.badge-success { background: #e6f7ee; color: #0d8b45; }
+
+.profile-actions { margin-top: 4rem; text-align: center; }
+.logout-btn { background: none; border: 1.5px solid #000; padding: 0.9rem 2rem; border-radius: 1.5rem;
+  font-weight: 500; cursor: pointer; transition: all 0.25s; }
+.logout-btn:hover { background: #000; color: #fff; }
+
+/* Мобильная шторка редактирования */
+.mobile-edit-sheet {
+  position: fixed; bottom: -100%; left: 0; right: 0; background: var(--bg); border-radius: 1.5rem 1.5rem 0 0;
+  max-height: 95vh; overflow-y: auto; transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 1000; padding-bottom: 2rem;
+}
+.mobile-edit-sheet.active { transform: translateY(0); bottom: 0; }
+.sheet-handle { width: 40px; height: 5px; background: #ddd; border-radius: 3px; margin: 1rem auto; }
+/* Новый хедер профиля — аватар слева, название и кнопка справа */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 4rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  position: relative;
+}
+
+.company-info {
+  text-align: center;
+  flex: 1;
+}
+
+.company-name {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+}
+
+.company-inn {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+}
+
+/* Кнопка редактировать — теперь справа от названия */
+#editProfileBtn {
+  position: static;
+  background: none;
+  border: 1.5px solid #000;
+  padding: 0.7rem 1.4rem;
+  border-radius: 2rem;
+  font-weight: 500;
+  margin-top: 1rem;
+  transition: all 0.25s;
+}
+
+#editProfileBtn:hover {
+  background: #000;
+  color: #fff;
+}
+
+/* Тогглы для рассылок (iOS стиль) */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 32px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .3s;
+  border-radius: 34px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: #000;
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+/* Кнопка выхода — теперь всегда видна и красивая */
+.profile-actions {
+  margin-top: 5rem;
+  text-align: center;
+}
+
+.logout-btn {
+  background: none;
+  border: 1.5px solid #000;
+  color: #000;
+  padding: 1rem 2.5rem;
+  border-radius: 2rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.logout-btn:hover {
+  background: #000;
+  color: #fff;
+}
+
+/* На мобиле — всё по центру, кнопка редактировать под названием */
+@media (max-width: 768px) {
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  #editProfileBtn {
+    margin-top: 1.5rem;
+  }
+}
+/* Центрированный хедер */
+.profile-header-center { text-align: center; margin-bottom: 4rem; }
+.profile-header-center .company-name { font-size: 2.4rem; margin: 1rem 0 0.5rem; }
+.profile-header-center .company-inn { font-size: 1.1rem; color: #666; }
+
+/* Секции профиля */
+.profile-section {
+  margin-bottom: 4rem;
+  position: relative;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid #eee;
+}
+.section-header h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Кнопки редактирования и выхода — справа от заголовка секции */
+.edit-section-btn {
+  background: none;
+  border: 1.5px solid #000;
+  color: #000;
+  padding: 0.6rem 1.2rem;
+  border-radius: 2rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.edit-section-btn:hover {
+  background: #000;
+  color: #fff;
+}
+.edit-section-btn.danger { border-color: #d32f2f; color: #d32f2f; }
+.edit-section-btn.danger:hover { background: #d32f2f; color: #fff; }
+
+/* Настройки */
+.settings-grid {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 600px;
+}
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.setting-label {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+/* Ссылки внизу */
+.profile-links {
+  display: grid;
+  gap: 1rem;
+  max-width: 600px;
+  margin: 4rem auto 0;
+}
+.profile-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.2rem 1.5rem;
+  background: #f9f9f9;
+  border-radius: 1rem;
+  text-decoration: none;
+  color: inherit;
+  font-size: 1.1rem;
+  transition: all 0.2s;
+}
+.profile-link:hover {
+  background: #000;
+  color: #fff;
+}
+.profile-link i { font-size: 1.3rem; width: 24px; }
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+  .section-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .edit-section-btn { align-self: flex-end; }
+  .profile-links { gap: 0.8rem; }
+}
+.profile-fullscreen-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 6rem 2rem 8rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.profile-hero {
+  text-align: center;
+  margin-bottom: 5rem;
+  flex-shrink: 0;
+}
+/* === АВАТАРКА В ШАПКЕ ПРОФИЛЯ — ИСПРАВЛЕНО (НЕТ ЗУМА!) === */
+.profile-hero .company-avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto 2rem;
+  position: relative;
+  background: #f5f5f5;
+  border: 4px solid #fff;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.profile-page-avatar {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Логотип компании */
+#profilePageAvatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;           /* главное — картинка не растягивается */
+  display: none;
+}
+
+/* Заглушка — человечек/здание */
+#profilePagePlaceholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e8e8e8;
+  color: #999;
+  font-size: 58px;             /* нормальный размер иконки */
+  pointer-events: none;
+}
+
+/* Когда есть логотип — показываем фото, скрываем заглушку */
+#profilePageAvatar[src]:not([src=""]),
+#profilePageAvatar[src*="uploads"] {
+  display: block !important;
+}
+
+#profilePageAvatar[src]:not([src=""]) ~ #profilePagePlaceholder,
+#profilePageAvatar[src*="uploads"] ~ #profilePagePlaceholder {
+  display: none !important;
+}
+
+/* На мобильных — чуть меньше */
+@media (max-width: 768px) {
+  .profile-hero .company-avatar {
+    width: 120px;
+    height: 120px;
+  }
+  #profilePagePlaceholder {
+    font-size: 50px;
+  }
+}
+.profile-hero .company-name {
+  font-size: 2.6rem; margin: 0 0 0.5rem 0; font-weight: 700;
+}
+.profile-hero .company-inn {
+  font-size: 1.3rem; color: #666;
+}
+
+.profile-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5rem;
+}
+
+.profile-section {
+  background: var(--bg, #fff);
+  padding: 2.5rem;
+  border-radius: 1.8rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+.section-header h3 {
+  font-size: 1.7rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.edit-section-btn {
+  background: transparent;
+  border: 1.8px solid currentColor;
+  color: #000;
+  padding: 0.7rem 1.4rem;
+  border-radius: 2rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.edit-section-btn:hover { background: #000; color: #fff; }
+.edit-section-btn.danger { color: #d32f2f; border-color: #d32f2f; }
+.edit-section-btn.danger:hover { background: #d32f2f; color: #fff; }
+
+.requisites-grid {
+  display: grid;
+  gap: 2rem 3rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+.requisite-item { gap: 0.6rem; }
+.requisite-label { font-size: 0.95rem; color: #666; text-transform: uppercase; letter-spacing: 0.06em; }
+.requisite-value { font-size: 1.35rem; font-weight: 500; }
+
+.settings-grid { display: grid; gap: 2rem; }
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.profile-links {
+  display: grid;
+  gap: 1rem;
+}
+.profile-link {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.6rem 2rem;
+  background: #f9f9f9;
+  border-radius: 1.4rem;
+  font-size: 1.2rem;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.25s;
+}
+.profile-link:hover {
+  background: #000;
+  color: #fff;
+  transform: translateY(-2px);
+}
+.profile-link i { font-size: 1.5rem; width: 30px; }
+
+@media (max-width: 768px) {
+  .profile-fullscreen-container { padding: 5rem 1.5rem 8rem; }
+  .profile-hero .company-avatar { width: 120px; height: 120px; font-size: 3.8rem; }
+  .profile-hero .company-name { font-size: 2.2rem; }
+  .requisites-grid { grid-template-columns: 1fr; gap: 1.8rem; }
+  .section-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .edit-section-btn { align-self: flex-end; }
+}
+
+/* Заглушка с иконкой человечка, когда нет логотипа */
+.avatar-placeholder {
+  position: absolute;
+  inset: 0;
+  background: #f0f0f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 58px;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+.avatar-placeholder i {
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.1));
+}
+
+/* Когда логотип загружен — скрываем заглушку, показываем img */
+#currentAvatar:not([src=""]), 
+#currentAvatar[src*="data:"], 
+#currentAvatar[src*="/uploads/"] {
+  display: block !important;
+}
+
+#currentAvatar[src=""] ~ .avatar-placeholder,
+#currentAvatar:not([src]) ~ .avatar-placeholder,
+#currentAvatar[style*="display: none"] ~ .avatar-placeholder {
+  display: flex;
+}
+.logout-container {
+  text-align: center;
+  padding: 3rem 2rem 4rem;
+  background: var(--bg, #fff);
+}
+
+.logout-btn {
+  background: transparent;
+  border: 2px solid #d32f2f;
+  color: #d32f2f;
+  padding: 1rem 3rem;
+  border-radius: 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.logout-btn:hover {
+  background: #d32f2f;
+  color: #fff;
+}
+
+/* Дополнительные стили для новых полей */
+.requisites-grid .requisite-item {
+  gap: 0.7rem;
+}
+
+/* Мобильная адаптация для кнопки выхода */
+@media (max-width: 768px) {
+  .logout-container { padding: 2rem 1.5rem 3rem; }
+  .logout-btn { padding: 0.9rem 2.5rem; font-size: 1rem; }
+}
+
+.piligrim-field select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23666' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+  background-size: 12px;
+  padding-right: 50px !important;
+}
+
+.piligrim-field select:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23000' d='M1 7l5-5 5 5'/%3E%3C/svg%3E");
+}
+.requisite-item:has(#regDate) {
+  grid-column: 1 / -1;        /* растягиваем на всю ширину */
+  justify-self: center;       /* центрируем по горизонтали */
+  margin-top: 2rem;           /* отступ сверху от остальных полей */
+  text-align: center;         /* текст по центру */
+}
+
+/* 2. Стили для самого значения даты — чуть крупнее и выделяем */
+#regDate {
+  font-size: 1.45rem !important;
+  font-weight: 600;
+  color: #000;
+}
+
+/* 3. Подпись "Дата регистрации" тоже центрируем и делаем чуть ярче */
+.requisite-item:has(#regDate) .requisite-label {
+  font-size: 1rem;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* 4. На мобильных устройствах всё и так по центру, но добавим небольшой отступ */
+@media (max-width: 768px) {
+  .requisite-item:has(#regDate) {
+    margin-top: 1.8rem;
+  }
+  
+  #regDate {
+    font-size: 1.35rem !important;
+  }
+}
+
+/* МОДАЛКА EMAIL ВВОДА */
+
+/* === APPLE-STYLE EMAIL MODAL === */
+#emailModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+#emailModal.active {
+  display: flex;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Карточка с эффектом "парить над экраном" */
+.email-modal-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24px;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.15);
+  width: 100%;
+  max-width: 420px;
+  margin: 20px;
+  overflow: hidden;
+  transform: translateY(30px) scale(0.94);
+  transition: all 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+#emailModal.active .email-modal-card {
+  transform: translateY(0) scale(1);
+}
+
+/* Заголовок */
+.email-modal-header {
+  position: relative;
+  padding: 32px 32px 0;
+  text-align: center;
+}
+
+.email-modal-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, #0066ff, #00d4ff);
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  color: white;
+  box-shadow: 0 10px 25px rgba(0, 102, 255, 0.3);
+}
+
+.email-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  border: none;
+  color: #666;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.email-modal-close:hover {
+  background: rgba(0, 0, 0, 0.15);
+  transform: scale(1.1);
+}
+
+/* Тело */
+.email-modal-body {
+  padding: 0 40px 40px;
+  text-align: center;
+}
+
+.email-modal-body h2 {
+  margin: 0 0 12px;
+  font-size: 24px;
+  font-weight: 600;
+  color: #111;
+}
+
+.email-modal-body p {
+  margin: 0 0 32px;
+  color: #666;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* Поле ввода — как в iOS/macOS */
+.email-input-wrapper {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.email-input-wrapper input {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 17px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  outline: none;
+  transition: all 0.25s ease;
+}
+
+.email-input-wrapper input:focus {
+  border-color: #0066ff;
+  box-shadow: 0 0 0 4px rgba(0, 102, 255, 0.15);
+}
+
+.email-input-focus {
+  position: absolute;
+  inset: 0;
+  border: 2px solid #0066ff;
+  border-radius: 16px;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.94);
+  transition: all 0.3s ease;
+}
+
+.email-input-wrapper input:focus + .email-input-focus {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Кнопка */
+.email-submit-btn {
+  width: 100%;
+  padding: 16px;
+  background: #0066ff;
+  color: white;
+  font-size: 17px;
+  font-weight: 600;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.email-submit-btn:hover {
+  background: #0055ee;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 102, 255, 0.3);
+}
+
+.email-submit-btn:active {
+  transform: translateY(0);
+}
+
+/* Футер */
+.email-modal-footer {
+  margin-top: 24px;
+  color: #999;
+  font-size: 13px;
+}
+
+/* Адаптив */
+@media (max-width: 480px) {
+  .email-modal-card {
+    margin: 15px;
+    border-radius: 20px;
+  }
+  .email-modal-body {
+    padding: 0 24px 32px;
+  }
+}
+.email-input-wrapper input.error {
+  border-color: #ff3b30 !important;
+  box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.15) !important;
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+
+
+/* ============================================= */
+/* ПРОФИЛЬ — ТОЧЕЧНЫЕ ИСПРАВЛЕНИЯ ДЛЯ ТЁМНОЙ ТЕМЫ */
+/* Только 5 проблем, которые ты указал. Всё остальное оставляем как было */
+/* ============================================= */
+
+html[data-theme="dark"] {
+  /* 1. Убираем рамку у кнопки "Выйти из аккаунта" */
+  .logout-btn {
+    border: none !important;
+    background: rgba(255, 59, 48, 0.15) !important;
+    color: #ffffff !important;
+    backdrop-filter: blur(12px);
+    font-weight: 600 !important;
+  }
+
+  .logout-btn:hover {
+    background: #ffffff !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+  }
+
+  /* 2. Блок "Разделы" — текст и иконки были белые на белом → делаем чёрный текст + тёмные карточки */
+  .profile-link {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+    backdrop-filter: blur(12px);
+  }
+
+  .profile-link i {
+    color: #ffffff !important;
+  }
+
+  .profile-link:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-color: #ffffff !important;
+    transform: translateY(-3px);
+  }
+
+  /* 3. Тумблеры в "Настройки аккаунта" — были почти невидимы */
+  .toggle-slider {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.25) !important;
+  }
+
+  input:checked + .toggle-slider {
+    background-color: #ffffff !important;
+    border-color: #ffffff !important;
+  }
+
+  .toggle-slider:before {
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  /* 4. Кнопки "Редактировать" — были невидимы */
+  .edit-section-btn,
+  #editProfileBtn {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.25) !important;
+    color: #ffffff !important;
+    backdrop-filter: blur(12px);
+    font-weight: 600;
+  }
+
+  .edit-section-btn:hover,
+  #editProfileBtn:hover {
+    background: rgba(255, 255, 255, 0.22) !important;
+    border-color: #ffffff !important;
+    transform: translateY(-1px);
+  }
+
+  /* 5. Дата регистрации — была невидимая */
+  #regDate {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 1.55rem !important;
+  }
+
+  /* Подпись "Дата регистрации" — тоже делаем видимой */
+  .requisite-item:has(#regDate) .requisite-label {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-weight: 600;
+  }
+}
+/* ============================================= */
+/* ТЁМНАЯ ТЕМА — исправления профиля */
+/* ============================================= */
+
+html[data-theme="dark"] {
+  
+  /* Кнопка "Выйти из аккаунта" — убираем рамку полностью, делаем как в светлой теме */
+  .logout-btn {
+    border: none !important;                    /* полностью убираем рамку */
+    background: rgba(255, 59, 48, 0.15) !important;   /* лёгкий красный фон */
+    color: #ff453a !important;                  /* ярко-красный текст (как в iOS) */
+    backdrop-filter: blur(12px);
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .logout-btn:hover {
+    background: #ff453a !important;             /* при наведении — сплошной красный */
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(255, 69, 58, 0.3);
+  }
+
+  /* Остальные исправления (оставляем, они работают отлично) */
+  .profile-link {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+    backdrop-filter: blur(12px);
+  }
+
+  .profile-link:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-color: #ffffff !important;
+    transform: translateY(-3px);
+  }
+
+  .toggle-slider {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.25) !important;
+  }
+
+  input:checked + .toggle-slider {
+    background-color: #ffffff !important;
+  }
+
+  .edit-section-btn,
+  #editProfileBtn {
+    background: rgba(255, 255, 255, 0.12) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.25) !important;
+    color: #ffffff !important;
+    backdrop-filter: blur(12px);
+    font-weight: 600;
+  }
+
+  .edit-section-btn:hover,
+  #editProfileBtn:hover {
+    background: rgba(255, 255, 255, 0.22) !important;
+    border-color: #ffffff !important;
+  }
+
+  #regDate {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 1.55rem !important;
+  }
+
+  .requisite-item:has(#regDate) .requisite-label {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-weight: 600;
+  }
+}
+html[data-theme="dark"] {
+  
+  /* УБИРАЕМ ЧЁРНЫЙ ПРЯМОУГОЛЬНИК ПОД КНОПКОЙ ВЫХОДА */
+  .logout-container,
+  .profile-section:has(.logout-btn),
+  .profile-actions:has(.logout-btn) {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Сама кнопка — чистая, без рамки и без подложки */
+  .logout-btn {
+    border: none !important;
+    background: rgba(255, 59, 48, 0.16) !important;
+    color: #ff453a !important;
+    border-radius: 2.5rem;
+    font-weight: 600;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .logout-btn:hover {
+    background: #ff453a !important;
+    color: #fff !important;
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(255, 69, 58, 0.35);
+  }
+}
+
+/* ТЁМНАЯ ТЕМА — ПРОФИЛЬ: супер-тонкие рамки + полностью прозрачные блоки */
+html[data-theme="dark"] {
+
+  /* Все карточки — прозрачные + еле заметная рамка (как в светлой теме) */
+  .profile-section,
+  .logout-container {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.07) !important;  /* почти не видно, но структура есть */
+  }
+
+  /* Ссылки снизу — тоже почти без рамки */
+  .profile-link {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #fff;
+  }
+
+  .profile-link:hover {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+  }
+
+  /* Нижняя полоска под заголовком — тоже еле заметная */
+  .section-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09) !important;
+  }
+
+  /* Кнопка выхода — полностью без рамки и без фона в покое */
+  .logout-btn {
+    background: transparent !important;
+    border: none !important;
+    color: #ff453a !important;
+    font-weight: 600;
+    padding: 1rem 3rem;
+    border-radius: 2.5rem;
+    transition: all 0.3s;
+  }
+
+  .logout-btn:hover {
+    background: #ff453a !important;
+    color: #fff !important;
+  }
+}
+
+html[data-theme="dark"] {
+  
+  /* Убираем внешние рамки/тени/фон у контейнеров вокруг кнопки */
+  .logout-container,
+  .profile-section:has(.logout-btn),
+  .profile-actions:has(.logout-btn),
+  .profile-content > *:has(.logout-btn) {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* Кнопка "Выйти из аккаунта" — аналог светлой темы */
+  .logout-btn {
+    background: transparent !important;               /* прозрачный фон */
+    border: 2px solid #ff453a !important;              /* красная рамка, как в светлой (там была #d32f2f, но #ff453a — ярче и современнее для dark) */
+    color: #ff453a !important;                         /* красный текст */
+    font-weight: 600 !important;
+    border-radius: 2.5rem !important;                  /* сохраняем скругление */
+    padding: 1rem 3rem !important;                     /* отступы как в светлой */
+    transition: all 0.3s ease !important;
+    backdrop-filter: blur(12px);                       /* лёгкий блюр для "стеклянного" вида (опционально, можно убрать) */
+  }
+
+  .logout-btn:hover {
+    background: #ff453a !important;                    /* заливка красным */
+    color: #ffffff !important;                         /* белый текст */
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(255, 69, 58, 0.35);
+  }
+
+  .logout-btn:active {
+    transform: translateY(0);
+  }
+}
+
+/* ============================================= */
+/* ТЁМНАЯ ТЕМА — МОДАЛКИ РЕДАКТИРОВАНИЯ (ФИНАЛЬНАЯ, СТРЕЛКИ ВЕРНУЛИСЬ БЕЗ БАГОВ) */
+/* Кастомная стрелка через ::after — нет дубликатов в Chrome! */
+/* ============================================= */
+
+html[data-theme="dark"] {
+
+  /* Бэкдроп модалок */
+  .piligrim-modal-backdrop,
+  #emailModal {
+    background: rgba(0, 0, 0, 0.65) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  /* Основная карточка */
+  .piligrim-modal-content,
+  .email-modal-card {
+    background: rgba(20, 20, 20, 0.88) !important;
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+    color: #ffffff !important;
+  }
+
+  /* Текст и подсказки */
+  .piligrim-modal-header h2,
+  .email-modal-body h2,
+  .piligrim-field label,
+  .piligrim-field small,
+  .avatar-hint,
+  .email-modal-body p,
+  .email-modal-footer small {
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+
+  /* Блок аватара */
+  .piligrim-avatar-upload { background: transparent !important; }
+  .avatar-preview { background: rgba(255, 255, 255, 0.08) !important; border: 2px dashed rgba(255, 255, 255, 0.2) !important; }
+  .avatar-placeholder { background: rgba(255, 255, 255, 0.1) !important; color: rgba(255, 255, 255, 0.6) !important; }
+  .avatar-placeholder i { color: rgba(255, 255, 255, 0.7) !important; }
+  .avatar-overlay { background: rgba(0, 0, 0, 0.6) !important; color: #ffffff !important; }
+  .avatar-overlay i { color: #ffffff !important; }
+  .avatar-remove-btn { background: rgba(255, 59, 48, 0.9) !important; color: #ffffff !important; }
+  .avatar-remove-btn:hover { background: #ff453a !important; }
+  .avatar-actions .piligrim-btn.outline { background: rgba(255, 255, 255, 0.12) !important; border: 1.5px solid rgba(255, 255, 255, 0.25) !important; color: #ffffff !important; }
+  .avatar-actions .piligrim-btn.outline:hover { background: rgba(255, 255, 255, 0.2) !important; border-color: #ffffff !important; }
+
+  /* Поля ввода (общие стили) */
+  .piligrim-field input,
+  .piligrim-field select,
+  .email-input-wrapper input {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    color: #ffffff !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+    padding-right: 48px !important; /* место под стрелку */
+    position: relative; /* для ::after */
+  }
+
+  .piligrim-field input::placeholder,
+  .email-input-wrapper input::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  .piligrim-field input:focus,
+  .piligrim-field select:focus,
+  .email-input-wrapper input:focus {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.18) !important;
+    outline: none;
+  }
+
+  /* SELECT — КАСТОМНАЯ СТРЕЛКА ЧЕРЕЗ ::after (БЕЗ БАГОВ!) */
+  .piligrim-field select {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    background-image: none !important; /* убираем любые background */
+  }
+
+  .piligrim-field select::after {
+    content: "";
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 9px solid #ffffff; /* белая стрелка вниз */
+    pointer-events: none;
+    transition: transform 0.3s ease, border-top-color 0.3s ease;
+  }
+
+  /* При фокусе/раскрытии — переворот вверх */
+  .piligrim-field select:focus::after {
+    transform: translateY(-50%) rotate(180deg);
+    border-top-color: #ffffff;
+  }
+
+  /* Выпадающая шторка — тёмная */
+  .piligrim-field select option {
+    background: #1e1e1e !important;
+    color: #ffffff !important;
+  }
+
+  /* Кнопки */
+  .piligrim-btn.outline { background: transparent !important; border: 1.5px solid rgba(255, 255, 255, 0.3) !important; color: #ffffff !important; }
+  .piligrim-btn.outline:hover { background: rgba(255, 255, 255, 0.15) !important; border-color: #ffffff !important; }
+  .piligrim-btn.solid,
+  .email-submit-btn { background: #ffffff !important; color: #000000 !important; font-weight: 600; }
+  .piligrim-btn.solid:hover,
+  .email-submit-btn:hover { background: #e0e0e0 !important; transform: translateY(-2px); }
+
+  /* Закрытие и иконки */
+  .piligrim-close-btn,
+  .email-modal-close { color: rgba(255, 255, 255, 0.7) !important; background: rgba(255, 255, 255, 0.1) !important; }
+  .piligrim-close-btn:hover,
+  .email-modal-close:hover { background: rgba(255, 255, 255, 0.2) !important; color: #ffffff !important; }
+  .email-modal-icon { background: linear-gradient(135deg, #0066ff, #00d4ff) !important; box-shadow: 0 10px 25px rgba(0, 102, 255, 0.4) !important; }
+
+  .email-input-wrapper input.error { border-color: #ff453a !important; box-shadow: 0 0 0 4px rgba(255, 69, 58, 0.25) !important; }
+}
+/* === БЛОК ЗАГРУЗКИ АВАТАРА — ТЕКСТ ПЕРЕМЕЩЁН НИЖЕ === */
+
+/* Общие стили (светлая тема) */
+.avatar-hint {
+  display: block;
+  margin-top: 1.2rem;            /* отступ сверху — теперь текст ниже кнопки */
+  font-size: 0.9rem;
+  color: #888;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Тёмная тема — делаем текст видимым */
+html[data-theme="dark"] .avatar-hint {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Если нужно чуть больше отступа на мобильных */
+@media (max-width: 768px) {
+  .avatar-hint {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* ============================================= */
+/* АДАПТАЦИЯ ДЛЯ ЭКРАНОВ ОТ 300px ДО 1250px — ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ ЦЕНТРИРОВАНИЯ И ТУМБЛЕРОВ */
+/* Центрирование стабильно на всех ширинах, тумблеры с равным расстоянием */
+/* Ничего не вылазит за экран, всё сжимается плавно */
+/* ============================================= */
+@media (max-width: 1250px) {
+
+  /* Основной контейнер — безопасные боковые отступы */
+  .profile-fullscreen-container {
+    padding: clamp(3rem, 10vw, 6rem) clamp(0.8rem, 5vw, 2rem) clamp(5rem, 12vw, 8rem);
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  /* Шапка профиля — всегда по центру */
+  .profile-hero {
+    text-align: center;
+  }
+
+  .profile-hero .company-avatar {
+    width: clamp(90px, 25vw, 140px);
+    height: clamp(90px, 25vw, 140px);
+    margin: 0 auto clamp(1rem, 4vw, 2rem);
+  }
+
+  #profilePagePlaceholder {
+    font-size: clamp(38px, 18vw, 58px);
+  }
+
+  .profile-hero .company-name,
+  .profile-hero .company-inn {
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 95%;
+  }
+
+  .profile-hero .company-name {
+    font-size: clamp(1.7rem, 8vw, 2.6rem);
+  }
+
+  .profile-hero .company-inn {
+    font-size: clamp(1rem, 4.5vw, 1.3rem);
+  }
+
+  /* Секции — центрирование содержимого */
+  .profile-section {
+    padding: clamp(1.5rem, 6vw, 2.5rem);
+    border-radius: clamp(1.2rem, 4vw, 1.8rem);
+    margin: 0 clamp(0.5rem, 3vw, 1rem);
+    text-align: center;               /* общее центрирование */
+    box-sizing: border-box;
+  }
+
+  /* Заголовки секций — центрированы, максимум 2 строки */
+  .section-header {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.6rem, 3vw, 1rem);
+    margin-bottom: clamp(1.5rem, 5vw, 2rem);
+    padding-bottom: clamp(0.6rem, 3vw, 1rem);
+    text-align: center;
+    width: 100%;
+  }
+
+  .section-header h3 {
+    font-size: clamp(1.3rem, 6.5vw, 1.7rem);
+    line-height: 1.3;
+    margin: 0 auto;
+    max-width: 94%;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: keep-all;
+    hyphens: none;
+    white-space: normal;
+  }
+
+  .edit-section-btn {
+    align-self: center;
+    margin-top: clamp(0.4rem, 2vw, 0.8rem);
+    padding: clamp(0.5rem, 3vw, 0.7rem) clamp(0.9rem, 4vw, 1.4rem);
+    font-size: clamp(0.88rem, 3.5vw, 1rem);
+  }
+
+  /* Реквизиты и контакты */
+  .requisites-grid {
+    grid-template-columns: 1fr;
+    gap: clamp(1.4rem, 5vw, 2rem);
+    justify-items: center;
+    padding: 0 clamp(0.5rem, 3vw, 1rem);
+  }
+
+  .requisite-item {
+    text-align: center;
+    width: 100%;
+    max-width: 94%;
+  }
+
+  .requisite-label {
+    font-size: clamp(0.82rem, 4vw, 0.95rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .requisite-value {
+    font-size: clamp(1.1rem, 5vw, 1.35rem);
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  /* Настройки аккаунта — фиксированное расстояние до тумблера */
+  .settings-grid {
+    gap: clamp(1.2rem, 5vw, 2rem);
+    justify-content: center;
+    max-width: 94%;
+    margin: 0 auto;
+  }
+
+  .setting-item {
+    display: flex;
+    justify-content: space-between;     /* текст слева, тумблер справа */
+    align-items: center;
+    gap: clamp(1rem, 5vw, 2rem);        /* фиксированное расстояние между текстом и тумблером */
+    font-size: clamp(1.05rem, 4.5vw, 1.25rem);
+    width: 100%;
+    max-width: 100%;
+    padding: 0 clamp(0.5rem, 3vw, 1rem);
+    box-sizing: border-box;
+  }
+
+  /* РАЗДЕЛ "РАЗДЕЛЫ" — одна строка, по центру */
+  .profile-links {
+    gap: clamp(0.9rem, 4vw, 1.2rem);
+    justify-content: center;
+    max-width: 94%;
+    margin: 0 auto;
+  }
+
+  .profile-link {
+    font-size: clamp(0.98rem, 4.8vw, 1.2rem);
+    padding: clamp(1.1rem, 5vw, 1.6rem) clamp(1.3rem, 6vw, 2rem);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    gap: clamp(0.9rem, 4vw, 1.2rem);
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .profile-link i {
+    font-size: clamp(1.25rem, 5.5vw, 1.5rem);
+    flex-shrink: 0;
+  }
+
+  /* Кнопка выхода */
+  .logout-container {
+    padding: clamp(2rem, 7vw, 3rem) clamp(1rem, 5vw, 2rem) clamp(2.5rem, 8vw, 4rem);
+    text-align: center;
+  }
+
+  .logout-btn {
+    padding: clamp(0.75rem, 5vw, 1rem) clamp(2rem, 8vw, 3rem);
+    font-size: clamp(0.95rem, 4.5vw, 1.1rem);
+    max-width: 94%;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  /* Дата регистрации */
+  #regDate {
+    font-size: clamp(1.25rem, 5.5vw, 1.45rem) !important;
+  }
+
+  /* Усиление для узких экранов < 450px */
+  @media (max-width: 450px) {
+    .profile-fullscreen-container {
+      padding-left: clamp(0.6rem, 4vw, 1.5rem);
+      padding-right: clamp(0.6rem, 4vw, 1.5rem);
+    }
+
+    .section-header h3,
+    .requisite-item,
+    .setting-item,
+    .profile-link,
+    .logout-btn {
+      max-width: 98%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .edit-section-btn {
+      align-self: center !important;
+    }
+  }
+}
+
+/* ============================================= */
+/* ФИНАЛЬНАЯ МОБИЛЬНАЯ АДАПТАЦИЯ ПРОФИЛЯ — 2025 */
+/* Всё выровнено, всё переносится, иконки в столбик */
+/* ============================================= */
+@media (max-width: 1023px) {
+
+  .profile-fullscreen-container {
+    padding: clamp(4rem, 12vw, 6rem) clamp(1rem, 5vw, 2rem) clamp(6rem, 15vw, 8rem);
+  }
+
+  /* === АВАТАРКА + НАЗВАНИЕ === */
+  .profile-hero .company-avatar {
+    width: clamp(100px, 28vw, 140px);
+    height: clamp(100px, 28vw, 140px);
+  }
+
+  .profile-hero .company-name {
+    font-size: clamp(1.8rem, 7.5vw, 2.6rem);
+    line-height: 1.25;
+    word-break: break-word;
+    hyphens: auto;
+    text-align: center;
+  }
+
+  .profile-hero .company-inn {
+    font-size: clamp(1rem, 4vw, 1.3rem);
+    text-align: center;
+  }
+
+  /* === ЗАГОЛОВКИ СЕКЦИЙ === */
+  .section-header h3 {
+    font-size: clamp(1.35rem, 6vw, 1.7rem);
+    line-height: 1.3;
+    text-align: center;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  /* === РЕКВИЗИТЫ И КОНТАКТЫ — КРАСИВЫЙ ПЕРЕНОС === */
+  .requisite-label {
+    font-size: clamp(0.85rem, 3.8vw, 0.95rem);
+    line-height: 1.4;
+    word-break: break-word;
+    hyphens: auto;
+    white-space: normal !important;
+    text-align: left;
+  }
+
+  .requisite-value {
+    font-size: clamp(1.1rem, 4.8vw, 1.35rem);
+    line-height: 1.45;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+ 
+
+  /* === НАСТРОЙКИ — ТЕКСТ И ТУМБЛЕРЫ ВЫРОВНЕНЫ ПО ПРАВОМУ КРАЮ === */
+  .setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: clamp(1rem, 6vw, 2.5rem);
+    font-size: clamp(1.05rem, 4.8vw, 1.25rem);
+    line-height: 1.4;
+  }
+
+  .setting-label {
+    flex: 1;
+    text-align: left;
+    word-break: break-word;
+    hyphens: auto;
+    white-space: normal;
+    font-size: clamp(1.05rem, 4.8vw, 1.25rem);
+  }
+
+  .toggle-switch {
+    flex-shrink: 0;
+    width: clamp(48px, 13vw, 54px);
+    height: clamp(28px, 8vw, 32px);
+  }
+
+  .toggle-slider:before {
+    width: clamp(23px, 6.5vw, 27px);
+    height: clamp(23px, 6.5vw, 27px);
+    left: 3px;
+    bottom: 3px;
+  }
+
+  input:checked + .toggle-slider:before {
+    transform: translateX(clamp(18px, 5vw, 22px));
+  }
+
+  /* === РАЗДЕЛЫ — ИКОНКИ В СТРОГОМ СТОЛБИКЕ СЛЕВА === */
+  .profile-links {
+    gap: clamp(0.9rem, 4vw, 1.2rem);
+    justify-content: center;
+  }
+
+  .profile-link {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    align-items: center;
+    gap: clamp(0.9rem, 4vw, 1.2rem);
+    padding: clamp(1.2rem, 5vw, 1.6rem) clamp(1.2rem, 5vw, 1.8rem);
+    font-size: clamp(1rem, 4.7vw, 1.2rem);
+    line-height: 1.4;
+    text-align: left;
+    word-break: break-word;
+    hyphens: auto;
+    background: #f9f9f9;
+    border-radius: 1.4rem;
+    transition: all 0.25s;
+  }
+
+  .profile-link i {
+    font-size: clamp(1.3rem, 5.5vw, 1.5rem);
+    justify-self: start;
+    width: 32px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  /* Тёмная тема — иконки остаются в столбике */
+  html[data-theme="dark"] .profile-link {
+    background: rgba(255,255,255,0.08);
+  }
+
+  /* === КНОПКА ВЫХОДА === */
+  .logout-btn {
+    font-size: clamp(0.98rem, 4.5vw, 1.1rem);
+    padding: clamp(0.9rem, 5vw, 1.1rem) clamp(2.5rem, 8vw, 3.5rem);
+  }
+
+  /* === КОПИРАЙТ В ФУТЕРЕ === */
+  .footer-left,
+  .footer-center,
+  .footer-right {
+    font-size: clamp(0.78rem, 3.2vw, 0.9rem);
+    line-height: 1.5;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  /* === ДАТА РЕГИСТРАЦИИ === */
+  #regDate {
+    font-size: clamp(1.3rem, 6vw, 1.55rem) !important;
+  }
+}
+
+/* Для самых узких экранов (iPhone SE и т.п.) */
+@media (max-width: 380px) {
+  .profile-fullscreen-container { padding-left: 1rem; padding-right: 1rem; }
+  .profile-link { grid-template-columns: 28px 1fr; }
+  .profile-link i { width: 28px; }
+}
+
+/* ============================================= */
+/* ФИНАЛЬНАЯ МОБИЛЬНАЯ АДАПТАЦИЯ ПРОФИЛЯ — ДЕКАБРЬ 2025 */
+/* 2 строки максимум + идеальный столбик иконок */
+/* ============================================= */
+@media (max-width: 1023px) {
+
+  .profile-fullscreen-container {
+    padding: clamp(4rem, 12vw, 6rem) clamp(1rem, 5vw, 2rem) clamp(6rem, 15vw, 8rem);
+  }
+
+  /* Аватар + название */
+  .profile-hero .company-avatar {
+    width: clamp(100px, 28vw, 140px);
+    height: clamp(100px, 28vw, 140px);
+  }
+
+  .profile-hero .company-name {
+    font-size: clamp(1.8rem, 7.5vw, 2.6rem);
+    line-height: 1.25;
+    text-align: center;
+  }
+
+  .profile-hero .company-inn {
+    font-size: clamp(1rem, 4vw, 1.3rem);
+    text-align: center;
+  }
+
+  /* Заголовки секций */
+  .section-header h3 {
+    font-size: clamp(1.35rem, 6vw, 1.7rem);
+    text-align: center;
+  }
+
+  /* === ГЛАВНОЕ: ВСЕ ДЛИННЫЕ ПОДПИСИ — МАКСИМУМ 2 СТРОКИ === */
+  .requisite-label,
+  .setting-label {
+    font-size: clamp(0.88rem, 3.9vw, 0.98rem) !important;
+    line-height: 1.35 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+    white-space: normal !important;
+    text-align: left;
+  }
+
+  /* Значения — тоже с запасом на 2 строки */
+  .requisite-value {
+    font-size: clamp(1.1rem, 4.8vw, 1.35rem);
+    line-height: 1.45;
+    word-break: break-word;
+    hyphens: auto;
+    min-height: 2.9em; /* гарантирует место под 2 строки */
+  }
+
+  /* === НАСТРОЙКИ — ТЕКСТ СЛЕВА, ТУМБЛЕР СТРОГО СПРАВА === */
+  .setting-item {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: clamp(1.2rem, 6vw, 2.5rem);
+    font-size: clamp(1.05rem, 4.8vw, 1.25rem);
+  }
+
+  .setting-label {
+    flex: 1;
+    padding-right: 1rem;
+  }
+
+  .toggle-switch {
+    flex-shrink: 0;
+    width: clamp(50px, 14vw, 56px);
+    height: clamp(30px, 8.5vw, 34px);
+  }
+
+  .toggle-slider:before {
+    width: clamp(24px, 7vw, 28px);
+    height: clamp(24px, 7vw, 28px);
+    left: 3px;
+    bottom: 3px;
+  }
+
+  input:checked + .toggle-slider:before {
+    transform: translateX(clamp(18px, 5.5vw, 22px));
+  }
+
+  /* === РАЗДЕЛЫ — ИКОНКИ В ИДЕАЛЬНОМ СТОЛБИКЕ (УЖЕ ГОТОВО) === */
+  .profile-link {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    align-items: center;
+    gap: clamp(0.9rem, 4.5vw, 1.2rem);
+    padding: clamp(1.3rem, 5.5vw, 1.7rem) clamp(1.3rem, 6vw, 2rem);
+    font-size: clamp(1.02rem, 4.8vw, 1.22rem);
+    line-height: 1.4;
+    border-radius: 1.4rem;
+  }
+
+  .profile-link i {
+    font-size: clamp(1.35rem, 5.8vw, 1.55rem);
+    width: 34px;
+    text-align: center;
+    justify-self: start;
+  }
+
+  /* === КНОПКА ВЫХОДА === */
+  .logout-btn {
+    font-size: clamp(0.98rem, 4.6vw, 1.1rem);
+    padding: clamp(0.9rem, 5.5vw, 1.1rem) clamp(2.5rem, 9vw, 3.5rem);
+  }
+
+  /* === КОПИРАЙТ === */
+  .footer-left,
+  .footer-center,
+  .footer-right {
+    font-size: clamp(0.78rem, 3.3vw, 0.9rem);
+  }
+
+  /* === ДАТА РЕГИСТРАЦИИ === */
+  #regDate {
+    font-size: clamp(1.3rem, 6.2vw, 1.55rem) !important;
+  }
+}
+
+/* Для самых узких экранов */
+@media (max-width: 380px) {
+  .profile-fullscreen-container { padding-left: 0.9rem; padding-right: 0.9rem; }
+  .profile-link { grid-template-columns: 30px 1fr; }
+  .profile-link i { width: 30px; }
+}
+
+/* ============================================= */
+/* ФИНАЛЬНАЯ МОБИЛЬНАЯ АДАПТАЦИЯ — ДЕКАБРЬ 2025 (300px+) */
+/* Всё идеально: иконки в столбик, тумблеры ровно, текст не ломается */
+/* ============================================= */
+@media (max-width: 1023px) {
+
+  .profile-fullscreen-container {
+    padding: clamp(3.5rem, 12vw, 6rem) clamp(0.8rem, 5vw, 2rem) clamp(5rem, 15vw, 8rem);
+  }
+
+  /* Аватар + название */
+  .profile-hero .company-avatar {
+    width: clamp(90px, 28vw, 140px);
+    height: clamp(90px, 28vw, 140px);
+  }
+
+  .profile-hero .company-name {
+    font-size: clamp(1.7rem, 7.8vw, 2.6rem);
+    text-align: center;
+    line-height: 1.25;
+  }
+
+  .profile-hero .company-inn {
+    font-size: clamp(0.95rem, 4.2vw, 1.3rem);
+    text-align: center;
+  }
+
+  /* Заголовки секций */
+  .section-header h3 {
+    font-size: clamp(1.3rem, 6.2vw, 1.7rem);
+    text-align: center;
+  }
+
+  /* === ВСЕ ПОДПИСИ — МАКСИМУМ 2 СТРОКИ, КРАСИВЫЙ ПЕРЕНОС === */
+  .requisite-label {
+    font-size: clamp(0.82rem, 3.8vw, 0.95rem) !important;
+    line-height: 1.38 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+    white-space: normal !important;
+    text-align: left;
+  }
+
+  .requisite-value {
+    font-size: clamp(1.08rem, 4.9vw, 1.35rem);
+    line-height: 1.45;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  /* === НАСТРОЙКИ АККАУНТА — ТЕКСТ БЕЗ ПЕРЕНОСА + ТУМБЛЕРЫ РОВНО СПРАВА === */
+  .setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: clamp(1.2rem, 5.5vw, 2.5rem);
+  }
+
+  .setting-label {
+    font-size: clamp(1.02rem, 4.6vw, 1.25rem) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    flex: 1;
+    padding-right: 0.5rem;
+  }
+
+  .toggle-switch {
+    flex-shrink: 0;
+    width: clamp(48px, 14vw, 56px);
+    height: clamp(29px, 8.5vw, 34px);
+  }
+
+  .toggle-slider:before {
+    width: clamp(23px, 7vw, 28px);
+    height: clamp(23px, 7vw, 28px);
+    left: 3px;
+    bottom: 3px;
+  }
+
+  input:checked + .toggle-slider:before {
+    transform: translateX(clamp(18px, 5.5vw, 23px));
+  }
+
+  /* === РАЗДЕЛЫ — ИКОНКИ В ИДЕАЛЬНОМ СТОЛБИКЕ (300px+) === */
+  .profile-links {
+    gap: clamp(0.8rem, 4vw, 1.2rem);
+    justify-content: center;
+  }
+
+  .profile-link {
+    display: grid !important;
+    grid-template-columns: 34px 1fr !important;
+    align-items: center;
+    gap: clamp(0.9rem, 4.5vw, 1.3rem);
+    padding: clamp(1.1rem, 5vw, 1.7rem) clamp(1rem, 5vw, 1.8rem);
+    font-size: clamp(0.98rem, 4.7vw, 1.22rem);
+    line-height: 1.4;
+    border-radius: 1.4rem;
+    background: #f9f9f9;
+  }
+
+  .profile-link i {
+    font-size: clamp(1.3rem, 5.8vw, 1.55rem);
+    width: 34px;
+    text-align: center;
+    justify-self: start;
+    flex-shrink: 0;
+  }
+
+  html[data-theme="dark"] .profile-link {
+    background: rgba(255,255,255,0.08);
+  }
+
+  /* === КНОПКА "ВЫЙТИ ИЗ АККАУНТА" — ТОЛЬКО УМЕНЬШАЕТСЯ, НЕ ПЕРЕНОСИТСЯ === */
+  .logout-btn {
+    font-size: clamp(0.92rem, 4.5vw, 1.1rem) !important;
+    padding: clamp(0.85rem, 5.2vw, 1.1rem) clamp(2.2rem, 9vw, 3.5rem) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 96%;
+    margin: 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+  }
+
+  /* === КОПИРАЙТ В ФУТЕРЕ — НЕ ЛОМАЕТСЯ === */
+  .footer-left,
+  .footer-center,
+  .footer-right {
+    font-size: clamp(0.72rem, 3.3vw, 0.9rem) !important;
+    line-height: 1.5;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  /* === ДАТА РЕГИСТРАЦИИ === */
+  #regDate {
+    font-size: clamp(1.25rem, 6.2vw, 1.55rem) !important;
+  }
+}
+
+/* Для самых узких экранов (iPhone SE, 320–300px) */
+@media (max-width: 340px) {
+  .profile-fullscreen-container { padding-left: 0.7rem; padding-right: 0.7rem; }
+  .profile-link { grid-template-columns: 30px 1fr; }
+  .profile-link i { width: 30px; }
+  .toggle-switch { width: 48px; height: 29px; }
+}
+
+/* ФИНАЛЬНОЕ ИСПОЛНЕНИЕ — SMS, Email, Тёмная тема — НИКОГДА НЕ ПЕРЕНОСЯТСЯ */
+@media (max-width: 1023px) {
+  .setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: clamp(1rem, 5vw, 2rem);
+    width: 100%;
+  }
+
+  /* САМОЕ ВАЖНОЕ — 100% перебьёт любые стили выше */
+  .setting-label,
+  .setting-item span,
+  .setting-item div,
+  .setting-item *:not(.toggle-switch):not(input) {
+    font-size: clamp(0.95rem, 4.4vw, 1.25rem) !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    flex: 1;
+    min-width: 0;                     /* критично для flex + ellipsis */
+    padding-right: 0.5rem;
+  }
+
+  /* Тумблеры — строго справа и одинакового размера */
+  .toggle-switch {
+    flex-shrink: 0 !important;
+    width: clamp(50px, 14vw, 56px) !important;
+    height: clamp(30px, 8.5vw, 34px) !important;
+  }
+
+  .toggle-slider:before {
+    width: clamp(24px, 7vw, 28px) !important;
+    height: clamp(24px, 7vw, 28px) !important;
+  }
+
+  input:checked + .toggle-slider:before {
+    transform: translateX(clamp(18px, 5.5vw, 23px)) !important;
+  }
+}
+
+/* Дополнительно на сверхузких экранах (300–340px) */
+@media (max-width: 340px) {
+  .setting-label,
+  .setting-item span {
+    font-size: clamp(0.88rem, 4.6vw, 1.1rem) !important;
+  }
+}
+
+/* ============================================= */
+/* МОБИЛЬНЫЙ ЗАГОЛОВОК "ЛИЧНЫЙ КАБИНЕТ" — СВЕТЛАЯ + ТЁМНАЯ ТЕМА */
+/* ============================================= */
+@media (max-width: 1023px) {
+  /* Контейнер для заголовка */
+  .profile-fullscreen-container::before {
+    content: "Личный кабинет";
+    display: block;
+    text-align: center;
+    font-size: clamp(1.5rem, 6.5vw, 2.1rem);
+    font-weight: 700;
+    color: #000;
+    padding: clamp(1.2rem, 4vw, 1.8rem) 1rem clamp(0.8rem, 3vw, 1.2rem);
+    margin-bottom: clamp(0.5rem, 2vw, 1rem);
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Тёмная тема — белый текст */
+  html[data-theme="dark"] .profile-fullscreen-container::before {
+    color: #ffffff !important;
+  }
+
+  /* Сдвигаем весь контент ниже, чтобы не налезал на заголовок */
+  .profile-fullscreen-container {
+    padding-top: clamp(4.5rem, 14vw, 7rem) !important;
+  }
+
+  /* На совсем узких экранах — чуть меньше отступ */
+  @media (max-width: 380px) {
+    .profile-fullscreen-container::before {
+      font-size: clamp(1.4rem, 6.8vw, 1.9rem);
+      padding-top: 1rem;
+      padding-bottom: 0.6rem;
+    }
+  }
+}
+

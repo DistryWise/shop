@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Личный кабинет — Piligrim</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <script>
+// Глобальное хранилище актуального токена
+window.csrfToken = "{{ csrf_token() }}";
+
+// Автоматически обновляем токен при любом успешном ответе от сервера
+function updateCsrfTokenFromResponse(data) {
+    if (data.csrf_token) {
+        window.csrfToken = data.csrf_token;
+        document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', data.csrf_token);
+    }
+}
+
+// Перехватываем ВСЕ fetch-запросы (POST, PUT, DELETE и т.д.)
+const { fetch: origFetch } = window;
+window.fetch = async (...args) => {
+    let [resource, config] = args;
+    
+    // Только для мутирующих методов
+    if (config && ['POST','PUT','DELETE','PATCH'].includes((config.method || 'GET').toUpperCase())) {
+        config = config || {};
+        config.headers = config.headers || {};
+        config.headers['X-CSRF-Token'] = window.csrfToken;
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+        
+        // Если отправляем FormData — не трогаем Content-Type (браузер сам поставит с boundary)
+        if (!(config.body instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
+        }
+    }
+
+    const response = await origFetch(resource, config);
+    
+    // Автоматически обновляем токен после любого успешного JSON-ответа
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        try {
+            const data = await response.clone().json();
+            updateCsrfTokenFromResponse(data);
+        } catch (e) { /* не JSON — игнорируем */ }
+    }
+
+    return response;
+};
+</script>
+
+<script>
+  window.serverKnowsImLoggedIn = {{ user_authenticated|default(false)|tojson|safe }};
+</script>
+
+  <!-- Шрифты и иконки -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap" rel="stylesheet">
+
+
+
+  <!-- ДОБАВЛЕННЫЕ СТИЛИ — БЕЗ КОНФЛИКТОВ -->
+  <link rel="stylesheet" href="/static/css/search.css">
+  <link rel="stylesheet" href="/static/css/auth.css">
+  <link rel="stylesheet" href="/static/css/cart.css">
+  <link rel="stylesheet" href="/static/css/ai.css">
+  <link rel="stylesheet" href="/static/css/contacts.css"> 
+
+  <link rel="stylesheet" href="/static/css/profile/profile.css"> 
+  <link rel="stylesheet" href="/static/css/profile/auth.css"> 
+ <link rel="stylesheet" href="/static/css/profile/modal_company.css"> 
+
+
+</head>
+<body>
+
+
+  
+  <div class="loader" id="pageLoader"></div>
+
+
+
+<!-- ВЕРХНИЙ ХЕДЕР — ТОЛЬКО НА ДЕСКТОПЕ -->
+<header class="main-header desktop-only">
+  <a href="/" class="logo">
+    <img src="/static/assets/logo.png" alt="Piligrim" class="logo-img">
+  </a>
+
+  <nav class="desktop-nav">
+    <a href="/" class="nav-link">Главная</a>
+    <a href="/goods" class="nav-link">Товары</a>
+    <a href="/services" class="nav-link">Услуги</a>
+    <a href="/news" class="nav-link">Новости</a>
+    <a href="/about_company" class="nav-link">О компании</a> 
+    <a href="/contacts" class="nav-link">Контакты</a>
+  </nav>
+
+  <div class="header-right">
+    <div class="header-icons">
+      <div class="search-wrapper">
+        <div class="search-container">
+          <div class="search-icon"><i class="fas fa-search"></i></div>
+          <input type="text" class="search-input" id="searchInput" placeholder="Поиск...">
+          <button id="searchClear" class="search-clear">×</button>
+        </div>
+        <div id="autocompleteList" class="autocomplete-list"></div>
+      </div>
+
+      <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
+
+      <div class="cart-wrapper">
+        <button class="icon-btn" id="cartBtn">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <div id="miniCartDropdown" class="mini-cart-dropdown">
+          <div class="mini-cart-header"><div class="mini-cart-title">Корзина</div></div>
+          <div class="mini-cart-items" id="miniCartItems">
+            <div class="mini-cart-empty">Корзина пуста</div>
+          </div>
+          <div class="mini-cart-footer">
+            <div class="mini-cart-total" id="miniCartTotal">Итого: 0.00 ₽</div>
+            <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
+    </div>
+  </div>
+</header>
+<main class="profile-page">
+  <div class="profile-fullscreen-container">
+
+
+    <!-- ВЕРХ — АВАТАР + НАЗВАНИЕ (ПОДГРУЖАЕТСЯ ИЗ БД) -->
+    <div class="profile-hero">
+      <div class="company-avatar">
+        <div class="avatar-preview-wrapper profile-page-avatar">
+          <img src="/static/assets/default-company-avatar.png" 
+               alt="Логотип компании" 
+               id="profilePageAvatar" 
+               class="profile-avatar-img" 
+               style="display: none;">
+          <div class="avatar-placeholder" id="profilePagePlaceholder">
+            <i class="fas fa-user-tie"></i>
+          </div>
+        </div>
+      </div>
+      <h1 class="company-name" id="companyName">Загрузка...</h1>
+      <p class="company-inn">ИНН <span id="inn">—</span></p>
+    </div>
+
+
+
+      <!-- ОСНОВНОЙ КОНТЕНТ (ТВОЙ СТАРЫЙ, НИЧЕГО НЕ ЛОМАЮ) -->
+      <div class="profile-content" id="profileContent">
+
+        
+        <!-- Реквизиты -->
+        <section class="profile-section" id="requisitesSection">
+
+<!-- ЗАГЛУШКА ПУСТОГО ПРОФИЛЯ — ЧИСТЫЙ APPLE МИНИМАЛИЗМ 2025 -->
+<div id="emptyProfilePlaceholder" class="minimal-empty-overlay">
+  <div class="minimal-empty-card">
+    <h3>Профиль компании ещё не заполнен</h3>
+    <p class="minimal-subtitle">
+      Добавьте реквизиты, чтобы получить доступ к заказам,<br>договорам и персональным предложениям
+    </p>
+    <button id="fillProfileBtn" class="minimal-action-btn">
+      Заполнить данные компании
+    </button>
+  </div>
+</div>
+          <div class="section-header">
+            <h3>Реквизиты компании</h3>
+            <button id="editCompanyBtn" class="edit-section-btn" data-target="company">
+              Редактировать
+            </button>
+          </div>
+<div class="requisites-grid">
+  <div class="requisite-item"><div class="requisite-label">Полное название</div><div class="requisite-value" id="fullName">—</div></div>
+  <div class="requisite-item"><div class="requisite-label">ОГРН</div><div class="requisite-value" id="ogrn">—</div></div>
+  <div class="requisite-item"><div class="requisite-label">КПП</div><div class="requisite-value" id="kpp">—</div></div>
+  <div class="requisite-item"><div class="requisite-label">ОКПО</div><div class="requisite-value" id="okpo">—</div></div>
+  <div class="requisite-item"><div class="requisite-label">ОКВЭД</div><div class="requisite-value" id="okved">—</div></div>
+  <div class="requisite-item"><div class="requisite-label">Юр. адрес</div><div class="requisite-value" id="legalAddress">—</div></div>
+  <div class="requisite-item"><div class="requisite-label">Фактический адрес</div><div class="requisite-value" id="actualAddress">—</div></div>
+  <div class="requisite-item"><div class="requisite-label">Сфера деятельности</div><div class="requisite-value" id="activity">—</div></div>
+  <div class="requisite-item"><div class="requisite-label">Годовой оборот</div><div class="requisite-value" id="budget">—</div></div>
+  <div class="requisite-item"><div class="requisite-label">Руководитель</div><div class="requisite-value" id="director">—</div></div>
+
+  <!-- СТАТУС — ДОБАВИЛИ ID -->
+  <div class="requisite-item">
+    <div class="requisite-label">Статус</div>
+    <div class="requisite-value">
+      <span class="badge badge-success" id="companyStatusBadge">Действующая</span>
+    </div>
+  </div>
+
+  <!-- НАЛОГООБЛОЖЕНИЕ — ДОБАВИЛИ ID -->
+  <div class="requisite-item">
+    <div class="requisite-label">Налогообложение</div>
+    <div class="requisite-value">
+      <span class="badge badge-success" id="taxSystemBadge">ОСНО (плательщик НДС)</span>
+    </div>
+  </div>
+
+  <div class="requisite-item"><div class="requisite-label">Дата регистрации</div><div class="requisite-value" id="regDate">—</div></div>
+</div>
+        </section>
+
+        <!-- Контакты -->
+        <!-- Контакты — НОВАЯ ВЕРСИЯ 2025, ПОЛНОЕ СООТВЕТСТВИЕ МОДАЛКЕ -->
+<section class="profile-section">
+  <div class="section-header">
+    <h3>Контактная информация</h3>
+    <button id="editContactsBtn" class="edit-section-btn" data-target="contacts">
+      Редактировать
+    </button>
+  </div>
+
+  <div class="requisites-grid" style="grid-template-columns: 1fr 1fr; gap: 20px 32px;">
+    
+    <!-- Контактное лицо -->
+    <div class="requisite-item">
+      <div class="requisite-label">
+        <i class="fas fa-user-tie" style="margin-right: 8px; color: #666;"></i>
+        Контактное лицо
+      </div>
+      <div class="requisite-value" id="contactPerson">—</div>
+    </div>
+
+    <!-- Рабочий телефон -->
+    <div class="requisite-item">
+      <div class="requisite-label">
+        <i class="fas fa-phone-alt" style="margin-right: 8px; color: #666;"></i>
+        Рабочий телефон
+        <small style="color: #888; font-weight: normal;">(в договорах)</small>
+      </div>
+      <div class="requisite-value" id="workPhone">—</div>
+    </div>
+
+    <!-- Личный телефон -->
+    <div class="requisite-item">
+      <div class="requisite-label">
+        <i class="fas fa-mobile-alt" style="margin-right: 8px; color: #666;"></i>
+        Личный телефон
+        <small style="color: #888; font-weight: normal;">(дополнительный)</small>
+      </div>
+      <div class="requisite-value" id="personalPhone">—</div>
+    </div>
+
+    <!-- Email для документов -->
+    <div class="requisite-item">
+      <div class="requisite-label">
+        <i class="fas fa-file-contract" style="margin-right: 8px; color: #666;"></i>
+        Email для документов
+      </div>
+      <div class="requisite-value" id="documentsEmail">—</div>
+    </div>
+
+    <!-- Email для уведомлений -->
+    <div class="requisite-item">
+      <div class="requisite-label">
+        <i class="fas fa-bell" style="margin-right: 8px; color: #666;"></i>
+        Email для уведомлений
+      </div>
+      <div class="requisite-value" id="notificationsEmail">—</div>
+    </div>
+
+    <!-- Telegram -->
+    <div class="requisite-item">
+      <div class="requisite-label">
+        <i class="fab fa-telegram-plane" style="margin-right: 8px; color: #0088cc;"></i>
+        Telegram
+      </div>
+      <div class="requisite-value">
+        <span id="telegramValue">—</span>
+        <span id="telegramLink" style="display: none; margin-left: 8px;">
+          <a href="#" target="_blank" style="color: #0088cc; text-decoration: none;">@<span id="telegramHandle"></span></a>
+        </span>
+      </div>
+    </div>
+
+    <!-- WhatsApp -->
+    <div class="requisite-item">
+      <div class="requisite-label">
+        <i class="fab fa-whatsapp" style="margin-right: 8px; color: #25d366;"></i>
+        WhatsApp
+      </div>
+      <div class="requisite-value" id="whatsapp">—</div>
+    </div>
+
+    <!-- MAX (если нужен) — можно убрать потом -->
+    <div class="requisite-item">
+      <div class="requisite-label">
+        <i class="fas fa-comments" style="margin-right: 8px; color: #666;"></i>
+        MAX
+      </div>
+      <div class="requisite-value" id="maxPhone">—</div>
+    </div>
+
+  </div>
+</section>
+
+        <!-- Настройки -->
+        <section class="profile-section">
+          <div class="section-header">
+            <h3>Настройки аккаунта</h3>
+          </div>
+          <div class="settings-grid">
+            <div class="setting-item">
+              <span>SMS-оповещения</span>
+              <label class="toggle-switch"><input type="checkbox" id="smsSubscribe" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-item">
+              <span>Email-рассылка</span>
+              <label class="toggle-switch"><input type="checkbox" id="emailSubscribe" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-item">
+              <span>Тёмная тема</span>
+              <label class="toggle-switch"><input type="checkbox" id="darkModeToggle"><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+        </section>
+
+        <!-- Ссылки -->
+        <section class="profile-section">
+          <div class="section-header"><h3>Разделы</h3></div>
+          <div class="profile-links">
+            <a href="/orders" class="profile-link"><i class="fas fa-receipt"></i> История заказов</a>
+            <a href="/favorites" class="profile-link"><i class="fas fa-heart"></i> Избранное</a>
+            <a href="/documents" class="profile-link"><i class="fas fa-file-contract"></i> Договоры и акты</a>
+            <a href="/invoices" class="profile-link"><i class="fas fa-file-invoice-dollar"></i> Счета</a>
+            <a href="/support" class="profile-link"><i class="fas fa-headset"></i> Поддержка</a>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- КНОПКА ВЫХОДА -->
+    <div class="logout-container">
+      <button id="logoutBtn" class="logout-btn">
+        Выйти из аккаунта
+      </button>
+    </div>
+  </div>
+</main>
+
+<!-- ОБЯЗАТЕЛЬНО ДОБАВЬ ЭТОТ БЛОК — ДАЖЕ ЕСЛИ ОН НЕ ИСПОЛЬЗУЕТСЯ НА ДЕСКТОПЕ! -->
+<div class="custom-alert" id="feedbackModal">
+  <div class="alert-content">
+    <button class="alert-close">×</button>
+    <div class="alert-icon"><i class="fas fa-envelope-open-text"></i></div>
+    <div class="alert-text">
+      <strong>Обратная связь</strong>
+      <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
+    </div>
+    <form class="contact-form" novalidate>
+      <input type="text" placeholder="Ваше имя" name="name" required />
+      <div class="phone-field-wrapper">
+        <input type="tel" placeholder="+7 (___) ___-__-__" name="phone" required />
+      </div>
+      <input type="email" placeholder="Email" name="email" required />
+      <textarea placeholder="Ваше сообщение" name="message" required></textarea>
+      <button type="submit" class="alert-login-btn">
+        <span class="btn-text">Отправить</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- МОДАЛКА EMAIL — APPLE STYLE 2025 -->
+<div id="emailModal">
+  <div class="email-modal-card">
+    <div class="email-modal-header">
+      <div class="email-modal-icon">
+        <i class="far fa-envelope"></i>
+      </div>
+      <button class="email-modal-close" id="closeEmailModal" aria-label="Закрыть">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="email-modal-body">
+      <h2>Получайте акции и новости</h2>
+      <p>Мы будем присылать только самое важное — никаких спамов, обещаем</p>
+
+      <form id="emailForm" class="email-modal-form">
+        <div class="email-input-wrapper">
+          <input
+            type="email"
+            id="emailInput"
+            placeholder="you@company.com"
+            required
+            autocomplete="email"
+          />
+          <div class="email-input-focus"></div>
+        </div>
+
+        <button type="submit" class="email-submit-btn">
+          <span class="btn-text">Подписаться</span>
+          <span class="btn-loading" style="display:none;">
+            <i class="fas fa-spinner fa-spin"></i>
+          </span>
+        </button>
+      </form>
+
+      <div class="email-modal-footer">
+        <small>Можно отписаться в любой момент</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ДЕСКТОПНАЯ МОДАЛКА РЕДАКТИРОВАНИЯ КОМПАНИИ — ФИНАЛЬНАЯ ВЕРСИЯ -->
+<div class="profile-edit-modal" id="piligrimEditModal">
+  <div class="piligrim-modal-backdrop"></div>
+  
+  <div class="piligrim-modal-content">
+    <div class="piligrim-modal-header">
+      <h2>Редактировать профиль компании</h2>
+      <button class="piligrim-close-btn">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <form class="piligrim-edit-form" id="piligrimEditForm" novalidate>
+      <input type="hidden" name="remove_avatar" id="removeAvatarFlag" value="0">
+           <!-- АВАТАРКА — ИКОНКА ЧЕЛОВЕЧКА ПО УМОЛЧАНИЮ -->
+      <!-- АВАТАРКА — ФИНАЛЬНАЯ РАБОЧАЯ ВЕРСИЯ -->
+      <div class="piligrim-avatar-upload">
+        
+        <!-- Обёртка с relative — чтобы крестик позиционировался правильно -->
+        <div class="avatar-preview-wrapper">
+          
+          <div class="avatar-preview" id="avatarPreview">
+            
+            <!-- Загруженный логотип -->
+            <img src="/static/assets/default-company-avatar.png" 
+                 alt="Логотип компании" 
+                 id="currentAvatar" 
+                 style="display: none;">
+
+            <!-- Заглушка — человечек -->
+            <div class="avatar-placeholder" id="avatarPlaceholder">
+              <i class="fas fa-user-tie"></i>
+            </div>
+
+            <!-- Оверлей при наведении -->
+            <div class="avatar-overlay">
+              <i class="fas fa-camera"></i>
+              <span>Изменить логотип</span>
+            </div>
+          </div>
+
+          <!-- КРЕСТИК УДАЛЕНИЯ — ПРЯМО ЗДЕСЬ, В ОБЁРТКЕ! -->
+          <button type="button" 
+                  class="avatar-remove-btn" 
+                  id="removeAvatar" 
+                  style="display:none;" 
+                  title="Удалить логотип">
+            <i class="fas fa-times"></i>
+          </button>
+
+        </div>
+
+        <!-- Кнопка загрузки — снизу, как и было -->
+        <div class="avatar-actions">
+          <label class="piligrim-btn outline small">
+            <input type="file" id="avatarInput" accept="image/*" style="display:none;">
+            Загрузить логотип
+          </label>
+        </div>
+
+        <small class="avatar-hint">
+          Рекомендуемый размер: 400×400 px · JPG, PNG · до 5 МБ
+        </small>
+      </div>
+
+      <!-- Форма — 2 колонки, 13 редактируемых полей, как снаружи -->
+      <div class="piligrim-form-grid">
+
+        <!-- Левая колонка -->
+        <div class="piligrim-form-col">
+          <div class="piligrim-field">
+            <label>Полное название</label>
+            <input type="text" name="fullName" value="Общество с ограниченной ответственностью «Пилигрим Сервис»" placeholder='Например: Общество с ограниченной ответственностью «Рога и Копыта»' required>
+          </div>
+
+          <div class="piligrim-field">
+            <label>Короткое название</label>
+            <input type="text" name="companyName" value="ООО «Пилигрим Сервис»" placeholder='Например: ООО «Рога и Копыта»' required>
+          </div>
+
+          <div class="piligrim-field">
+  <label>ИНН</label>
+  <input type="text" name="inn" value="" placeholder="Например: 3900046405" placeholder="Например: 7707083893" required>
+  <small>10 или 12 цифр без пробелов</small>
+</div>
+
+          <div class="piligrim-field">
+            <label>ОГРН</label>
+            <input type="text" name="ogrn" value="1253900010880" placeholder="Например: 1027700132195" required>
+          </div>
+
+          <div class="piligrim-field">
+            <label>КПП</label>
+            <input type="text" name="kpp" value="390001001"placeholder="Например: 770701001" required>
+          </div>
+
+          <div class="piligrim-field">
+            <label>ОКПО</label>
+            <input type="text" name="okpo" value="123456789" placeholder="Например: 12345678" required>
+          </div>
+
+          <div class="piligrim-field">
+            <label>ОКВЭД</label>
+            <input type="text" name="okved" value="69.10, 70.22, 74.90" placeholder="Например: 46.90, 62.01, 47.91" required>
+          </div>
+        </div>
+
+        <!-- Правая колонка -->
+        <div class="piligrim-form-col">
+          <div class="piligrim-field">
+            <label>Юридический адрес</label>
+            <input type="text" name="legalAddress" value="236003, г. Калининград, ул. Балашовская, д. 4, помещ. 14" placeholder="Например: 125009, г. Москва, ул. Тверская, д. 7, офис 404" required>
+          </div>
+
+          <div class="piligrim-field">
+            <label>Фактический адрес</label>
+            <input type="text" name="actualAddress" value="236003, г. Калининград, ул. Балашовская, д. 4" placeholder="Тот же, что юридический (или другой)">
+            <small>Если совпадает с юридическим — оставьте как есть</small>
+          </div>
+
+          <div class="piligrim-field">
+            <label>Сфера деятельности</label>
+            <input type="text" name="activity" value="Юридические услуги, сопровождение бизнеса, налоговое консультирование" placeholder="Например: Оптовая торговля, IT-консультации, разработка ПО">
+          </div>
+
+          <div class="piligrim-field">
+            <label>Годовой оборот</label>
+            <select name="budget">
+              <option>до 10 млн ₽</option>
+              <option>10–50 млн ₽</option>
+              <option selected>50–120 млн ₽</option>
+              <option>более 120 млн ₽</option>
+            </select>
+          </div>
+
+          <div class="piligrim-field">
+            <label>Руководитель</label>
+            <input type="text" name="director" value="Иванов Иван Иванович (Генеральный директор)"placeholder="Например: Иванов Иван Иванович (Генеральный директор)">
+          </div>
+
+          <div class="piligrim-field">
+            <label>Статус компании</label>
+            <select name="companyStatus">
+              <option value="Действующая" selected>Действующая</option>
+              <option value="В процессе ликвидации">В процессе ликвидации</option>
+              <option value="Банкротство">Банкротство</option>
+              <option value="Приостановлена">Приостановлена</option>
+            </select>
+          </div>
+
+          <div class="piligrim-field">
+            <label>Система налогообложения</label>
+            <select name="taxSystem">
+              <option value="ОСНО (плательщик НДС)" selected>ОСНО (плательщик НДС)</option>
+              <option value="УСН 6% (доходы)">УСН 6% (доходы)</option>
+              <option value="УСН 15% (доходы − расходы)">УСН 15% (доходы − расходы)</option>
+              <option value="Патент">Патент</option>
+              <option value="НПД (самозанятый)">НПД (самозанятый)</option>
+              <option value="Без НДС (освобождён)">Без НДС (освобождён по ст. 145 НК РФ)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Кнопки -->
+      <div class="piligrim-modal-actions">
+        <button type="button" class="piligrim-btn outline" id="piligrimCancel">Отмена</button>
+        <button type="submit" class="piligrim-btn solid">Сохранить изменения</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- БЛОКИРОВКА НЕАВТОРИЗОВАННОГО ДОСТУПА К ЛИЧНОМУ КАБИНЕТУ -->
+<div id="authRequiredOverlay" class="auth-required-overlay">
+  <div class="auth-required-modal">
+    <div class="auth-required-content">
+      <i class="fas fa-user-lock auth-required-icon"></i>
+      <h2>Требуется авторизация</h2>
+      <p>Для доступа к личному кабинету необходимо войти в аккаунт</p>
+      <button id="loginFromOverlayBtn" class="auth-required-btn">
+        <i class="fas fa-sign-in-alt"></i> Войти по номеру телефона
+      </button>
+      <div class="auth-required-footer">
+  <small>
+    Проблемы со входом? 
+    <a href="https://t.me/piligrim_support" 
+       target="_blank" 
+       rel="noopener" 
+       class="support-link">
+      Обратитесь в поддержку
+    </a>
+  </small>
+</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- МОДАЛКА РЕДАКТИРОВАНИЯ КОНТАКТОВ — PILIGRIM 2025 STYLE -->
+<div class="profile-edit-modal" id="contactEditModal">
+  <div class="piligrim-modal-backdrop"></div>
+  
+  <div class="piligrim-modal-content">
+    <div class="piligrim-modal-header">
+      <h2>Контактная информация</h2>
+      <button class="piligrim-close-btn" data-modal="contactEditModal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <form class="piligrim-edit-form" id="contactEditForm" novalidate>
+      <div class="piligrim-form-grid" style="grid-template-columns: 1fr; gap: 24px;">
+
+        <div class="piligrim-field">
+          <label>Контактное лицо <small>(ФИО)</small></label>
+          <input type="text" name="contactPerson" placeholder="Иванов Иван Иванович" value="">
+        </div>
+
+        <div class="piligrim-field">
+  <label>Рабочий телефон</label>
+  <input type="tel" name="workPhone" placeholder="+7 (999) 123-45-67" value="" readonly 
+         style="background: #f9f9f9; color: #333; cursor: not-allowed; opacity: 0.85;">
+  <small>Номер из профиля · Нельзя изменить</small>
+</div>
+
+        <div class="piligrim-field">
+          <label>Личный телефон <small>(дополнительный)</small></label>
+          <input type="tel" name="personalPhone" placeholder="+7 (999) 987-65-43" value="">
+        </div>
+
+        <div class="piligrim-field">
+          <label>Email для документов</label>
+          <input type="email" name="documentsEmail" placeholder="docs@company.ru" value="">
+          <small>Счета, акты, закрывающие документы</small>
+        </div>
+
+        <div class="piligrim-field">
+          <label>Email для уведомлений</label>
+          <input type="email" name="notificationsEmail" placeholder="info@company.ru" value="">
+          <small>Статусы заказов, новости, акции</small>
+        </div>
+
+        <div class="piligrim-field">
+          <label>Telegram</label>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <span style="color: #666; font-size: 20px;">@</span>
+            <input type="text" name="telegram" placeholder="company_manager" value="">
+          </div>
+        </div>
+
+        <div class="piligrim-field">
+          <label>WhatsApp</label>
+          <input type="tel" name="whatsapp" placeholder="+7 (999) 123-45-67" value="">
+        </div>
+
+        <div class="piligrim-field">
+          <label>MAX</label>
+          <input type="tel" name="max" placeholder="+7 (999) 123-45-67" value="">
+        </div>
+      </div>
+
+      <div class="piligrim-modal-actions">
+        <button type="button" class="piligrim-btn outline" data-modal="contactEditModal">Отмена</button>
+        <button type="submit" class="piligrim-btn solid">Сохранить контакты</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- НИЖНЯЯ ПАНЕЛЬ — ТОЛЬКО НА МОБИЛЬНЫХ -->
+<nav class="mobile-bottom-bar">
+  <button class="bottom-bar-btn" id="mobileSearchBtn" data-label="Поиск">
+    <i class="fas fa-search"></i>
+  </button>
+
+  <button class="bottom-bar-btn" id="mobileAuthBtn" data-label="Вход">
+    <i class="fas fa-user"></i>
+  </button>
+
+    <button class="bottom-bar-btn active" id="openSidebarMenu" data-label="Меню">
+  <i class="fas fa-bars"></i>
+
+</button>
+
+  <button class="bottom-bar-btn" id="mobileCartBtn" data-label="Корзина">
+    <i class="fas fa-shopping-bag"></i>
+    <span class="cart-count" id="mobileCartCount">0</span>
+  </button>
+
+  <button class="bottom-bar-btn" id="feedbackBtnMobile" data-label="Поддержка">
+    <i class="fas fa-envelope"></i>
+  </button>
+</nav>
+<!-- ПОЛНОЭКРАННАЯ ШТОРКА ПОИСКА ДЛЯ НОУТБУКОВ/ПЛАНШЕТОВ -->
+<div class="tablet-search-full" id="tabletSearchSheet">
+  <div class="tablet-search-backdrop"></div>
+  <div class="tablet-search-header-full">
+    <button class="tablet-search-back" id="closeTabletSearch">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <div class="tablet-search-input-wrapper-full">
+      <i class="fas fa-search"></i>
+      <input type="text" id="tabletSearchInput" placeholder="Поиск по каталогу..." autocomplete="off">
+      <button class="tablet-search-clear" id="tabletSearchClear">×</button>
+    </div>
+  </div>
+  <div class="tablet-search-empty" id="tabletEmptyState">
+    <i class="fas fa-search"></i>
+    <p>Начните вводить запрос...</p>
+  </div>
+  <div id="tabletAutocompleteList" class="tablet-autocomplete-list-full"></div>
+</div>
+
+<div class="mobile-search-sheet" id="mobileSearchSheet">
+  <!-- Хедер с ручкой и строкой поиска -->
+  <div class="mobile-search-header">
+    <!-- Ручка сверху (как в iOS) -->
+    <div class="sheet-handle"></div>
+
+    <!-- Кнопка назад + строка поиска -->
+    <button class="mobile-search-back" id="closeMobileSearchTop">←</button>
+    <div class="mobile-search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input 
+        type="text" 
+        class="mobile-search-input" 
+        id="mobileSearchInput" 
+        placeholder="Поиск по каталогу..." 
+        autocomplete="off"
+      >
+      <button class="mobile-search-clear" id="mobileSearchClear">×</button>
+    </div>
+  </div>
+
+  <!-- Контент: либо пустое состояние, либо результаты -->
+  <div class="mobile-search-results-content" id="mobileSearchResults">
+    
+    <!-- ПУСТОЕ СОСТОЯНИЕ — "Введите название товара" -->
+    <div class="search-empty-state" id="mobileEmptyState">
+      <div class="empty-icon">
+        <i class="fas fa-search"></i>
+      </div>
+      <div class="empty-title">Введите название товара</div>
+      <div class="empty-subtitle">
+        Например: iPhone 16, кроссовки Nike, кофеварка
+      </div>
+    </div>
+
+    <!-- Сюда будут вставляться результаты поиска -->
+    <div id="mobileAutocompleteList" class="mobile-autocomplete-list"></div>
+  </div>
+</div>
+
+<!-- МОБИЛЬНАЯ ШТОРКА КОРЗИНЫ -->
+<div class="mobile-cart-sheet" id="mobileCartSheet">
+  <div class="sheet-backdrop" id="mobileCartBackdrop"></div>
+  <div class="sheet-container">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="cart-header-icon">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="cart-count" id="mobileCartHeaderCount">0</span>
+      </div>
+      <h3>Корзина</h3>
+      <button class="sheet-close-btn" id="mobileCloseCart">×</button>
+    </div>
+    <div class="sheet-items" id="mobileMiniCartItems">
+      <div style="padding:3rem 1.5rem;text-align:center;color:#888;">
+        <i class="fas fa-shopping-bag" style="font-size:3rem;margin-bottom:1rem;opacity:0.3;"></i>
+        <p>Корзина пуста</p>
+      </div>
+    </div>
+    <div class="sheet-total">
+      Итого: <strong id="mobileMiniCartTotal">0 ₽</strong>
+    </div>
+    <div class="sheet-footer">
+      <button class="checkout-btn-full" id="mobileGoToCartBtn">
+        Перейти к оформлению
+      </button>
+    </div>
+  </div>
+</div>
+<!-- Алерт «Авторизуйтесь» перед отправкой сообщения -->
+<div class="custom-alert" id="authAlert">
+  <div class="alert-content">
+    <button class="alert-close">×</button>
+    <div class="alert-icon">
+      <i class="fas fa-user-lock"></i>
+    </div>
+    <div class="alert-text">
+      <strong>Авторизуйтесь</strong>
+      <span>Для отправки сообщения нужно войти в аккаунт</span>
+    </div>
+    <button class="alert-login-btn" id="authBtnFeedback">Войти</button>
+  </div>
+</div>
+  <!-- МОДАЛКА АВТОРИЗАЦИИ  -->
+<div id="authModal" class="auth-modal">
+  <div class="auth-modal-content">
+    <button class="close-modal" id="closeAuthModal">×</button>
+    <h2 class="auth-title">Вход по номеру<br><span class="mobile-only">телефона</span></h2>
+
+    <!-- ШАГ 1 — ВВОД НОМЕРА -->
+    <div id="stepPhone" class="auth-step">
+      <div class="country-selector">
+        <div class="selected-country" id="selectedCountry">
+          <span class="flag">RU</span>
+          <span class="code">+7</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="country-dropdown" id="countryDropdown">
+          <div class="country-item" data-code="+7" data-flag="RU">Россия +7</div>
+          <div class="country-item" data-code="+1" data-flag="US">USA +1</div>
+          <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
+        </div>
+      </div>
+      
+      <input type="text" 
+       name="honeypot" 
+       id="honeypot" 
+       tabindex="-1" 
+       autocomplete="off" 
+       style="position:absolute; left:-9999px; opacity:0; height:0; width:0; border:none; padding:0; margin:0;"
+       aria-hidden="true">
+
+<input type="hidden" name="fp_token" id="fp_token" value="">
+      <input type="tel" id="phoneInput" placeholder="(999) 999 99 99" class="auth-input">
+
+      <label class="checkbox-label required">
+        <input type="checkbox" id="privacyCheck">
+        <span class="custom-checkbox"></span>
+        Согласен с <a href="/policy" target="_blank" class="privacy-link">политикой конфиденциальности</a>
+      </label>
+
+      <label class="checkbox-label">
+        <input type="checkbox" id="subscribeCheck" checked>
+        <span class="custom-checkbox"></span>
+        Получать SMS с акциями и уведомлениями
+      </label>
+
+      <button id="sendCodeBtn" class="auth-btn" disabled>Получить код</button>
+    </div>
+
+    <!-- ШАГ 2 — ВВОД КОДА -->
+    <div id="stepCode" class="auth-step" style="display:none;">
+      <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
+      <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
+      <button id="verifyCodeBtn" class="auth-btn">Войти</button>
+      <button id="resendCode" class="auth-link">Отправить повторно</button>
+    </div>
+
+    <!-- ШАГ 3 — УСПЕШНЫЙ ВХОД -->
+    <div id="stepSuccess" class="auth-step" style="display:none;">
+      <i class="fas fa-check-circle success-icon"></i>
+      <h3>Добро пожаловаться!</h3>
+      <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
+      <button id="closeSuccess" class="auth-btn">Продолжить</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОБИЛЬНАЯ ШТОРКА ОБРАТНОЙ СВЯЗИ -->
+ <div class="mobile-feedback-top" id="mobileFeedbackTop"></div>
+<div class="mobile-feedback-sheet" id="mobileFeedbackSheet">
+
+
+  <div class="sheet-header">
+    <button class="sheet-back-btn" id="closeMobileFeedback">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <div class="sheet-title-wrapper">
+      <i class="fas fa-envelope-open-text"></i>
+      <h2>Обратная связь</h2>
+    </div>
+  </div>
+  <div class="sheet-handle"></div>
+  
+  <form class="contact-form sheet-form" novalidate id="contactFormMobile">
+    <div class="sheet-field">
+      <label>Ваше имя</label>
+      <input type="text" class="name-input" name="name" placeholder="Ваше имя..." required autocomplete="name" />
+    </div>
+    <div class="sheet-field phone-field-wrapper">
+      <label>Телефон <span class="required">*</span></label>
+      <input type="tel" class="phone-input" name="phone" placeholder="+7 (___) ___-__-__" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+    </div>
+    <div class="sheet-field">
+      <label>Email <span class="required">*</span></label>
+      <input type="email" name="email" placeholder="your@email.com" required autocomplete="email" />
+    </div>
+    <div class="sheet-field">
+      <label>Сообщение <span class="required">*</span></label>
+      <textarea name="message" placeholder="Опишите ваш вопрос или предложение..." rows="4" required></textarea>
+    </div>
+    <button type="submit" class="sheet-submit-btn" id="submitBtnMobile">
+      <span class="btn-text">Отправить заявку</span>
+      <span class="btn-loading"><i class="fas fa-spinner fa-spin"></i></span>
+      <span class="btn-cooldown" style="display:none;"><span class="timer">30</span>с</span>
+    </button>
+  </form>
+</div>
+
+<!-- ШТОРКА СЛЕВА — МЕНЮ -->
+<div class="mobile-sidebar" id="mobileSidebar">
+  <div class="sidebar-top">
+    <button class="sidebar-close" id="closeSidebar">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <img src="/static/assets/logo.png" alt="Piligrim" class="sidebar-logo-big">
+  </div>
+
+  <nav class="sidebar-nav-modern">
+    <div class="nav-divider top"></div>
+    <a href="/" class="sidebar-link-modern">Главная</a>
+    <a href="/goods" class="sidebar-link-modern">Товары</a>
+    <a href="/services" class="sidebar-link-modern">Услуги</a>
+    <a href="/news" class="sidebar-link-modern">Новости</a>
+    <a href="/about_company" class="sidebar-link-modern active">О компании</a>
+    <a href="/contacts" class="sidebar-link-modern">Контакты</a>
+    <div class="nav-divider bottom"></div>
+  </nav>
+
+  <div class="sidebar-bottom-theme">
+    <div class="sidebar-theme-toggle">
+      <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+      <label for="theme-toggle" class="theme-toggle-label">
+        <i class="fas fa-moon"></i>
+        <i class="fas fa-sun"></i>
+      </label>
+    </div>
+  </div>
+</div>
+
+
+  <footer>
+    <div class="footer-left">© PILIGRIM 2025. ALL RIGHTS RESERVED.</div>
+    <div class="footer-center"><a href="/" class="footer-logo-link"><img src="/static/assets/logo.png" alt="Piligrim" class="footer-logo"></a></div>
+    <div class="footer-right">
+      <div class="footer-links">
+        <a href="/policy">Политика конфиденциальности</a>
+        <a href="/terms">Условия использования</a>
+        <a href="/delivery">Доставка и оплата</a>
+      </div>
+    </div>
+  </footer>
+
+<!-- КАРТОЧКА ТОВАРА  -->
+<div class="product-modal" id="productModal">
+  <div class="product-content">
+    <!-- Крестик закрытия -->
+    <button class="close-modal" onclick="closeProductModal()">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M6 6L22 22M6 22L22 6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <!-- Основной контейнер -->
+    <div class="product-main">
+      <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
+
+      <div class="product-info">
+        <h3 id="productTitle" class="product-title">Загрузка...</h3>
+
+        <div id="productStockInfo" 
+     style="margin: 12px 0 8px; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            line-height: 1.4;">
+</div>
+
+        <!-- Рейтинг и отзывы -->
+        <div class="product-rating">
+          <div class="stars"></div>
+          <span id="productReviewsCount" class="reviews-count">—</span>
+        </div>
+
+        <div id="productPrice" class="product-price">—</div>
+
+        <div id="productDescription" class="product-description">Загрузка описания...</div>
+
+        <!-- Кнопка "В корзину" -->
+        <button id="addToCartModal" class="add-to-cart-btn">
+          <i class="fas fa-shopping-cart"></i> В корзину
+        </button>
+
+        <!-- ОТЗЫВЫ — ТОЧНО КАК В НОВОСТЯХ -->
+        <div class="product-reviews">
+          <h4 class="reviews-title">Отзывы покупателей</h4>
+          <div class="reviews-list" id="productReviewsList">
+            <div style="text-align:center;padding:3rem;color:#888;">
+              <i class="far fa-star" style="font-size:3rem;margin-bottom:1rem;display:block;opacity:0.6;"></i>
+              <p>Отзывов пока нет</p>
+              <small style="opacity:0.7;">Будьте первым!</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- === AI АССИСТЕНТ — ИКОНКА И МОДАЛКА (из zaza.html, не в ai.css) === -->
+<div id="ai-assistant">
+  <svg viewBox="0 0 100 100" class="ai-robot" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f5d78a"/>
+        <stop offset="100%" stop-color="#d4af37"/>
+      </linearGradient>
+      <linearGradient id="suitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#2d2d2d"/>
+        <stop offset="100%" stop-color="#1a1a1a"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Голова робота (золотая) -->
+    <circle cx="50" cy="35" r="18" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+
+    <!-- Глаза -->
+    <circle cx="44" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="56" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="45.5" cy="31" r="1.8" fill="#fff"/>
+    <circle cx="57.5" cy="31" r="1.8" fill="#fff"/>
+
+    <!-- Светящиеся акценты в глазах -->
+    <circle cx="46" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+    <circle cx="58" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+
+    <!-- Туловище — пиджак -->
+    <path d="M30 52 L28 98 L72 98 L70 52 
+             Q62 58 50 58 Q38 58 30 52 Z" 
+          fill="url(#suitGrad)" stroke="#000" stroke-width="2"/>
+
+    <!-- Лацканы пиджака -->
+    <path d="M50 52 L42 64 L42 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+    <path d="M50 52 L58 64 L58 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+
+    <!-- Галстук -->
+    <path d="M50 58 L46 72 L50 78 L54 72 Z" fill="#8b1e1e"/>
+    <polygon points="46,72 50,78 54,72" fill="#5c1212"/>
+
+    <!-- Пуговицы пиджака -->
+    <circle cx="50" cy="70" r="2.5" fill="#333"/>
+    <circle cx="50" cy="78" r="2.5" fill="#333"/>
+    <circle cx="50" cy="86" r="2.5" fill="#333"/>
+
+    <!-- Руки -->
+    <rect x="24" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+    <rect x="64" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+
+    <!-- Планшет с Конституцией в левой руке -->
+    <g transform="translate(12, 68)">
+      <rect x="0" y="0" width="28" height="36" rx="4" fill="#fff" stroke="#111" stroke-width="2"/>
+      <rect x="2" y="2" width="24" height="30" rx="2" fill="#f0f0f0"/>
+      <text x="14" y="11" font-family="Arial, sans-serif" font-size="5.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+      <line x1="4" y1="15" x2="24" y2="15" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="19" x2="24" y2="19" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="23" x2="22" y2="23" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="27" x2="20" y2="27" stroke="#333" stroke-width="0.8"/>
+    </g>
+
+    <!-- Блеск на голове -->
+    <path d="M42 24 Q46 20 50 24" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.6"/>
+  </svg>
+</div>
+
+<!-- === AI ЧАТ МОДАЛЬНЫЙ (ТОТ ЖЕ СТИЛЬ) === -->
+<div id="ai-chat" class="ai-chat-modal">
+  <div class="ai-chat-header">
+    <div class="ai-chat-title">
+      <svg width="32" height="32" viewBox="0 0 100 100" style="margin-right:10px;">
+        <use href="#goldGrad"/>
+        <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+        <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="39" cy="40" r="2.5" fill="#fff"/>
+        <circle cx="63" cy="40" r="2.5" fill="#fff"/>
+        <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <g transform="translate(8, 62)">
+          <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
+          <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+        </g>
+        <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
+      </svg>
+      <span>Юрист AI</span>
+    </div>
+    <div class="ai-header-buttons">
+      <button class="ai-btn-minimize" onclick="toggleAIChatSize()" title="На весь экран">
+        <i class="fas fa-expand-arrows-alt"></i>
+      </button>
+      <button class="ai-btn-close" onclick="closeAIChat()" title="Закрыть">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+  <div class="ai-chat-body">
+    <div class="ai-chat-messages"></div>
+    <div class="ai-chat-input">
+      <input type="text" id="ai-input" placeholder="Задайте юридический вопрос..." 
+             onkeypress="if(event.key==='Enter' && this.value.trim()) { sendAIMessage(this.value); this.value=''; }">
+      <button onclick="const inp = document.getElementById('ai-input'); if(inp.value.trim()) { sendAIMessage(inp.value); inp.value=''; }" title="Отправить">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>
+<!-- ТУМБЛЕР ТЕМЫ — ВИСЯЩАЯ ЛАМПОЧКА -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
+
+  <a href="#" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
+  <!-- СКРИПТЫ -->
+  <script src="/static/js/search.js"></script>
+  <script src="/static/js/auth.js"></script>
+  <script src="/static/js/cart.js" defer></script>
+  <script src="/static/js/feedback.js"></script>
+  <script src="/static/js/contacts.js" defer></script>
+  <script src="/static/js/ai.js"></script>
+  <script src="/static/js/about_company.js" defer></script>
+  <script src="/static/js/profile.js"></script>
+  <script src="/static/js/profile_two.js"></script>
+
+  <script>
+  // ФИНАЛЬНАЯ ВЕРСИЯ — МОДАЛКА ОТКРЫВАЕТСЯ НОРМАЛЬНО, НЕ В УГЛУ И НЕ ПРОПАДАЕТ
+(() => {
+  const overlay = document.getElementById('authRequiredOverlay');
+  const loginBtn = document.getElementById('loginFromOverlayBtn');
+
+const isLoggedIn = async () => {
+  // НИКОМУ НЕ ВЕРИМ. Только серверу.
+  try {
+    const res = await fetch('/api/company', { 
+      method: 'HEAD', 
+      // быстро, без тела
+      credentials: 'include',
+      cache: 'no-store'     // ← важно! не берём из кэша
+    });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+};
+
+  const lockPage = () => {
+    overlay.classList.add('active');
+    document.body.classList.add('auth-locked');
+    document.querySelectorAll('header, main, footer, nav, .mobile-bottom-bar').forEach(el => {
+      if (el) el.style.filter = 'blur(16px)';
+    });
+  };
+
+  const unlockPage = () => {
+    overlay.classList.remove('active');
+    document.body.classList.remove('auth-locked');
+    document.querySelectorAll('header, main, footer, nav, .mobile-bottom-bar').forEach(el => {
+      if (el) el.style.filter = '';
+    });
+  };
+
+  // ГЛАВНОЕ: ОТКРЫВАЕМ МОДАЛКУ, КОТОРАЯ НАХОДИТСЯ В КОРНЕ body
+  const openAuthModal = () => {
+    const modal = document.querySelector('#authModal'); // берём единственную
+    if (!modal) return;
+
+    // Снимаем блокировку на 200мс — чтобы модалка успела открыться
+    unlockPage();
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden'; // можно вернуть — модалка уже вне blur
+
+    // Фокус на номер
+    setTimeout(() => {
+      document.getElementById('phoneInput')?.focus();
+    }, 300);
+
+    // Через 200мс возвращаем blur (но модалка уже поверх)
+    setTimeout(async () => {
+  const loggedIn = await isLoggedIn();
+  if (!loggedIn) {
+    lockPage();
+    modal.style.filter = 'none';
+    modal.style.zIndex = '9999999';
+  }
+}, 200);
+  };
+
+  loginBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openAuthModal();
+  });
+
+  // ИСПРАВЛЕННЫЙ check — теперь ждёт async и работает правильно
+  const check = async () => {
+    const loggedIn = await isLoggedIn();  // ← ждём результат!
+
+    if (loggedIn) {
+      unlockPage();
+      overlay?.classList.remove('active');
+      document.body.classList.remove('no-scroll');
+    } else {
+      lockPage();
+      overlay?.classList.add('active');
+      document.body.classList.add('no-scroll');
+    }
+  };
+
+  // Первый запуск
+  check();
+
+  // Периодическая проверка
+  const interval = setInterval(async () => {
+    await check();
+    const loggedIn = await isLoggedIn();
+    if (loggedIn) clearInterval(interval);
+  }, 600);
+
+  document.addEventListener('authSuccess', () => {
+    setTimeout(unlockPage, 800);
+  });
+
+  window.addEventListener('authChanged', check);
+  window.addEventListener('storage', check);
+})();
+</script>
+
+
+</body>
+</html>

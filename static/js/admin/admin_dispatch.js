@@ -410,3 +410,59 @@ document.addEventListener('keydown', e => {
         document.querySelectorAll('.apple-modal.show').forEach(m => closeAppleModal(m.id));
     }
 });
+// === НОВАЯ СИСТЕМА ВЫБОРА (как в feedback) — БЕЗ БАГОВ С ИКОНКАМИ ===
+let isSelectionMode = false;
+
+function enterSelectionMode() {
+    isSelectionMode = true;
+    document.body.classList.add('selection-mode');
+    document.getElementById('startSelectionBtn').style.display = 'none';
+    document.getElementById('bulkActions').classList.add('active');
+    updateSelectionCounter();
+}
+
+function exitSelectionMode() {
+    isSelectionMode = false;
+    document.body.classList.remove('selection-mode');
+    document.getElementById('startSelectionBtn').style.display = 'inline-flex';
+    document.getElementById('bulkActions').classList.remove('active');
+    document.querySelectorAll('#subsBody tr.selected').forEach(r => r.classList.remove('selected'));
+    updateSelectionCounter();
+}
+
+function updateSelectionCounter() {
+    const count = document.querySelectorAll('#subsBody tr.selected').length;
+    document.getElementById('selectedCount').textContent = count;
+    document.getElementById('deleteSelectedBtn').style.display = count > 0 ? 'inline-flex' : 'none';
+}
+
+// Клик по строке — только в режиме выбора
+document.addEventListener('click', e => {
+    if (!isSelectionMode) return;
+    const row = e.target.closest('#subsBody tr');
+    if (!row) return;
+    if (e.target.closest('.btn-delete')) return; // не мешать кнопке "Удалить"
+    row.classList.toggle('selected');
+    updateSelectionCounter();
+});
+
+// Удаление выбранных
+function prepareBulkDelete() {
+    const selected = Array.from(document.querySelectorAll('#subsBody tr.selected'))
+        .map(tr => parseInt(tr.querySelector('td').textContent))
+        .filter(Boolean);
+    if (selected.length === 0) return;
+    deleteMode = 'bulk_subs';
+    deleteIds = selected;
+    document.getElementById('deleteConfirmText').textContent = `Удалить ${selected.length} выбранных подписчиков?`;
+    openModal('deleteConfirmModal');
+}
+
+// Удаление всех
+function prepareDeleteAll() {
+    if (subscribers.length === 0) return;
+    deleteMode = 'all_subs';
+    deleteIds = subscribers.map(s => s.id);
+    document.getElementById('deleteConfirmText').innerHTML = `Удалить <strong style="color:#ff4444;">ВСЕХ подписчиков</strong> (${deleteIds.length} шт.)?`;
+    openModal('deleteConfirmModal');
+}

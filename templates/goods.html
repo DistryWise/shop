@@ -1,7 +1,55 @@
 <!DOCTYPE html>
 <head>
+
+  
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <script>
+// Глобальное хранилище актуального токена
+window.csrfToken = "{{ csrf_token() }}";
+
+// Автоматически обновляем токен при любом успешном ответе от сервера
+function updateCsrfTokenFromResponse(data) {
+    if (data.csrf_token) {
+        window.csrfToken = data.csrf_token;
+        document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', data.csrf_token);
+    }
+}
+
+// Перехватываем ВСЕ fetch-запросы (POST, PUT, DELETE и т.д.)
+const { fetch: origFetch } = window;
+window.fetch = async (...args) => {
+    let [resource, config] = args;
+    
+    // Только для мутирующих методов
+    if (config && ['POST','PUT','DELETE','PATCH'].includes((config.method || 'GET').toUpperCase())) {
+        config = config || {};
+        config.headers = config.headers || {};
+        config.headers['X-CSRF-Token'] = window.csrfToken;
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+        
+        // Если отправляем FormData — не трогаем Content-Type (браузер сам поставит с boundary)
+        if (!(config.body instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
+        }
+    }
+
+    const response = await origFetch(resource, config);
+    
+    // Автоматически обновляем токен после любого успешного JSON-ответа
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        try {
+            const data = await response.clone().json();
+            updateCsrfTokenFromResponse(data);
+        } catch (e) { /* не JSON — игнорируем */ }
+    }
+
+    return response;
+};
+  </script>
+
 
 <!-- Этот скрипт — магия, которая заставляет медиа-запросы сработать сразу на 100% устройств -->
 <script>
@@ -114,6 +162,7 @@
 </nav>
 
   <!-- МОДАЛКА ОБРАТНОЙ СВЯЗИ -->
+
   <div class="custom-alert" id="feedbackModal">
     <div class="alert-content">
       <button class="alert-close" id="closeFeedback">×</button>
@@ -145,7 +194,6 @@
       </form>
     </div>
   </div>
-
   <!-- МОДАЛКА АВТОРИЗАЦИИ  -->
 <div id="authModal" class="auth-modal">
   <div class="auth-modal-content">
@@ -227,6 +275,13 @@
 
       <div class="product-info">
         <h3 id="productTitle" class="product-title">Загрузка...</h3>
+
+        <div id="productStockInfo" 
+     style="margin: 12px 0 8px; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            line-height: 1.4;">
+</div>
 
         <!-- Рейтинг и отзывы -->
         <div class="product-rating">
@@ -340,6 +395,17 @@
         <h3 id="modal-title"></h3>
         <div class="price" id="modal-price">₽ —</div>
       </div>
+
+      <!-- ВОТ СЮДА ВСТАВЛЯЙ — СРАЗУ ПОД ЦЕНОЙ -->
+      <div id="productStockInfo" 
+           style="margin: 12px 0 8px; 
+                  font-size: 1rem; 
+                  font-weight: 600; 
+                  color: #27ae60;">
+        В наличии
+      </div>
+      <!-- КОНЕЦ ВСТАВКИ -->
+
       <p id="modal-desc"></p>
       <div class="rating" id="modal-rating">
         <span class="stars">★★★★★</span>
@@ -643,6 +709,7 @@
 
 <!-- Кнопка наверх -->
 <a href="#" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
+
 <script src="static/js/goods.js"></script>
 <script src="/static/js/search.js"></script>
 <script src="/static/js/auth.js"></script>
@@ -944,7 +1011,149 @@ document.addEventListener('DOMContentLoaded', () => {
   modal.addEventListener('touchend', handleEnd);
 })();
 </script>
+<script defer>
+// === ОБРАТНАЯ СВЯЗЬ — ПОЛНАЯ БЛОКИРОВКА БЕЗ АВТОРИЗАЦИИ (ПК + МОБИЛКА) ===
+document.addEventListener("DOMContentLoaded", () => {
 
+  const isAuthenticated = () => !!(sessionStorage.getItem('phone') || localStorage.getItem('phone'));
+
+  // Тост-алерт (один раз)
+  if (!window.showCustomAlert) {
+    window.showCustomAlert = (text, isError = true) => {
+      document.querySelectorAll('.toast-alert').forEach(t => t.remove());
+      const toast = document.createElement('div');
+      toast.className = `toast-alert ${isError ? 'error' : ''}`;
+      toast.innerHTML = `
+        <div class="alert-text">
+          <strong>${isError ? 'Ошибка' : 'Успех'}</strong>
+          <span>${text}</span>
+        </div>
+        <button class="alert-close">×</button>
+      `;
+      document.body.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.add('show'));
+      toast.querySelector('.alert-close').onclick = () => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 500);
+      };
+      setTimeout(() => toast.isConnected && toast.classList.remove('show') && setTimeout(() => toast.remove(), 500), 5000);
+    };
+  }
+
+  // === УДАЛЯЕМ ВСЕ СТАРЫЕ ОБРАБОТЧИКИ НА КНОПКАХ ===
+  ['#feedbackBtn', '#feedbackBtnMobile'].forEach(selector => {
+    document.querySelectorAll(selector).forEach(btn => {
+      const newBtn = btn.cloneNode(true);
+      btn.replaceWith(newBtn);
+    });
+  });
+
+  // === ДЕСКТОПНАЯ КНОПКА (ПК) ===
+  document.getElementById('feedbackBtn')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
+    if (!isAuthenticated()) {
+      showCustomAlert('Войдите в аккаунт', true);
+      return;
+    }
+
+    // ТОЛЬКО если это ПК — открываем десктопную модалку
+    if (window.innerWidth > 1024) {
+      const modal = document.getElementById('feedbackModal');
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+
+      // Подставляем телефон
+      const phone = sessionStorage.getItem('phone') || localStorage.getItem('phone');
+      if (phone) {
+        const clean = phone.replace(/\D/g, '');
+        const formatted = clean.length === 11 
+          ? `+7 (${clean.slice(1,4)}) ${clean.slice(4,7)}-${clean.slice(7,9)}-${clean.slice(9)}`
+          : phone;
+        const input = modal.querySelector('input[type="tel"]');
+        if (input) input.value = formatted;
+
+      }
+    }
+  });
+
+  // === МОБИЛЬНАЯ КНОПКА ===
+ // === МОБИЛЬНАЯ КНОПКА ПОДДЕРЖКИ — ПРАВИЛЬНЫЙ АЛЕРТ, КАК НА ДЕСКТОПЕ ===
+document.getElementById('feedbackBtnMobile')?.addEventListener('click', function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+
+  if (!isAuthenticated()) {
+    // ←←← ВОТ ТУТ БЫЛ ТОСТ, А ДОЛЖЕН БЫТЬ КРАСИВЫЙ АЛЕРТ
+    const authAlert = document.getElementById('authAlert');
+    authAlert.classList.add('show');
+    document.body.style.overflow = 'hidden';
+
+    // Кнопка "Войти" в алерте открывает модалку авторизации
+    document.getElementById('authBtnFeedback')?.addEventListener('click', () => {
+      authAlert.classList.remove('show');
+      document.body.style.overflow = '';
+      document.getElementById('authModal').style.display = 'flex';
+    });
+
+    // Закрытие алерта
+    authAlert.querySelector('.alert-close')?.addEventListener('click', () => {
+      authAlert.classList.remove('show');
+      document.body.style.overflow = '';
+    });
+
+    // Клик вне контента — закрыть
+    authAlert.addEventListener('click', (ev) => {
+      if (ev.target === authAlert) {
+        authAlert.classList.remove('show');
+        document.body.style.overflow = '';
+      }
+    });
+
+    return;
+  }
+
+  // Если авторизован — открываем мобильную шторку обратной связи
+  const sheet = document.getElementById('mobileFeedbackSheet');
+  sheet.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  // Автозаполнение телефона
+  const phone = sessionStorage.getItem('phone') || localStorage.getItem('phone');
+  if (phone) {
+    const clean = phone.replace(/\D/g, '');
+    const formatted = clean.length === 11 
+      ? `+7 (${clean.slice(1,4)}) ${clean.slice(4,7)}-${clean.slice(7,9)}-${clean.slice(9)}`
+      : phone;
+    const input = sheet.querySelector('input[type="tel"]');
+    if (input) input.value = formatted;
+  }
+});
+
+  // === ЗАКРЫТИЕ МОДАЛОК (чтобы не было конфликтов) ===
+  document.getElementById('closeFeedback')?.addEventListener('click', () => {
+    document.getElementById('feedbackModal').classList.remove('show');
+    document.body.style.overflow = '';
+  });
+
+  document.getElementById('feedbackModal')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('feedbackModal')) {
+      document.getElementById('feedbackModal').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+  });
+
+  // Мобильная шторка — закрытие
+  document.querySelectorAll('#closeMobileFeedback, .sheet-back-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('mobileFeedbackSheet').classList.remove('active');
+      document.body.style.overflow = '';
+    });
+  });
+});
+</script>
 <style>
   #my-toast-container {
     position: fixed;
@@ -1335,5 +1544,7 @@ if (sidebar) {
   });
 }
 </script>
+
+
 </body>
 </html>

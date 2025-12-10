@@ -168,45 +168,41 @@ window.addToCart = async function(id, type = 'product', quantity = 1) {
     try {
         const isLoggedIn = !!sessionStorage.getItem('user_id');
 
-        // КРИТИЧНО: БЕРЁМ КАРТИНКУ ТОЧНО ТАК ЖЕ, КАК В АВТОКОМПЛИТЕ!
-        let image_url = '/static/assets/no-image.png';
-
-        // 1. Из модалки (если открыта)
-        const modalImg = document.getElementById('modal-img') || document.getElementById('productImg');
-        if (modalImg?.src && !modalImg.src.includes('no-image')) {
-            image_url = modalImg.src;
-        }
-        // 2. Из карточки в каталоге
-        else if (event?.target) {
-            const card = event.target.closest('.card') || event.target.closest('.autocomplete-item');
-            const img = card?.querySelector('img');
-            if (img?.src && !img.src.includes('no-image')) {
-                image_url = img.src;
-            }
-        }
-
         if (isLoggedIn) {
-            await fetch('/api/cart/add', {
+            // Авторизованный — как было
+            const res = await fetch('/api/cart/add', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     [type === 'product' ? 'product_id' : 'service_id']: id,
-                    quantity,
-                    image_url  // ← ВОТ ЭТО ВСЁ ИСПРАВИЛО
+                    quantity
                 })
             });
-        } else {
-            const existing = clientCart.find(i => i.id === id && i.type === type);
-            if (existing) {
-                existing.quantity += quantity;
-            } else {
-                clientCart.push({ id, type, quantity, image_url });
+            const data = await res.json();
+            if (!data.success) {
+                showToast('Не добавлено', data.error || 'Ошибка', true);
+                return;
             }
-            localStorage.setItem('clientCart', JSON.stringify(clientCart));
+        } else {
+            // ГОСТЬ — просто добавляем через сервер, БЕЗ clientCart!
+            const res = await fetch('/api/cart/guest/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    [type === 'product' ? 'product_id' : 'service_id']: id,
+                    quantity
+                })
+            });
+            const data = await res.json();
+            if (!data.success) {
+                showToast('Не добавлено', data.error || 'Недостаточно товара', true);
+                return;
+            }
         }
 
-        showToast('Добавлено в корзину!');
+        // ← ВСЁ! Больше НИЧЕГО НЕ ДЕЛАЕМ ВРУЧНУЮ
         await loadCart();
+        showToast('Добавлено в корзину!');
         notifyCartUpdated();
 
     } catch (e) {
@@ -261,56 +257,97 @@ document.addEventListener('click', async (e) => {
     }
 });
 // Остальные функции — без изменений (но можно тоже защитить, если хочешь)
-window.removeFromCart = async (id, type) => {
+window.removeFromCart = async (id, type = 'product') => {
     const isLoggedIn = !!sessionStorage.getItem('user_id');
+    const url = isLoggedIn ? '/api/cart/update' : '/api/cart/guest/update';
 
-    if (isLoggedIn) {
-        await api('/api/cart/update', {
+    try {
+        await fetch(url, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 [type === 'product' ? 'product_id' : 'service_id']: id,
                 quantity: 0
             })
         });
-    } else {
-        clientCart = clientCart.filter(i => !(i.id === id && i.type === type));
-        localStorage.setItem('clientCart', JSON.stringify(clientCart));
+    } catch (err) {
+        console.error('Ошибка удаления из корзины:', err);
     }
-    await loadCart();
-    notifyCartUpdated();
+
+    await loadCart();           // ← обновляем с сервера
+    notifyCartUpdated();        // ← обновляем мини-корзину и /bin
     showToast('Удалено');
 };
 
+// 2. updateQuantity — ГОСТЬ (правильная версия!)
 window.updateQuantity = async (id, type, delta) => {
     const isLoggedIn = !!sessionStorage.getItem('user_id');
-    let newQty;
 
     if (isLoggedIn) {
+        // Авторизованный — как было
         const item = cartItems.find(i => i.id === id && i.type === type);
         if (!item) return;
-        newQty = Math.max(0, item.quantity + delta);
-        await api('/api/cart/update', {
+        const newQty = Math.max(0, item.quantity + delta);
+
+        if (delta > 0 && item.max_available !== -1 && newQty > item.max_available) {
+            showToast('Нельзя больше', `В наличии только ${item.max_available} шт.`, true);
+            return;
+        }
+
+        const res = await fetch('/api/cart/update', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 [type === 'product' ? 'product_id' : 'service_id']: id,
                 quantity: newQty
             })
         });
-    } else {
-        const item = clientCart.find(i => i.id === id && i.type === type);
-        if (!item) return;
-        newQty = Math.max(0, item.quantity + delta);
-        if (newQty === 0) {
-            clientCart = clientCart.filter(i => !(i.id === id && i.type === type));
+        const data = await res.json();
+        if (data.success || newQty === 0) {
+            await loadCart();
+            notifyCartUpdated();
         } else {
-            item.quantity = newQty;
+            showToast('Ошибка', data.error || 'Не удалось обновить', true);
+            await loadCart();
         }
-        localStorage.setItem('clientCart', JSON.stringify(clientCart));
-    }
-    await loadCart();
-    notifyCartUpdated();
-};
+    } else {
+        // ГОСТЬ — используем правильный эндпоинт update!
+        const item = cartItems.find(i => i.id === id && i.type === type);
+        if (!item) return;
 
+        const newQty = item.quantity + delta;
+
+        if (delta > 0 && item.max_available !== -1 && newQty > item.max_available) {
+            showToast('Нельзя больше', `В наличии только ${item.max_available} шт.`, true);
+            return;
+        }
+
+        if (newQty <= 0) {
+            // Удаляем
+            await fetch('/api/cart/guest/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    [type === 'product' ? 'product_id' : 'service_id']: id,
+                    quantity: 0
+                })
+            });
+        } else {
+            // Обновляем количество
+            await fetch('/api/cart/guest/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    [type === 'product' ? 'product_id' : 'service_id']: id,
+                    quantity: newQty
+                })
+            });
+        }
+
+        await loadCart();
+        notifyCartUpdated();
+    }
+};
 
     // === ЗАГРУЗКА КОРЗИНЫ ===
 window.loadCart = async () => {
@@ -321,22 +358,19 @@ window.loadCart = async () => {
         const { ok, data } = await api('/api/cart/get');
         if (ok && Array.isArray(data)) items = data;
     } else {
-        // Гость — отправляем список {id, type, quantity} → сервер возвращает полные данные
-        const { ok, data } = await api('/api/cart/get-guest', {
-            method: 'POST',
-            body: JSON.stringify({ cart: clientCart })
-        });
+        // ← НОВОЕ: просто GET, без отправки clientCart!
+        const { ok, data } = await api('/api/cart/guest/get');
         if (ok && Array.isArray(data)) items = data;
     }
 
     cartItems = items.map(i => ({
-        id: i.id || i.product_id || i.service_id,
+        id: i.id,
         title: i.title,
         type: i.type,
         quantity: i.quantity,
         price_cents: Number(i.price_cents) || 0,
         image_url: i.image_url || '/static/assets/no-image.png',
-        old_price_cents: i.old_price_cents || null
+        max_available: i.max_available ?? -1
     }));
 
     renderMiniCart();
@@ -352,53 +386,87 @@ const renderMiniCart = () => {
 
     elements.miniCartItems.innerHTML = cartItems.length === 0
         ? '<div style="padding:1.5rem;text-align:center;color:#888;font-size:0.9rem;">Корзина пуста</div>'
-        : cartItems.map(item => `
-            <div class="mini-cart-item">
-                <img src="${item.image_url}" class="mini-cart-img" onerror="this.src='/static/assets/no-image.png'">
-                <div class="mini-cart-info">
-                    <h4>${escapeJS(item.title)}</h4>
-                    <div class="mini-cart-price">${formatPrice(item.price_cents || 0)}</div>
-                    <div class="mini-quantity-controls">
-                        <button class="quantity-btn" onclick="updateQuantity(${item.id}, '${item.type}', -1)">−</button>
-                        <span>${item.quantity}</span>
-                        <button class="quantity-btn" onclick="updateQuantity(${item.id}, '${item.type}', 1)">+</button>
-                    </div>
-                </div>
-                <button class="clear-cart-btn" onclick="removeFromCart(${item.id}, '${item.type}')">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        `).join('');
+        : cartItems.map(item => {
+            const max = item.max_available ?? -1;  // если нет поля — бесконечно
+            const canAddMore = max === -1 || item.quantity < max;
 
-    // ✅ МОБИЛЬНАЯ ШТОРКА
+            return `
+    <div class="mini-cart-item" 
+         onclick="openProductModal(${item.id}, '${item.type}')">
+         
+        <img src="${item.image_url}" 
+             class="mini-cart-img" 
+             onerror="this.src='/static/assets/no-image.png'">
+
+        <div class="mini-cart-info">
+            <h4>${escapeJS(item.title)}</h4>
+            <div class="mini-cart-price">${formatPrice(item.price_cents || 0)}</div>
+            
+            ${max !== -1 ? `<small style="color:#888; font-size:0.85rem;">Осталось: ${max} шт.</small>` : ''}
+
+            <div class="mini-quantity-controls">
+                <button class="quantity-btn" 
+                        onclick="event.stopPropagation(); updateQuantity(${item.id}, '${item.type}', -1)">−</button>
+                <span>${item.quantity}</span>
+                <button class="quantity-btn" 
+                        onclick="event.stopPropagation(); updateQuantity(${item.id}, '${item.type}', 1)"
+                        ${!canAddMore ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''}>+</button>
+            </div>
+        </div>
+
+        <button class="clear-cart-btn" 
+                onclick="event.stopPropagation(); removeFromCart(${item.id}, '${item.type}')">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+`;
+        }).join('');
+
+    // === МОБИЛЬНАЯ ШТОРКА — ТОТ ЖЕ КОД ===
     if (elements.mobileMiniCartItems && elements.mobileCartSheet?.classList.contains('active')) {
         elements.mobileMiniCartItems.innerHTML = cartItems.length === 0
             ? '<div style="padding:3rem 1.5rem;text-align:center;color:#888;"><i class="fas fa-shopping-bag" style="font-size:3rem;margin-bottom:1rem;opacity:0.3;"></i><p>Корзина пуста</p></div>'
-            : cartItems.map(item => `
-                <div class="sheet-cart-item">
-                    <img src="${item.image_url}" class="sheet-cart-img" onerror="this.src='/static/assets/no-image.png'">
-                    <div class="sheet-cart-info">
-                        <h4 class="sheet-cart-title">${escapeJS(item.title)}</h4>
-                        <div class="sheet-cart-price">${formatPrice(item.price_cents || 0)}</div>
-                        <div class="sheet-quantity-controls">
-                            <button class="quantity-btn" onclick="updateQuantity(${item.id}, '${item.type}', -1)">−</button>
-                            <span>${item.quantity}</span>
-                            <button class="quantity-btn" onclick="updateQuantity(${item.id}, '${item.type}', 1)">+</button>
-                        </div>
-                    </div>
-                    <button class="clear-cart-btn" onclick="removeFromCart(${item.id}, '${item.type}')">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `).join('');
-        
-        // ✅ ИСПРАВЛЕНИЕ: Обновляем ИТОГО ДЛЯ ШТОРКИ
-        if (elements.mobileMiniCartTotal) {
-            elements.mobileMiniCartTotal.textContent = sumStr;  // ← БЕЗ "Итого: "
-        }
-    }  // ← УБЕДИТЕСЬ, ЧТО ЗАКРЫВАЮЩАЯ СКОБКА НА СВОЁМ МЕСТЕ
-};  // ← И ЭТА ТУТ
+            : cartItems.map(item => {
+                const max = item.max_available ?? -1;
+                const canAddMore = max === -1 || item.quantity < max;
 
+                return `
+    <div class="sheet-cart-item" 
+         onclick="openProductModal(${item.id}, '${item.type}')">
+         
+        <img src="${item.image_url}" 
+             class="sheet-cart-img" 
+             onerror="this.src='/static/assets/no-image.png'">
+
+        <div class="sheet-cart-info">
+            <h4 class="sheet-cart-title">${escapeJS(item.title)}</h4>
+            <div class="sheet-cart-price">${formatPrice(item.price_cents || 0)}</div>
+            
+            ${max !== -1 ? `<small style="color:#888; font-size:0.85rem;">Осталось: ${max} шт.</small>` : ''}
+
+            <div class="sheet-quantity-controls">
+                <button class="quantity-btn" 
+                        onclick="event.stopPropagation(); updateQuantity(${item.id}, '${item.type}', -1)">−</button>
+                <span>${item.quantity}</span>
+                <button class="quantity-btn" 
+                        onclick="event.stopPropagation(); updateQuantity(${item.id}, '${item.type}', 1)"
+                        ${!canAddMore ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''}>+</button>
+            </div>
+        </div>
+
+        <button class="clear-cart-btn" 
+                onclick="event.stopPropagation(); removeFromCart(${item.id}, '${item.type}')">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+`;
+            }).join('');
+
+        if (elements.mobileMiniCartTotal) {
+            elements.mobileMiniCartTotal.textContent = sumStr;
+        }
+    }
+};
     // === АНИМАЦИЯ КОРЗИНЫ ===
     const openCartModal = () => {
         if (cartAnimating || !elements.cartModal) return;
@@ -544,13 +612,14 @@ const renderMiniCart = () => {
   let isClosing = false;
   const threshold = 150;
 
-  const openSheet = () => {
-    if (sheet.classList.contains('active') || isClosing) return;
-    isClosing = false;
-    sheet.classList.add('active');
-    document.body.classList.add('no-scroll');
-    loadCart?.();
-  };
+const openSheet = () => {
+  if (sheet.classList.contains('active') || isClosing) return;
+  isClosing = false;
+  sheet.classList.add('active');
+  document.body.classList.add('no-scroll');
+  
+  loadCart(); // ← ЭТА СТРОЧКА ВСЁ ИСПРАВИТ
+};
 
   const closeSheet = () => {
     if (isClosing || !sheet.classList.contains('active')) return;

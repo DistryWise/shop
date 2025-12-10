@@ -7,13 +7,15 @@ from functools import wraps
 import sqlite3          
 import time
 import httpx
-
+from flask_wtf.csrf import CSRFProtect
 import asyncio
 import json
 from flask import stream_with_context, Response
 from admin_goods import admin_goods_bp
 from dotenv import load_dotenv
+
 import os
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s | %(levelname)s | %(name)s | %(message)s'
@@ -44,8 +46,7 @@ from use_db import init_users_db, users_bp, track_visits
 from editor import zaza_editor, init_zaza_db
 from auth_backend import init_auth_db, generate_and_send_code, verify_user_code
 from dispatch import init_dispatch_db, register_dispatch_routes, get_stats
-
-
+from profile import init_company_db, profile_bp
 def get_client_ip():
     """Точно определяет IP даже за Cloudflare/Nginx"""
     if request.headers.get("CF-Connecting-IP"):
@@ -60,10 +61,30 @@ def get_client_ip():
 
 def create_app():
     app = Flask(__name__, static_folder='static', static_url_path='/static')
-    app.secret_key = 'your-super-secret-key-1234567890-CHANGE-IT-NOW'
+    app.secret_key = 'a1b2c3d4e5f678901234567890abcdef1234567890abcdef1234567890abcdef'  
     app.config['UPLOAD_FOLDER'] = 'static/uploads'
     app.config['ADMIN_PASSWORD'] = 'admin123'
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+    
+    csrf = CSRFProtect(app)  
+    
+
+    from flask_wtf.csrf import generate_csrf
+    app.config['WTF_CSRF_ENABLED'] = True
+    app.config['WTF_CSRF_CHECK_DEFAULT'] = True
+    app.config['WTF_CSRF_METHODS'] = ['POST', 'PUT', 'PATCH', 'DELETE']
+    app.config['SESSION_COOKIE_HTTPONLY'] = True    # JS не читает — оставляем всегда
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'   # Защита от CSRF — оставляем всегда
+
+    # УМНОЕ ОПРЕДЕЛЕНИЕ: Secure только на HTTPS, на localhost — выключаем
+    if app.debug or os.getenv('FLASK_ENV') == 'development':
+        app.config['SESSION_COOKIE_SECURE'] = False   # ← Локально работает!
+    else:
+        app.config['SESSION_COOKIE_SECURE'] = True    # ← На проде — только HTTPS
+    
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
@@ -75,11 +96,15 @@ def create_app():
         init_users_db()
         init_auth_db()
         init_dispatch_db()
+        init_company_db()
+
     logger.info("Все БД готовы!")
+
+    
 
     # === ОТСЛЕЖИВАНИЕ ВИЗИТОВ ===
     track_visits(app)
-
+    
     # === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
     @app.context_processor
     def inject_globals():
@@ -207,12 +232,12 @@ def create_app():
     # === ПОДКЛЮЧЕНИЕ БЛЮПРИНТОВ ===
     app.register_blueprint(zaza_editor)
     app.register_blueprint(users_bp)
-
     app.register_blueprint(admin_goods_bp)
+
+    app.register_blueprint(profile_bp)
 
     # === АДМИН РОУТЫ (внутри register_admin_routes — они тоже защищены по IP) ===
     register_admin_routes(app)
-
     register_dispatch_routes(app)
 
     # === БЕЗОПАСНОСТЬ ===
@@ -286,13 +311,46 @@ def create_app():
 
 
     # === DEEPSEEK API КОНФИГУРАЦИЯ ===
-    DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "sk-2677a916a2ef42619d1ff71e3a926d11") 
+    DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "sk-bfab6af1ca424cd0b8280975a01b5774") 
     DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
     DEEPSEEK_MODEL = "deepseek-chat"  # или "deepseek-reasoner"
 
-    SYSTEM_PROMPT = """Ты — юрист Priligrim. Отвечай строго по-русски, коротко (2–4 предложения), уверенно и профессионально.
-    Темы: договор оферты, возврат товара в течение 14 дней, VIP-клуб, оплата криптовалютой, защита персональных данных.
-    Если вопрос не по теме — ответь: «Я специализируюсь только на юридических вопросах нашего магазина. Задайте вопрос по договору, возврату или VIP-клубу.»"""
+    SYSTEM_PROMPT = """Ты — официальный AI-помощник маркетплейса Piligrim Services (piligrim-services.ru).
+
+    Мы помогаем быстро и легально открыть и вести бизнес в России и за рубежом:
+    • Регистрация ООО и ИП (с ЭЦП, без визита в налоговую)
+    • Готовые компании с историей и оборотами
+    • Лицензии (МЧС, ФСБ, алкоголь, медицина, строительство и др.)
+    • Бухгалтерское обслуживание
+    • Юридический адрес и массовые адреса
+    • Открытие расчётных счетов
+    • Крипто-лицензии и регистрация за рубежом
+    • Консультации юристов и бухгалтеров
+
+    Отвечай ТОЛЬКО на русском, коротко (2–5 предложений), уверенно, по делу и дружелюбно.
+    Ты отлично знаешь весь каталог, актуальные цены и сроки оказания услуг.
+    Никогда не говори, что ты «специализируешься только на юридических вопросах» — ты помощник по ВСЕМ услугам платформы.
+
+    Важные правила ответа:
+    - Если человек спрашивает про конкретную услугу — назови актуальную цену и срок сразу.
+    - Если есть несколько вариантов — предложи самый популярный и самый быстрый.
+    - Всегда предлагай перейти к оформлению: «Могу оформить для вас прямо сейчас» или «Готовы начать оформление?».
+    - Если вопрос технический по сайту — отвечай чётко: как добавить в корзину, где найти чек, как оплатить криптой и т.д.
+
+    Примеры правильных ответов:
+
+    Вопрос: Сколько стоит регистрация ООО под ключ?
+    Ответ: Регистрация ООО с ЭЦП и открытием счёта в банке — 14 900 ₽. Всё делаем удалённо за 3 рабочих дня. Готовы начать оформление прямо сейчас?
+
+    Вопрос: Есть ли готовые ООО с оборотами?
+    Ответ: Да, в наличии более 50 компаний от 6 месяцев до 3 лет, обороты от 10 млн до 1 млрд+. Самые популярные сейчас — строительные и торговые. Подберу под ваш вид деятельности за 2 минуты.
+
+    Вопрос: Как оплатить криптовалютой?
+    Ответ: После добавления услуги в корзину выбираете «Оплата криптовалютой» — система выдаст адрес кошелька (USDT, BTC, ETH). Зачисляем моментально, без комиссий с нашей стороны.
+
+    Вопрос: Где найти договор оферты?
+    Ответ: Публичная оферта находится в подвале сайта по ссылке «Договор-оферта», а также приходит на почту сразу после оплаты заказа.
+    """
 
     # ───── ЗАПРОС К DEEPSEEK API ─────
     @app.route('/api/ai', methods=['POST'])
@@ -430,17 +488,62 @@ def create_app():
         session['user_id'] = user_id
         session['phone'] = clean_phone
 
-        # Сливаем корзину (если клиент прислал локальную корзину до логина)
-        client_cart = data.get('cart', [])
-        if client_cart:
-            from database_goods import merge_cart_from_client
-            merge_cart_from_client(user_id, client_cart)
+        guest_id = session.get('guest_id')
+        if guest_id:
+            conn = sqlite3.connect('database.db')
+            conn.row_factory = sqlite3.Row
+            try:
+                # Собираем товары гостя
+                guest_items = conn.execute(
+                    'SELECT product_id, quantity FROM guest_cart_items WHERE guest_id = ?',
+                    (guest_id,)
+                ).fetchall()
+                # Собираем услуги гостя
+                guest_services = conn.execute(
+                    'SELECT service_id, quantity FROM guest_cart_services WHERE guest_id = ?',
+                    (guest_id,)
+                ).fetchall()
 
-        # Финальный лог — теперь всегда будет True, если ты с нужного IP и номера
+                # Переносим товары
+                for row in guest_items:
+                    conn.execute('''
+                        INSERT INTO cart_items (user_id, product_id, quantity)
+                        VALUES (?, ?, ?)
+                        ON CONFLICT(user_id, product_id) DO UPDATE
+                        SET quantity = quantity + excluded.quantity
+                    ''', (user_id, row['product_id'], row['quantity']))
+
+                # Переносим услуги
+                for row in guest_services:
+                    conn.execute('''
+                        INSERT INTO cart_services (user_id, service_id, quantity)
+                        VALUES (?, ?, ?)
+                        ON CONFLICT(user_id, service_id) DO UPDATE
+                        SET quantity = quantity + excluded.quantity
+                    ''', (user_id, row['service_id'], row['quantity']))
+
+                # Очищаем гостевую корзину
+                conn.execute('DELETE FROM guest_cart_items WHERE guest_id = ?', (guest_id,))
+                conn.execute('DELETE FROM guest_cart_services WHERE guest_id = ?', (guest_id,))
+                conn.commit()
+
+                # Удаляем guest_id из сессии
+                session.pop('guest_id', None)
+
+                logger.info(f"Корзина гостя {guest_id} перенесена пользователю {user_id}")
+            except Exception as e:
+                logger.error(f"Ошибка переноса корзины при входе: {e}")
+                conn.rollback()
+            finally:
+                conn.close()
+        # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+
+        # Финальный лог
         logger.info(f"Вход: {clean_phone} (ID: {user_id}) | is_admin: {session['is_admin']} | real_admin: {session['real_admin']}")
 
         return jsonify({
             "success": True,
+            "cart_merged": bool(guest_id),  # ← вот это!
             "user": {
                 "id": user_id,
                 "phone": clean_phone,
@@ -459,7 +562,10 @@ def create_app():
 
     @app.route('/api/logout', methods=['POST'])
     def api_logout():
-        session.clear()
+        # Удаляем только данные пользователя — CSRF-токен остаётся живым!
+        for key in ['user_id', 'phone', 'is_admin', 'real_admin', 'is_real_admin']:
+            session.pop(key, None)
+        
         return jsonify({"success": True})
 
     return app

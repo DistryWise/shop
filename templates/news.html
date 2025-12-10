@@ -4,6 +4,53 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Новости — Piligrim</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <script>
+// Глобальное хранилище актуального токена
+window.csrfToken = "{{ csrf_token() }}";
+
+// Автоматически обновляем токен при любом успешном ответе от сервера
+function updateCsrfTokenFromResponse(data) {
+    if (data.csrf_token) {
+        window.csrfToken = data.csrf_token;
+        document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', data.csrf_token);
+    }
+}
+
+// Перехватываем ВСЕ fetch-запросы (POST, PUT, DELETE и т.д.)
+const { fetch: origFetch } = window;
+window.fetch = async (...args) => {
+    let [resource, config] = args;
+    
+    // Только для мутирующих методов
+    if (config && ['POST','PUT','DELETE','PATCH'].includes((config.method || 'GET').toUpperCase())) {
+        config = config || {};
+        config.headers = config.headers || {};
+        config.headers['X-CSRF-Token'] = window.csrfToken;
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+        
+        // Если отправляем FormData — не трогаем Content-Type (браузер сам поставит с boundary)
+        if (!(config.body instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
+        }
+    }
+
+    const response = await origFetch(resource, config);
+    
+    // Автоматически обновляем токен после любого успешного JSON-ответа
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        try {
+            const data = await response.clone().json();
+            updateCsrfTokenFromResponse(data);
+        } catch (e) { /* не JSON — игнорируем */ }
+    }
+
+    return response;
+};
+  </script>
+
+
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
@@ -498,20 +545,61 @@
 </div>
 <a href="#" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
 
-<!-- УНИВЕРСАЛЬНАЯ КАРТОЧКА ТОВАРА/УСЛУГИ — ФИНАЛ 2025 -->
+<!-- КАРТОЧКА ТОВАРА  -->
 <div class="product-modal" id="productModal">
   <div class="product-content">
-    <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="">
-    <div class="product-info">
-      <h3 id="productTitle" class="product-title">Загрузка...</h3>
-      <div class="product-rating"><div class="stars"></div><span id="productReviewsCount" class="reviews-count">—</span></div>
-      <div id="productPrice" class="product-price">—</div>
-      <div id="productDescription" class="product-description">Загрузка...</div>
-      <button id="addToCartModal" class="add-to-cart-btn"><i class="fas fa-shopping-cart"></i> В корзину</button>
+    <!-- Крестик закрытия -->
+    <button class="close-modal" onclick="closeProductModal()">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M6 6L22 22M6 22L22 6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <!-- Основной контейнер -->
+    <div class="product-main">
+      <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
+
+      <div class="product-info">
+        <h3 id="productTitle" class="product-title">Загрузка...</h3>
+
+        <div id="productStockInfo" 
+     style="margin: 12px 0 8px; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            line-height: 1.4;">
+</div>
+
+        <!-- Рейтинг и отзывы -->
+        <div class="product-rating">
+          <div class="stars"></div>
+          <span id="productReviewsCount" class="reviews-count">—</span>
+        </div>
+
+        <div id="productPrice" class="product-price">—</div>
+
+        <div id="productDescription" class="product-description">Загрузка описания...</div>
+
+        <!-- Кнопка "В корзину" -->
+        <button id="addToCartModal" class="add-to-cart-btn">
+          <i class="fas fa-shopping-cart"></i> В корзину
+        </button>
+
+        <!-- ОТЗЫВЫ — ТОЧНО КАК В НОВОСТЯХ -->
+        <div class="product-reviews">
+          <h4 class="reviews-title">Отзывы покупателей</h4>
+          <div class="reviews-list" id="productReviewsList">
+            <div style="text-align:center;padding:3rem;color:#888;">
+              <i class="far fa-star" style="font-size:3rem;margin-bottom:1rem;display:block;opacity:0.6;"></i>
+              <p>Отзывов пока нет</p>
+              <small style="opacity:0.7;">Будьте первым!</small>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="close-modal" onclick="closeProductModal()">X</div>
   </div>
 </div>
+
 
 <footer>
   <div class="footer-left">

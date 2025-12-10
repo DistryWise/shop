@@ -2334,3 +2334,32 @@ body.white #mobileCatalogTrigger,
   .card .price { font-size: 17px !important; }
   .card p { font-size: 12px !important; }
 }
+.review-rating {
+    margin-bottom: 12px;
+    font-size: 1.4rem;
+    letter-spacing: 2px;
+}
+
+.review-rating .star {
+    color: #666;                    /* серая звезда */
+    text-shadow: 0 1px 1px rgba(0,0,0,0.2);
+    transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.review-rating .star.filled {
+    color: #ffb302;                 /* золотая */
+    text-shadow: 0 0 10px rgba(255,179,2,0.6);
+}
+
+/* Опционально: лёгкая анимация при наведении */
+.review-item:hover .star.filled {
+    transform: scale(1.15);
+}
+html[data-theme="light"] .review-rating .star {
+    color: #ccc;
+}
+html[data-theme="light"] .review-rating .star.filled {
+    color: #ff9f00;
+    text-shadow: 0 0 8px rgba(255,159,0,0.4);
+}
+

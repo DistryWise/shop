@@ -3,13 +3,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Обратная связь — Админка | ZAZA</title>
+      <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <script>
+// Глобальное хранилище актуального токена
+window.csrfToken = "{{ csrf_token() }}";
+
+// Автоматически обновляем токен при любом успешном ответе от сервера
+function updateCsrfTokenFromResponse(data) {
+    if (data.csrf_token) {
+        window.csrfToken = data.csrf_token;
+        document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', data.csrf_token);
+    }
+}
+
+// Перехватываем ВСЕ fetch-запросы (POST, PUT, DELETE и т.д.)
+const { fetch: origFetch } = window;
+window.fetch = async (...args) => {
+    let [resource, config] = args;
+    
+    // Только для мутирующих методов
+    if (config && ['POST','PUT','DELETE','PATCH'].includes((config.method || 'GET').toUpperCase())) {
+        config = config || {};
+        config.headers = config.headers || {};
+        config.headers['X-CSRF-Token'] = window.csrfToken;
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+        
+        // Если отправляем FormData — не трогаем Content-Type (браузер сам поставит с boundary)
+        if (!(config.body instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
+        }
+    }
+
+    const response = await origFetch(resource, config);
+    
+    // Автоматически обновляем токен после любого успешного JSON-ответа
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        try {
+            const data = await response.clone().json();
+            updateCsrfTokenFromResponse(data);
+        } catch (e) { /* не JSON — игнорируем */ }
+    }
+
+    return response;
+};
+  </script>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
     <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
     <link rel="stylesheet" href="/static/css/admin/admin_feedback.css">
-    <link rel="stylesheet" href="/static/css/admin/admin_goods.css">
+
+    <style>
+        #subsBody tr.selected {
+    background: rgba(100, 200, 255, 0.15) !important;
+    outline: 2px solid var(--accent);
+}
+.subscriber-actions button {
+    background: rgba(255,255,255,0.08);
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0. 0.2s;
+}
+.subscriber-actions button:hover {
+    background: rgba(255,255,255,0.15);
+    transform: scale(1.1);
+}
+.subscriber-actions button.delete { color: #ff6b6b; }
+.subscriber-actions button:first-child { color: var(--accent); }
+    </style>
 
 </head>
 <body>

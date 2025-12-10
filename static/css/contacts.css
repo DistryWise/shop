@@ -4328,3 +4328,273 @@ html[data-theme="light"] #mobileSidebar .sidebar-logo-big {
     display: inline !important;
   }
 }
+
+/* ╔══════════════════════════════════════════════════╗
+   ║  УБОЙНЫЙ ФИКС — СВЕТЛАЯ ТЕМА, МОБИЛЬНАЯ ШТОРКА   ║
+   ║  Задний фон больше НИКОГДА не будет просвечивать ║
+   ╚══════════════════════════════════════════════════╝ */
+
+@media (max-width: 1023px) {
+  
+  /* Перебиваем любой предыдущий backdrop-filter и background */
+  html[data-theme="light"] .feedback-sheet.mobile-only .sheet-backdrop,
+  html[data-theme="light"] .sheet-backdrop {
+    background: rgba(255, 255, 255, 0.97) !important;
+    backdrop-filter: blur(42px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(42px) saturate(190%) !important;
+  }
+
+  /* На случай, если у тебя где-то ещё есть .sheet-backdrop без класса mobile-only */
+  html[data-theme="light"] .sheet-backdrop {
+    background: rgba(255, 255, 255, 0.97) !important;
+  }
+
+  /* Сама шторка — максимально непрозрачная */
+  html[data-theme="light"] .feedback-sheet.mobile-only .sheet-container,
+  html[data-theme="light"] .sheet-container {
+    background: rgba(255, 255, 255, 0.99) !important;
+    backdrop-filter: blur(32px) !important;
+    -webkit-backdrop-filter: blur(32px) !important;
+  }
+
+  /* Если у тебя шторка называется mobile-feedback-sheet (видел у тебя в коде) */
+  html[data-theme="light"] .mobile-feedback-sheet {
+    background: rgba(255, 255, 255, 0.99) !important;
+    backdrop-filter: blur(40px) !important;
+    -webkit-backdrop-filter: blur(40px) !important;
+  }
+
+  html[data-theme="light"] body.sheet-open::before,
+  html[data-theme="light"] .sheet-backdrop {
+    background: rgba(255, 255, 255, 0.97) !important;
+  }
+}
+
+/* Экстра-страховка для iOS 18+ (иногда нужен ещё больший блюр) */
+@supports (-webkit-backdrop-filter: blur(50px)) {
+  html[data-theme="light"] .sheet-backdrop,
+  html[data-theme="light"] .mobile-feedback-sheet {
+    -webkit-backdrop-filter: blur(50px) saturate(200%) !important;
+    backdrop-filter: blur(50px) saturate(200%) !important;
+  }
+}
+
+/* ===================================================== */
+/* CONTACTS — ТОЛЬКО МОБИЛЬНАЯ АДАПТАЦИЯ ТЕКСТА 2025   */
+/* Работает только на экранах ≤1024px                  */
+/* Десктоп остаётся 100% нетронутым                    */
+/* ===================================================== */
+
+@media screen and (max-width: 1024px) {
+
+  /* Заголовок "Контакты" */
+  .page-title {
+    font-size: clamp(2.4rem, 9.5vw, 4.2rem) !important;
+    line-height: 1.18 !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+    text-align: center !important;
+  }
+
+  /* Подзаголовок "Связаться с нами" */
+  .page-subtitle {
+    font-size: clamp(1.05rem, 4.4vw, 1.35rem) !important;
+    line-height: 1.7 !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+    text-align: center !important;
+    margin-bottom: clamp(2.5rem, 8vw, 4rem) !important;
+  }
+
+  /* Метки (Телефон, Адрес, E-mail и т.д.) */
+  .contact-label {
+    font-size: clamp(0.88rem, 3.8vw, 1.02rem) !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase !important;
+  }
+
+  /* Значения (номер, адрес, почта) */
+  .contact-value,
+  .contact-value a {
+    font-size: clamp(1.12rem, 4.8vw, 1.48rem) !important;
+    line-height: 1.68 !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 3 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+
+  /* VISIT US + SHOWROOM */
+  .visit-us h2,
+  .showroom h2,
+  .newsletter h2,
+  .instagram-feed h2 {
+    font-size: clamp(2.1rem, 8.2vw, 3.6rem) !important;
+    line-height: 1.2 !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+  }
+
+  .visit-us p,
+  .showroom p,
+  .newsletter p {
+    font-size: clamp(1.05rem, 4.4vw, 1.34rem) !important;
+    line-height: 1.78 !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+    max-width: 94% !important;
+    margin: 0 auto !important;
+  }
+
+  /* Реквизиты */
+  .req-title {
+    font-size: clamp(0.92rem, 4vw, 1.1rem) !important;
+    letter-spacing: 0.1em !important;
+  }
+
+  .requisites-grid p {
+    font-size: clamp(1rem, 4.3vw, 1.28rem) !important;
+    line-height: 1.7 !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+  }
+
+  /* Цитата в манифесте */
+  .philosophy blockquote {
+    font-size: clamp(1.35rem, 5.8vw, 2.1rem) !important;
+    line-height: 1.75 !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+  }
+
+  .philosophy cite {
+    font-size: clamp(0.95rem, 4.1vw, 1.15rem) !important;
+  }
+
+  /* Подпись под инстаграмом */
+  .instagram-feed h2 {
+    margin-bottom: clamp(1.8rem, 6vw, 2.8rem) !important;
+  }
+
+  /* Форма подписки */
+  .newsletter-input::placeholder {
+    font-size: clamp(0.98rem, 4.2vw, 1.18rem) !important;
+  }
+
+  /* Для самых узких экранов — чуть меньше */
+  @media (max-width: 380px) {
+    .page-title { font-size: clamp(2.2rem, 10.5vw, 3.8rem) !important; }
+    .contact-value { font-size: clamp(1.05rem, 5vw, 1.38rem) !important; }
+  }
+}
+
+/* ===================================================== */
+/* CONTACTS — ДОПОЛНЕНИЕ: КОПИРАЙТ + ЦИТАТА 2025       */
+/* Только на мобильных (≤1024px)                        */
+/* Десктоп не трогаем                                   */
+/* ===================================================== */
+
+@media screen and (max-width: 1024px) {
+
+  /* КОПИРАЙТ В ФУТЕРЕ */
+  .footer-left {
+    font-size: clamp(0.88rem, 3.8vw, 1.05rem) !important;
+    line-height: 1.6 !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+    text-align: center !important;
+    padding: 0 1rem !important;
+  }
+
+  /* ЦИТАТА — МАНИФЕСТ */
+  .philosophy blockquote {
+    font-size: clamp(1.42rem, 6.2vw, 2.3rem) !important;
+    line-height: 1.72 !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+    padding: clamp(2rem, 8vw, 3.5rem) clamp(1rem, 5vw, 2rem) !important;
+    margin: clamp(3rem, 10vw, 5rem) 0 !important;
+  }
+
+  .philosophy cite {
+    font-size: clamp(0.98rem, 4.2vw, 1.22rem) !important;
+    letter-spacing: 0.12em !important;
+  }
+
+  /* На самых узких экранах — ещё чуть компактнее */
+  @media (max-width: 380px) {
+    .footer-left {
+      font-size: clamp(0.84rem, 4.1vw, 0.98rem) !important;
+    }
+    .philosophy blockquote {
+      font-size: clamp(1.35rem, 7vw, 2.1rem) !important;
+    }
+  }
+}
+
+/* ===================================================== */
+/* БЛОК ЦИТАТЫ — ИДЕАЛЬНЫЕ ПЕРЕНОСЫ + РОВНАЯ ШИРИНА     */
+/* Только на мобильных (≤1024px)                        */
+/* Десктоп не трогаем                                   */
+/* ===================================================== */
+
+@media screen and (max-width: 1024px) {
+
+  /* Сам блок цитаты */
+  .philosophy {
+    padding: clamp(3.5rem, 10vw, 5.5rem) clamp(1.5rem, 6vw, 3rem) !important;
+    text-align: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: clamp(4rem, 12vw, 6rem) auto !important;
+  }
+
+  /* Текст цитаты */
+  .philosophy blockquote {
+    font-size: clamp(1.45rem, 6.5vw, 2.4rem) !important;
+    line-height: 1.72 !important;
+    font-weight: 400 !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    
+    /* ГЛАВНОЕ — ПЕРЕНОС ПО СЛОВАМ */
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;           /* красиво по словам */
+    text-align: center !important;
+    
+    /* Ровно по ширине — как в профиле */
+    max-width: 92% !important;
+    width: fit-content !important;
+    display: block !important;
+  }
+
+  /* Убираем возможные старые стили, которые ломают переносы */
+  .philosophy blockquote span,
+  .philosophy blockquote * {
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+  }
+
+  /* Подпись "PILIGRIM MANIFESTO" */
+  .philosophy cite {
+    display: block !important;
+    margin-top: clamp(2rem, 6vw, 3rem) !important;
+    font-size: clamp(0.98rem, 4.2vw, 1.22rem) !important;
+    letter-spacing: 0.15em !important;
+    color: #888 !important;
+    font-style: normal !important;
+    text-transform: uppercase !important;
+  }
+
+  /* На самых маленьких экранах — чуть компактнее */
+  @media (max-width: 380px) {
+    .philosophy blockquote {
+      font-size: clamp(1.38rem, 7.2vw, 2.1rem) !important;
+      max-width: 96% !important;
+    }
+  }
+}

@@ -3476,3 +3476,87 @@ html[data-theme="dark"] .progress-label.filled { color: #fff; }
   from { transform: translateY(80px); opacity: 0; }
   to   { transform: translateY(0); opacity: 1; }
 }
+
+/* ===================================================== */
+/* BIN.HTML — МОБИЛЬНАЯ АДАПТАЦИЯ ТЕКСТОВ 2025         */
+/* Только на экранах ≤1026px                           */
+/* Десктоп остаётся 100% нетронутым                    */
+/* ===================================================== */
+
+@media screen and (max-width: 1026px) {
+
+  /* 1. ПУСТАЯ КОРЗИНА — "Добавьте товар и он появится здесь" */
+  .cart-empty-apple .empty-title,
+  .cart-empty .empty-title,
+  .cart-empty-apple .empty-subtitle,
+  .cart-empty .empty-subtitle {
+    font-size: clamp(1.35rem, 6.5vw, 2.1rem) !important;
+    line-height: 1.68 !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+    text-align: center !important;
+    max-width: 92% !important;
+    margin: 1.2rem auto !important;
+  }
+
+  .cart-empty-apple .empty-subtitle,
+  .cart-empty .empty-subtitle {
+    font-size: clamp(1.05rem, 4.6vw, 1.35rem) !important;
+    color: #888 !important;
+    margin-top: 0.8rem !important;
+  }
+
+  /* 2. МОДАЛКА "ВАШИ ЗАКАЗЫ" — ВЕСЬ ТЕКСТ ВЛЕЗАЕТ */
+  #multiOrderModal .checkout-header h2,
+  #multiOrderModal h2 {
+    font-size: clamp(1.95rem, 8vw, 2.8rem) !important;
+    line-height: 1.2 !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+    text-align: center !important;
+    margin: 0 0 0.8rem !important;
+  }
+
+  #multiOrderModal .checkout-header p,
+  #multiOrderModal p,
+  #activeOrdersCountText {
+    font-size: clamp(1.02rem, 4.3vw, 1.28rem) !important;
+    line-height: 1.7 !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+    text-align: center !important;
+    max-width: 90% !important;
+    margin: 0 auto !important;
+    color: #aaa !important;
+  }
+
+  /* 3. Кнопка "Закрыть" в модалке заказов */
+  #multiOrderModal button[onclick="closeMultiOrderModal()"] {
+    font-size: clamp(1.05rem, 4.5vw, 1.35rem) !important;
+    padding: clamp(1rem, 4vw, 1.3rem) !important;
+  }
+
+  /* 4. Плашка с активными заказами (вверху) */
+  #pillMainText,
+  #pillSubText {
+    font-size: clamp(0.98rem, 4.1vw, 1.15rem) !important;
+    line-height: 1.5 !important;
+    word-break: break-word !important;
+    hyphens: auto !important;
+  }
+
+  #pillSubText {
+    font-size: clamp(0.88rem, 3.8vw, 1.02rem) !important;
+    opacity: 0.9 !important;
+  }
+
+  /* 5. На самых узких экранах — ещё чуть компактнее */
+  @media (max-width: 380px) {
+    .cart-empty-apple .empty-title {
+      font-size: clamp(1.3rem, 7.2vw, 1.9rem) !important;
+    }
+    #multiOrderModal h2 {
+      font-size: clamp(1.8rem, 8.5vw, 2.5rem) !important;
+    }
+  }
+}

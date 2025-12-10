@@ -6,6 +6,7 @@ import threading
 import time
 import logging
 import uuid
+import hashlib
 import urllib.parse
 from flask import (
     request, flash, redirect, url_for,
@@ -233,6 +234,38 @@ def init_cart_db():
         logger.info("Корзина товаров создана с UNIQUE")
     except Exception as e:
         logger.error(f"init_cart_db: {e}")
+    finally:
+        conn.close()
+
+def init_guest_cart_db():
+    conn = get_conn(DB_MAIN)
+    try:
+        # Товары в гостевой корзине
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS guest_cart_items (
+                guest_id TEXT NOT NULL,
+                product_id INTEGER NOT NULL,
+                quantity INTEGER NOT NULL DEFAULT 1,
+                PRIMARY KEY (guest_id, product_id),
+                FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+            )
+        ''')
+        # Услуги в гостевой корзине
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS guest_cart_services (
+                guest_id TEXT NOT NULL,
+                service_id INTEGER NOT NULL,
+                quantity INTEGER NOT NULL DEFAULT 1,
+                PRIMARY KEY (guest_id, service_id)
+            )
+        ''')
+        # Индексы для скорости
+        conn.execute('CREATE INDEX IF NOT EXISTS idx_guest_items_guest ON guest_cart_items(guest_id)')
+        conn.execute('CREATE INDEX IF NOT EXISTS idx_guest_services_guest ON guest_cart_services(guest_id)')
+        conn.commit()
+        logger.info("Гостевые таблицы корзины созданы успешно!")
+    except Exception as e:
+        logger.error(f"init_guest_cart_db error: {e}")
     finally:
         conn.close()
 
@@ -669,6 +702,7 @@ def init_all_dbs():
     init_news_db()
     init_services_db()
     init_feedback_db()
+    init_guest_cart_db()
     migrate_user_order_numbers()
     logger.info("Все БД инициализированы + заказы + статусы + миграция!")
 
@@ -1011,8 +1045,6 @@ def register_admin_routes(app):
             traceback.print_exc()
             return jsonify([]), 500
 
-   
-    # === КОРЗИНА: ДОБАВЛЕНИЕ — ФИНАЛЬНО, БЕЗ ОШИБОК, ПО ID, ДВЕ БАЗЫ ===
     @app.route('/api/cart/add', methods=['POST'])
     def api_cart_add():
         if 'user_id' not in session:
@@ -1028,16 +1060,36 @@ def register_admin_routes(app):
         if not product_id and not service_id:
             return jsonify({'error': 'Не указан ID товара или услуги'}), 400
 
-        conn = get_conn(DB_MAIN)        # ← для cart_items, cart_services
-        serv_conn = get_conn(DB_SERVICES)  # ← для проверки services
+        conn = get_conn(DB_MAIN)
+        serv_conn = get_conn(DB_SERVICES)
 
         try:
             if product_id:
                 product_id = int(product_id)
-                exists = conn.execute('SELECT 1 FROM products WHERE id = ?', (product_id,)).fetchone()
-                if not exists:
+
+                # ← ПРОВЕРЯЕМ НАЛИЧИЕ И STOCK
+                product = conn.execute('SELECT stock, title FROM products WHERE id = ?', (product_id,)).fetchone()
+                if not product:
                     return jsonify({'error': 'Товар не найден'}), 404
 
+                current_stock = product['stock']
+
+                # ← ГЛАВНАЯ ПРОВЕРКА
+                if current_stock != -1:  # если не бесконечное количество
+                    # Сколько уже в корзине
+                    existing = conn.execute(
+                        'SELECT quantity FROM cart_items WHERE user_id = ? AND product_id = ?',
+                        (user_id, product_id)
+                    ).fetchone()
+                    in_cart = existing[0] if existing else 0
+                    total_wanted = in_cart + quantity
+
+                    if total_wanted > current_stock:
+                        return jsonify({
+                            'error': f'Недостаточно товара! В наличии только {current_stock} шт.'
+                        }), 400
+
+                # Всё ок — добавляем
                 conn.execute('''
                     INSERT INTO cart_items (user_id, product_id, quantity)
                     VALUES (?, ?, ?)
@@ -1046,13 +1098,12 @@ def register_admin_routes(app):
                 ''', (user_id, product_id, quantity))
 
             elif service_id:
+                # Услуги обычно без лимита — оставляем как было
                 service_id = int(service_id)
-                # ← ИСПРАВЛЕНО: ПРОВЕРЯЕМ В ПРАВИЛЬНОЙ БАЗЕ!
                 exists = serv_conn.execute('SELECT 1 FROM services WHERE id = ?', (service_id,)).fetchone()
                 if not exists:
                     return jsonify({'error': 'Услуга не найдена'}), 404
 
-                # ← Записываем в cart_services — в database.db!
                 conn.execute('''
                     INSERT INTO cart_services (user_id, service_id, quantity)
                     VALUES (?, ?, ?)
@@ -1072,8 +1123,8 @@ def register_admin_routes(app):
         finally:
             conn.close()
             serv_conn.close()
+  
 
-    # === КОРЗИНА: ОБНОВЛЕНИЕ (ТОЛЬКО ПО ID — БЕЗОПАСНО И НАДЁЖНО) ===
     @app.route('/api/cart/update', methods=['POST'])
     def api_cart_update():
         if 'user_id' not in session:
@@ -1082,10 +1133,9 @@ def register_admin_routes(app):
         data = request.get_json() or {}
         user_id = session['user_id']
 
-        # Теперь принимаем ID, а не title!
         product_id = data.get('product_id')
         service_id = data.get('service_id')
-        quantity = int(data.get('quantity', 1))
+        quantity = int(data.get('quantity', 0))
 
         if quantity < 0:
             quantity = 0
@@ -1094,48 +1144,49 @@ def register_admin_routes(app):
 
         try:
             if product_id is not None:
-                # === ТОВАР ===
                 product_id = int(product_id)
+
                 if quantity == 0:
                     conn.execute('DELETE FROM cart_items WHERE user_id = ? AND product_id = ?', (user_id, product_id))
-                    logger.info(f"Удалён товар из корзины (ID: {product_id})")
                 else:
+                    # ← ПРОВЕРКА НАЛИЧИЯ НА СКЛАДЕ
+                    product = conn.execute('SELECT stock FROM products WHERE id = ?', (product_id,)).fetchone()
+                    if not product:
+                        return jsonify({'error': 'Товар не найден'}), 404
+
+                    if product['stock'] != -1 and quantity > product['stock']:
+                        return jsonify({
+                            'error': f'Нельзя столько! В наличии только {product["stock"]} шт.'
+                        }), 400
+
                     conn.execute('''
                         INSERT INTO cart_items (user_id, product_id, quantity)
                         VALUES (?, ?, ?)
                         ON CONFLICT(user_id, product_id) DO UPDATE SET quantity = excluded.quantity
                     ''', (user_id, product_id, quantity))
-                    logger.info(f"Обновлён товар в корзине (ID: {product_id}) → {quantity}")
 
             elif service_id is not None:
-                # === УСЛУГА ===
                 service_id = int(service_id)
                 if quantity == 0:
                     conn.execute('DELETE FROM cart_services WHERE user_id = ? AND service_id = ?', (user_id, service_id))
-                    logger.info(f"Удалена услуга из корзины (ID: {service_id})")
                 else:
                     conn.execute('''
                         INSERT INTO cart_services (user_id, service_id, quantity)
                         VALUES (?, ?, ?)
                         ON CONFLICT(user_id, service_id) DO UPDATE SET quantity = excluded.quantity
                     ''', (user_id, service_id, quantity))
-                    logger.info(f"Обновлена услуга в корзине (ID: {service_id}) → {quantity}")
-
             else:
-                return jsonify({'error': 'Не указан ID товара или услуги'}), 400
+                return jsonify({'error': 'Не указан ID'}), 400
 
             conn.commit()
             return jsonify({'success': True})
 
-        except ValueError:
-            return jsonify({'error': 'Неверный ID'}), 400
         except Exception as e:
             logger.error(f"cart_update error: {e}")
             conn.rollback()
-            return jsonify({'error': 'Ошибка сервера'}), 500
+            return jsonify({'error': 'Ошибка'}), 500
         finally:
             conn.close()
-
     # === КОРЗИНА: ПОЛУЧЕНИЕ ДЛЯ АВТОРИЗОВАННЫХ ===
     @app.route('/api/cart/get')
     def api_cart_get():
@@ -1149,9 +1200,8 @@ def register_admin_routes(app):
         try:
             user_id = session['user_id']
 
-            # === ТОВАРЫ ===
             rows = conn.execute('''
-                SELECT p.id, p.title, p.price, ci.quantity, p.image_filenames
+                SELECT p.id, p.title, p.price, ci.quantity, p.image_filenames, p.stock
                 FROM cart_items ci
                 JOIN products p ON ci.product_id = p.id
                 WHERE ci.user_id = ?
@@ -1160,14 +1210,15 @@ def register_admin_routes(app):
             for row in rows:
                 imgs = json.loads(row['image_filenames'] or '[]')
                 img_url = f"/static/uploads/goods/{imgs[0]}" if imgs else '/static/assets/no-image.png'
-                price_cents = int(row['price'])  # УБЕДИСЬ, что в БД price уже в копейках!
+                price_cents = int(row['price'])
                 items.append({
                     'id': row['id'],
                     'title': row['title'],
                     'price_cents': price_cents,
                     'quantity': row['quantity'],
                     'type': 'product',
-                    'image_url': img_url
+                    'image_url': img_url,
+                    'max_available': row['stock'] if row['stock'] is not None else -1  # ← ВОТ ЭТО ВСЁ ИСПРАВИЛО!
                 })
 
             # === УСЛУГИ ===
@@ -1212,14 +1263,67 @@ def register_admin_routes(app):
             conn.close()
             serv_conn.close()
 
+    @app.route('/api/cart/guest/add', methods=['POST'])
+    def api_cart_guest_add():
+        guest_id = session.get('guest_id')
+        if not guest_id:
+            guest_id = str(uuid.uuid4())
+            session['guest_id'] = guest_id
 
-    # === НОВЫЙ ЭНДПОИНТ: КОРЗИНА ДЛЯ ГОСТЕЙ (по ID) ===
-    @app.route('/api/cart/get-guest', methods=['POST'])
-    def api_cart_get_guest():
         data = request.get_json() or {}
-        cart = data.get('cart', [])  # [{id: 123, type: 'product', quantity: 1}, ...]
+        product_id = data.get('product_id')
+        service_id = data.get('service_id')
+        quantity = max(1, int(data.get('quantity', 1)))
 
-        if not cart:
+        conn = get_conn(DB_MAIN)
+        try:
+            if product_id:
+                product_id = int(product_id)
+                product = conn.execute('SELECT stock, price FROM products WHERE id = ?', (product_id,)).fetchone()
+                if not product:
+                    return jsonify({'error': 'Товар не найден'}), 404
+
+                # Считаем текущее количество в гостевой корзине
+                current = conn.execute(
+                    'SELECT quantity FROM guest_cart_items WHERE guest_id = ? AND product_id = ?',
+                    (guest_id, product_id)
+                ).fetchone()
+                in_cart = current[0] if current else 0
+                total = in_cart + quantity
+
+                if product['stock'] != -1 and total > product['stock']:
+                    return jsonify({'error': f'В наличии только {product["stock"]} шт.'}), 400
+
+                conn.execute('''
+                    INSERT INTO guest_cart_items (guest_id, product_id, quantity)
+                    VALUES (?, ?, ?)
+                    ON CONFLICT(guest_id, product_id) DO UPDATE 
+                    SET quantity = quantity + excluded.quantity
+                ''', (guest_id, product_id, quantity))
+
+            elif service_id:
+                service_id = int(service_id)
+                conn.execute('''
+                    INSERT INTO guest_cart_services (guest_id, service_id, quantity)
+                    VALUES (?, ?, ?)
+                    ON CONFLICT(guest_id, service_id) DO UPDATE 
+                    SET quantity = quantity + excluded.quantity
+                ''', (guest_id, service_id, quantity))
+
+            conn.commit()
+            return jsonify({'success': True, 'guest_id': guest_id})
+
+        except Exception as e:
+            logger.error(f"guest add error: {e}")
+            conn.rollback()
+            return jsonify({'error': 'Ошибка'}), 500
+        finally:
+            conn.close()
+
+    @app.route('/api/cart/guest/get')
+    def api_cart_guest_get():
+        guest_id = session.get('guest_id')
+        if not guest_id:
             return jsonify([])
 
         conn = get_conn(DB_MAIN)
@@ -1227,68 +1331,124 @@ def register_admin_routes(app):
         items = []
 
         try:
-            for item in cart:
-                item_id = item.get('id')
-                item_type = item.get('type', 'product')
-                quantity = item.get('quantity', 1)
+            # ТОВАРЫ
+            rows = conn.execute('''
+                SELECT p.id, p.title, p.price, gci.quantity, p.image_filenames, p.stock
+                FROM guest_cart_items gci
+                JOIN products p ON gci.product_id = p.id
+                WHERE gci.guest_id = ?
+            ''', (guest_id,)).fetchall()
 
-                if not item_id:
+            for row in rows:
+                imgs = json.loads(row['image_filenames'] or '[]')
+                img_url = f"/static/uploads/goods/{imgs[0]}" if imgs else '/static/assets/no-image.png'
+                items.append({
+                    'id': row['id'],
+                    'title': row['title'],
+                    'price_cents': int(row['price']),
+                    'quantity': row['quantity'],
+                    'type': 'product',
+                    'image_url': img_url,
+                    'max_available': row['stock'] if row['stock'] is not None else -1
+                })
+
+            # УСЛУГИ
+            rows = conn.execute('''
+                SELECT gcs.service_id, gcs.quantity
+                FROM guest_cart_services gcs
+                WHERE gcs.guest_id = ?
+            ''', (guest_id,)).fetchall()
+
+            for row in rows:
+                service = serv_conn.execute('SELECT id, title, price, image_urls FROM services WHERE id = ?', (row['service_id'],)).fetchone()
+                if not service:
                     continue
 
-                if item_type == 'product':
-                    row = conn.execute('''
-                        SELECT id, title, price, image_filenames
-                        FROM products WHERE id = ?
-                    ''', (item_id,)).fetchone()
-                    if not row:
-                        continue
-                    imgs = json.loads(row['image_filenames'] or '[]')
-                    img_url = f"/static/uploads/{imgs[0]}" if imgs else '/static/assets/no-image.png'
-                    price_cents = int(row['price'])  # ← УБЕДИСЬ, что price в копейках!
+                try:
+                    image_urls = json.loads(service['image_urls'] or '[]')
+                except:
+                    image_urls = [u.strip() for u in (service['image_urls'] or '').split(',') if u.strip()]
 
-                    items.append({
-                        'id': row['id'],
-                        'title': row['title'],
-                        'price_cents': price_cents,
-                        'quantity': quantity,
-                        'type': 'product',
-                        'image_url': img_url
-                    })
+                img_url = f"/static/uploads/services/{image_urls[0]}" if image_urls else '/static/assets/no-image.png'
 
-                elif item_type == 'service':
-                    row = serv_conn.execute('''
-                        SELECT id, title, price, image_urls FROM services WHERE id = ?
-                    ''', (item_id,)).fetchone()
-                    if not row:
-                        continue
-
-                    try:
-                        image_urls = json.loads(row['image_urls'] or '[]')
-                        if not isinstance(image_urls, list):
-                            image_urls = []
-                    except:
-                        image_urls = [u.strip() for u in (row['image_urls'] or '').split(',') if u.strip()]
-
-                    img_url = f"/static/uploads/services/{image_urls[0]}" if image_urls else '/static/assets/no-image.png'
-                    price_cents = parse_price_to_cents(row['price'])
-
-                    items.append({
-                        'id': row['id'],
-                        'title': row['title'],
-                        'price_cents': price_cents,
-                        'quantity': quantity,
-                        'type': 'service',
-                        'image_url': img_url
-                    })
+                items.append({
+                    'id': service['id'],
+                    'title': service['title'],
+                    'price_cents': parse_price_to_cents(service['price']),
+                    'quantity': row['quantity'],
+                    'type': 'service',
+                    'image_url': img_url
+                })
 
             return jsonify(items)
 
         except Exception as e:
-            logger.error(f"get-guest-cart error: {e}")
+            logger.error(f"guest cart get error: {e}")
             return jsonify([])
         finally:
             conn.close()
             serv_conn.close()
+
+
+    @app.route('/api/cart/guest/update', methods=['POST'])
+    def api_cart_guest_update():
+        guest_id = session.get('guest_id')
+        if not guest_id:
+            return jsonify({'error': 'No guest session'}), 401
+
+        data = request.get_json() or {}
+        product_id = data.get('product_id')
+        service_id = data.get('service_id')
+        quantity = int(data.get('quantity', 0))
+
+        if quantity < 0:
+            quantity = 0
+
+        conn = get_conn(DB_MAIN)
+
+        try:
+            if product_id is not None:
+                product_id = int(product_id)
+
+                if quantity == 0:
+                    conn.execute('DELETE FROM guest_cart_items WHERE guest_id = ? AND product_id = ?', (guest_id, product_id))
+                else:
+                    # Проверка остатка
+                    product = conn.execute('SELECT stock FROM products WHERE id = ?', (product_id,)).fetchone()
+                    if not product:
+                        return jsonify({'error': 'Товар не найден'}), 404
+                    if product['stock'] != -1 and quantity > product['stock']:
+                        return jsonify({'error': f'В наличии только {product["stock"]} шт.'}), 400
+
+                    conn.execute('''
+                        INSERT INTO guest_cart_items (guest_id, product_id, quantity)
+                        VALUES (?, ?, ?)
+                        ON CONFLICT(guest_id, product_id) DO UPDATE SET quantity = excluded.quantity
+                    ''', (guest_id, product_id, quantity))
+
+            elif service_id is not None:
+                service_id = int(service_id)
+                if quantity == 0:
+                    conn.execute('DELETE FROM guest_cart_services WHERE guest_id = ? AND service_id = ?', (guest_id, service_id))
+                else:
+                    conn.execute('''
+                        INSERT INTO guest_cart_services (guest_id, service_id, quantity)
+                        VALUES (?, ?, ?)
+                        ON CONFLICT(guest_id, service_id) DO UPDATE SET quantity = excluded.quantity
+                    ''', (guest_id, service_id, quantity))
+
+            else:
+                return jsonify({'error': 'Не указан ID товара или услуги'}), 400
+
+            conn.commit()
+            return jsonify({'success': True})
+
+        except Exception as e:
+            logger.error(f"guest update error: {e}")
+            conn.rollback()
+            return jsonify({'error': 'Ошибка'}), 500
+        finally:
+            conn.close()
 
 
 
@@ -1442,27 +1602,64 @@ def register_admin_routes(app):
             })
         finally:
             conn.close()
-    @app.route('/admin_feedback')
+
+   
+    @app.route('/admin_feedback', methods=['GET', 'POST'])
     def admin_feedback():
-        """Админка → Все сообщения из формы обратной связи"""
+        # Защита админки
         if not session.get('is_admin'):
+            if request.method == 'POST':
+                return jsonify({'success': False, 'message': 'Доступ запрещён'}), 403
             flash('Доступ запрещён', 'error')
             return redirect(url_for('index'))
 
-        # === Пагинация ===
-        page = max(1, int(request.args.get('page', 1)))
-        per_page = 20
-        offset = (page - 1) * per_page
-
-        conn_main = get_conn(DB_MAIN)
         conn_fb = get_conn(DB_FEEDBACK)
 
         try:
-            # Общее количество
+            # === POST — УДАЛЕНИЕ (только JSON!) ===
+            if request.method == 'POST':
+                # Теперь принимаем ТОЛЬКО JSON (как отправляет твой JS)
+                if not request.is_json:
+                    return jsonify({'success': False, 'message': 'Неверный формат данных'}), 400
+
+                data = request.get_json()
+                password = data.get('password', '').strip()
+
+                # ПРЯМАЯ ПРОВЕРКА: admin123
+                if password != 'admin123':
+                    return jsonify({'success': False, 'message': 'Неверный пароль администратора'})
+
+                # Удаление всех
+                if data.get('delete_all'):
+                    conn_fb.execute('DELETE FROM feedback')
+                    conn_fb.commit()
+                    return jsonify({'success': True, 'message': 'Все заявки удалены!'})
+
+                # Удаление по списку ID
+                ids = data.get('ids', [])
+                if not ids or not isinstance(ids, list):
+                    return jsonify({'success': False, 'message': 'Не выбрано ни одной заявки'})
+
+                # Защита: превращаем в int
+                try:
+                    ids = [int(i) for i in ids]
+                except:
+                    return jsonify({'success': False, 'message': 'Неверный формат ID'})
+
+                placeholders = ','.join('?' for _ in ids)
+                conn_fb.execute(f'DELETE FROM feedback WHERE id IN ({placeholders})', ids)
+                conn_fb.commit()
+
+                return jsonify({'success': True, 'message': f'Удалено заявок: {len(ids)}'})
+
+            # === GET — обычная страница ===
+            page = max(1, request.args.get('page', 1, type=int) or 1)
+            per_page = 20
+            offset = (page - 1) * per_page
+
             total_feedback = conn_fb.execute('SELECT COUNT(*) FROM feedback').fetchone()[0]
             total_pages = max(1, (total_feedback + per_page - 1) // per_page)
 
-            # Список сообщений
             rows = conn_fb.execute('''
                 SELECT id, name, email, phone, message, created_at
                 FROM feedback
@@ -1470,26 +1667,29 @@ def register_admin_routes(app):
                 LIMIT ? OFFSET ?
             ''', (per_page, offset)).fetchall()
 
-            feedbacks = [dict(row) for row in rows]  # ← именно feedbacks (как у тебя в HTML)
+            feedbacks = [dict(row) for row in rows]
 
-            # Статистика для сайдбара
-            total_users = conn_main.execute('SELECT COUNT(*) FROM users').fetchone()[0]
-            total_orders = conn_main.execute('SELECT COUNT(*) FROM orders').fetchone()[0]
+            conn_main = get_conn(DB_MAIN)
+            total_users   = conn_main.execute('SELECT COUNT(*) FROM users').fetchone()[0]
+            total_orders  = conn_main.execute('SELECT COUNT(*) FROM orders').fetchone()[0]
             total_reviews = conn_main.execute('SELECT COUNT(*) FROM reviews').fetchone()[0]
+            conn_main.close()
 
         except Exception as e:
-            logger.error(f"Ошибка в admin_feedback: {e}")
+            logger.error(f"admin_feedback error: {e}")
+            if request.method == 'POST':
+                return jsonify({'success': False, 'message': 'Ошибка сервера'}), 500
             flash('Ошибка загрузки данных', 'error')
             feedbacks = []
-            total_feedback = total_pages = 0
+            total_feedback = total_pages = page = 1
             total_users = total_orders = total_reviews = 0
+
         finally:
-            conn_main.close()
             conn_fb.close()
 
         return render_template(
             'admin_callback.html',
-            feedbacks=feedbacks,           # ← важно именно так!
+            feedbacks=feedbacks,
             total_feedback=total_feedback,
             total_users=total_users,
             total_orders=total_orders,
@@ -1497,8 +1697,6 @@ def register_admin_routes(app):
             page=page,
             total_pages=total_pages
         )
-    
-    
 
     @app.route('/api/order_status/<int:order_id>')
     def api_order_status(order_id):
@@ -2025,40 +2223,99 @@ def register_admin_routes(app):
 
     @app.route('/api/user_cart/<int:user_id>')
     def api_user_cart(user_id):
-        conn = get_conn(DB_MAIN)
+        conn_main = get_conn(DB_MAIN)
+        conn_serv = get_conn(DB_SERVICES)
+
         try:
-            rows_p = conn.execute('''
-                SELECT 'product' as type, c.product_id as id, c.quantity, p.title, p.price, p.image_filenames
-                FROM cart_items c JOIN products p ON c.product_id = p.id
+            # === ТОВАРЫ ===
+            rows_p = conn_main.execute('''
+                SELECT 'product' as type, c.product_id as id, c.quantity, 
+                    p.title, p.price, p.image_filenames
+                FROM cart_items c 
+                JOIN products p ON c.product_id = p.id
                 WHERE c.user_id = ?
             ''', (user_id,)).fetchall()
 
-            rows_s = conn.execute('''
-                SELECT 'service' as type, c.service_id as id, c.quantity, s.title, s.price, '[]' as image_filenames
-                FROM cart_services c JOIN services s ON c.service_id = s.id
-                WHERE c.user_id = ?
-            ''', (user_id,)).fetchall()
+            # === УСЛУГИ ===
+            rows_s = []
+            try:
+                cart_rows = conn_main.execute('''
+                    SELECT service_id, quantity FROM cart_services WHERE user_id = ?
+                ''', (user_id,)).fetchall()
 
+                if cart_rows:
+                    service_ids = [r['service_id'] for r in cart_rows]
+                    if service_ids:
+                        placeholders = ','.join(['?'] * len(service_ids))
+                        services = conn_serv.execute(f'''
+                            SELECT id, title, price, image_urls 
+                            FROM services 
+                            WHERE id IN ({placeholders})
+                        ''', service_ids).fetchall()
+
+                        serv_dict = {s['id']: s for s in services}
+
+                        for cr in cart_rows:
+                            s = serv_dict.get(cr['service_id'])
+                            if s:
+                                # ← ПАРСИМ ФОТО УСЛУГИ ПРАВИЛЬНО! ←
+                                try:
+                                    imgs = json.loads(s['image_urls'] or '[]')
+                                except:
+                                    imgs = [x.strip() for x in str(s['image_urls']).split(',') if x.strip()]
+                                rows_s.append({
+                                    'type': 'service',
+                                    'id': cr['service_id'],
+                                    'quantity': cr['quantity'],
+                                    'title': s['title'],
+                                    'price': s['price'],
+                                    'image_filenames': json.dumps(imgs) if imgs else '[]'
+                                })
+            except Exception as e:
+                logger.warning(f"Услуги в корзине не загрузились (это нормально, если их нет): {e}")
+
+            # === СБОРКА ОТВЕТА ===
             result = []
             for row in rows_p + rows_s:
-                imgs = json.loads(row['image_filenames'] or '[]')
-                img_url = "/static/uploads/" + imgs[0] if imgs else ("https://via.placeholder.com/80/1a1a1a/a0c4ff?text=" + urllib.parse.quote(row['title'][:10]))
-                price = row['price'] if row['type'] == 'product' else int(''.join(filter(str.isdigit, row['price'])) or 0) * 100
+                try:
+                    imgs = json.loads(row['image_filenames'] or '[]')
+                except:
+                    imgs = []
+
+                if row['type'] == 'product' and imgs:
+                    img_url = f"/static/uploads/goods/{imgs[0]}"
+                elif row['type'] == 'service' and imgs:
+                    img_url = f"/static/uploads/services/{imgs[0]}"
+                else:
+                    # ← ГАРАНТИРОВАННО РАБОЧАЯ ЗАГЛУШКА ←
+                    img_url = "/static/assets/no-image.png"
+
+                # Цена
+                if row['type'] == 'service':
+                    price_cents = int(''.join(filter(str.isdigit, str(row['price']))) or 0) * 100
+                    price_str = str(row['price']).strip()
+                else:
+                    price_cents = int(row['price'])
+                    price_str = f"{price_cents//100}.{price_cents%100:02d} ₽"
+
                 result.append({
                     "type": row['type'],
                     "id": row['id'],
                     "title": escape(row['title']),
-                    "price": price,
-                    "price_str": row['type'] == 'service' and row['price'] or f"{price//100}.{price%100:02d} ₽",
+                    "price": price_cents,
+                    "price_str": price_str,
                     "quantity": row['quantity'],
-                    "image_url": img_url
+                    "image_url": img_url          # ← ВСЕГДА валидный URL!
                 })
+
             return jsonify(result)
+
         except Exception as e:
-            logger.error(f"api_user_cart: {e}")
+            logger.error(f"api_user_cart fatal error: {e}")
             return jsonify([])
         finally:
-            conn.close()
+            conn_main.close()
+            conn_serv.close()
 
     @app.route('/admin_users', methods=['GET', 'POST'])
     def admin_users():
@@ -2273,28 +2530,41 @@ def register_admin_routes(app):
                     flash('Услуга обновлена!', 'success')
 
                 # ─────── УДАЛЕНИЕ ───────
+                # ─────── УДАЛЕНИЕ УСЛУГИ ───────
                 elif action == 'delete':
-                    sid = request.form.get('product_id')
-                    if not sid:
-                        flash('ID услуги не указан', 'error')
+                    service_id = request.form.get('product_id')
+                    if not service_id:
+                        flash('Не указан ID услуги', 'error')
                         return redirect(url_for('admin_services'))
 
-                    cursor.execute('SELECT image_urls FROM services WHERE id = ?', (sid,))
-                    row = cursor.fetchone()
-                    if row and row['image_urls']:
-                        try:
-                            for filename in json.loads(row['image_urls']):
-                                filepath = os.path.join(UPLOAD_FOLDER, filename)
-                                if os.path.exists(filepath):
-                                    os.remove(filepath)
-                        except:
-                            pass
+                    try:
+                        # Получаем фото перед удалением
+                        cursor.execute("SELECT image_urls FROM services WHERE id = ?", (service_id,))
+                        row = cursor.fetchone()
 
-                    cursor.execute('DELETE FROM services WHERE id = ?', (sid,))
-                    conn.commit()
-                    flash('Услуга удалена!', 'success')
+                        if row:
+                            try:
+                                filenames = json.loads(row['image_urls'] or '[]')
+                                for fname in filenames:
+                                    if fname:
+                                        filepath = os.path.join(UPLOAD_FOLDER, fname)
+                                        if os.path.exists(filepath):
+                                            os.remove(filepath)
+                            except:
+                                pass  # если JSON битый — просто пропускаем
 
-                return redirect(url_for('admin_services'))
+                            # Удаляем саму услугу
+                            cursor.execute("DELETE FROM services WHERE id = ?", (service_id,))
+                            conn.commit()
+                            flash('Услуга удалена!', 'success')
+                        else:
+                            flash('Услуга не найдена', 'error')
+                    except Exception as e:
+                        logger.error(f"Ошибка удаления услуги {service_id}: {e}")
+                        flash('Ошибка при удалении услуги', 'error')
+
+                    return redirect(url_for('admin_services'))
+
 
             # ─────── GET ───────
             cursor.execute('''
@@ -2376,31 +2646,57 @@ def register_admin_routes(app):
         try:
             if request.method == 'POST':
                 password = request.form.get('password')
-                action = request.form.get('action')
-
                 if not password or password != current_app.config.get('ADMIN_PASSWORD', 'admin123'):
                     return jsonify({'success': False, 'error': 'Неверный пароль'}), 403
 
-                title = request.form.get('title')
-                date = request.form.get('date')
-                short_desc = request.form.get('short_desc')
+                action = request.form.get('action')
+                title = request.form.get('title', '').strip()
+                date = request.form.get('date', '').strip()
+                short_desc = request.form.get('short_desc', '').strip()
                 full_desc = request.form.get('full_desc', '')
                 category = request.form.get('category', '').strip() or None
 
-                # === Загружаем новые фото ===
+                # Защита от пустых полей при редактировании
+                if action in ('add', 'edit'):
+                    if not title:
+                        title = "Без названия"
+                    if not date:
+                        date = datetime.now().strftime('%d %B %Y')
+                    if not short_desc:
+                        short_desc = "Нет описания"
+
+                # === 1. ЗАГРУЗКА НОВЫХ ФАЙЛОВ ===
                 uploaded_images = []
                 if 'images' in request.files:
-                    files = request.files.getlist('images')
-                    for file in files:
-                        if file and file.filename:
-                            ext = os.path.splitext(file.filename)[1].lower()
-                            if ext in {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'}:
-                                filename = f"news_{uuid.uuid4().hex}{ext}"
-                                filepath = os.path.join(NEWS_UPLOAD_FOLDER, filename)
-                                file.save(filepath)
-                                uploaded_images.append(filename)
+                    for file in request.files.getlist('images'):
+                        if not file or not file.filename:
+                            continue
+                        ext = '.jpg'
+                        if file.mimetype:
+                            if file.mimetype == 'image/png':
+                                ext = '.png'
+                            elif file.mimetype == 'image/webp':
+                                ext = '.webp'
+                            elif file.mimetype == 'image/gif':
+                                ext = '.gif'
 
-                # === Удалённые фото (из JS) ===
+                        # Проверка магических байтов (на всякий случай)
+                        if ext == '.jpg':
+                            file.stream.seek(0)
+                            header = file.stream.read(12)
+                            file.stream.seek(0)
+                            if header.startswith(b'\x89PNG'):
+                                ext = '.png'
+                            elif b'WEBP' in header:
+                                ext = '.webp'
+                            elif header.startswith(b'GIF8'):
+                                ext = '.gif'
+
+                        filename = f"news_{uuid.uuid4().hex}{ext}"
+                        file.save(os.path.join(NEWS_UPLOAD_FOLDER, filename))
+                        uploaded_images.append(filename)
+
+                # === 2. УДАЛЕНИЕ СТАРЫХ ФОТО (по delete_images) ===
                 delete_images = []
                 if request.form.get('delete_images'):
                     try:
@@ -2408,30 +2704,26 @@ def register_admin_routes(app):
                     except:
                         pass
 
-                if action == 'add':
-                    # Просто берём до 4 новых фото
-                    final_images = (uploaded_images + [None] * 4)[:4]
+                msg = "Операция выполнена"
 
-                    conn_news.execute(
-                        """INSERT INTO news 
+                # ─────── ДОБАВЛЕНИЕ ───────
+                if action == 'add':
+                    images = (uploaded_images + [None] * 4)[:4]
+                    conn_news.execute("""INSERT INTO news 
                         (title, date, short_desc, full_desc, image1, image2, image3, image4, category) 
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                        (title, date, short_desc, full_desc,
-                         final_images[0], final_images[1], final_images[2], final_images[3], category)
-                    )
+                        (title, date, short_desc, full_desc, *images, category))
                     msg = "Новость добавлена!"
 
+                # ─────── РЕДАКТИРОВАНИЕ ───────
                 elif action == 'edit':
                     nid = request.form.get('news_id')
+                    if not nid:
+                        return jsonify({'success': False, 'error': 'Нет ID новости'})
 
-                    # === УДАЛЕНИЕ СТАРЫХ ФОТО ===
-                    delete_images = json.loads(request.form.get('delete_images', '[]'))
-                    old_row = conn_news.execute("SELECT image1,image2,image3,image4 FROM news WHERE id=?", (nid,)).fetchone()
-                    
-                    # Список текущих фото, которые останутся
+                    old = conn_news.execute("SELECT image1,image2,image3,image4 FROM news WHERE id=?", (nid,)).fetchone()
                     current_images = []
-                    for i in range(1, 5):
-                        img = old_row[f'image{i}']
+                    for img in [old['image1'], old['image2'], old['image3'], old['image4']] if old else []:
                         if img and img not in delete_images:
                             current_images.append(img)
                         if img and img in delete_images:
@@ -2440,105 +2732,86 @@ def register_admin_routes(app):
                             except:
                                 pass
 
-                    # === СОХРАНЕНИЕ НОВЫХ ФОТО (ГЛАВНОЕ ИСПРАВЛЕНИЕ!) ===
-                    new_files = []
-                    files = request.files.getlist('images')
-                    for file in files:
-                        # ← УБРАЛИ .startswith('new_') — ЭТО БЫЛО ГЛАВНОЕ ЗЛО!
-                        if file and file.filename:  # просто проверяем, что файл есть
-                            ext = os.path.splitext(file.filename)[1].lower()
-                            if ext in {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'}:
-                                filename = f"news_{uuid.uuid4().hex}{ext}"
-                                filepath = os.path.join(NEWS_UPLOAD_FOLDER, filename)
-                                file.save(filepath)
-                                new_files.append(filename)
-
-                    # === ФОРМИРОВАНИЕ ФИНАЛЬНОГО ПОРЯДКА ПО images_order ===
+                    # Восстановление порядка
                     order = json.loads(request.form.get('images_order', '[]'))
                     final_images = []
                     new_idx = 0
+                    for marker in order:
+                        if marker.startswith('__new_'):
+                            if new_idx < len(uploaded_images):
+                                final_images.append(uploaded_images[new_idx])
+                                new_idx += 1
+                        elif marker in current_images:
+                            final_images.append(marker)
+                    final_images.extend(uploaded_images[new_idx:])
+                    final_images = final_images[:4]
 
-                    for item in order:
-                        if item.startswith('new_') and new_idx < len(new_files):
-                            final_images.append(new_files[new_idx])
-                            new_idx += 1
-                        elif item in current_images:
-                            final_images.append(item)
-
-                    # Если что-то осталось — добавляем в конец
-                    final_images.extend(new_files[new_idx:])
-                    final_images = final_images[:4]  # строго 4
-
-                    # === ОБНОВЛЕНИЕ В БД ===
                     conn_news.execute("""UPDATE news SET 
                         title=?, date=?, short_desc=?, full_desc=?,
                         image1=?, image2=?, image3=?, image4=?, category=?
                         WHERE id=?""",
                         (title, date, short_desc, full_desc,
-                        final_images[0] if len(final_images) > 0 else None,
-                        final_images[1] if len(final_images) > 1 else None,
-                        final_images[2] if len(final_images) > 2 else None,
-                        final_images[3] if len(final_images) > 3 else None,
+                        final_images[0] if len(final_images)>0 else None,
+                        final_images[1] if len(final_images)>1 else None,
+                        final_images[2] if len(final_images)>2 else None,
+                        final_images[3] if len(final_images)>3 else None,
                         category, nid))
-
                     msg = "Изменения сохранены!"
 
+                # ─────── УДАЛЕНИЕ ───────
                 elif action == 'delete':
                     nid = request.form.get('news_id')
-                    row = conn_news.execute("SELECT image1,image2,image3,image4 FROM news WHERE id = ?", (nid,)).fetchone()
+                    if not nid:
+                        return jsonify({'success': False, 'error': 'Нет ID новости'})
+
+                    row = conn_news.execute("SELECT image1, image2, image3, image4 FROM news WHERE id = ?", (nid,)).fetchone()
                     if row:
-                        for img in [row['image1'], row['image2'], row['image3'], row['image4']]:
+                        for img in (row['image1'], row['image2'], row['image3'], row['image4']):
                             if img:
                                 try:
                                     os.remove(os.path.join(NEWS_UPLOAD_FOLDER, img))
                                 except:
                                     pass
-                    conn_news.execute("DELETE FROM news WHERE id = ?", (nid,))
-                    msg = "Новость удалена"
 
+                    conn_news.execute("DELETE FROM news WHERE id = ?", (nid,))
+                    msg = "Новость удалена!"
+
+                # ← ОДИН commit И ОДИН return ДЛЯ ВСЕХ ДЕЙСТВИЙ
                 conn_news.commit()
                 return jsonify({'success': True, 'message': msg})
 
-                        # GET — ВОТ ЭТОТ БЛОК ДОЛЖЕН БЫТЬ ИМЕННО ТАК
+            # ─────── GET — отображение страницы ───────
             rows = conn_news.execute('SELECT * FROM news ORDER BY created_at DESC').fetchall()
             news = []
-
             for row in rows:
                 n = dict(row)
-                
-                # ЭТОТ БЛОК — ГЛАВНОЕ! С ОБРАТНОЙ СОВМЕСТИМОСТЬЮ И ЛОГИРОВАНИЕМ
-                images = [n.get(f'image{i}') for i in range(1, 5) if n.get(f'image{i}')]
-                n['images'] = images or []   # ← ГАРАНТИРОВАННО список
-                
-                # ← ДЛЯ ДЕБАГА — ВИДИМ В ЛОГАХ, ЧТО ПРИЛЕТАЕТ
-                print(f"Новость {n['id']} — images: {images}")
-                
+                images = [n.get(f'image{i}') for i in range(1,5) if n.get(f'image{i}')]
+                n['images'] = images
                 news.append(n)
 
             today = datetime.now().strftime('%d %B %Y')
-
             total_users = conn_main.execute('SELECT COUNT(*) FROM users').fetchone()[0]
             total_feedback = conn_feedback.execute('SELECT COUNT(*) FROM feedback').fetchone()[0]
             total_orders = conn_main.execute('SELECT COUNT(*) FROM orders').fetchone()[0]
             total_reviews = conn_main.execute('SELECT COUNT(*) FROM reviews').fetchone()[0]
 
             return render_template('admin_news.html',
-                                   news=news,
-                                   today=today,
-                                   total_users=total_users,
-                                   total_feedback=total_feedback,
-                                   total_orders=total_orders,
-                                   total_reviews=total_reviews)
+                                news=news, today=today,
+                                total_users=total_users,
+                                total_feedback=total_feedback,
+                                total_orders=total_orders,
+                                total_reviews=total_reviews)
+
         except Exception as e:
             conn_news.rollback()
             logger.error(f"admin_news error: {e}", exc_info=True)
-            return jsonify({'success': False, 'error': 'Серверная ошибка'}), 500
+            # Возвращаем чистый JSON даже при ошибке
+            return jsonify({'success': False, 'error': 'Ошибка сервера'}), 200
 
         finally:
             conn_news.close()
             conn_main.close()
             conn_feedback.close()
-
     @app.route('/api/categories')
     def api_categories():
         conn = get_conn(DB_MAIN)
@@ -2628,17 +2901,30 @@ def register_admin_routes(app):
     def api_product(product_id):
         conn = get_conn(DB_MAIN)
         try:
-            row = conn.execute("SELECT * FROM products WHERE id = ?", (product_id,)).fetchone()
+            # ← ДОБАВЛЯЕМ stock в SELECT!
+            row = conn.execute("SELECT *, stock FROM products WHERE id = ?", (product_id,)).fetchone()
             if not row:
                 return jsonify({"error": "Товар не найден"}), 404
+            
             p = dict(row)
             p['title'] = escape(p['title'])
-            p['description'] = escape(p.get('description', '')).replace('\n', '<br>')
+            p['description'] = escape(p.get('description', '') or '').replace('\n', '<br>')
+            
             imgs = json.loads(p['image_filenames'] or '[]')
             safe_imgs = [img for img in imgs if isinstance(img, str) and not img.lower().startswith(('javascript:', 'data:'))]
             p['image_urls'] = [f"/static/uploads/goods/{img}" for img in safe_imgs]
             p['price_str'] = f"{p['price']//100}.{p['price']%100:02d} ₽"
-            return jsonify(p)
+
+            # ← ВОТ ЭТО ГЛАВНОЕ: возвращаем stock!
+            return jsonify({
+                "id": p['id'],
+                "title": p['title'],
+                "price": p['price'],
+                "price_str": p['price_str'],
+                "description": p['description'],
+                "image_urls": p['image_urls'],
+                "stock": p['stock'] if p['stock'] is not None else -1  # ← -1 = бесконечно
+            })
         except Exception as e:
             logger.error(f"api_product error: {e}")
             return jsonify({"error": "Ошибка"}), 500
@@ -2875,89 +3161,112 @@ def register_admin_routes(app):
             serv_conn.close()
 
     @app.route('/admin_reviews', methods=['GET', 'POST'])
+
     def admin_reviews():
         if request.method == 'POST':
             data = request.get_json(force=True) or {}
             if not data:
                 return jsonify({'success': False, 'message': 'Нет данных'}), 400
+
             password = data.get('password')
             if password != current_app.config.get('ADMIN_PASSWORD', 'admin123'):
                 return jsonify({'success': False, 'message': 'Неверный пароль'}), 403
+
             action = data.get('action')
-            conn = get_conn(DB_MAIN)
+            conn_main = get_conn(DB_MAIN)
+            conn_services = get_conn(DB_SERVICES)
+
             try:
+                # === УДАЛЕНИЕ ОТЗЫВА ===
                 if action == 'delete_review':
                     rid = data.get('review_id')
                     if not rid or not str(rid).isdigit():
                         return jsonify({'success': False, 'message': 'ID обязателен'}), 400
-                    conn.execute('DELETE FROM reviews WHERE id = ?', (int(rid),))
-                    conn.commit()
+                    conn_main.execute('DELETE FROM reviews WHERE id = ?', (int(rid),))
+                    conn_main.commit()
                     return jsonify({'success': True, 'message': 'Отзыв удалён'})
+
+                # === РЕДАКТИРОВАНИЕ ОТЗЫВА ===
                 elif action == 'edit_review':
                     rid = data.get('review_id')
                     rating = data.get('rating')
                     text = data.get('text', '').strip()
                     if not all([rid, rating, text]) or not str(rid).isdigit() or not str(rating).isdigit():
                         return jsonify({'success': False, 'message': 'Неверные данные'}), 400
-                    conn.execute('UPDATE reviews SET rating = ?, text = ? WHERE id = ?', (int(rating), text, int(rid)))
-                    conn.commit()
+                    conn_main.execute(
+                        'UPDATE reviews SET rating = ?, text = ? WHERE id = ?',
+                        (int(rating), text, int(rid))
+                    )
+                    conn_main.commit()
                     return jsonify({'success': True, 'message': 'Отзыв обновлён'})
+
+                # === СОЗДАНИЕ ОТЗЫВА АДМИНОМ (ГЛАВНОЕ ИСПРАВЛЕНИЕ!) ===
                 elif action == 'create_review':
                     item_type = data.get('item_type')
                     item_id = data.get('item_id')
                     rating = data.get('rating')
                     text = data.get('text', '').strip()
                     user_phone = data.get('user_phone', '').strip() or None
-                    if not all([item_type in ('product', 'service'), item_id, rating, text]):
+
+                    if item_type not in ('product', 'service') or not item_id or not rating or not text:
                         return jsonify({'success': False, 'message': 'Заполните все поля'}), 400
-                    conn.execute('''
-                        INSERT INTO reviews (user_phone, item_type, item_id, rating, text)
-                        VALUES (?, ?, ?, ?, ?)
-                    ''', (user_phone, item_type, int(item_id), int(rating), text))
-                    conn.commit()
+
+                    try:
+                        rating = int(rating)
+                        item_id = int(item_id)
+                    except:
+                        return jsonify({'success': False, 'message': 'Неверные данные'}), 400
+
+                    # ←←← ПОДТЯГИВАЕМ НАЗВАНИЕ ТОВАРА/УСЛУГИ ←←←
+                    item_title = "Без названия"
+                    try:
+                        if item_type == 'product':
+                            row = conn_main.execute('SELECT title FROM products WHERE id = ?', (item_id,)).fetchone()
+                        else:  # service
+                            row = conn_services.execute('SELECT title FROM services WHERE id = ?', (item_id,)).fetchone()
+                        if row and row['title']:
+                            item_title = row['title']
+                    except Exception as e:
+                        logger.warning(f"Не удалось получить название товара/услуги: {e}")
+
+                    # ←←← СОХРАНЯЕМ С ПРАВИЛЬНЫМ item_title ←←←
+                    conn_main.execute('''
+                        INSERT INTO reviews (user_phone, item_type, item_id, rating, text, item_title, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+                    ''', (user_phone, item_type, item_id, rating, text, item_title))
+
+                    conn_main.commit()
                     return jsonify({'success': True, 'message': 'Отзыв создан'})
+
                 else:
                     return jsonify({'success': False, 'message': 'Неизвестное действие'}), 400
+
             except Exception as e:
                 logger.error(f"Admin review error: {e}")
-                conn.rollback()
+                conn_main.rollback()
                 return jsonify({'success': False, 'message': 'Ошибка сервера'}), 500
             finally:
-                conn.close()
+                conn_main.close()
+                conn_services.close()
 
-        # === GET: отображаем отзывы ===
+        # ===================================================================
+        # === GET: отображаем страницу с отзывами ===
+        # ===================================================================
         conn_main = get_conn(DB_MAIN)
-        conn_services = get_conn(DB_SERVICES)
-        reviews = []
-
         try:
-            # 1. Получаем все отзывы из main.db
-            review_rows = conn_main.execute('''
-                SELECT r.*, p.title AS product_title
-                FROM reviews r
-                LEFT JOIN products p ON r.item_type = 'product' AND r.item_id = p.id
-                ORDER BY r.created_at DESC
+            reviews = conn_main.execute('''
+                SELECT *, 
+                    COALESCE(item_title, 'Без названия') AS display_title
+                FROM reviews 
+                ORDER BY created_at DESC
             ''').fetchall()
-
-            # 2. Для каждого отзыва на услугу — подтягиваем title из services.db
-            for row in review_rows:
-                review = dict(row)
-                if review['item_type'] == 'service':
-                    service = conn_services.execute(
-                        'SELECT title FROM services WHERE id = ?',
-                        (review['item_id'],)
-                    ).fetchone()
-                    review['service_title'] = service['title'] if service else 'Услуга удалена'
-                else:
-                    review['service_title'] = None
-                reviews.append(review)
-
+            reviews = [dict(row) for row in reviews]
         except Exception as e:
             logger.error(f"admin_reviews GET error: {e}")
             flash('Ошибка загрузки отзывов', 'error')
+            reviews = []
         finally:
             conn_main.close()
-            conn_services.close()
 
         # === СТАТИСТИКА ===
         conn_main = get_conn(DB_MAIN)
@@ -2967,6 +3276,8 @@ def register_admin_routes(app):
             total_feedback = conn_feedback.execute('SELECT COUNT(*) FROM feedback').fetchone()[0]
             total_orders = conn_main.execute('SELECT COUNT(*) FROM orders').fetchone()[0]
             total_reviews = conn_main.execute('SELECT COUNT(*) FROM reviews').fetchone()[0]
+        except:
+            total_users = total_feedback = total_orders = total_reviews = 0
         finally:
             conn_main.close()
             conn_feedback.close()
