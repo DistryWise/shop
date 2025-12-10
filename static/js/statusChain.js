@@ -319,9 +319,18 @@ function updateArchiveTabsCounts() {
 
     // Обновляем бейджи — проверь, какие у тебя ID у спанов!
     // Чаще всего так:
-    document.querySelector('[data-tab="active"] span')?.then(b => b.textContent = activeCount > 0 ? activeCount : '');
-    document.querySelector('[data-tab="cancelled"] span')?.then(b => b.textContent = cancelledCount > 0 ? cancelledCount : '');
-    document.querySelector('[data-tab="completed"] span')?.then(b => b.textContent = completedCount > 0 ? completedCount : '');
+    document.querySelector('[data-tab="active"] span')?.then?.(b => b.textContent = activeCount > 0 ? activeCount : '');
+// Нет! Так нельзя!
+
+// Правильно:
+const activeBadge = document.querySelector('[data-tab="active"] span');
+if (activeBadge) activeBadge.textContent = activeCount > 0 ? activeCount : '';
+
+const cancelledBadge = document.querySelector('[data-tab="cancelled"] span');
+if (cancelledBadge) cancelledBadge.textContent = cancelledCount > 0 ? cancelledCount : '';
+
+const completedBadge = document.querySelector('[data-tab="completed"] span');
+if (completedBadge) completedBadge.textContent = completedCount > 0 ? completedCount : '';
 
     // Если у тебя ID, а не data-tab — подставь свои:
     // document.getElementById('activeCountBadge')?.textContent = activeCount || '';
