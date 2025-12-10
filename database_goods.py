@@ -1747,7 +1747,7 @@ def register_admin_routes(app):
                         try:
                             imgs = json.loads(prod['image_filenames'])
                             if imgs and isinstance(imgs, list) and imgs[0]:
-                                image_url = f"/static/uploads/{imgs[0]}"
+                                image_url = f"/static/uploads/goods/{imgs[0]}"
                         except:
                             pass
 

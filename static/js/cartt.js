@@ -507,20 +507,17 @@ function renderVerticalOrders() {
   container.innerHTML = '';
 
   if (activeOrders.length === 0) {
-    container.innerHTML = `
-      <div style="text-align:center;padding:80px 20px;color:var(--text-secondary);opacity:0.7;">
-        <svg style="width:64px;height:64px;margin-bottom:16px;opacity:0.3;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M9 12h6m-6-4h6m-6 8h6m-2 4H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4l-2 2-2-2Z"/>
-        </svg>
-        <div style="font-weight:600;font-size:17px;">Активных заказов нет</div>
-      </div>`;
+    container.innerHTML = `<div style="text-align:center;padding:80px 20px;color:var(--text-secondary);opacity:0.7;">
+      <svg style="width:64px;height:64px;margin-bottom:16px;opacity:0.3;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M9 12h6m-6-4h6m-6 8h6m-2 4H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4l-2 2-2-2Z"/>
+      </svg>
+      <div style="font-weight:600;font-size:17px;">Активных заказов нет</div>
+    </div>`;
     return;
   }
 
   activeOrders.forEach(order => {
     const card = document.createElement('div');
-    
-    // ← Твои родные стили — всё как было!
     card.style.cssText = `
       background:rgba(255,255,255,0.09);
       border-radius:20px;
@@ -529,87 +526,137 @@ function renderVerticalOrders() {
       border-left:5px solid #00ff95;
       transition:all 0.4s cubic-bezier(0.22,1,0.36,1);
       cursor:pointer;
+      box-shadow:0 4px 16px rgba(0,0,0,0.18);
     `;
 
-    card.onmouseenter = () => card.style.transform = 'translateY(-2px)';
-    card.onmouseleave = () => card.style.transform = '';
-
+    // ←←← ВОТ ЭТО ГЛАВНОЕ: НОМЕР ЗАКАЗА В ДВЕ СТРОКИ + ЦЕПОЧКА СТАТУСОВ ВНУТРИ
     card.innerHTML = `
-      <!-- Заголовок -->
-      <div class="order-header" style="padding:16px 18px;display:flex;align-items:center;gap:14px;">
-        <div style="width:52px;height:52px;background:var(--order-icon-bg);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-          <i class="fas fa-truck" style="font-size:24px;color:var(--order-icon-color);"></i>
+      <div class="order-header" style="
+        padding:clamp(14px, 4vw, 18px) clamp(16px, 4.5vw, 20px);
+        display:flex;
+        align-items:center;
+        gap:clamp(12px, 3.5vw, 16px);
+      ">
+        <div style="
+          width:clamp(48px, 13vw, 56px);
+          height:clamp(48px, 13vw, 56px);
+          background:var(--order-icon-bg, rgba(0,255,149,0.12));
+          border-radius:16px;
+          display:flex;align-items:center;justify-content:center;
+          flex-shrink:0;
+        ">
+          <i class="fas fa-truck" style="font-size:clamp(20px, 6vw, 26px);color:#00ff95;"></i>
         </div>
+
         <div style="flex:1;min-width:0;">
-          <div style="font-weight:800;font-size:17px;color:var(--text-primary);margin-bottom:3px;">
-            Заказ ${order.display_id || order.id}
+          <!-- "Заказ" — сверху -->
+          <div style="
+            font-size:clamp(12px, 3.4vw, 13.5px);
+            color:var(--text-secondary);
+            text-transform:uppercase;
+            letter-spacing:0.5px;
+            font-weight:600;
+            opacity:0.9;
+            margin-bottom:2px;
+          ">Заказ</div>
+
+          <!-- Номер заказа — снизу, крупно, без переносов -->
+          <div style="
+            font-weight:900;
+            font-size:clamp(17px, 5.2vw, 21px);
+            color:var(--text-primary);
+            line-height:1.1;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            letter-spacing:-0.5px;
+          ">
+            ${order.display_id || order.id}
           </div>
-          <div style="font-size:14px;color:var(--text-secondary);">
-            ${order.total_str || '—'} • ${new Date(order.created_at).toLocaleDateString('ru-RU', {day:'numeric', month:'short', year:'numeric'})}
+
+          <!-- Цена + дата — в одну строку -->
+          <div style="
+            margin-top:6px;
+            font-size:clamp(13px, 3.7vw, 15px);
+            color:var(--text-secondary);
+            line-height:1.4;
+          ">
+            <span style="font-weight:700;color:#00ff95;font-size:clamp(14px, 4vw, 16.5px);">
+              ${order.total_str || '—'}
+            </span>
+            <span style="opacity:0.7;margin:0 8px;">•</span>
+            <span style="opacity:0.85;">
+              ${new Date(order.created_at).toLocaleDateString('ru-RU', {day:'numeric', month:'short'}).replace('.', '')}
+            </span>
           </div>
         </div>
-        <i class="fas fa-chevron-down expand-icon" style="color:var(--text-secondary);font-size:20px;transition:transform 0.3s;"></i>
+
+        <i class="fas fa-chevron-down expand-icon" style="
+          color:var(--text-secondary);
+          font-size:clamp(19px, 5.5vw, 23px);
+          transition:transform 0.38s cubic-bezier(0.22,1,0.36,1);
+          flex-shrink:0;
+        "></i>
       </div>
 
-      <!-- Раскрывающаяся часть — ТОЧНО КАК У ТЕБЯ -->
-      <div class="order-details" style="max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.22,1,0.36,1);background:var(--order-details-bg);border-top:1px solid var(--order-details-border);">
-        <div style="padding:18px 18px 22px;">
-          <div id="chain-${order.id}"></div>
+      <!-- ВНУТРЕННЯЯ МОДАЛКА — ЦЕПОЧКА СТАТУСОВ С КРАСИВОЙ МОБИЛЬНОЙ АДАПТАЦИЕЙ -->
+      <div class="order-details" style="
+        max-height:0;overflow:hidden;
+        transition:max-height 0.6s cubic-bezier(0.22,1,0.36,1);
+        background:rgba(255,255,255,0.04);
+        border-top:1px solid rgba(255,255,255,0.08);
+      ">
+        <div style="
+          padding:clamp(20px, 5.5vw, 32px) clamp(16px, 4.5vw, 20px);
+        ">
+          <div id="chain-${order.id}" class="mobile-chain-content" style="
+            font-size:clamp(13.8px, 3.9vw, 15.8px);
+            line-height:1.6;
+            color:var(--text-primary);
+            word-break:break-word;
+            hyphens:none;
+            overflow-wrap:anywhere;
+          "></div>
         </div>
       </div>
     `;
 
-card.querySelector('.order-header').addEventListener('click', (e) => {
-  e.stopPropagation();
-  const details = card.querySelector('.order-details');
-  const icon = card.querySelector('.expand-icon');
-  const target = document.getElementById(`chain-${order.id}`);
+    // Клик — открытие цепочки
+    card.querySelector('.order-header').addEventListener('click', (e) => {
+      e.stopPropagation();
+      const details = card.querySelector('.order-details');
+      const icon = card.querySelector('.expand-icon');
+      const target = document.getElementById(`chain-${order.id}`);
 
-  if (!target) return;
+      const isOpen = details.dataset.open === 'true';
 
-  // Надёжное определение состояния — через data-атрибут
-  const isOpen = details.dataset.open === 'true';
+      if (isOpen) {
+        details.style.maxHeight = '0px';
+        details.dataset.open = 'false';
+        icon.style.transform = 'rotate(0deg)';
+      } else {
+        details.dataset.open = 'true';
+        icon.style.transform = 'rotate(180deg)';
 
-  if (isOpen) {
-    // ЗАКРЫВАЕМ — всегда работает
-    details.style.maxHeight = '0px';
-    details.dataset.open = 'false';
-    icon.style.transform = 'rotate(0deg)';
-  } else {
-    // ОТКРЫВАЕМ — всегда работает
-    details.dataset.open = 'true';
-    icon.style.transform = 'rotate(180deg)';
+        // Подмена для statuschain.js
+        const real = Document.prototype.getElementById;
+        Document.prototype.getElementById = (id) => id === 'orderChain' ? target : real.call(this, id);
 
-    // Подмена + запуск цепочки
-    const real = Document.prototype.getElementById;
-    Document.prototype.getElementById = (id) => id === 'orderChain' ? target : real.call(this, id);
-
-    if (!target.dataset.loaded) {
-      window.startOrderChain?.(order.id);
-      target.dataset.loaded = 'true';
-    }
-
-    Document.prototype.getElementById = real;
-
-    // Открываем на безопасную высоту
-    details.style.maxHeight = '3000px';
-
-    // Подгоняем высоту каждые 80 мс, пока контент растёт
-    let attempts = 0;
-    const adjust = () => {
-      if (details.dataset.open === 'true') {  // если не закрыли за это время
-        const needed = details.scrollHeight + 90;
-        if (needed + 50 > parseFloat(details.style.maxHeight)) {
-          details.style.maxHeight = needed + 'px';
+        if (!target.dataset.loaded) {
+          window.startOrderChain?.(order.id);
+          target.dataset.loaded = 'true';
         }
-        if (attempts++ < 20) {
-          setTimeout(adjust, 80);
-        }
+
+        Document.prototype.getElementById = real;
+
+        details.style.maxHeight = '6000px';
+        setTimeout(() => {
+          if (details.dataset.open === 'true') {
+            details.style.maxHeight = (details.scrollHeight + 80) + 'px';
+          }
+        }, 100);
       }
-    };
-    setTimeout(adjust, 60);
-  }
-});
+    });
 
     container.appendChild(card);
   });
@@ -642,27 +689,44 @@ function openMultiOrderModal() {
 }
 
 function closeMultiOrderModal() {
-  if (window.innerWidth <= 1026) {
-    multiModal.classList.remove('show');
+    const modal = document.getElementById('multiOrderModal');
+    const sheet = modal?.querySelector('div[style*="background:var(--modal-bg)"]') || modal?.firstElementChild;
 
-    // Дожидаемся окончания анимации и только потом скрываем
-    modalInner.addEventListener('transitionend', function hide() {
-      multiModal.style.display = 'none';
-      multiModal.classList.remove('show'); // на всякий случай
-      modalInner.removeEventListener('transitionend', hide);
-    }, { once: true });
-  } else {
-    multiModal.style.display = 'none';
-  }
+    if (!modal) return;
+
+    if (window.innerWidth <= 1026) {
+        modal.classList.remove('show');
+
+        // Принудительно скрываем через 600мс — даже если transitionend не сработает
+        const forceHide = () => {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        };
+
+        // Пытаемся поймать transitionend
+        if (sheet) {
+            sheet.addEventListener('transitionend', forceHide, { once: true });
+        }
+
+        // Но если не сработает — всё равно скроем через 600мс
+        setTimeout(forceHide, 600);
+    } else {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
 }
 
 // ——— КНОПКА "ЗАКРЫТЬ" ———
-document.querySelector('#multiOrderModal button[onclick="closeMultiOrderModal()"]')
-  ?.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    closeMultiOrderModal();
-  });
+// ГАРАНТИРОВАННОЕ ЗАКРЫТИЕ КНОПКОЙ "ЗАКРЫТЬ"
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (btn && btn.textContent.trim() === 'Закрыть' && btn.closest('#multiOrderModal')) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeMultiOrderModal();
+    }
+});
 
 // ——— ЗАКРЫТИЕ ПО БЭКДРОПУ ———
 multiModal.addEventListener('click', (e) => {
@@ -694,28 +758,50 @@ document.getElementById('multiOrderModal').addEventListener('click', e => {
   if (e.target === document.getElementById('multiOrderModal')) closeMultiOrderModal();
 });
 
-// Перехват оформления заказа
+// === ПЕРЕОПРЕДЕЛЯЕМ window.startOrderChain — РАБОТАЕТ МОМЕНТАЛЬНО И С ЦЕНОЙ ===
 window.startOrderChain = async function(orderId) {
   try {
-    const res = await fetch(`/api/order/${orderId}?t=${Date.now()}`);
-    const order = res.ok ? await res.json() : { id: orderId };
+    // 1. Делаем запрос и ЖДЁМ ПОЛНЫЕ данные заказа
+    const res = await fetch(`/api/order/${orderId}?t=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch order');
 
-    // Добавляем в начало, максимум 3
-    if (!activeOrders.find(o => o.id === order.id)) {
-      activeOrders.unshift(order);
-      if (activeOrders.length > 3) activeOrders.pop();
-    }
+    const freshOrder = await res.json();
+
+    // 2. Формируем объект точно так же, как везде
+    const order = {
+      ...freshOrder,
+      display_id: freshOrder.display_id || freshOrder.user_order_number || `№${orderId}`,
+      total_str: freshOrder.total_str || (freshOrder.total ? `${freshOrder.total.toLocaleString()} ₽` : '—'),
+      created_at: freshOrder.created_at || new Date().toISOString(),
+    };
+
+    // 3. Обновляем глобальный массив (удаляем старый, если был)
+    activeOrders = activeOrders.filter(o => o.id !== order.id);
+    activeOrders.unshift(order); // новый — в начало
+    if (activeOrders.length > 10) activeOrders.pop(); // ограничение
+
+    // 4. ОБНОВЛЯЕМ ВСЁ СРАЗУ — с правильной ценой!
+    updateFloatingPill();
+    renderVerticalOrders();        // ← теперь с реальной ценой
+    openMultiOrderModal();         // ← открываем уже с заполненными данными
+
+  } catch (err) {
+    console.warn('Не удалось загрузить детали заказа для модалки', err);
+
+    // Даже если упало — всё равно показываем хотя бы номер
+    const fallbackOrder = {
+      id: orderId,
+      display_id: `№${orderId}`,
+      total_str: '—',
+      created_at: new Date().toISOString(),
+    };
+
+    activeOrders = activeOrders.filter(o => o.id !== orderId);
+    activeOrders.unshift(fallbackOrder);
 
     updateFloatingPill();
     renderVerticalOrders();
-
-  } catch (err) {
-    console.warn('Не удалось загрузить заказ', orderId);
-    if (!activeOrders.find(o => o.id === orderId)) {
-      activeOrders.unshift({ id: orderId });
-      if (activeOrders.length > 3) activeOrders.pop();
-    }
-    updateFloatingPill();
+    openMultiOrderModal();
   }
 };
 
@@ -1145,5 +1231,6 @@ document.addEventListener('DOMContentLoaded', () => {
     e.stopPropagation();
     openMultiOrderModal();
   });
+  
 });
 

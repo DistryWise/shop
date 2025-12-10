@@ -924,11 +924,11 @@ function renderOrders() {
                         </span>
                     </div>
                     <div class="archive-order-meta">
-                        <div class="archive-order-date">
-                            ${new Date(order.created_at).toLocaleDateString('ru-RU', {
-                                day: 'numeric', month: 'short', year: 'numeric'
-                            })}
-                        </div>
+                        <div class="archive-order-date" style="font-size:clamp(0.78rem,2.6vw,0.92rem);font-weight:600;opacity:0.88;white-space:nowrap;">
+    ${new Date(order.created_at).toLocaleDateString('ru-RU', {
+        day: 'numeric', month: 'short', year: 'numeric'
+    })}
+</div>
                         <div class="archive-order-total">${order.total_str}</div>
                     </div>
                 </div>
@@ -1008,10 +1008,15 @@ const apiUrl = isService
      onerror="this.onerror=null; this.src='/static/assets/no-image.png?t=' + Date.now()"
      loading="lazy">
                 <div class="archive-item-info">
-                    <div class="archive-item-name">${item.title || 'Без названия'}</div>
-                    <div class="archive-item-details">
-                        ${item.quantity || 1} × ${item.price_str || '—'}
-                    </div>
+                    <div class="archive-item-details" style="font-size:clamp(0.82rem,2.8vw,0.96rem);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+    ${item.quantity || 1} × ${item.price_str && item.price_str !== '—' && item.price_str !== '' 
+        ? item.price_str 
+        : (item.price_cents > 0 
+            ? (Math.floor(item.price_cents / 100)).toLocaleString('ru-RU') + '.' + (item.price_cents % 100).toString().padStart(2, '0') + ' ₽'
+            : 'Цена по запросу'
+        )
+    }
+</div>
                 </div>
                 <button class="archive-repeat-btn" 
                         onclick="event.stopPropagation(); repeatOrderItem(${item.item_id}, '${item.item_type || 'product'}')">
@@ -1048,18 +1053,140 @@ const apiUrl = isService
         if (window.pollInterval) clearInterval(window.pollInterval);
         window.startOrderChain(orderId);
     };
-    window.repeatOrderItem = async function(itemId, type = 'product') {
+    // ПОВТОРИТЬ ЗАКАЗ — ИДЕАЛЬНАЯ ВЕРСИЯ 2025 (ПО ТВОИМ ТРЕБОВАНИЯМ)
+window.repeatOrderItem = async function(itemId, type = 'product') {
     if (!itemId) return;
-    await fetch('/api/cart/add', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(
-            type === 'service' ? { service_id: itemId } : { product_id: itemId }
-        )
-    });
-    document.dispatchEvent(new CustomEvent('cartUpdated'));
+
+    // ОСТАНАВЛИВАЕМ ВСПЛЫТИЕ — МОДАЛКА НЕ ЗАКРОЕТСЯ!
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+
+    const btn = event?.target?.closest('.archive-repeat-btn');
+    if (!btn || btn.disabled) return;
+
+    btn.disabled = true;
+    const originalText = btn.innerText.trim() || 'Повторить';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    try {
+        const res = await fetch('/api/cart/add', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(
+                type === 'service'
+                    ? { service_id: itemId, quantity: 1 }
+                    : { product_id: itemId, quantity: 1 }
+            )
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+            // Обновляем корзину мгновенно
+            if (typeof loadCart === 'function') await loadCart();
+            document.dispatchEvent(new CustomEvent('cartUpdated'));
+
+            // САМЫЙ КРАСИВЫЙ ТОСТ В МИРЕ — CLAMP() + НИКАКИХ ПЕРЕНОСОВ
+            const toast = document.createElement('div');
+            toast.innerHTML = `
+                <div class="perfect-toast">
+                    <i class="fas fa-check-circle"></i>
+                    <div class="perfect-text">
+                        Добавлено в корзину!
+                    </div>
+                </div>
+            `;
+
+            Object.assign(toast.style, {
+                position: 'fixed',
+                bottom: 'max(28px, env(safe-area-inset-bottom))',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: '#00ff95',
+                color: '#000',
+                padding: '16px 32px',
+                borderRadius: '32px',
+                boxShadow: '0 20px 60px rgba(0,255,149,0.38)',
+                backdropFilter: 'blur(28px)',
+                WebkitBackdropFilter: 'blur(28px)',
+                zIndex: '999999',
+                fontFamily: 'Inter, -apple-system, system-ui, sans-serif',
+                fontWeight: '800',
+                maxWidth: '92vw',
+                textAlign: 'center',
+                opacity: '0',
+                pointerEvents: 'none',
+                animation: 'toastUp 0.6s cubic-bezier(0.22,0.61,0.36,1) forwards'
+            });
+
+            const inner = toast.firstElementChild;
+            Object.assign(inner.style, {
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '16px'
+            });
+
+            inner.querySelector('i').style.fontSize = 'clamp(1.5rem, 5vw, 2rem)';
+
+            const text = inner.querySelector('.perfect-text');
+            text.style.fontSize = 'clamp(0.95rem, 4.2vw, 1.25rem)';
+            text.style.lineHeight = '1.3';
+            text.style.whiteSpace = 'nowrap'; // ← ГЛАВНОЕ: НИКАКИХ ПЕРЕНОСОВ!
+
+            document.body.appendChild(toast);
+            requestAnimationFrame(() => toast.style.opacity = '1');
+
+            setTimeout(() => {
+                toast.style.animation = 'toastDown 0.5s ease forwards';
+                setTimeout(() => toast.remove(), 550);
+            }, 2800);
+
+        } else {
+            throw new Error(data.error || 'Ошибка');
+        }
+    } catch (err) {
+        console.error('Повтор заказа:', err);
+        if (typeof reliableToast === 'function') {
+            reliableToast('Ошибка', 'Не удалось добавить', true);
+        }
+    } finally {
+        setTimeout(() => {
+            if (btn?.isConnected) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }, 600);
+    }
 };
+
+// АНИМАЦИИ — ОДИН РАЗ
+if (!document.getElementById('perfectRepeatToast2025')) {
+    const style = document.createElement('style');
+    style.id = 'perfectRepeatToast2025';
+    style.textContent = `
+        @keyframes toastUp {
+            from { transform: translateX(-50%) translateY(120px); opacity: 0; }
+            to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+        @keyframes toastDown {
+            to { transform: translateX(-50%) translateY(120px); opacity: 0; }
+        }
+        .perfect-toast {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+        .perfect-toast i {
+            flex-shrink: 0;
+        }
+    `;
+    document.head.appendChild(style);
+}
 }
 
 // === ГЛАВНОЕ: ЛОВИМ ИЗМЕНЕНИЕ СТАТУСА И ОБНОВЛЯЕМ МИНИ-ЦЕПОЧКУ В АРХИВЕ ===

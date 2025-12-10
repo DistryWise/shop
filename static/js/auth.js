@@ -797,60 +797,145 @@ const logout = async () => {
 
   const alertBox = document.createElement('div');
   alertBox.style.cssText = `
-    position:fixed;inset:0;
-    background:${isLight ? 'rgba(250,250,250,0.96)' : 'rgba(0,0,0,0.92)'};
-    backdrop-filter:blur(28px);
-    display:flex;align-items:center;justify-content:center;
-    z-index:99999;opacity:0;transition:opacity .45s ease;
+    position:fixed;
+    inset:0;
+    background:${isLight ? 'rgba(250,250,250,0.96)' : 'rgba(0,0,0,0.94)'};
+    backdrop-filter:blur(32px);
+    -webkit-backdrop-filter:blur(32px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:99999;
+    opacity:0;
+    transition:opacity .5s cubic-bezier(0.22,1,0.36,1);
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    box-sizing:border-box;
   `;
 
-  alertBox.innerHTML = `
+  // ВАЖНО: используем шаблонные строки + \ перед clamp, чтобы не сломать кавычки
+alertBox.innerHTML = `
+  <div style="
+    background:${isLight ? '#ffffff' : 'rgba(18,18,18,0.98)'};
+    border:${isLight ? '1.8px solid rgba(0,0,0,0.14)' : '1.5px solid rgba(255,255,255,0.16)'};
+    border-radius:28px;
+    padding:clamp(1.8rem, 6vw, 2.6rem) clamp(1.6rem, 5vw, 2.6rem);
+    text-align:center;
+    max-width:92vw;
+    width:100%;
+    box-shadow:${isLight 
+      ? '0 32px 80px rgba(0,0,0,0.16), 0 16px 40px rgba(0,0,0,0.1)' 
+      : '0 40px 100px rgba(0,0,0,0.7)'};
+    animation:popIn 0.55s cubic-bezier(0.22,1,0.36,1) forwards;
+  ">
+    <!-- Иконка -->
+    <i class="fas fa-sign-out-alt" style="
+      font-size:clamp(2.8rem, 10vw, 3.6rem) !important;
+      color:#ff453a;
+      margin-bottom:clamp(0.9rem, 3vw, 1.4rem) !important;
+      display:block;
+    "></i>
+    
+    <!-- Заголовок — теперь с жёстким переносом -->
+    <h3 style="
+      margin:0 0 clamp(0.6rem, 2vw, 1rem);
+      font-size:clamp(1.45rem, 5.2vw, 1.85rem) !important;
+      font-weight:800;
+      line-height:1.22;
+      letter-spacing:-0.03em;
+      color:${isLight ? '#000000' : '#ffffff'};
+      max-width:100%;
+      white-space:normal !important;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+      hyphens:auto;
+    ">Выйти из аккаунта?</h3>
+    
+    <!-- Текст под иконкой — САМАЯ ГЛАВНАЯ ИСПРАВЛЕННАЯ ЧАСТЬ -->
+    <p style="
+      color:${isLight ? '#555555' : '#bbbbbb'};
+      margin:0 0 clamp(1.6rem, 5vw, 2.2rem);
+      line-height:1.52;
+      font-size:clamp(0.95rem, 3.3vw, 1.08rem) !important;
+      padding:0 clamp(0.4rem, 2vw, 0.8rem);
+      max-width:100%;
+      width:100%;
+      box-sizing:border-box;
+      white-space:normal !important;
+      overflow-wrap:anywhere !important;
+      word-break:break-word !important;
+      hyphens:auto !important;
+    ">Вы будете разлогинены со всех устройств</p>
+    
+    <!-- Кнопки -->
     <div style="
-      background:${isLight ? '#ffffff' : 'rgba(15,15,15,0.98)'};
-      border:${isLight ? '1.8px solid rgba(0,0,0,0.16)' : '1.5px solid rgba(255,255,255,0.15)'};
-      border-radius:28px;padding:2.2rem 2.6rem;text-align:center;max-width:90vw;
-      box-shadow:${isLight 
-        ? '0 40px 100px rgba(0,0,0,0.18), 0 20px 60px rgba(0,0,0,0.12)' 
-        : '0 30px 80px rgba(0,0,0,0.7)'};
+      display:flex;
+      gap:clamp(0.9rem, 3vw, 1.2rem);
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-top:clamp(0.5rem, 2vw, 1rem);
     ">
-      <i class="fas fa-sign-out-alt" style="
-        font-size:3.2rem;color:#ff6b6b;margin-bottom:1rem;display:block;
-      "></i>
+      <button id="confirmLogout" style="
+        background:#ff453a;
+        color:#fff;
+        border:none;
+        padding:clamp(0.85rem, 3vw, 1rem) clamp(1.8rem, 5vw, 2.4rem);
+        border-radius:20px;
+        font-weight:700;
+        font-size:clamp(0.98rem, 3.5vw, 1.1rem) !important;
+        cursor:pointer;
+        min-width:128px;
+        box-shadow:0 12px 32px rgba(255,69,58,0.38);
+        transition:all .3s ease;
+      ">Выйти</button>
       
-      <h3 style="
-        margin:0 0 1rem;font-size:1.7rem;font-weight:700;
+      <button id="cancelLogout" style="
+        background:${isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.11)'};
         color:${isLight ? '#000000' : '#ffffff'};
-      ">Выйти из аккаунта?</h3>
-      
-      <p style="
-        color:${isLight ? '#444444' : '#aaaaaa'};
-        margin-bottom:2rem;line-height:1.5;font-size:1.02rem;
-      ">Вы будете разлогинены со всех устройств</p>
-      
-      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
-        <button id="confirmLogout" style="
-          background:#ff3b30;color:#fff;border:none;
-          padding:0.9rem 2rem;border-radius:18px;font-weight:600;
-          font-size:1.05rem;cursor:pointer;min-width:130px;
-          box-shadow:0 10px 30px rgba(255,59,48,0.35);
-        ">Выйти</button>
-        
-        <button id="cancelLogout" style="
-          background:${isLight ? 'rgba(0,0,0,0.09)' : 'rgba(255,255,255,0.12)'};
-          color:${isLight ? '#000000' : '#ffffff'};
-          border:${isLight ? '1.7px solid rgba(0,0,0,0.22)' : '1.5px solid rgba(255,255,255,0.22)'};
-          padding:0.9rem 2rem;border-radius:18px;font-weight:600;
-          font-size:1.05rem;cursor:pointer;min-width:130px;
-        ">Отмена</button>
-      </div>
+        border:${isLight ? '1.7px solid rgba(0,0,0,0.2)' : '1.6px solid rgba(255,255,255,0.24)'};
+        padding:clamp(0.85rem, 3vw, 1rem) clamp(1.8rem, 5vw, 2.4rem);
+        border-radius:20px;
+        font-weight:700;
+        font-size:clamp(0.98rem, 3.5vw, 1.1rem) !important;
+        cursor:pointer;
+        min-width:128px;
+        transition:all .3s ease;
+      ">Отмена</button>
     </div>
-  `;
+  </div>
+`;
 
+  // Анимация появления
   document.body.appendChild(alertBox);
-  setTimeout(() => alertBox.style.opacity = '1', 10);
+  requestAnimationFrame(() => {
+    alertBox.style.opacity = '1';
+  });
+
+  // Добавляем @keyframes один раз (если ещё нет)
+  if (!document.getElementById('logoutPopInStyle')) {
+    const style = document.createElement('style');
+    style.id = 'logoutPopInStyle';
+    style.textContent = `
+      @keyframes popIn {
+        from { transform:scale(0.86); opacity:0; }
+        to   { transform:scale(1); opacity:1; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
 
   return new Promise(resolve => {
-    alertBox.querySelector('#confirmLogout').onclick = async () => {
+    const confirmBtn = alertBox.querySelector('#confirmLogout');
+    const cancelBtn = alertBox.querySelector('#cancelLogout');
+
+    const closeModal = () => {
+      alertBox.style.opacity = '0';
+      setTimeout(() => {
+        alertBox.remove();
+      }, 500);
+      resolve();
+    };
+
+    confirmBtn.onclick = async () => {
       try {
         await fetch('/api/logout', { method: 'POST' });
       } catch (e) {}
@@ -863,23 +948,6 @@ const logout = async () => {
       document.dispatchEvent(new CustomEvent('userLoggedOut'));
       currentUser = null;
 
-      // Сброс модалки авторизации
-      const modal = $('authModal');
-      if (modal) modal.classList.remove('show');
-      document.body.style.overflow = '';
-      
-      const stepPhone = $('stepPhone');
-      const stepCode = $('stepCode');
-      const stepSuccess = $('stepSuccess');
-      const phoneInput = $('phoneInput');
-      const codeInput = $('codeInput');
-
-      if (stepPhone) stepPhone.style.display = 'block';
-      if (stepCode) stepCode.style.display = 'none';
-      if (stepSuccess) stepSuccess.style.display = 'none';
-      if (phoneInput) phoneInput.value = '';
-      if (codeInput) codeInput.value = '';
-
       updateAuthBtn();
       updateMobileAuthBtn();
       window.dispatchEvent(new Event('storage'));
@@ -888,19 +956,18 @@ const logout = async () => {
       showToast('Вы вышли', 'До встречи!');
       if (typeof loadCart === 'function') await loadCart();
 
-      alertBox.remove();
-      resolve();
+      closeModal();
     };
 
-    const closeAndResolve = () => {
-      alertBox.remove();
-      resolve();
+    cancelBtn.onclick = closeModal;
+    alertBox.onclick = (e) => {
+      if (e.target === alertBox) closeModal();
     };
-
-    alertBox.querySelector('#cancelLogout').onclick = closeAndResolve;
-    alertBox.onclick = (e) => e.target === alertBox && closeAndResolve();
   });
 };
+
+// Делаем доступным глобально
+window.logout = logout;
 
 // Делаем доступным глобально
 window.logout = logout;
