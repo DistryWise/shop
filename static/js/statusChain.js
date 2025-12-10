@@ -70,7 +70,7 @@ window.startOrderChain = async function(orderId) {
     const isMobile = window.innerWidth <= 1026;
 
     try {
-        const res = await fetch(`/api/order_status/${orderId}?t=${Date.now()}`);
+        const res = await fetch(`/api/order_status/${orderId}`);
         if (!res.ok) return;
         const data = await res.json();
         if (!data.status) return;
