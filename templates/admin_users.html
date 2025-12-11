@@ -31,9 +31,20 @@ window.fetch = async (...args) => {
         config.headers['X-Requested-With'] = 'XMLHttpRequest';
         
         // Если отправляем FormData — не трогаем Content-Type (браузер сам поставит с boundary)
-        if (!(config.body instanceof FormData)) {
-            config.headers['Content-Type'] = 'application/json';
-        }
+        // В твоём глобальном перехватчике fetch — замени условие:
+if (!(config.body instanceof FormData)) {
+    // Если тело — URLSearchParams или строка с "=" — это form-urlencoded
+    const isFormUrlEncoded = 
+        config.body instanceof URLSearchParams ||
+        (typeof config.body === 'string' && config.body.includes('=')) ||
+        (config.body && config.body.toString() === '[object URLSearchParams]');
+
+    if (isFormUrlEncoded) {
+        config.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    } else {
+        config.headers['Content-Type'] = 'application/json';
+    }
+}
     }
 
     const response = await origFetch(resource, config);
@@ -48,7 +59,7 @@ window.fetch = async (...args) => {
 
     return response;
 };
-  </script>
+</script>
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Shadows+Into+Light&display=swap" rel="stylesheet">
@@ -123,7 +134,7 @@ window.fetch = async (...args) => {
                             <option value="month">За месяц</option>
                             <option value="year">За год</option>
                         </select>
-                        <button class="clear-stats-btn" id="clearAllBtn">Очистить всё</button>
+                        <button class="clear-stats-btn" id="clearAllBtn">Очистить</button>
                     </div>
                 </div>
 
@@ -266,18 +277,19 @@ window.fetch = async (...args) => {
                 <h2 id="blockTitle">Заблокировать пользователя?</h2>
                 <button class="modal-close" onclick="closeBlockModal()">×</button>
             </div>
-            <form method="POST">
-                <input type="hidden" name="action" id="blockAction">
-                <input type="hidden" name="user_id" id="blockUserId">
-                <div class="form-group">
-                    <label>Пароль админа</label>
-                    <input type="password" name="password" required placeholder="Введите пароль">
-                </div>
-                <div class="modal-actions">
-                    <button type="submit" id="blockBtn" style="background: #ff6666; color: var(--white);">Заблокировать</button>
-                    <button type="button" class="cancel-btn" onclick="closeBlockModal()">Отмена</button>
-                </div>
-            </form>
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">  <!-- ← ВОТ ЭТО ДОБАВЬ -->
+    <input type="hidden" name="action" id="blockAction">
+    <input type="hidden" name="user_id" id="blockUserId">
+    <div class="form-group">
+        <label>Пароль админа</label>
+        <input type="password" name="password" required placeholder="Введите пароль">
+    </div>
+    <div class="modal-actions">
+        <button type="submit" id="blockBtn">Заблокировать</button>
+        <button type="button" class="cancel-btn" onclick="closeBlockModal()">Отмена</button>
+    </div>
+</form>
         </div>
     </div>
 
@@ -288,6 +300,7 @@ window.fetch = async (...args) => {
                 <button class="modal-close" onclick="closeDeleteModal()">×</button>
             </div>
             <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="action" value="delete_user">
                 <input type="hidden" name="user_id" id="deleteUserId">
                 <div class="form-group">
@@ -311,6 +324,7 @@ window.fetch = async (...args) => {
 -modal-close" onclick="closeAdminModal()">×</button>
             </div>
             <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="action" value="edit_user">
                 <input type="hidden" name="user_id" id="adminUserId">
                 <input type="hidden" name="is_admin" id="adminValue" value="1">
@@ -345,6 +359,16 @@ window.fetch = async (...args) => {
     let currentStatsData = null;
     let currentChartType = null;
     let isLoading = false;
+    const PAGE_TITLES = {
+    '/':              { title: 'Главная',      icon: 'fa-home' },
+    '/goods':         { title: 'Товары',       icon: 'fa-box' },
+    '/services':      { title: 'Услуги',       icon: 'fa-handshake' },
+    '/news':          { title: 'Новости',      icon: 'fa-newspaper' },
+    '/about_company': { title: 'О компании',   icon: 'fa-info-circle' },
+    '/contacts':      { title: 'Контакты',     icon: 'fa-phone' },
+    '/bin':           { title: 'Корзина',      icon: 'fa-shopping-cart' },
+    '/profile':       { title: 'Профиль',      icon: 'fa-user' },
+};
 
     const statsTypes = [
         { key: 'visits',      label: 'Всего визитов (сессии)', icon: 'fa-chart-line' },
@@ -481,7 +505,19 @@ function showChart(type) {
         case 'visits':      rawData = currentStatsData.visits_data || []; break;
         case 'unique':      rawData = currentStatsData.unique_data || []; break;
         case 'non-unique':  rawData = currentStatsData.non_unique_data || []; break;
-        case 'top-pages':   rawData = currentStatsData.top_pages || []; break;
+        case 'top-pages':
+    rawData = (currentStatsData.top_pages || []).map(item => {
+        const info = PAGE_TITLES[item.path] || { 
+            title: item.path === '/' ? 'Главная' : (item.path.replace('/', '') || 'Другое'), 
+            icon: 'fa-globe' 
+        };
+        return {
+            path: info.title,
+            views: item.views,
+            icon: info.icon
+        };
+    });
+    break;
         case 'activity':    rawData = currentStatsData.activity_map || []; break;
     }
 
@@ -541,48 +577,113 @@ function showChart(type) {
         if (canvas) dynamicChart = new Chart(canvas, config);
     });
 }
-    // === Очистка конкретного типа ===
-    async function clearPeriod(type) {
-        const password = prompt('Пароль админа для очистки:');
-        if (!password) return;
+// Универсальная функция открытия модалки для очистки статистики
+function openClearStatsModal(isFull = false) {
+    const title = isFull ? 'Очистить ВСЮ статистику навсегда?' : 'Очистить статистику за выбранный период?';
+    const btnText = isFull ? 'ОЧИСТИТЬ ВСЁ' : 'ОЧИСТИТЬ';
+    const btnColor = '#ff453a';
 
-        const period = document.getElementById('periodSelect').value;
-        const res = await fetch('/api/clear_visits_period', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `password=${encodeURIComponent(password)}&period=${period}&type=${type}`
-        });
+    document.getElementById('blockTitle').textContent = title;
+    document.getElementById('blockBtn').textContent = btnText;
+    document.getElementById('blockBtn').style.background = btnColor;
+    document.getElementById('blockBtn').style.color = '#fff';
 
-        if (res.ok) {
-            alert('Очищено!');
-            loadStats();
-        } else {
-            alert('Неверный пароль или ошибка');
+    // ← ГЛАВНОЕ ИСПРАВЛЕНИЕ: очищаем user_id, чтобы бэк не пытался int('day')
+    document.getElementById('blockUserId').value = '';  // ← ПУСТО!
+    document.getElementById('blockAction').value = '';  // тоже очищаем на всякий
+
+    // Если нужно — можно добавить отдельное поле для типа очистки, но и так сработает
+    document.getElementById('blockModal').classList.add('active');
+}
+
+// Полная очистка
+document.getElementById('clearAllBtn').addEventListener('click', () => {
+    openClearStatsModal(true);
+});
+
+// Добавь это в конец <script>
+document.querySelector('#blockModal form').addEventListener('submit', async (e) => {
+    // Если это очистка статистики — отправляем через API, не даём форме отправиться обычным POST
+    if (document.getElementById('blockTitle').textContent.includes('статистику')) {
+        e.preventDefault();
+
+        const password = e.target.password.value.trim();
+        if (!password) {
+            showToast('Введите пароль', '', true);
+            return;
+        }
+
+        const isFull = document.getElementById('blockTitle').textContent.includes('ВСЮ');
+        const url = isFull ? '/api/clear_visits' : '/api/clear_visits_period';
+        const body = new URLSearchParams();
+        body.append('password', password);
+        if (!isFull) {
+            body.append('period', document.getElementById('periodSelect').value);
+        }
+
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body
+            });
+
+            if (res.ok) {
+                showToast('Статистика очищена!', '', false);
+                closeBlockModal();
+                loadStats();
+            } else {
+                showToast('Неверный пароль', 'Попробуйте снова', true);
+            }
+        } catch (err) {
+            showToast('Ошибка сети', '', true);
         }
     }
+    // Если это блокировка пользователя — пусть форма отправится как обычно
+});
 
-    // === Полная очистка ===
-    document.getElementById('clearAllBtn').addEventListener('click', async () => {
-        const password = prompt('Пароль для ПОЛНОЙ очистки ВСЕЙ статистики:');
-        if (!password) return;
+// === ТОСТЫ ===
+function showToast(title, msg = '', error = false) {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark' || document.body.classList.contains('dark');
 
-        const res = await fetch('/api/clear_visits', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: `password=${encodeURIComponent(password)}`
-        });
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 28px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${error ? 'rgba(255, 107, 107, 0.96)' : (isDark ? 'rgba(35, 35, 40, 0.97)' : 'rgba(255, 255, 255, 0.97)')};
+        color: ${error ? '#ffffff' : (isDark ? '#ffffff' : '#000000')};
+        padding: 1.2rem 2.6rem;
+        border-radius: 20px;
+        border: 1.5px solid ${isDark ? 'rgba(255, 255, 255, 0.18)' : 'rgba(0, 0, 0, 0.12)'};
+        z-index: 99999;
+        font-weight: 700;
+        font-size: 1.1rem;
+        box-shadow: 0 20px 50px rgba(0,0,0,${isDark ? '0.6' : '0.35'});
+        backdrop-filter: blur(16px);
+        max-width: 90vw;
+        text-align: center;
+        line-height: 1.4;
+    `;
 
-        if (res.ok) {
-            alert('Вся статистика удалена!');
-            currentStatsData = null;
-            currentChartType = null;
-            document.getElementById('dynamicChartContainer').style.display = 'none';
-            document.querySelectorAll('.stats-item').forEach(i => i.classList.remove('active'));
-            loadStats();
-        } else {
-            alert('Ошибка');
-        }
-    });
+    toast.innerHTML = window.innerWidth < 1026
+        ? `<div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">${title}${msg ? ' — ' + msg : ''}</div>`
+        : `${title}${msg ? `<br><small style="font-weight:500; opacity:0.88; font-size:0.95rem;">${msg}</small>` : ''}`;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.transition = 'all 0.4s ease';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(20px) scale(0.9)';
+        setTimeout(() => toast.remove(), 400);
+    }, 3200);
+}
+// Очистка по периоду
+function clearPeriod(type) {
+    openClearStatsModal(false);
+}
 
     // === Открытие/закрытие блока статистики ===
 // === Открытие/закрытие блока статистики (РАБОЧИЙ ТУМБЛЕР) ===

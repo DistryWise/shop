@@ -3841,27 +3841,72 @@ html[data-theme="dark"] .progress-label.filled { color: #fff; }
   }
 }
 
-@media (max-width: 480px) {
-  .checkout-header h2 {
-    font-size: clamp(23px, 8.5vw, 32px) !important;
-    font-weight: 800 !important;
-    line-height: 1.18 !important;
-    text-align: center !important;
-    margin: 0 0 8px 0 !important;
-    padding: 0 12px !important;
+/* === ОБЛАЧКО ПРОФИЛЯ — ТОЧНО КАК У КОРЗИНЫ В cart.css === */
+.auth-profile-popover {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  width: 360px;
+  background: rgba(0, 0, 0, 0.88) !important;           /* ← точный фон */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15) !important; /* ← точный бордер */
+  border-radius: 18px !important;                        /* ← точный радиус */
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important; /* ← точная тень */
+  padding: 1.4rem 1.6rem;
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+  text-align: center;
+  box-sizing: border-box;
+}
 
-    /* ГЛАВНОЕ — ПЕРЕНОС ТОЛЬКО ПО СЛОВАМ */
-    word-break: keep-all !important;
-    overflow-wrap: anywhere !important;
-    hyphens: none !important;
-    white-space: normal !important;
-  }
+/* Стрелочка — тоже как у корзины */
+.auth-profile-popover::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 16px;
+  height: 16px;
+  background: rgba(0, 0, 0, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-bottom: none;
+  border-right: none;
+  z-index: -1;
+}
 
-  /* На самых узких экранах (iPhone SE старый, 320px) — чуть компактнее */
-  @media (max-width: 340px) {
-    .checkout-header h2 {
-      font-size: clamp(21px, 9vw, 28px) !important;
-      line-height: 1.15 !important;
-    }
-  }
+/* Появление */
+#authBtn.logged-in:hover .auth-profile-popover {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: all;
+}
+
+/* СВЕТЛАЯ ТЕМА — ТОЧНО КАК У КОРЗИНЫ */
+html[data-theme="light"] .auth-profile-popover {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15) !important;
+}
+
+html[data-theme="light"] .auth-profile-popover::before {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+html[data-theme="light"] .popover-phone { color: #000 !important; }
+html[data-theme="light"] .popover-hint { color: #555 !important; }
+html[data-theme="light"] .popover-buttons button:first-child {
+  background: rgba(0,0,0,0.07) !important;
+  color: #000 !important;
+  border: 1px solid rgba(0,0,0,0.18) !important;
+}
+html[data-theme="light"] .popover-buttons button:first-child:hover {
+  background: rgba(0,0,0,0.12) !important;
 }

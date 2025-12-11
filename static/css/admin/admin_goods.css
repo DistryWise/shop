@@ -1152,3 +1152,30 @@ header.scrolled {
     /* Отключаем прокрутку страницы, когда мышь над хедером */
     onwheel = "return false;"  /* не работает в CSS, поэтому добавляем маленький JS ниже */
 }
+/* УБИРАЕМ РАМКУ ВОКРУГ admin-container В СВЕТЛОЙ ТЕМЕ */
+[data-theme="light"] .admin-container {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* ТЕКСТ "ДОБАВИТЬ НОВУЮ НОВОСТЬ" — ВСЕГДА ВИДЕН В СВЕТЛОЙ ТЕМЕ */
+[data-theme="light"] .add-form-header h3,
+[data-theme="light"] .add-form-header {
+    color: #111111 !important;
+    font-weight: 600 !important;
+}
+
+/* Иконка стрелочки тоже чёрная */
+[data-theme="light"] .add-form-header i {
+    color: #111111 !important;
+}
+
+/* Фон заголовка формы — чуть серый, чтобы было видно */
+[data-theme="light"] .add-form-header {
+    background: #f1f3f5 !important;
+    border-bottom: 1px solid rgba(0,0,0,0.08) !important;
+}
+[data-theme="light"] .add-form-header:hover {
+    background: #e9ecef !important;
+}

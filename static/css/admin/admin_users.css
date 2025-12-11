@@ -1231,3 +1231,182 @@ select option:hover {
 }
 
 
+/* ==================================================================
+   СВЕТЛАЯ ТЕМА — ЧИСТАЯ, МИНИМАЛИСТИЧНАЯ, БЕЗ ТЕНЕЙ И ЛЕТАЮЩИХ КАРТОЧЕК
+   ==================================================================*/
+[data-theme="light"] {
+  --white: #111111;
+  --light: #ffffff;
+  --gray: #888888;
+  --dark: #ffffff;
+  --bg: #f8f9fa;
+  --glass: rgba(255, 255, 255, 0.96);
+  --border: rgba(0, 0, 0, 0.1);
+  --shadow: none; /* УБИРАЕМ ВСЕ ТЕНИ НАВСЕГДА */
+}
+
+/* Фон и текст */
+[data-theme="light"] body { 
+  background: var(--bg); 
+  color: var(--white); 
+}
+
+/* Убираем все тени, hover-подъёмы и рамки */
+[data-theme="light"] .stat-card,
+[data-theme="light"] .user-item,
+[data-theme="light"] .stats-item,
+[data-theme="light"] .chart-container,
+[data-theme="light"] .modal,
+[data-theme="light"] .stats-toggle-btn,
+[data-theme="light"] .action-icon,
+[data-theme="light"] .page-link,
+[data-theme="light"] .clear-btn {
+  background: var(--glass) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+
+/* Hover — только лёгкое подсвечивание, без подъёма и теней */
+[data-theme="light"] .stat-card:hover,
+[data-theme="light"] .user-item:hover,
+[data-theme="light"] .stats-item:hover,
+[data-theme="light"] .stats-toggle-btn:hover,
+[data-theme="light"] .action-icon:hover,
+[data-theme="light"] .page-link:hover:not(.active):not(.disabled) {
+  background: rgba(0, 0, 0, 0.04) !important;
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Аватарка пользователя — теперь число видно! */
+[data-theme="light"] .user-avatar {
+  background: #111111 !important;
+  color: #ffffff !important;
+  border: 2px solid rgba(0,0,0,0.15);
+}
+
+/* Текст */
+[data-theme="light"] .section-title,
+[data-theme="light"] .stats-title,
+[data-theme="light"] .modal-header h2,
+[data-theme="light"] .user-phone,
+[data-theme="light"] .stat-card h3 { 
+  color: #111; 
+  text-shadow: none; 
+}
+
+[data-theme="light"] .section-title::after { 
+  background: #111; 
+}
+
+/* Сайдбар — чистый белый */
+[data-theme="light"] .sidebar {
+  background: rgba(255, 255, 255, 0.98);
+  border-right: 1px solid rgba(0,0,0,0.08);
+  box-shadow: none;
+}
+
+[data-theme="light"] .sidebar-item { color: #555; }
+[data-theme="light"] .sidebar-item:hover,
+[data-theme="light"] .sidebar-item.active { 
+  color: #111; 
+  background: rgba(0,0,0,0.06);
+}
+[data-theme="light"] .sidebar-item i { color: #666; }
+[data-theme="light"] .sidebar-item:hover i,
+[data-theme="light"] .sidebar-item.active i { color: #111; }
+
+/* Кнопки */
+[data-theme="light"] .clear-stats-btn,
+[data-theme="light"] .clear-btn {
+  background: #ff4444 !important;
+  color: white !important;
+  box-shadow: none !important;
+}
+[data-theme="light"] .clear-btn:hover {
+  background: #ff6666 !important;
+  transform: none;
+}
+
+/* Пагинация */
+[data-theme="light"] .page-link.active {
+  background: #111 !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+/* Модалки */
+[data-theme="light"] .modal-overlay {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(20px);
+}
+[data-theme="light"] .modal {
+  box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+}
+
+/* Тумблер админа */
+[data-theme="light"] .slider { 
+  background: #ddd; 
+}
+[data-theme="light"] .admin-toggle input:checked + .slider { 
+  background: #111; 
+}
+[data-theme="light"] .admin-toggle input:checked + .slider:before { 
+  background: #fff; 
+}
+
+
+
+/* Мобильная адаптация — всё остаётся по центру */
+@media (max-width: 992px) {
+    [data-theme="light"] .main-content { margin-left: 90px !important; }
+}
+@media (max-width: 768px) {
+    [data-theme="light"] .main-content,
+    [data-theme="light"] .admin-container {
+        margin-left: 0 !important;
+        padding: 1.5rem 1rem !important;
+    }
+}
+/* УБИРАЕМ ВНУТРЕННИЙ ПРЯМОУГОЛЬНИК (user-info) РАЗ И НАВСЕГДА */
+[data-theme="light"] .user-info {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    min-height: auto !important;
+}
+
+/* На всякий случай — если где-то остался стеклянный фон у дочерних элементов */
+[data-theme="light"] .user-info > div,
+[data-theme="light"] .user-phone,
+[data-theme="light"] .user-meta,
+[data-theme="light"] .data {
+    background: none !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* 100% РАБОЧИЙ ФИКС — ЦИФРЫ В АВАТАРКЕ ВИДНЫ В СВЕТЛОЙ ТЕМЕ */
+[data-theme="light"] .user-avatar,
+html[data-theme="light"] .user-avatar,
+body[data-theme="light"] .user-avatar {
+    background: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid rgba(0,0,0,0.15) !important;
+    filter: none !important;
+    font-weight: 700 !important;
+}
+/* УБИРАЕМ РАМКУ ВОКРУГ admin-container В СВЕТЛОЙ ТЕМЕ */
+[data-theme="light"] .admin-container {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}

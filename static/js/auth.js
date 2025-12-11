@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let currentUser = null;  // ← ЭТО ВНЕ DOMContentLoaded!
   let isSubmitting = false;
+  let currentEmoji = null;
 
 let wrongCodeAttempts = 0;        // ← СЧЁТЧИК НЕВЕРНЫХ ПОПЫТОК
 const MAX_WRONG_ATTEMPTS = 5;     // ← После скольких попыток блокируем
@@ -469,7 +470,7 @@ const handleCodeInput = () => {
   authBtn.parentNode.replaceChild(authBtnFresh, authBtn);
 
   // ОБНОВЛЕНИЕ КНОПКИ: ВОЙТИ / ВЫЙТИ + СЛУЧАЙНЫЕ ЭМОДЗИ
-
+const emojis = ['😊','😎','😍','🤩','😇','😋','🤔','😴','🥳','🤗','🤪','😏','🐱','🐶','🦊','🐼','🦁','🐸','🐵','🤖','👻','🎃','💩','🦄','😀','😂','🤣','🤠','🤡','👽','🥷','🦸','🧙','🕵️'];
   
 const updateAuthBtn = () => {
   if (currentUser) {
@@ -478,11 +479,14 @@ const updateAuthBtn = () => {
     // ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
     // НАСТОЯЩИЕ СМАЙЛИКИ — БРАУЗЕР ИХ ПОКАЖЕТ!
     const emojis = ['😊','😎','😍','🤩','😇','😋','🤔','😴','🥳','🤗','🤪','😏','🐱','🐶','🦊','🐼','🦁','🐸','🐵','🤖','👻','🎃','💩','🦄','😀','😂','🤣','🤠','🤡','👽','🥷','🦸','🧙','🕵️'];
-    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+    if (!currentEmoji) {
+  currentEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+}
+const randomEmoji = currentEmoji;
 
 authBtnFresh.innerHTML = `
       <div class="live-emoji">${randomEmoji}</div>
-      <span class="logout-text">Выйти</span>
+      <span class="logout-text">Настройки</span>
     `;
 
     // АНИМАЦИЯ ПРИ КАЖДОМ ВХОДЕ
@@ -794,123 +798,237 @@ const updateMobileAuthBtn = () => {
 
 const logout = async () => {
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const isDesktop = window.innerWidth > 768; // или 1024, если хочешь планшеты тоже как мобильные
 
   const alertBox = document.createElement('div');
-  alertBox.style.cssText = `
-    position:fixed;
-    inset:0;
-    background:${isLight ? 'rgba(250,250,250,0.96)' : 'rgba(0,0,0,0.94)'};
-    backdrop-filter:blur(32px);
-    -webkit-backdrop-filter:blur(32px);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    z-index:99999;
-    opacity:0;
-    transition:opacity .5s cubic-bezier(0.22,1,0.36,1);
-    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    box-sizing:border-box;
-  `;
 
-  // ВАЖНО: используем шаблонные строки + \ перед clamp, чтобы не сломать кавычки
+  if (isDesktop) {
+    // ДЕСКТОП — обычная центрированная модалка (как было раньше)
+    alertBox.style.cssText = `
+      position:fixed;
+      inset:0;
+      background:${isLight ? 'rgba(250,250,250,0.92)' : 'rgba(0,0,0,0.92)'};
+      backdrop-filter:blur(24px);
+      -webkit-backdrop-filter:blur(24px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:99999;
+      opacity:0;
+      transition:opacity .5s cubic-bezier(0.22,1,0.36,1);
+    `;
+  } else {
+    // МОБИЛКА — твой идеальный полноэкранный вариант (НИЧЕГО НЕ ЛОМАЕМ!)
+    alertBox.style.cssText = `
+      position:fixed;
+      inset:0;
+      background:${isLight ? 'rgba(250,250,250,0.96)' : 'rgba(0,0,0,0.94)'};
+      backdrop-filter:blur(32px);
+      -webkit-backdrop-filter:blur(32px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:99999;
+      opacity:0;
+      transition:opacity .5s cubic-bezier(0.22,1,0.36,1);
+      padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      box-sizing:border-box;
+    `;
+  }
+
+// Локальный эмодзи для панели
+const panelEmojis = ['😊','😎','😍','🤩','😇','😋','🥳','🤗','🤪','😏','🐱','🐶','🦊','🐼','🦁','🐸','🤖','👻','🦄','😂','🤣','🤠','👽'];
+const panelRandomEmoji = currentEmoji || '😎';
+
+// Безопасный номер телефона
+let rawPhone = (currentUser?.phone || '0000000000').replace(/\D/g, '');  // только цифры
+let userPhone = rawPhone.slice(-10);  // ← ВСЕГДА последние 10 цифр
+userPhone = userPhone.padStart(10, '0');  // если меньше 10 — добиваем нулями слева
+
+const formattedPhone = `+7 (${userPhone.slice(0,3)}) ${userPhone.slice(3,6)} ${userPhone.slice(6,8)} ${userPhone.slice(8)}`;
+
 alertBox.innerHTML = `
   <div style="
-    background:${isLight ? '#ffffff' : 'rgba(18,18,18,0.98)'};
-    border:${isLight ? '1.8px solid rgba(0,0,0,0.14)' : '1.5px solid rgba(255,255,255,0.16)'};
-    border-radius:28px;
-    padding:clamp(1.8rem, 6vw, 2.6rem) clamp(1.6rem, 5vw, 2.6rem);
+    background:${isLight 
+      ? 'linear-gradient(145deg, rgba(255,255,255,0.98), rgba(245,245,247,0.94))' 
+      : 'linear-gradient(145deg, rgba(15,15,18,0.99), rgba(28,28,32,0.96))'};
+    border:${isLight 
+      ? '1.8px solid rgba(0,0,0,0.11)' 
+      : '1.4px solid rgba(255,255,255,0.18)'};
+    border-radius:32px;
+    padding:clamp(2.4rem, 8vw, 3.2rem) clamp(2rem, 6vw, 3rem);
     text-align:center;
-    max-width:92vw;
+    max-width:${isDesktop ? '440px' : '92vw'};
     width:100%;
     box-shadow:${isLight 
-      ? '0 32px 80px rgba(0,0,0,0.16), 0 16px 40px rgba(0,0,0,0.1)' 
-      : '0 40px 100px rgba(0,0,0,0.7)'};
-    animation:popIn 0.55s cubic-bezier(0.22,1,0.36,1) forwards;
+      ? '0 40px 100px rgba(0,0,0,0.18), 0 16px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06) inset' 
+      : '0 50px 120px rgba(0,0,0,0.75), 0 20px 50px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.08) inset'};
+    backdrop-filter:blur(28px);
+    -webkit-backdrop-filter:blur(28px);
+    animation:premiumPop 0.68s cubic-bezier(0.22,1,0.36,1) forwards;
+    position:relative;
+    overflow:hidden;
   ">
-    <!-- Иконка -->
-    <i class="fas fa-sign-out-alt" style="
-      font-size:clamp(2.8rem, 10vw, 3.6rem) !important;
-      color:#ff453a;
-      margin-bottom:clamp(0.9rem, 3vw, 1.4rem) !important;
-      display:block;
-    "></i>
-    
-    <!-- Заголовок — теперь с жёстким переносом -->
-    <h3 style="
-      margin:0 0 clamp(0.6rem, 2vw, 1rem);
-      font-size:clamp(1.45rem, 5.2vw, 1.85rem) !important;
-      font-weight:800;
-      line-height:1.22;
-      letter-spacing:-0.03em;
-      color:${isLight ? '#000000' : '#ffffff'};
-      max-width:100%;
-      white-space:normal !important;
-      overflow-wrap:anywhere;
-      word-break:break-word;
-      hyphens:auto;
-    ">Выйти из аккаунта?</h3>
-    
-    <!-- Текст под иконкой — САМАЯ ГЛАВНАЯ ИСПРАВЛЕННАЯ ЧАСТЬ -->
-    <p style="
-      color:${isLight ? '#555555' : '#bbbbbb'};
-      margin:0 0 clamp(1.6rem, 5vw, 2.2rem);
-      line-height:1.52;
-      font-size:clamp(0.95rem, 3.3vw, 1.08rem) !important;
-      padding:0 clamp(0.4rem, 2vw, 0.8rem);
-      max-width:100%;
-      width:100%;
-      box-sizing:border-box;
-      white-space:normal !important;
-      overflow-wrap:anywhere !important;
-      word-break:break-word !important;
-      hyphens:auto !important;
-    ">Вы будете разлогинены со всех устройств</p>
-    
-    <!-- Кнопки -->
+    <!-- Блик -->
+    <div style="
+      position:absolute;
+      inset:0;
+      background:radial-gradient(circle at 30% 30%, ${isLight ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.12)'} 0%, transparent 60%);
+      pointer-events:none;
+      opacity:0.6;
+    "></div>
+
+    <!-- АВАТАР + ТЕЛЕФОН — БОЛЬШОЙ ЖИВОЙ ЭМОДЗИ ПО ЦЕНТРУ -->
+    <div style="
+      margin-bottom:clamp(2rem, 6vw, 2.6rem);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      z-index:2;
+    ">
+      <div style="
+        width:112px;
+        height:112px;
+        border-radius:50%;
+        background:${isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.12)'};
+        border:2.4px solid ${isLight ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.28)'};
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        font-size:4.8rem; /* ← БОЛЬШЕ! */
+        box-shadow:${isLight 
+          ? '0 16px 40px rgba(0,0,0,0.18), inset 0 2px 0 rgba(255,255,255,0.6)' 
+          : '0 20px 50px rgba(0,0,0,0.7), inset 0 2px 0 rgba(255,255,255,0.15)'};
+        position:relative;
+        overflow:hidden;
+        animation:
+          iosAvatarBreath 4.5s ease-in-out infinite,
+          iosAvatarFloat 7s ease-in-out infinite,
+          iosAvatarMicroJump 9s ease-in-out infinite 1s;
+      ">${panelRandomEmoji}</div>
+
+      <div style="
+        margin-top:1.2rem;
+        font-size:clamp(1.2rem, 4.2vw, 1.4rem);
+        font-weight:700;
+        color:${isLight ? '#000000' : '#ffffff'};
+        opacity:0.94;
+        letter-spacing:-0.03em;
+      ">${formattedPhone}</div>
+      
+      <div style="
+        font-size:0.95rem;
+        color:${isLight ? '#555' : '#aaa'};
+        margin-top:6px;
+        opacity:0.85;
+        font-weight:500;
+      ">Личный аккаунт</div>
+    </div>
+    <!-- Разделитель -->
+    <div style="
+      height:1px;
+      background:linear-gradient(90deg, transparent, ${isLight ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.18)'}, transparent);
+      margin:clamp(1.2rem, 4vw, 1.6rem) auto;
+      width:70%;
+    "></div>
+
+    <!-- Кнопки — с полным стилем -->
     <div style="
       display:flex;
-      gap:clamp(0.9rem, 3vw, 1.2rem);
-      justify-content:center;
-      flex-wrap:wrap;
-      margin-top:clamp(0.5rem, 2vw, 1rem);
+      flex-direction:column;
+      gap:clamp(1.1rem, 4vw, 1.4rem);
+      width:100%;
+      max-width:340px;
+      margin:0 auto;
+      position:relative;
+      z-index:2;
     ">
-      <button id="confirmLogout" style="
-        background:#ff453a;
-        color:#fff;
-        border:none;
-        padding:clamp(0.85rem, 3vw, 1rem) clamp(1.8rem, 5vw, 2.4rem);
-        border-radius:20px;
-        font-weight:700;
-        font-size:clamp(0.98rem, 3.5vw, 1.1rem) !important;
-        cursor:pointer;
-        min-width:128px;
-        box-shadow:0 12px 32px rgba(255,69,58,0.38);
-        transition:all .3s ease;
-      ">Выйти</button>
-      
-      <button id="cancelLogout" style="
-        background:${isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.11)'};
+      <!-- ПРОФИЛЬ -->
+      <button id="openProfile" style="
+        background:${isLight 
+          ? 'linear-gradient(135deg, rgba(255,255,255,0.85), rgba(240,240,245,0.75))' 
+          : 'linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06))'};
         color:${isLight ? '#000000' : '#ffffff'};
-        border:${isLight ? '1.7px solid rgba(0,0,0,0.2)' : '1.6px solid rgba(255,255,255,0.24)'};
-        padding:clamp(0.85rem, 3vw, 1rem) clamp(1.8rem, 5vw, 2.4rem);
-        border-radius:20px;
-        font-weight:700;
-        font-size:clamp(0.98rem, 3.5vw, 1.1rem) !important;
+        border:1.6px solid ${isLight ? 'rgba(0,0,0,0.18)' : 'rgba(255,255,255,0.25)'};
+        padding:clamp(1.1rem, 4vw, 1.3rem);
+        border-radius:24px;
+        font-weight:800;
+        font-size:clamp(1.05rem, 4vw, 1.18rem);
         cursor:pointer;
-        min-width:128px;
-        transition:all .3s ease;
-      ">Отмена</button>
+        transition:all 0.42s cubic-bezier(0.22,1,0.36,1);
+        backdrop-filter:blur(16px);
+        -webkit-backdrop-filter:blur(16px);
+        box-shadow:${isLight 
+          ? '0 8px 28px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.6)' 
+          : '0 10px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.15)'};
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:12px;
+        position:relative;
+        overflow:hidden;
+      ">
+        <i class="fas fa-user-astronaut" style="font-size:1.35em; opacity:0.9;"></i>
+        <span>Личный кабинкет</span>
+      </button>
+
+      <!-- ВЫХОД -->
+      
+      <button id="confirmLogout" style="
+ 
+        background:linear-gradient(135deg, #ff453a, #ff6b3a);
+        color:#ffffff;
+        border:none;
+        padding:clamp(1.1rem, 4vw, 1.3rem);
+        border-radius:24px;
+        font-weight:800;
+        font-size:clamp(1.05rem, 4vw, 1.18rem);
+        cursor:pointer;
+        transition:all 0.42s cubic-bezier(0.22,1,0.36,1);
+        box-shadow:0 14px 40px rgba(255,69,58,0.45), 0 0 0 1px rgba(255,255,255,0.2) inset;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:12px;
+        position:relative;
+        overflow:hidden;
+      ">
+        <i class="fas fa-sign-out-alt" style="font-size:1.35em;"></i>
+        <span>Выйти из аккаунта</span>
+      </button>
     </div>
+
+    <!-- Крестик -->
+    <button id="closeSettingsPanel" style="
+      position:absolute;
+      top:16px;
+      right:16px;
+      width:40px;
+      height:40px;
+      background:${isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.12)'};
+      border:1.6px solid ${isLight ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.28)'};
+      border-radius:50%;
+      color:${isLight ? '#000' : '#fff'};
+      font-size:1.4rem;
+      font-weight:300;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition:all 0.4s ease;
+      backdrop-filter:blur(12px);
+      z-index:3;
+    ">×</button>
   </div>
 `;
-
-  // Анимация появления
   document.body.appendChild(alertBox);
   requestAnimationFrame(() => {
     alertBox.style.opacity = '1';
   });
 
-  // Добавляем @keyframes один раз (если ещё нет)
+  // Добавляем анимацию popIn один раз
   if (!document.getElementById('logoutPopInStyle')) {
     const style = document.createElement('style');
     style.id = 'logoutPopInStyle';
@@ -923,21 +1041,57 @@ alertBox.innerHTML = `
     document.head.appendChild(style);
   }
 
+  if (!document.getElementById('iosAvatarStyle')) {
+  const style = document.createElement('style');
+  style.id = 'iosAvatarStyle';
+  style.textContent = `
+    @keyframes iosAvatarBreath {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    @keyframes iosAvatarFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    @keyframes iosAvatarMicroJump {
+      0%, 100% { transform: rotate(0deg); }
+      15% { transform: rotate(-4deg) translateX(-2px); }
+      30% { transform: rotate(3deg) translateY(-4px); }
+      45% { transform: rotate(-2deg) translateX(3px); }
+      60% { transform: rotate(2deg) translateY(-2px); }
+      80% { transform: rotate(-1deg); }
+    }
+  `;
+  document.head.appendChild(style);
+}
   return new Promise(resolve => {
-    const confirmBtn = alertBox.querySelector('#confirmLogout');
-    const cancelBtn = alertBox.querySelector('#cancelLogout');
-
     const closeModal = () => {
       alertBox.style.opacity = '0';
-      setTimeout(() => {
-        alertBox.remove();
-      }, 500);
+      setTimeout(() => alertBox.remove(), 500);
       resolve();
     };
 
-    confirmBtn.onclick = async () => {
-      try {
-        await fetch('/api/logout', { method: 'POST' });
+    // Кнопка закрытия (крестик)
+    alertBox.querySelector('#closeSettingsPanel')?.addEventListener('click', closeModal);
+
+    // Клик по фону — закрываем
+    alertBox.addEventListener('click', (e) => {
+      if (e.target === alertBox) closeModal();
+    });
+
+    // Кнопка "Мой профиль"
+    alertBox.querySelector('#openProfile')?.addEventListener('click', () => {
+      closeModal();
+
+   
+       window.location.href = '/profile';
+
+    });
+
+    // Кнопка "Выйти из аккаунта"
+    alertBox.querySelector('#confirmLogout')?.addEventListener('click', async () => {
+      try { 
+        await fetch('/api/logout', { method: 'POST' }); 
       } catch (e) {}
 
       localStorage.removeItem(SAVED_PHONE_KEY);
@@ -957,15 +1111,9 @@ alertBox.innerHTML = `
       if (typeof loadCart === 'function') await loadCart();
 
       closeModal();
-    };
-
-    cancelBtn.onclick = closeModal;
-    alertBox.onclick = (e) => {
-      if (e.target === alertBox) closeModal();
-    };
+    });
   });
 };
-
 // Делаем доступным глобально
 window.logout = logout;
 

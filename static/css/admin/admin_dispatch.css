@@ -615,3 +615,23 @@ header.scrolled .theme-toggle-hanging {
   border-radius: 1px;
 }
 
+
+/* УБИРАЕМ РАМКУ ВОКРУГ admin-container В СВЕТЛОЙ ТЕМЕ */
+[data-theme="light"] .admin-container {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+
+
+/* Если родитель — flex (а у тебя почти всегда так) */
+.add-form-body,
+.form-group,
+.action-buttons,
+.dispatch-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 1rem;
+}
+

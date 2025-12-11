@@ -2324,13 +2324,27 @@ def register_admin_routes(app):
             return redirect(url_for('admin'))
 
         admin_password = current_app.config.get('ADMIN_PASSWORD', 'admin123')
-        conn = get_conn(DB_MAIN)
-        users = []
-        total_users = 0
-        page = max(1, int(request.args.get('page', 1)))
+
+        # ← ВСЕ ПЕРЕМЕННЫЕ ОПРЕДЕЛЯЕМ СНАЧАЛА!
+        page = 1
         phone = request.args.get('phone', '').strip()
         per_page = 10
+        total_users = 0
+        total_pages = 1
+        users = []
+        total_feedback = 0
+        total_orders = 0
+        total_reviews = 0
+
+        # Безопасно получаем page
+        try:
+            page = max(1, int(request.args.get('page', 1)))
+        except (ValueError, TypeError):
+            page = 1  # если пришло 'day' или что-то нечисленное
+
         offset = (page - 1) * per_page
+
+        conn = get_conn(DB_MAIN)
 
         try:
             if request.method == 'POST':
@@ -2339,7 +2353,11 @@ def register_admin_routes(app):
                     return redirect(url_for('admin_users', page=page, phone=phone))
 
                 action = request.form.get('action')
-                user_id = int(request.form.get('user_id', 0))
+                try:
+                    user_id = int(request.form.get('user_id', 0))
+                except ValueError:
+                    flash('Неверный ID пользователя', 'error')
+                    return redirect(url_for('admin_users', page=page, phone=phone))
 
                 if user_id <= 0 or user_id == session.get('user_id'):
                     flash('Нельзя трогать свой аккаунт или неверный ID!', 'error')
@@ -2362,14 +2380,15 @@ def register_admin_routes(app):
                 conn.commit()
                 return redirect(url_for('admin_users', page=page, phone=phone))
 
-            # === ВЫБОРКА ===
+            # === ВЫБОРКА ПОЛЬЗОВАТЕЛЕЙ ===
             where = 'WHERE 1=1'
             params = []
             if phone:
                 where += ' AND phone LIKE ?'
                 params.append(f'%{phone}%')
 
-            total_users = conn.execute(f'SELECT COUNT(*) FROM users {where}', params).fetchone()[0]
+            total_users_row = conn.execute(f'SELECT COUNT(*) FROM users {where}', params).fetchone()
+            total_users = total_users_row[0] if total_users_row else 0
             total_pages = max(1, (total_users + per_page - 1) // per_page)
 
             sql = f'''
@@ -2385,34 +2404,34 @@ def register_admin_routes(app):
 
         except Exception as e:
             conn.rollback()
-            flash(f'Ошибка БД: {escape(str(e))}', 'error')
+            flash(f'Ошибка БД: {str(e)}', 'error')
             logger.error(f"admin_users error: {e}")
         finally:
             conn.close()
 
-        # Счётчики для сайдбара
-        conn_main = get_conn(DB_MAIN)
-        conn_fb = get_conn(DB_FEEDBACK)
+        # Счётчики для сайдбара — отдельно, чтобы не падало всё
         try:
+            conn_main = get_conn(DB_MAIN)
+            conn_fb = get_conn(DB_FEEDBACK)
             total_feedback = conn_fb.execute('SELECT COUNT(*) FROM feedback').fetchone()[0]
             total_orders = conn_main.execute('SELECT COUNT(*) FROM orders').fetchone()[0]
             total_reviews = conn_main.execute('SELECT COUNT(*) FROM reviews').fetchone()[0]
+        except Exception as e:
+            logger.error(f"Ошибка загрузки счётчиков: {e}")
         finally:
-            conn_main.close()
-            conn_fb.close()
+            if 'conn_main' in locals(): conn_main.close()
+            if 'conn_fb' in locals(): conn_fb.close()
 
         return render_template('admin_users.html',
                             users=users,
                             total_users=total_users,
-                            total_feedback=total_feedback,
-                            total_orders=total_orders,
-                            total_reviews=total_reviews,
+                            total_feedback=total_feedback or 0,
+                            total_orders=total_orders or 0,
+                            total_reviews=total_reviews or 0,
                             page=page,
                             total_pages=total_pages,
                             per_page=per_page,
-                            phone=phone
-            
-        )
+                           phone=phone)
 
 
     @app.route('/admin_services', methods=['GET', 'POST'])

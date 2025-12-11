@@ -46,10 +46,28 @@ def get_db():
 # Трекинг визитов
 # -------------------------------------------------
 def track_visits(app):
+    # ← Белый список страниц, которые считаем "настоящими"
+    ALLOWED_PATHS = {
+        '/', '/index',
+        '/services',
+        '/goods',
+        '/news',
+        '/about_company',
+        '/contacts',
+        '/bin',
+        '/profile'
+    }
+
     @app.before_request
     def _():
-        if request.path.startswith(('/admin', '/static')):
+        # Пропускаем статику, админку и API
+        if request.path.startswith(('/admin', '/static', '/api')):
             return
+
+        # ← Основная проверка: только разрешённые страницы
+        if request.path not in ALLOWED_PATHS:
+            return  # ← Не пишем в статистику
+
         ip = request.remote_addr or 'unknown'
         token = session.get('anon_token')
         if not token:
@@ -57,6 +75,7 @@ def track_visits(app):
             session['anon_token'] = token
             session.permanent = True
             app.permanent_session_lifetime = timedelta(hours=1)
+
         path = request.path or '/'
 
         conn = get_db()

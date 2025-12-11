@@ -1545,3 +1545,9 @@ header.scrolled + .theme-toggle-hanging { top: 76px; }
     border-color: rgba(0,0,0,0.22);
     box-shadow: 0 12px 35px rgba(0,0,0,0.16);
 }
+/* УБИРАЕМ РАМКУ ВОКРУГ admin-container В СВЕТЛОЙ ТЕМЕ */
+[data-theme="light"] .admin-container {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}

@@ -1604,3 +1604,104 @@ html[data-theme="light"] .search-result-badge.product {
 [data-theme="light"] .user-dropdown-header { border-color: rgba(0,0,0,0.1); }
 [data-theme="light"] .user-dropdown-avatar { background: rgba(0,0,0,0.08); }
 
+/* === РАСКРЫТИЕ ТАБЛЕТКИ: эмодзи исчезает — текст по центру === */
+#authBtn.logged-in .live-emoji {
+  transition: all 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#authBtn.logged-in .logout-text {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #fff;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* При наведении — эмодзи исчезает, текст появляется по центру */
+#authBtn.logged-in:hover .live-emoji {
+  opacity: 0;
+  transform: translateX(20px) scale(0.6);
+}
+
+#authBtn.logged-in:hover .logout-text {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+}
+
+/* На мобильных (нет hover) — сразу показываем текст по центру, эмодзи скрыт */
+@media (max-width: 768px) {
+  #authBtn.logged-in {
+    width: 156px;
+    border-radius: 30px;
+    background: rgba(255,255,255,0.16);
+  }
+  
+  #authBtn.logged-in .live-emoji {
+    opacity: 0;
+    transform: translateX(20px) scale(0.6);
+  }
+  
+  #authBtn.logged-in .logout-text {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Светлая тема — чёрный текст */
+html[data-theme="light"] #authBtn.logged-in .logout-text {
+  color: #000 !important;
+}
+
+/* Светлая тема — не центрируем строго, оставляем небольшой сдвиг влево для красоты */
+html[data-theme="light"] #authBtn.logged-in:hover .logout-text,
+html[data-theme="light"] #authBtn.logged-in .logout-text {
+  transform: translate(-50%, -50%) translateX(-4px) !important; /* лёгкий сдвиг влево */
+  left: 50% !important;
+}
+
+/* Мобильная версия в светлой теме — тоже со сдвигом (если хочешь строго по центру — удали эту строку) */
+@media (max-width: 768px) {
+  html[data-theme="light"] #authBtn.logged-in .logout-text {
+    transform: translate(-50%, -50%) translateX(-4px) !important;
+  }
+}
+
+/* Опционально: чуть крупнее и жирнее текст в светлой теме для лучшей читаемости */
+html[data-theme="light"] #authBtn.logged-in .logout-text {
+  font-weight: 700 !important;
+  font-size: 0.98rem !important;
+}
+/* === ИСПРАВЛЕНИЕ: таблетка не прыгает вверх в светлой теме при раскрытии === */
+
+/* Фиксируем transform и позицию для всех состояний */
+#authBtn.logged-in,
+#authBtn.logged-in:hover {
+  transform: translateY(0) !important; /* ← Запрещаем любое вертикальное смещение */
+}
+
+
+
+/* При ховере — только ширина и радиус меняются, без изменения фона/тени */
+html[data-theme="light"] #authBtn.logged-in:hover {
+  width: 100px !important; /* или твоя ширина */
+  border-radius: 30px !important;
+  background: rgb(255, 255, 255) !important; /* ← Тот же фон, что и в покое */
+  border-color: rgba(15, 15, 15, 0.35) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14) !important;
+  transform: translateY(0) !important;
+}
+
+/* Мобильная версия — тоже без прыжка */
+@media (max-width: 768px) {
+  html[data-theme="light"] #authBtn.logged-in {
+    width: 156px !important;
+    border-radius: 30px !important;
+    transform: translateY(0) !important;
+  }
+}
