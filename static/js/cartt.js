@@ -748,12 +748,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// ——— ЗАКРЫТИЕ ПО БЭКДРОПУ ———
-multiModal.addEventListener('click', (e) => {
-  if (e.target === multiModal) {
-    closeMultiOrderModal();
-  }
-});
 
 // ——— КЛИК ПО ПЛАШКЕ СНИЗУ ———
 document.getElementById('multiOrderPill')?.addEventListener('click', openMultiOrderModal);
@@ -765,12 +759,7 @@ document.getElementById('multiOrderPill')?.addEventListener('click', (e) => {
   openMultiOrderModal();
 });
 
-// Закрытие по бэкдропом (оставляем как было)
-document.getElementById('multiOrderModal').addEventListener('click', (e) => {
-  if (e.target === document.getElementById('multiOrderModal')) {
-    closeMultiOrderModal();
-  }
-});
+
 
 
 // Закрытие по клику вне
@@ -1214,12 +1203,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Если авторизован — открываем оформление
   openCheckout();
 });
-
-  // Закрытие по крестику и бэкдропу
-  document.getElementById('closeCheckout')?.addEventListener('click', closeCheckout);
-  modal.addEventListener('click', e => {
-    if (e.target === modal) closeCheckout();
-  });
+// ОДИН РАЗ И НАВСЕГДА — ЗАКРЫТИЕ multiOrderModal по бэкдропу
+document.addEventListener('click', (e) => {
+  const modal = document.getElementById('multiOrderModal');
+  if (modal && e.target === modal) {
+    closeMultiOrderModal();
+  }
+});
 
   // Принудительный сброс при открытии (на случай если кто-то делает display = flex вручную)
   new MutationObserver(() => {
