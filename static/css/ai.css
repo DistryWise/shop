@@ -138,10 +138,22 @@
   background: rgba(255,255,255,0.25);
 }
 
-.ai-chat-body { flex: 1; display: flex; flex-direction: column; }
+.ai-chat-body { 
+  flex: 1; 
+  display: flex; 
+  flex-direction: column; 
+  min-height: 0; /* ← ДОБАВЛЕНО: чтобы body могло сжиматься, если нужно */
+}
 .ai-chat-messages {
-  flex: 1; padding: 1rem; overflow-y: auto;
-  display: flex; flex-direction: column; gap: 0.8rem;
+  flex: 1 1 0%; /* Главный фикс для скролла */
+  min-height: 0; /* Критично для nested flex overflow */
+  padding: 1rem;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  scroll-behavior: smooth;
 }
 .msg {
   max-width: 80%; padding: 0.75rem 1.1rem; border-radius: 18px;
@@ -163,6 +175,7 @@
   display: flex; padding: 0.8rem;
   background: rgba(255,255,255,0.05);
   border-top: 1px solid rgba(255,255,255,0.1);
+  flex-shrink: 0; /* ← ДОБАВЛЕНО: чтобы input не сжимался и оставался видимым */
 }
 .ai-chat-input input {
   flex: 1; background: rgba(255,255,255,0.08);
@@ -385,7 +398,6 @@ html[data-theme="light"] .ai-chat-input button:active {
     backdrop-filter: blur(32px) !important;
     border-radius: 0 !important;
     box-shadow: none !important;
-    z-index: 2147483647 !important;
     display: flex !important;
     flex-direction: column;
     overflow: hidden;
@@ -433,7 +445,8 @@ html[data-theme="light"] .ai-chat-input button:active {
 
   /* Сообщения — с правильным отступом снизу */
   .ai-chat-messages {
-    flex: 1;
+    flex: 1 1 0%;
+    min-height: 0;
     padding: 12px 16px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -471,34 +484,22 @@ html[data-theme="light"] .ai-chat-input button:active {
   }
 }
 
-.ai-chat-modal {
-  transform: translateY(100dvh);
-  transition: transform 0.54s cubic-bezier(0.22, 0.88, 0.36, 1);
-}
-
-.ai-chat-modal.active {
-  transform: translateY(0);
-}
-
-.ai-chat-modal.dragging {
-  transition: none !important;
-}
 
 /* === КРИТИЧЕСКИ ВАЖНО: ПОДЪЁМ СТРОКИ ВВОДА НАД КЛАВИАТУРОЙ === */
 @media (max-width: 1023px) {
   .ai-chat-input {
-    position: fixed !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    width: calc(100% - 2rem) !important;
-    max-width: 480px !important;
-    box-sizing: border-box !important;
-    z-index: 9999 !important;
-    background: var(--bg, rgba(0,0,0,0.92)) !important;
-    border-top: 1px solid rgba(255,255,255,0.1) !important;
-    padding: 12px 16px !important;
-    padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
-    transition: bottom 0.32s cubic-bezier(0.22, 0.88, 0.36, 1) !important;
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 2rem);
+    max-width: 480px;
+    box-sizing: border-box;
+    z-index: 9999;
+    background: var(--bg, rgba(0,0,0,0.92));
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 12px 16px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    transition: bottom 0.32s cubic-bezier(0.22, 0.88, 0.36, 1);
   }
 
   html[data-theme="light"] .ai-chat-input {
@@ -517,3 +518,13 @@ html[data-theme="light"] .ai-chat-input button:active {
   }
 }
 
+.ai-chat-messages {
+scrollbar-width: none; /* Firefox /
+-ms-overflow-style: none; / IE/Edge */
+}
+.ai-chat-messages::-webkit-scrollbar {
+display: none; /* Chrome/Safari/Opera */
+}
+body:has(.ai-chat-modal.fullscreen) #ai-assistant {
+display: none !important;
+}

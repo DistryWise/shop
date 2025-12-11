@@ -643,9 +643,29 @@ function renderVerticalOrders() {
         Document.prototype.getElementById = (id) => id === 'orderChain' ? target : real.call(this, id);
 
         if (!target.dataset.loaded) {
-          window.startOrderChain?.(order.id);
-          target.dataset.loaded = 'true';
+  target.dataset.loaded = 'true'; // сразу помечаем, чтобы не дублировать
+
+  // Универсальная безопасная обёртка
+  const safeStartChain = (id) => {
+    if (typeof window.startOrderChain === 'function') {
+      window.startOrderChain(id);
+    } else {
+      // Ждём максимум 3 секунды
+      let attempts = 0;
+      const interval = setInterval(() => {
+        if (typeof window.startOrderChain === 'function') {
+          clearInterval(interval);
+          window.startOrderChain(id);
+        } else if (attempts++ > 60) {
+          clearInterval(interval);
+          console.warn('startOrderChain не загрузился');
         }
+      }, 50);
+    }
+  };
+
+  safeStartChain(order.id);
+}
 
         Document.prototype.getElementById = real;
 

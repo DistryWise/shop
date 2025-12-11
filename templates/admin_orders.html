@@ -49,7 +49,105 @@ window.fetch = async (...args) => {
     return response;
 };
   </script>
+<style>
+    /* ════════════════════════════════════════
+   СВЕТЛАЯ ТЕМА — ПОЛНОСТЬЮ ПЛОСКИЙ ДИЗАЙН
+   Убираем тени, ховеры, подъёмы, свечения
+   ════════════════════════════════════════ */
+html[data-theme="light"] .apple-order-card {
+    box-shadow: none !important;
+    transition: none !important;
+    border: 1px solid #e0e0e0 !important;
+    background: #ffffff !important;
+}
 
+html[data-theme="light"] .apple-order-card:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+html[data-theme="light"] .action-buttons button:hover,
+html[data-theme="light"] .apple-status-selector:hover,
+html[data-theme="light"] .apple-stat:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    opacity: 0.8;
+}
+
+/* Убираем тени у всех кнопок действий */
+html[data-theme="light"] .action-btn,
+html[data-theme="light"] .apple-modal-actions button,
+html[data-theme="light"] .apple-status-option:hover {
+    box-shadow: none !important;
+    transition: opacity 0.2s !important;
+}
+
+/* Убираем свечение у прогресс-кругов */
+html[data-theme="light"] .order-status-chain > div > div > div > div {
+    box-shadow: none !important;
+}
+
+/* Плоские статистические плитки + исправление вылезающей рамки */
+html[data-theme="light"] .apple-stat {
+    background: #f8f9fa !important;
+    border: 1px solid #e0e0e0 !important;
+    box-shadow: none !important;
+    border-radius: 16px !important;
+    padding: 20px 18px !important;        /* ← чуть больше отступов */
+    transition: none !important;
+    min-width: 120px;                     /* ← гарантируем, что не сожмётся */
+}
+
+html[data-theme="light"] .apple-stat.active {
+
+    color: white !important;
+    border-color: #007aff !important;
+}
+
+html[data-theme="light"] .apple-stat:hover:not(.active) {
+    background: #eef2ff !important;
+    transform: none !important;
+}
+
+/* Тёмная тема — тоже чуть подправим плитки, чтобы рамка не вылезала */
+html[data-theme="dark"] .apple-stat {
+    padding: 20px 18px !important;
+    min-width: 120px;
+    border-radius: 16px !important;
+}
+
+/* Общий фикс для сетки статистики — равномерный размер */
+#statsFilterGrid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 16px;
+}
+
+/* Дополнительно: убираем тень у модалок в светлой теме */
+html[data-theme="light"] .apple-modal {
+    box-shadow: 0 20px 40px rgba(0,0,0,0.12) !important;
+    border: 1px solid #e0e0e0;
+}
+
+html[data-theme="light"] .apple-modal-backdrop {
+    background: rgba(255,255,255,0.85);
+}
+/* Поднимаем блок статистики выше + убираем прыжок при активации */
+#statsFilterGrid,
+.apple-stats-grid {
+    margin-top: -12px !important;     /* ← поднимаем блок вверх */
+    margin-bottom: 16px !important;   /* ← меньше отступа снизу */
+    padding: 8px 0 !important;
+}
+
+/* Полностью убираем любые подъёмы/тени у плиток */
+.apple-stat,
+.apple-stat:hover,
+.apple-stat.active {
+    transform: none !important;
+    box-shadow: none !important;
+    transition: background 0.2s, color 0.2s !important;
+}
+</style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Shadows+Into+Light&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
@@ -703,9 +801,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="apple-items">
                             ${o.order_items.length > 0 ? o.order_items.map(item => `
                                 <div class="apple-item">
-                                    <img src="${(item.image_urls && item.image_urls[0]) || '/static/assets/no-image.png'}" 
-     onerror="this.src='/static/assets/no-image.png'" 
-     style="width:52px;height:52px;border-radius:12px;object-fit:cover;background:#222;">
+                                    <img src="${item.image_url}"
+     onerror="this.src='/static/assets/no-image.png'"
+     style="width:52px;height:52px;border-radius:12px;object-fit:cover;">
                                     <div>
                                         <div style="font-weight:600;">${item.title}</div>
                                         <div style="opacity:0.8;font-size:0.95rem;">${item.quantity} × ${item.price_str}</div>

@@ -832,6 +832,31 @@ async function loadOrders(forceReload = false) {
             list.innerHTML = '<div style="text-align:center;padding:3rem;color:#ff6b6b;">Ошибка загрузки</div>';
         }
     }
+    // В конец функции loadOrders(), сразу после renderOrders();
+function updateLoadMoreVisibility() {
+    const container = document.getElementById('loadMoreContainer');
+    if (!container) return;
+
+    const hasOrders = allOrders.length > 0;
+    const lastPageFull = allOrders.length % PER_PAGE === 0;
+
+    // Если заказов нет вообще — прячем
+    if (!hasOrders) {
+        container.style.display = 'none';
+        return;
+    }
+
+    // Если последняя страница была неполной — значит больше нет
+    if (!lastPageFull) {
+        container.style.display = 'none';
+    } else {
+        container.style.display = 'block';
+    }
+}
+
+// И вызывай её в конце loadOrders():
+renderOrders();
+updateLoadMoreVisibility(); // ← ЭТА СТРОЧКА РЕШАЕТ ВСЁ
 }
 // === НОВАЯ ВЕРСИЯ renderOrders() — РЕАЛ-ТАЙМ ЦЕПОЧКИ + ПРИЧИНА ОТМЕНЫ ===
 function renderOrders() {
@@ -1000,30 +1025,57 @@ const apiUrl = isService
             }, 80);
         }
 
-        return `
-            <div class="archive-item-row">
-<img id="${imgId}"
-     src="${initialSrc + (initialSrc.includes('?') ? '&' : '?') + 't=' + Date.now()}"
-     class="archive-item-thumb"
-     onerror="this.onerror=null; this.src='/static/assets/no-image.png?t=' + Date.now()"
-     loading="lazy">
-                <div class="archive-item-info">
-                    <div class="archive-item-details" style="font-size:clamp(0.82rem,2.8vw,0.96rem);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-    ${item.quantity || 1} × ${item.price_str && item.price_str !== '—' && item.price_str !== '' 
-        ? item.price_str 
-        : (item.price_cents > 0 
-            ? (Math.floor(item.price_cents / 100)).toLocaleString('ru-RU') + '.' + (item.price_cents % 100).toString().padStart(2, '0') + ' ₽'
-            : 'Цена по запросу'
-        )
-    }
-</div>
-                </div>
-                <button class="archive-repeat-btn" 
-                        onclick="event.stopPropagation(); repeatOrderItem(${item.item_id}, '${item.item_type || 'product'}')">
-                    Повторить
-                </button>
+return `
+    <div class="archive-item-row">
+        <img id="${imgId}"
+             src="${initialSrc + (initialSrc.includes('?') ? '&' : '?') + 't=' + Date.now()}"
+             class="archive-item-thumb"
+             onerror="this.onerror=null; this.src='/static/assets/no-image.png?t=' + Date.now()"
+             loading="lazy">
+
+        <div class="archive-item-info" style="flex:1;min-width:0;">
+            <!-- НАЗВАНИЕ ТОВАРА — НОВОЕ! -->
+            <div class="archive-item-title" style="
+                font-weight:700;
+                font-size:clamp(0.94rem,3.2vw,1_1.02rem);
+                color:var(--text-primary);
+                margin-bottom:4px;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                white-space:nowrap;
+                line-height:1.35;
+            ">
+                ${item.title || item.name || 'Без названия'}
             </div>
-        `;
+
+            <!-- КОЛ-ВО × ЦЕНА — КАК БЫЛО, НО ЧУТЬ МЕЛЬЧЕ -->
+            <div class="archive-item-details" style="
+                font-size:clamp(0.82rem,2.8vw,0.94rem);
+                font-weight:600;
+                color:var(--text-secondary);
+                opacity:0.92;
+                white-space:nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis;
+            ">
+                ${item.quantity || 1} × 
+                ${item.price_str && item.price_str !== '—' && item.price_str !== '' 
+                    ? item.price_str 
+                    : (item.price_cents > 0 
+                        ? (Math.floor(item.price_cents / 100)).toLocaleString('ru-RU') + '.' + (item.price_cents % 100).toString().padStart(2, '0') + ' ₽'
+                        : 'Цена по запросу'
+                    )
+                }
+            </div>
+        </div>
+
+        <!-- КНОПКА ПОВТОРИТЬ — ОСТАЁТСЯ НА МЕСТЕ -->
+        <button class="archive-repeat-btn" 
+                onclick="event.stopPropagation(); repeatOrderItem(${item.item_id}, '${item.item_type || 'product'}')">
+            Повторить
+        </button>
+    </div>
+`;
     }).join('')}
     ${order.items.length > 4 ? `<div class="archive-more-items">…и ещё ${order.items.length - 4}</div>` : ''}
 </div>

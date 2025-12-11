@@ -1,5 +1,17 @@
 <!DOCTYPE html>
 <head>
+  <script>
+    // Определяем тему ещё до первого рендера
+    const savedTheme = localStorage.getItem('theme');
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    const theme = savedTheme || (prefersLight ? 'light' : 'dark');
+
+    // Сразу ставим атрибут
+    document.documentElement.setAttribute('data-theme', theme);
+
+    // И сразу форсируем правильный фон лоадера
+    document.documentElement.style.backgroundColor = theme === 'light' ? '#ffffff' : '#000000';
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="csrf-token" content="{{ csrf_token() }}">

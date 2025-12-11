@@ -154,6 +154,7 @@ async function sendAIMessage(text) {
   const answer = await callAI(text);
   aiMsg.textContent = answer;
   messages.scrollTop = messages.scrollHeight;
+  scrollToBottom();
 }
 
 // === ИНИЦИАЛИЗАЦИЯ ===
@@ -286,7 +287,13 @@ setTimeout(showGreeting, 3000);
       }, 300);
     }
   });
-
+// Автоскролл к последнему сообщению — плавно и надёжно
+function scrollToBottom() {
+  const messages = document.querySelector('.ai-chat-messages');
+  if (messages) {
+    messages.scrollTop = messages.scrollHeight;
+  }
+}
   // 5. Запрещаем масштабирование страницы при двойном тапе (iOS Safari)
   let lastTouchEnd = 0;
   document.addEventListener('touchend', (e) => {

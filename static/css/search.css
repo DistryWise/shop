@@ -742,16 +742,7 @@ html[data-theme="light"] .product-modal::-webkit-scrollbar {
     color: #555 !important;
   }
 
-  /* ГЛАВНОЕ — ЧЁРНЫЙ СИЛУЭТ КАРТИНКИ (ВСЁ ВИДНО!) */
-  html[data-theme="light"] #autocompleteList .autocomplete-item img {
-    border: 2px solid #000 !important;
-    background: transparent !important;     /* ← УБИРАЕМ БЕЛЫЙ ФОН */
-    filter: brightness(0) invert(0) !important;  /* ← Делает чёрным */
-    mix-blend-mode: normal;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25) !important;
-    border-radius: 10px;
-    object-fit: contain;
-  }
+
 
   /* ===================================================== */
 /* МОБИЛЬНЫЙ ПОИСК — ШТОРКА СВЕРХУ (iPhone SE + все мобильные) */

@@ -1,5 +1,17 @@
 <!DOCTYPE html>
 <head>
+  <script>
+    // Определяем тему ещё до первого рендера
+    const savedTheme = localStorage.getItem('theme');
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    const theme = savedTheme || (prefersLight ? 'light' : 'dark');
+
+    // Сразу ставим атрибут
+    document.documentElement.setAttribute('data-theme', theme);
+
+    // И сразу форсируем правильный фон лоадера
+    document.documentElement.style.backgroundColor = theme === 'light' ? '#ffffff' : '#000000';
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -48,7 +60,11 @@ window.fetch = async (...args) => {
 };
   </script>
 
-
+<style>
+  /* Цвет грузовика — чёрный в светлой теме, белый в тёмной */
+html[data-theme="light"] .fa-truck { color: #000 !important; }
+html[data-theme="dark"]  .fa-truck { color: #fff !important; }
+</style>
 <!-- Этот скрипт — магия, которая заставляет медиа-запросы сработать сразу на 100% устройств -->
 <script>
   // Если вдруг браузер думает, что ширина >1024px — принудительно говорим, что это мобильник
@@ -119,8 +135,10 @@ window.fetch = async (...args) => {
 #global-cart-flood-alert i { font-size: 1.8rem; }
 
 </style>
+
 </head>
 <body>
+  
 
   <!-- ВЕРХНИЙ ХЕДЕР — ТОЛЬКО НА ДЕСКТОПЕ -->
 <header class="main-header desktop-only">
@@ -387,17 +405,11 @@ window.fetch = async (...args) => {
   onmouseover="this.style.transform='translateY(-8px)'; this.style.boxShadow='0 28px 56px rgba(0,0,0,0.38)'"
   onmouseout="this.style.transform=''; this.style.boxShadow='0 16px 40px rgba(0,0,0,0.24)'">
 
-    <!-- Иконка + число заказов просто текстом рядом -->
-    <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
-      <i class="fas fa-truck" style="font-size:1.9rem; color:var(--accent, #00ff95);"></i>
-      <span id="activeOrdersBadge" style="
-        font-weight: 700;
-        font-size: 1.15rem;
-        color: var(--accent, #00ff95);
-        min-width: 20px;
-        display: none; /* скрываем при 0 или 1 заказе — по желанию */
-      "></span>
-    </div>
+  <!-- Только грузовик. Число никогда не видно -->
+<i class="fas fa-truck" style="font-size:1.9rem; flex-shrink:0;"></i>
+
+<!-- Оставляем span только для JS, но он полностью скрыт и не мешает -->
+<span id="activeOrdersBadge" style="position:absolute; left:-9999px; opacity:0; pointer-events:none;"></span>
 
     <!-- Текст -->
     <div style="flex:1; min-width:0;">

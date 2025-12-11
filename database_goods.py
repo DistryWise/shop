@@ -2002,7 +2002,7 @@ def register_admin_routes(app):
                 items = []
                 for i in items_list:
                     imgs = json.loads(i['image_filenames'] or '[]') if i['item_type'] == 'product' else []
-                    img_url = url_for('uploaded_file', filename=imgs[0]) if imgs else '/static/assets/no-image.png'
+                    img_url = f"/static/uploads/{imgs[0]}" if imgs else '/static/assets/no-image.png'
                     items.append({
                         'title': i['title'],
                         'quantity': i['quantity'],

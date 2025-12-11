@@ -340,3 +340,5 @@
             document.getElementById('modalPrice').textContent = el.dataset.price;
             modal.classList.add('active');
         }
+
+        

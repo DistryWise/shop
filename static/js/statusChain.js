@@ -98,7 +98,15 @@ window.startOrderChain = async function(orderId) {
     .progress-fill { position:absolute; top:50%; left:${isMobile?'32px':'40px'}; height:2px; background:var(--text); width:0%; animation:fill-progress 1.4s cubic-bezier(0.16,1,0.3,1) forwards; border-radius:2px; z-index:2; }
     .step-icon { width:44px; height:44px; border-radius:50%; background:var(--text); color:${isLight?'#fff':'#000'}; display:flex; align-items:center; justify-content:center; font-size:22px; z-index:3; transition:all .4s; }
     .step-icon.active { animation:var(--pulse) 3s infinite ease-in-out; }
-    .items-mini { display:flex; gap:12px; padding:8px 20px; overflow-x:auto; scrollbar-width:none; }
+    .items-mini { 
+    display: flex; 
+    gap: 12px; 
+    padding: 20px 20px 20px calc(50% - 45px); /* ← магия центрирования */
+    overflow-x: auto; 
+    scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+}
+.items-mini > * { scroll-snap-align: center; flex-shrink: 0; }
     .item-img { width:90px; height:90px; border-radius:20px; object-fit:cover; box-shadow:0 6px 20px rgba(0,0,0,${isLight?'0.12':'0.45'}); }
 </style>
 
@@ -110,7 +118,7 @@ window.startOrderChain = async function(orderId) {
         <div class="progress-fill"></div>
         <div class="step-icon"><i class="fa-solid fa-credit-card"></i></div>
         <div class="step-icon"><i class="fa-regular fa-clock"></i></div>
-        <div class="step-icon"><i class="fa-solid fa-truck"></i></div>
+        <div class="step-icon"><i class="fa-solid fa-truck-fast"></i></div>
         <div class="step-icon"><i class="fa-solid fa-check"></i></div>
     </div>
 </div>

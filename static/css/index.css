@@ -1028,9 +1028,6 @@
 
 /* Если у тебя иконки в <i> или <img> — тоже перебиваем */
 
-[data-theme="light"] header:not(.scrolled) img {
-  filter: brightness(0) invert(1) !important;
-}
 
 /* ===================================================== */
 /* 1. КНОПКА «ПИСЬМО» — БЕЛАЯ С ЧЁРНОЙ ИКОНКОЙ ТОЛЬКО В СВЕТЛОЙ ТЕМЕ ДО СКРОЛЛА */
@@ -2115,3 +2112,5 @@ html[data-theme="light"] .cart-count {
     max-height: 56px !important;
   }
 }
+
+
