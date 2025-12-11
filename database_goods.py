@@ -1698,6 +1698,7 @@ def register_admin_routes(app):
             total_pages=total_pages
         )
 
+    @app.route('/api/order/<int:order_id>')  # ← ЭТО ГЛАВНОЕ
     @app.route('/api/order_status/<int:order_id>')
     def api_order_status(order_id):
         is_admin = request.args.get('admin', '0') == '1'
