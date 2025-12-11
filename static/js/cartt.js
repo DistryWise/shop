@@ -571,7 +571,7 @@ function renderVerticalOrders() {
             text-overflow:ellipsis;
             letter-spacing:-0.5px;
           ">
-            ${order.display_id || order.id}
+            ${order.display_id || order.user_order_number || `№${order.real_id || order.id}`}
           </div>
 
           <!-- Цена + дата — в одну строку -->
@@ -664,7 +664,7 @@ function renderVerticalOrders() {
     }
   };
 
-  safeStartChain(order.id);
+  safeStartChain(order.real_id || order.id);
 }
 
         Document.prototype.getElementById = real;
@@ -779,49 +779,45 @@ document.getElementById('multiOrderModal').addEventListener('click', e => {
 });
 
 // === ПЕРЕОПРЕДЕЛЯЕМ window.startOrderChain — РАБОТАЕТ МОМЕНТАЛЬНО И С ЦЕНОЙ ===
+// === ПЕРЕОПРЕДЕЛЯЕМ window.startOrderChain — РАБОТАЕТ НА RENDER.COM НА 1000% ===
 window.startOrderChain = async function(orderId) {
+  // orderId — это то, что ты передал (может быть display_id, user_order_number или real_id)
+  const order = activeOrders.find(o => 
+    String(o.display_id) === String(orderId) || 
+    String(o.user_order_number) === String(orderId) ||
+    String(o.real_id) === String(orderId) ||
+    String(o.id) === String(orderId)
+  );
+
+  if (!order) {
+    console.warn('Заказ не найден в activeOrders:', orderId);
+    return;
+  }
+
+  const realId = order.real_id || order.id;  // ← ВОТ ЭТО ГЛАВНОЕ!
+
   try {
-    // 1. Делаем запрос и ЖДЁМ ПОЛНЫЕ данные заказа
-    const res = await fetch(`/api/order/${orderId}?t=${Date.now()}`, { cache: 'no-store' });
-    if (!res.ok) throw new Error('Failed to fetch order');
+    const res = await fetch(`/api/order/${realId}?t=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('404 or server error');
 
     const freshOrder = await res.json();
 
-    // 2. Формируем объект точно так же, как везде
-    const order = {
+    // Обновляем данные в массиве
+    const updated = {
+      ...order,
       ...freshOrder,
-      display_id: freshOrder.display_id || freshOrder.user_order_number || `№${orderId}`,
-      total_str: freshOrder.total_str || (freshOrder.total ? `${freshOrder.total.toLocaleString()} ₽` : '—'),
-      created_at: freshOrder.created_at || new Date().toISOString(),
+      real_id: freshOrder.id || order.real_id,
+      display_id: freshOrder.display_id || order.display_id,
+      total_str: freshOrder.total_str || order.total_str
     };
 
-    // 3. Обновляем глобальный массив (удаляем старый, если был)
-    activeOrders = activeOrders.filter(o => o.id !== order.id);
-    activeOrders.unshift(order); // новый — в начало
-    if (activeOrders.length > 10) activeOrders.pop(); // ограничение
-
-    // 4. ОБНОВЛЯЕМ ВСЁ СРАЗУ — с правильной ценой!
-    updateFloatingPill();
-    renderVerticalOrders();        // ← теперь с реальной ценой
-    openMultiOrderModal();         // ← открываем уже с заполненными данными
-
-  } catch (err) {
-    console.warn('Не удалось загрузить детали заказа для модалки', err);
-
-    // Даже если упало — всё равно показываем хотя бы номер
-    const fallbackOrder = {
-      id: orderId,
-      display_id: `№${orderId}`,
-      total_str: '—',
-      created_at: new Date().toISOString(),
-    };
-
-    activeOrders = activeOrders.filter(o => o.id !== orderId);
-    activeOrders.unshift(fallbackOrder);
+    activeOrders = activeOrders.map(o => o.real_id === realId ? updated : o);
 
     updateFloatingPill();
     renderVerticalOrders();
-    openMultiOrderModal();
+
+  } catch (err) {
+    console.warn('Не удалось загрузить детали заказа', realId, err);
   }
 };
 
@@ -839,7 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(orders => {
       activeOrders = orders
         .filter(o => !['completed', 'cancelled'].includes(o.status))
-        .map(o => ({ ...o, display_id: o.display_id || '№' + o.user_order_number }))
+        .map(o => ({ ...o,real_id: o.id, display_id: o.display_id || '№' + o.user_order_number }))
         .slice(0, 3);
 
       // ←←← ВОТ ЭТА СТРОКА САМА ВСЁ СДЕЛАЕТ (и класс добавит, и плашку покажет) ←←←
