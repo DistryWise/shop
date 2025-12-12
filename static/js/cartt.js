@@ -501,187 +501,154 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+
 function renderVerticalOrders() {
   const container = document.getElementById('ordersVerticalList');
   if (!container) return;
+
+  // === ОЧИЩАЕМ И ДОБАВЛЯЕМ ДЕБАГ-ПАНЕЛЬ ===
+  container.innerHTML = '';
+  let debugPanel = document.getElementById('multiorder-debug-panel');
+  if (!debugPanel) {
+    debugPanel = document.createElement('div');
+    debugPanel.id = 'multiorder-debug-panel';
+    debugPanel.style.cssText = `
+      position:fixed;top:0;left:0;right:0;z-index:99999;
+      background:#000;color:#0f0;font-family:monospace;font-size:13px;
+      padding:8px 12px;max-height:50vh;overflow-y:auto;opacity:0.92;
+      border-bottom:2px solid #0f0;box-shadow:0 4px 20px rgba(0,255,0,0.3);
+    `;
+    document.body.appendChild(debugPanel);
+  }
+  debugPanel.innerHTML = '<div><strong>DEBUG multiOrderModal (Render.com)</strong> — обновляется в реальном времени</div><hr>';
+
+  const log = (msg, color = '#0f0') => {
+    console.log('%c[MultiOrder] ' + msg, 'color:' + color);
+    const line = document.createElement('div');
+    line.textContent = new Date().toLocaleTimeString() + ' → ' + msg;
+    line.style.color = color;
+    debugPanel.appendChild(line);
+    debugPanel.scrollTop = debugPanel.scrollHeight;
+  };
+
+  log('renderVerticalOrders() запущен', '#ff0');
+  log(`Найдено активных заказов: ${activeOrders.length}`, activeOrders.length ? '#0f0' : '#f00');
+
   container.innerHTML = '';
 
   if (activeOrders.length === 0) {
     container.innerHTML = `<div style="text-align:center;padding:80px 20px;color:var(--text-secondary);opacity:0.7;">
-      <svg style="width:64px;height:64px;margin-bottom:16px;opacity:0.3;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M9 12h6m-6-4h6m-6 8h6m-2 4H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4l-2 2-2-2Z"/>
-      </svg>
       <div style="font-weight:600;font-size:17px;">Активных заказов нет</div>
     </div>`;
+    log('Нет заказов — выходим', '#999');
     return;
   }
 
-  activeOrders.forEach(order => {
+  activeOrders.forEach((order, index) => {
+    const orderId = order.real_id || order.id;
+    const displayId = order.display_id || order.user_order_number || `№${orderId}`;
+
+    log(`Создаём карточку #${index + 1}: orderId = ${orderId}, display = ${displayId}`, '#0ff');
+
     const card = document.createElement('div');
     card.style.cssText = `
-      background:rgba(255,255,255,0.09);
-      border-radius:20px;
-      margin-bottom:12px;
-      overflow:hidden;
-      border-left:5px solid #00ff95;
-      transition:all 0.4s cubic-bezier(0.22,1,0.36,1);
-      cursor:pointer;
-      box-shadow:0 4px 16px rgba(0,0,0,0.18);
+      background:rgba(255,255,255,0.09);border-radius:20px;margin-bottom:12px;
+      overflow:hidden;border-left:5px solid #00ff95;box-shadow:0 4px 16px rgba(0,0,0,0.18);cursor:pointer;
     `;
 
-    // ←←← ВОТ ЭТО ГЛАВНОЕ: НОМЕР ЗАКАЗА В ДВЕ СТРОКИ + ЦЕПОЧКА СТАТУСОВ ВНУТРИ
     card.innerHTML = `
-      <div class="order-header" style="
-        padding:clamp(14px, 4vw, 18px) clamp(16px, 4.5vw, 20px);
-        display:flex;
-        align-items:center;
-        gap:clamp(12px, 3.5vw, 16px);
-      ">
-        <div style="
-          width:clamp(48px, 13vw, 56px);
-          height:clamp(48px, 13vw, 56px);
-          background:var(--order-icon-bg, rgba(0,255,149,0.12));
-          border-radius:16px;
-          display:flex;align-items:center;justify-content:center;
-          flex-shrink:0;
-        ">
-          <i class="fas fa-truck" style="font-size:clamp(20px, 6vw, 26px);color:#00ff95;"></i>
+      <div class="order-header" style="padding:clamp(14px,4vw,18px) clamp(16px,4.5vw,20px);display:flex;align-items:center;gap:clamp(12px,3.5vw,16px);">
+        <div style="width:clamp(48px,13vw,56px);height:clamp(48px,13vw,56px);background:var(--order-icon-bg,rgba(0,255,149,0.12));border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="fas fa-truck" style="font-size:clamp(20px,6vw,26px);color:#00ff95;"></i>
         </div>
-
         <div style="flex:1;min-width:0;">
-          <!-- "Заказ" — сверху -->
-          <div style="
-            font-size:clamp(12px, 3.4vw, 13.5px);
-            color:var(--text-secondary);
-            text-transform:uppercase;
-            letter-spacing:0.5px;
-            font-weight:600;
-            opacity:0.9;
-            margin-bottom:2px;
-          ">Заказ</div>
-
-          <!-- Номер заказа — снизу, крупно, без переносов -->
-          <div style="
-            font-weight:900;
-            font-size:clamp(17px, 5.2vw, 21px);
-            color:var(--text-primary);
-            line-height:1.1;
-            white-space:nowrap;
-            overflow:hidden;
-            text-overflow:ellipsis;
-            letter-spacing:-0.5px;
-          ">
-            ${order.display_id || order.user_order_number || `№${order.real_id || order.id}`}
+          <div style="font-size:clamp(12px,3.4vw,13.5px);color:var(--text-secondary);text-transform:uppercase;opacity:.9;margin-bottom:2px;">Заказ</div>
+          <div style="font-weight:900;font-size:clamp(17px,5.2vw,21px);color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            ${displayId}
           </div>
-
-          <!-- Цена + дата — в одну строку -->
-          <div style="
-            margin-top:6px;
-            font-size:clamp(13px, 3.7vw, 15px);
-            color:var(--text-secondary);
-            line-height:1.4;
-          ">
-            <span style="font-weight:700;color:#00ff95;font-size:clamp(14px, 4vw, 16.5px);">
-              ${order.total_str || '—'}
-            </span>
-            <span style="opacity:0.7;margin:0 8px;">•</span>
-            <span style="opacity:0.85;">
-              ${new Date(order.created_at).toLocaleDateString('ru-RU', {day:'numeric', month:'short'}).replace('.', '')}
-            </span>
+          <div style="margin-top:6px;font-size:clamp(13px,3.7vw,15px);color:var(--text-secondary);">
+            <span style="font-weight:700;color:#00ff95;">${order.total_str || '—'}</span>
+            <span style="opacity:.7;margin:0 8px;">•</span>
+            <span style="opacity:.85;">${new Date(order.created_at).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}).replace('.','')}</span>
           </div>
         </div>
-
-        <i class="fas fa-chevron-down expand-icon" style="
-          color:var(--text-secondary);
-          font-size:clamp(19px, 5.5vw, 23px);
-          transition:transform 0.38s cubic-bezier(0.22,1,0.36,1);
-          flex-shrink:0;
-        "></i>
+        <i class="fas fa-chevron-down expand-icon" style="color:var(--text-secondary);font-size:clamp(19px,5.5vw,23px);transition:transform .38s;"></i>
       </div>
 
-      <!-- ВНУТРЕННЯЯ МОДАЛКА — ЦЕПОЧКА СТАТУСОВ С КРАСИВОЙ МОБИЛЬНОЙ АДАПТАЦИЕЙ -->
-      <div class="order-details" style="
-        max-height:0;overflow:hidden;
-        transition:max-height 0.6s cubic-bezier(0.22,1,0.36,1);
-        background:rgba(255,255,255,0.04);
-        border-top:1px solid rgba(255,255,255,0.08);
-      ">
-        <div style="
-          padding:clamp(20px, 5.5vw, 32px) clamp(16px, 4.5vw, 20px);
-        ">
-          <div id="chain-${order.id}" class="mobile-chain-content" style="
-            font-size:clamp(13.8px, 3.9vw, 15.8px);
-            line-height:1.6;
-            color:var(--text-primary);
-            word-break:break-word;
-            hyphens:none;
-            overflow-wrap:anywhere;
-          "></div>
+      <div class="order-details" style="max-height:0;overflow:hidden;transition:max-height .6s cubic-bezier(.22,1,.36,1);background:rgba(255,255,255,.04);border-top:1px solid rgba(255,255,255,.08);">
+        <div style="padding:clamp(20px,5.5vw,32px) clamp(16px,4.5vw,20px);">
+          <div id="chain-${orderId}" style="min-height:80px;font-size:15px;color:var(--text-primary);">
+            <div style="text-align:center;padding:40px 0;color:#888;"><i class="fas fa-spinner fa-spin"></i> Загрузка статуса...</div>
+          </div>
         </div>
       </div>
     `;
 
-    // Клик — открытие цепочки
-    card.querySelector('.order-header').addEventListener('click', (e) => {
-      e.stopPropagation();
-      const details = card.querySelector('.order-details');
-      const icon = card.querySelector('.expand-icon');
-      const target = document.getElementById(`chain-${order.id}`);
+    const header = card.querySelector('.order-header');
+    const details = card.querySelector('.order-details');
+    const icon = card.querySelector('.expand-icon');
+    const target = card.querySelector(`#chain-${orderId}`);
 
-      const isOpen = details.dataset.open === 'true';
+    header.addEventListener('click', () => {
+      log(`Клик по заказу заказу ${displayId} (id=${orderId})`, '#ff0');
 
-      if (isOpen) {
-        details.style.maxHeight = '0px';
+      if (details.dataset.open === 'true') {
+        log('→ Уже открыто — сворачиваем', '#999');
+        details.style.maxHeight = '0';
         details.dataset.open = 'false';
         icon.style.transform = 'rotate(0deg)';
-      } else {
-        details.dataset.open = 'true';
-        icon.style.transform = 'rotate(180deg)';
-
-        // Подмена для statuschain.js
-        const real = Document.prototype.getElementById;
-        Document.prototype.getElementById = (id) => id === 'orderChain' ? target : real.call(this, id);
-
-        if (!target.dataset.loaded) {
-  target.dataset.loaded = 'true'; // сразу помечаем, чтобы не дублировать
-
-  // Универсальная безопасная обёртка
-  const safeStartChain = (id) => {
-    if (typeof window.startOrderChain === 'function') {
-      window.startOrderChain(id);
-    } else {
-      // Ждём максимум 3 секунды
-      let attempts = 0;
-      const interval = setInterval(() => {
-        if (typeof window.startOrderChain === 'function') {
-          clearInterval(interval);
-          window.startOrderChain(id);
-        } else if (attempts++ > 60) {
-          clearInterval(interval);
-          console.warn('startOrderChain не загрузился');
-        }
-      }, 50);
-    }
-  };
-
-  safeStartChain(order.real_id || order.id);
-}
-
-        Document.prototype.getElementById = real;
-
-        details.style.maxHeight = '6000px';
-        setTimeout(() => {
-          if (details.dataset.open === 'true') {
-            details.style.maxHeight = (details.scrollHeight + 80) + 'px';
-          }
-        }, 100);
+        return;
       }
+
+      log('→ Открываем карточку...', '#0f0');
+      details.dataset.open = 'true';
+      icon.style.transform = 'rotate(180deg)';
+      details.style.maxHeight = '8000px';
+
+      // === ГЛАВНАЯ ПОДМЕНА (оставляем на 15 секунд) ===
+      const originalGet = Document.prototype.getElementById;
+      Document.prototype.getElementById = function(id) {
+        if (id === 'orderChain') {
+          log(`getElementById('orderChain') → перенаправлено на #chain-${orderId}`, '#0f0');
+          return target;
+        }
+        return originalGet.call(this, id);
+      };
+
+      log(`Подмена getElementById активирована для заказа ${orderId}`, '#0f0');
+
+      // Запускаем рендер
+      const startChain = () => {
+        if (typeof window.startOrderChain === 'function') {
+          log(`startOrderChain(${orderId}) вызван успешно`, '#0f0');
+          window.startOrderChain(orderId);
+        } else {
+          log('startOrderChain ещё не загружен — ждём...', '#ffa500');
+          setTimeout(startChain, 100);
+        }
+      };
+      startChain();
+
+      // Через 15 секунд возвращаем оригинальный метод
+      setTimeout(() => {
+        Document.prototype.getElementById = originalGet;
+        log(`Подмена getElementById снята (таймаут 15с)`, '#999');
+      }, 15000);
+
+      // Подгоняем высоту
+      setTimeout(() => {
+        if (details.dataset.open === 'true') {
+          details.style.maxHeight = (details.scrollHeight + 120) + 'px';
+          log(`Высота карточки подогнана: ${details.scrollHeight + 120}px`, '#0f0');
+        }
+      }, 400);
     });
 
     container.appendChild(card);
   });
-}
 
+  log('renderVerticalOrders() завершён — карточки созданы', '#0f0');
+}
 // === РАБОЧАЯ ВЕРСИЯ 2025 — КНОПКА "ЗАКРЫТЬ" РАБОТАЕТ НА МОБИЛКЕ НА 100% ===
 
 const multiModal = document.getElementById('multiOrderModal');
