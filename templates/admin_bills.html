@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отзывы — Админка | Piligrim</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <script>
+// Глобальное хранилище актуального токена
+window.csrfToken = "{{ csrf_token() }}";
+
+// Автоматически обновляем токен при любом успешном ответе от сервера
+function updateCsrfTokenFromResponse(data) {
+    if (data.csrf_token) {
+        window.csrfToken = data.csrf_token;
+        document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', data.csrf_token);
+    }
+}
+
+// Перехватываем ВСЕ fetch-запросы (POST, PUT, DELETE и т.д.)
+const { fetch: origFetch } = window;
+window.fetch = async (...args) => {
+    let [resource, config] = args;
+    
+    // Только для мутирующих методов
+    if (config && ['POST','PUT','DELETE','PATCH'].includes((config.method || 'GET').toUpperCase())) {
+        config = config || {};
+        config.headers = config.headers || {};
+        config.headers['X-CSRF-Token'] = window.csrfToken;
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+        
+        // Если отправляем FormData — не трогаем Content-Type (браузер сам поставит с boundary)
+        if (!(config.body instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
+        }
+    }
+
+    const response = await origFetch(resource, config);
+    
+    // Автоматически обновляем токен после любого успешного JSON-ответа
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        try {
+            const data = await response.clone().json();
+            updateCsrfTokenFromResponse(data);
+        } catch (e) { /* не JSON — игнорируем */ }
+    }
+
+    return response;
+};
+  </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Shadows+Into+Light&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
+    <link rel="stylesheet" href="/static/css/admin/admin_bills.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#ffffff">
+
+    <style>
+            /* === КРАСИВЫЙ СЧЁТ В МОДАЛКЕ === */
+    .invoice-preview {
+        background: #ffffff;
+        color: #000000;
+        padding: 2.5rem;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        max-width: 800px;
+        margin: 0 auto;
+        font-family: 'Inter', Arial, sans-serif;
+    }
+    .invoice-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid #eee;
+    }
+    .invoice-logo img {
+        height: 80px;
+        width: auto;
+    }
+    .invoice-title h1 {
+        margin: 0 0 0.5rem 0;
+        font-size: 2.2rem;
+        color: #111;
+    }
+    .invoice-title p {
+        margin: 0.3rem 0;
+        font-size: 1.1rem;
+        color: #555;
+    }
+    .invoice-requisites h3 {
+        margin: 0 0 1rem 0;
+        color: #111;
+        font-size: 1.4rem;
+    }
+    .invoice-requisites pre {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #e0e0e0;
+        font-size: 1rem;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        margin: 0;
+    }
+    .invoice-amount {
+        margin: 2.5rem 0;
+        text-align: right;
+    }
+    .amount-label {
+        font-size: 1.2rem;
+        color: #555;
+        margin-bottom: 0.5rem;
+    }
+    .amount-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #111;
+    }
+    .invoice-footer {
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px dashed #ccc;
+        text-align: center;
+        color: #777;
+        font-size: 0.95rem;
+    }
+    .invoice-footer p {
+        margin: 0.5rem 0;
+    }
+
+    /* Светлая тема — счёт всегда на белом фоне */
+    html[data-theme="light"] .invoice-preview {
+        background: #ffffff;
+        color: #000000;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    </style>
+</head>
+<body>
+
+    <header>
+        <a href="/" class="logo"><img src="/static/assets/logo.png" alt="ZAZA" class="logo-img"></a>
+        <nav style="margin-left: auto;"><a href="/" class="nav-link">Главная</a></nav>
+    </header>
+
+
+    <!-- Сайдбар (точно как в новой версии) -->
+<aside class="sidebar">
+    <h3 class="sidebar-title">Админка</h3>
+    <div class="sidebar-menu">
+        <a href="/admin" class="sidebar-item"><i class="fas fa-box"></i><span>Товары</span></a>
+        <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
+        <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
+        <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
+        <a href="/admin_dispatch" class="sidebar-item"><i class="fas fa-paper-plane"></i><span>Рассылки</span></a>
+        <a href="/admin_bills" class="sidebar-item active"><i class="fas fa-file-invoice"></i><span>Счета</span></a>
+        <a href="/admin_documents" class="sidebar-item"><i class="fas fa-file-contract"></i><span>Документы</span></a>
+        <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
+        <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
+        <a href="/admin_reviews" class="sidebar-item"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews }}</div></span></a>
+        <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders }}</div></span></a>
+    </div>
+</aside>
+
+
+<main class="admin-main">
+    <h1 class="admin-title">Управление счетами</h1>
+
+    <!-- Сворачиваемая секция: Создать новый счёт -->
+    <div class="collapsible-section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>Создать новый счёт</h2>
+            <i class="fas fa-chevron-down toggle-icon"></i>
+        </div>
+        <div class="section-content">
+            <div class="form-grid">
+                <div class="form-group phone-group">
+                    <label>Телефон пользователя</label>
+                    <input type="text" id="userPhone" placeholder="+7 (999) 999-99-99" autocomplete="off">
+                    <div id="phoneAutocomplete" class="autocomplete-list"></div>
+                    <input type="hidden" id="selectedUserId">
+                </div>
+
+                <div class="form-group">
+                    <label>Номер счёта</label>
+                    <input type="text" id="invoiceNumber" placeholder="Например: 127">
+                </div>
+
+                <div class="form-group">
+                    <label>Сумма (₽)</label>
+                    <input type="number" id="invoiceAmount" placeholder="500000" min="1">
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Реквизиты оплаты</label>
+                    <textarea id="requisitesText" rows="12" placeholder="Получатель: ООО &quot;Пилигрим&quot;&#10;ИНН: ..."></textarea>
+                </div>
+
+                <div class="form-group full-width file-group">
+                    <label>Или загрузить файл с реквизитами (.txt или .pdf)</label>
+                    <label class="file-label">
+                        <i class="fas fa-upload"></i> Выберите файл
+                        <input type="file" id="requisitesFile" accept=".txt,.pdf">
+                    </label>
+                    <small id="fileStatus"></small>
+                </div>
+
+<div class="form-group submit-group">
+    <button id="createInvoiceBtn" class="primary-btn">
+        <i class="fas fa-paper-plane"></i> Создать и отправить счёт
+    </button>
+</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Сворачиваемая секция: Все выставленные счета -->
+    <div class="collapsible-section open"> <!-- open — чтобы вторая была развёрнута по умолчанию -->
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>Все выставленные счета</h2>
+            <i class="fas fa-chevron-down toggle-icon"></i>
+        </div>
+        
+
+        <div class="section-content">
+            <div class="table-wrapper">
+                <table id="invoicesTable">
+                    <thead>
+                        <tr>
+                            <th>Номер счёта</th>
+                            <th>Телефон</th>
+                            <th>Сумма</th>
+                            <th>Дата создания</th>
+                            <th class="status-header">
+                                Статус
+                                <button class="status-filter-toggle" title="Фильтр по статусу">
+                                    <i class="fas fa-sort-down"></i>
+                                </button>
+                                <div class="status-filter-dropdown">
+                                    <div class="filter-option active" data-status="all">Все счета</div>
+                                    <div class="filter-option" data-status="pending">На оплату</div>
+                                    <div class="filter-option" data-status="marked">Ожидает подтверждения</div>
+                                    <div class="filter-option" data-status="confirmed">Оплачен (подтверждён)</div>
+                                </div>
+                            </th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Заполняется JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- ВИСЯЩИЙ ТУМБЛЕР ТЕМЫ (ZAZA STYLE 2025) -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
+
+<!-- Модальное окно с красивым счётом -->
+<div id="invoiceModal" class="modal-overlay" onclick="closeInvoiceModal()">
+    <div class="modal wide-modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h2 id="modalInvoiceTitle">Счёт №000</h2>
+            <button class="modal-close" onclick="closeInvoiceModal()">×</button>
+        </div>
+        <div class="modal-body invoice-preview" id="invoicePreview">
+            <div class="invoice-header">
+                <div class="invoice-logo">
+                    <img src="/static/assets/logo.png" alt="Логотип">
+                </div>
+                <div class="invoice-title">
+                    <h1>Счёт на оплату</h1>
+                    <p id="modalInvoiceNumber"></p>
+                    <p id="modalInvoiceDate"></p>
+                </div>
+            </div>
+
+            <div class="invoice-requisites">
+                <h3>Реквизиты для оплаты</h3>
+                <pre id="modalRequisites"></pre>
+            </div>
+
+            <div class="invoice-amount">
+                <div class="amount-label">Сумма к оплате:</div>
+                <div class="amount-value" id="modalInvoiceAmount"></div>
+            </div>
+
+            <div class="invoice-footer">
+                <p>Спасибо за сотрудничество!</p>
+                <small>По вопросам оплаты обращайтесь: <strong>support@yourcompany.ru</strong></small>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Универсальная модалка ввода пароля админа — твой красивый дизайн -->
+<div id="adminPasswordModal" class="password-modal-overlay">
+  <div class="password-modal-content">
+    <!-- Крестик закрытия -->
+    <button class="password-modal-close" onclick="closeModal('adminPasswordModal')">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <!-- Иконка замка -->
+    <div class="password-modal-icon">
+      <i class="fas fa-lock"></i>
+    </div>
+
+    <!-- Заголовок и текст -->
+    <h2>Подтверждение действия</h2>
+    <p>Введите пароль администратора для продолжения</p>
+
+    <!-- Поле ввода пароля -->
+    <div class="password-input-wrapper">
+      <input type="password" id="adminPasswordInput" placeholder="••••••••" autocomplete="off">
+    </div>
+    <small class="password-hint">Введите пароль администратора</small>
+
+    <!-- Сообщение об ошибке -->
+    <small id="passwordError" class="password-error" style="display: none;">Неверный пароль</small>
+
+    <!-- Кнопки -->
+    <div class="password-modal-actions">
+      <button class="password-btn secondary">
+    Отмена
+</button>
+      <button class="password-btn primary">
+    <span class="btn-text">Подтвердить</span>
+    <i class="fas fa-arrow-right btn-icon"></i>
+</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// Функция сворачивания/разворачивания секций
+function toggleSection(header) {
+    const section = header.parentElement;
+    section.classList.toggle('open');
+}
+
+</script>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    // ======================== ПРОВЕРКА АДМИНА ========================
+    try {
+        const res = await fetch('/api/check_admin');
+        const data = await res.json();
+        if (!data.is_admin) location.href = '/';
+    } catch {
+        location.href = '/';
+    }
+
+    // ======================== ЛОГИКА МОДАЛКИ ПАРОЛЯ АДМИНА ========================
+    let pendingAction = null; // Хранит функцию, которую нужно выполнить после ввода пароля
+
+    function requireAdminPassword(callback) {
+        pendingAction = callback;
+        document.getElementById('adminPasswordModal').classList.add('visible');
+        document.getElementById('adminPasswordInput').value = '';
+        document.getElementById('passwordError').style.display = 'none';
+        document.getElementById('adminPasswordInput').focus();
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('visible');
+        pendingAction = null;
+    }
+
+    async function proceedWithPassword() {
+        const password = document.getElementById('adminPasswordInput').value.trim();
+        if (!password) return;
+
+        const errorEl = document.getElementById('passwordError');
+        errorEl.style.display = 'none';
+
+        try {
+            const res = await fetch('/api/admin_verify_password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                closeModal('adminPasswordModal');
+                if (pendingAction) {
+                    await pendingAction();
+                    pendingAction = null;
+                }
+            } else {
+                errorEl.textContent = data.error || 'Неверный пароль';
+                errorEl.style.display = 'block';
+            }
+        } catch (err) {
+            errorEl.textContent = 'Ошибка соединения';
+            errorEl.style.display = 'block';
+        }
+    }
+
+    // Закрытие модалки пароля по Esc
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('adminPasswordModal');
+            if (modal && modal.classList.contains('visible')) {
+                closeModal('adminPasswordModal');
+            }
+        }
+    });
+
+    // Привязываем кнопку "Отмена" (если ещё не привязана в HTML)
+    const cancelBtn = document.querySelector('.password-btn.secondary');
+    if (cancelBtn) {
+        cancelBtn.onclick = () => closeModal('adminPasswordModal');
+    }
+
+    // Привязываем кнопку "Подтвердить" (главная кнопка в модалке)
+    const confirmBtn = document.querySelector('.password-btn.primary');
+    if (confirmBtn) {
+        confirmBtn.onclick = proceedWithPassword;
+    }
+
+    // ======================== ОСНОВНАЯ ЛОГИКА СЧЕТОВ ========================
+
+    const phoneInput = document.getElementById('userPhone');
+    const autocomplete = document.getElementById('phoneAutocomplete');
+    const userIdInput = document.getElementById('selectedUserId');
+    const fileInput = document.getElementById('requisitesFile');
+    const fileStatus = document.getElementById('fileStatus');
+    const requisitesText = document.getElementById('requisitesText');
+
+    // Автокомплит по телефону
+    phoneInput.addEventListener('input', async () => {
+        const query = phoneInput.value.replace(/\D/g, '');
+        if (query.length < 3) {
+            autocomplete.style.display = 'none';
+            return;
+        }
+
+        const res = await fetch(`/api/admin_search_users?phone=${query}`);
+        const users = await res.json();
+
+        autocomplete.innerHTML = users.length
+            ? users.map(u => `<div onclick="selectUser(${u.id}, '${u.phone}')">${u.phone}${u.name ? ' — ' + u.name : ''}</div>`).join('')
+            : '<div>Ничего не найдено</div>';
+
+        autocomplete.style.display = 'block';
+    });
+
+    window.selectUser = (id, phone) => {
+        phoneInput.value = phone;
+        userIdInput.value = id;
+        autocomplete.style.display = 'none';
+    };
+
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.phone-group')) autocomplete.style.display = 'none';
+    });
+
+    // Загрузка файла с реквизитами
+    fileInput.addEventListener('change', async () => {
+        const file = fileInput.files[0];
+        if (!file) {
+            fileStatus.textContent = '';
+            return;
+        }
+
+        fileStatus.textContent = `Отправляется: ${file.name}...`;
+        fileStatus.style.color = '#ff9800';
+
+        const form = new FormData();
+        form.append('file', file);
+        form.append('csrf_token', window.csrfToken);
+
+        try {
+            const res = await fetch('/api/admin_parse_requisites', {
+                method: 'POST',
+                body: form,
+                credentials: 'include'
+            });
+
+            if (!res.ok) throw new Error(`Сервер вернул ${res.status}`);
+
+            const data = await res.json();
+
+            if (data.text !== undefined) {
+                requisitesText.value = data.text.trim();
+                fileStatus.textContent = 'Файл успешно распознан и вставлен';
+                fileStatus.style.color = '#4caf50';
+            } else {
+                fileStatus.textContent = data.error || 'Неизвестная ошибка';
+                fileStatus.style.color = '#f44336';
+            }
+        } catch (err) {
+            console.error('Ошибка загрузки файла:', err);
+            fileStatus.textContent = 'Ошибка: ' + err.message;
+            fileStatus.style.color = '#f44336';
+        }
+    });
+
+    // Создание счёта
+    document.getElementById('createInvoiceBtn').onclick = async () => {
+        const userId = userIdInput.value;
+        const number = document.getElementById('invoiceNumber').value.trim();
+        const amount = document.getElementById('invoiceAmount').value;
+        const requisites = requisitesText.value.trim();
+
+        if (!userId || !number || !amount || !requisites) {
+            return alert('Заполните все обязательные поля!');
+        }
+
+        requireAdminPassword(async () => {
+            const btn = document.getElementById('createInvoiceBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Создание...';
+
+            try {
+                const res = await fetch('/api/admin_create_invoice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: parseInt(userId),
+                        invoice_number: number,
+                        amount: parseInt(amount) * 100,
+                        requisites
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('Счёт успешно создан!');
+                    loadInvoices();
+                    // Очистка формы
+                    document.getElementById('userPhone').value = '';
+                    userIdInput.value = '';
+                    document.getElementById('invoiceNumber').value = '';
+                    document.getElementById('invoiceAmount').value = '';
+                    requisitesText.value = '';
+                    document.getElementById('fileStatus').textContent = '';
+                } else {
+                    alert(data.error || 'Ошибка при создании');
+                }
+            } catch (err) {
+                alert('Ошибка соединения');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Создать и отправить счёт';
+            }
+        });
+    };
+
+    // Подтверждение оплаты
+    window.confirmPayment = (id) => {
+        requireAdminPassword(async () => {
+            try {
+                const res = await fetch(`/api/admin_confirm_invoice/${id}`, { method: 'POST' });
+                if (res.ok) {
+                    alert('Оплата подтверждена');
+                    loadInvoices();
+                } else {
+                    const data = await res.json();
+                    alert(data.error || 'Ошибка подтверждения');
+                }
+            } catch {
+                alert('Ошибка соединения');
+            }
+        });
+    };
+
+    // Удаление счёта
+    window.deleteInvoice = (id) => {
+        requireAdminPassword(async () => {
+            if (!confirm('Вы уверены, что хотите удалить этот счёт? Это действие нельзя отменить.')) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/admin_delete_invoice/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    alert('Счёт успешно удалён');
+                    loadInvoices();
+                } else {
+                    const data = await res.json();
+                    alert(data.error || 'Ошибка удаления');
+                }
+            } catch {
+                alert('Ошибка соединения');
+            }
+        });
+    };
+
+    // ======================== РАБОТА С ТАБЛИЦЕЙ ========================
+
+    async function loadInvoices() {
+        const tbody = document.querySelector('#invoicesTable tbody');
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;">Загрузка...</td></tr>';
+
+        try {
+            const res = await fetch('/api/admin_all_invoices');
+            const invoices = await res.json();
+
+            if (invoices.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-filter-state">
+                                <i class="fas fa-file-invoice"></i>
+                                <div>Счетов пока нет</div>
+                                <small style="margin-top: 12px; opacity: 0.6;">Создайте первый счёт выше</small>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = invoices.map(inv => {
+                const statusClass = inv.admin_confirmed ? 'status-confirmed' :
+                    inv.user_marked_paid ? 'status-marked' : 'status-pending';
+                const statusText = inv.admin_confirmed ? 'Оплачен (подтверждён)' :
+                    inv.user_marked_paid ? 'Ожидает подтверждения' : 'На оплату';
+
+                return `<tr>
+                    <td>${inv.invoice_number}</td>
+                    <td>${inv.phone}</td>
+                    <td>${(inv.amount/100).toLocaleString('ru')} ₽</td>
+                    <td>${new Date(inv.created_at).toLocaleDateString('ru-RU')}</td>
+                    <td class="${statusClass}">${statusText}</td>
+                    <td class="actions-cell">
+                        ${!inv.admin_confirmed ? 
+                            `<button class="action-btn confirm-btn" onclick="event.stopPropagation(); confirmPayment(${inv.id})" title="Подтвердить оплату">
+                                <i class="fas fa-check"></i>
+                            </button>` : ''}
+                        <button class="action-btn delete-btn" onclick="event.stopPropagation(); deleteInvoice(${inv.id})" title="Удалить счёт">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+        } catch {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#f44336;">Ошибка загрузки</td></tr>';
+        }
+    }
+
+    // Фильтр по статусу
+    const filterToggle = document.querySelector('.status-filter-toggle');
+    const filterDropdown = document.querySelector('.status-filter-dropdown');
+
+    if (filterToggle && filterDropdown) {
+        filterToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            filterDropdown.classList.toggle('visible');
+            filterToggle.classList.toggle('active');
+        });
+
+        filterDropdown.addEventListener('click', (e) => e.stopPropagation());
+    }
+
+    document.addEventListener('click', () => {
+        if (filterDropdown) {
+            filterDropdown.classList.remove('visible');
+            filterToggle?.classList.remove('active');
+        }
+    });
+
+    document.querySelectorAll('.filter-option').forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('.filter-option').forEach(o => o.classList.remove('active'));
+            option.classList.add('active');
+
+            const status = option.getAttribute('data-status');
+            filterInvoicesByStatus(status);
+
+            filterDropdown.classList.remove('visible');
+            filterToggle?.classList.remove('active');
+        });
+    });
+
+    async function filterInvoicesByStatus(status) {
+        const tbody = document.querySelector('#invoicesTable tbody');
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;">Загрузка...</td></tr>';
+
+        try {
+            const res = await fetch('/api/admin_all_invoices');
+            const invoices = await res.json();
+
+            let filtered = invoices;
+
+            if (status !== 'all') {
+                filtered = invoices.filter(inv => {
+                    if (status === 'pending') return !inv.user_marked_paid && !inv.admin_confirmed;
+                    if (status === 'marked') return inv.user_marked_paid && !inv.admin_confirmed;
+                    if (status === 'confirmed') return inv.admin_confirmed;
+                    return false;
+                });
+            }
+
+            if (filtered.length === 0) {
+                let statusName = status === 'all' ? 'всех' : 'выбранным';
+                if (status === 'pending') statusName = '«На оплату»';
+                if (status === 'marked') statusName = '«Ожидает подтверждения»';
+                if (status === 'confirmed') statusName = '«Оплачен (подтверждён)»';
+
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-filter-state">
+                                <i class="fas fa-search"></i>
+                                <div>Нет счетов со статусом<br><strong>${statusName}</strong></div>
+                                <small>Попробуйте выбрать другой фильтр</small>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(inv => {
+                const statusClass = inv.admin_confirmed ? 'status-confirmed' :
+                    inv.user_marked_paid ? 'status-marked' : 'status-pending';
+                const statusText = inv.admin_confirmed ? 'Оплачен (подтверждён)' :
+                    inv.user_marked_paid ? 'Ожидает подтверждения' : 'На оплату';
+
+                const escapedRequisites = inv.requisites ? inv.requisites.replace(/`/g, '\\`').replace(/\$/g, '\\$') : '';
+
+                return `<tr onclick="showInvoiceDetails(${inv.id}, \`${escapedRequisites}\`, '${inv.invoice_number}', ${inv.amount}, '${inv.created_at}')" style="cursor: pointer;">
+                    <td>${inv.invoice_number}</td>
+                    <td>${inv.phone}</td>
+                    <td>${(inv.amount/100).toLocaleString('ru')} ₽</td>
+                    <td>${new Date(inv.created_at).toLocaleDateString('ru-RU')}</td>
+                    <td class="${statusClass}">${statusText}</td>
+                    <td class="actions-cell">
+                        ${!inv.admin_confirmed ? 
+                            `<button class="action-btn confirm-btn" onclick="event.stopPropagation(); confirmPayment(${inv.id})" title="Подтвердить оплату">
+                                <i class="fas fa-check"></i>
+                            </button>` : ''}
+                        <button class="action-btn delete-btn" onclick="event.stopPropagation(); deleteInvoice(${inv.id})" title="Удалить счёт">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+        } catch (err) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#f44336;">Ошибка загрузки данных</td></tr>';
+        }
+    }
+
+    // Показ подробностей счёта
+    window.showInvoiceDetails = function(invoiceId, requisites, number, amount, date) {
+        document.getElementById('modalInvoiceTitle').textContent = `Счёт №${number}`;
+        document.getElementById('modalInvoiceNumber').textContent = `№ ${number}`;
+        document.getElementById('modalInvoiceDate').textContent = `от ${new Date(date).toLocaleDateString('ru-RU')}`;
+        document.getElementById('modalRequisites').textContent = requisites || 'Реквизиты не указаны';
+        document.getElementById('modalInvoiceAmount').textContent = `${(amount/100).toLocaleString('ru')} ₽`;
+
+        document.getElementById('invoiceModal').classList.add('visible');
+    };
+
+    window.closeInvoiceModal = function() {
+        document.getElementById('invoiceModal').classList.remove('visible');
+    };
+
+    // Сохраняем фильтр при автообновлении
+    const originalLoadInvoices = loadInvoices;
+    loadInvoices = async function() {
+        await originalLoadInvoices();
+        const activeOption = document.querySelector('.filter-option.active');
+        if (activeOption && activeOption.getAttribute('data-status') !== 'all') {
+            filterInvoicesByStatus(activeOption.getAttribute('data-status'));
+        }
+    };
+
+    // Запуск
+    loadInvoices();
+    setInterval(loadInvoices, 30000);
+});
+</script>
+
+
+<script>
+// ======================== 1. ПРОВЕРКА АДМИНСКОГО ДОСТУПА ========================
+fetch('/api/check_admin')
+    .then(r => r.json())
+    .then(data => {
+        if (!data.is_admin) {
+            document.documentElement.innerHTML = `
+                <!DOCTYPE html>
+                <html lang="ru">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>404 — Страница не найдена</title>
+                    <style>
+                        body { margin:0; height:100vh; background:#000; color:#fff; font-family:Arial,sans-serif; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+                        h1 { font-size:6rem; margin:0; opacity:0.8; }
+                        p { font-size:1.5rem; opacity:0.6; }
+                        .back { margin-top:2rem; color:#fff; text-decoration:none; padding:1rem 2rem; background:rgba(255,255,255,0.1); border-radius:12px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>404</h1>
+                    <p>Страница не найдена</p>
+                    <a href="/" class="back">← На главную</a>
+                </body>
+                </html>`;
+            throw new Error("Admin access denied");
+        }
+    })
+    .catch(() => {
+        document.documentElement.innerHTML = `<h1 style="color:#fff;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:4rem;">Доступ запрещён</h1>`;
+        throw new Error("Check admin failed");
+    });
+
+// ======================== 2. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ========================
+let currentPage = 1;
+const itemsPerPage = 10;
+let allReviews = [];
+let filteredReviews = [];
+
+
+
+function changePage(delta) {
+    const totalPages = Math.ceil(filteredReviews.length / itemsPerPage);
+    const newPage = currentPage + delta;
+    if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        renderPage();
+    }
+}
+
+
+// ======================== 8. ВСЕ ОСТАЛЬНЫЕ ФУНКЦИИ (ТВОИ, НЕ ТРОГАЛ!) ========================
+async function fetchItemModal(type, id) {
+    const modal = document.getElementById('itemModal');
+    const title = document.getElementById('modalItemTitle');
+    const img = document.getElementById('modalItemImg');
+    const desc = document.getElementById('modalItemDesc');
+    const price = document.getElementById('modalItemPrice');
+    const icon = document.getElementById('itemModalIcon');
+
+    title.textContent = 'Загрузка...';
+    desc.textContent = 'Загрузка описания...';
+    price.textContent = '';
+    img.src = '/static/assets/no-image.png';
+    icon.className = type === 'product' ? 'fas fa-box' : 'fas fa-gavel';
+
+    const endpoint = type === 'product' ? `/api/product/${id}` : `/api/service/${id}`;
+    
+    try {
+        const res = await fetch(endpoint);
+        const data = await res.json();
+
+        title.textContent = data.title || 'Без названия';
+        img.src = data.image_urls?.[0] || '/static/assets/no-image.png';
+        desc.textContent = data.full_desc || data.description || 'Описание отсутствует';
+        price.textContent = data.price_str || data.price || 'Цена не указана';
+    } catch (e) {
+        title.textContent = 'Ошибка загрузки';
+        desc.textContent = 'Не удалось загрузить данные.';
+        price.textContent = '—';
+    }
+
+    openModal('itemModal');
+}
+
+
+
+// === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ (ZAZA TOGGLE) ===
+const themeToggle = document.getElementById('theme-toggle');
+const html = document.documentElement;
+
+// Восстанавливаем сохранённую тему
+if (localStorage.getItem('theme') === 'light') {
+  html.setAttribute('data-theme', 'light');
+  themeToggle.checked = true;
+} else {
+  html.setAttribute('data-theme', 'dark');
+  localStorage.setItem('theme', 'dark');
+}
+
+// Переключение при клике
+themeToggle.addEventListener('change', () => {
+  if (themeToggle.checked) {
+    html.setAttribute('data-theme', 'light');
+    localStorage.setItem('theme', 'light');
+  } else {
+    html.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+  }
+});
+
+</script>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', () => {
+    const currentPath = window.location.pathname;
+
+    // Сопоставление путей с текстом пункта меню
+    const menuMap = {
+        '/admin': 'товары',
+        '/admin_services': 'услуги',
+        '/admin_news': 'новости',
+        '/carousel-editor': 'редактор баннеров',
+        '/admin_feedback': 'обратная связь',
+        '/admin_users': 'пользователи',
+        '/admin_reviews': 'отзывы',
+        '/admin_orders': 'заказы'
+    };
+
+    const activeText = menuMap[currentPath] || null;
+
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+        item.classList.remove('active');
+        const spanText = item.querySelector('span')?.textContent?.trim().toLowerCase();
+
+        if (activeText && spanText === activeText) {
+            item.classList.add('active');
+        }
+    });
+});
+</script>
+
+</body>
+</html>

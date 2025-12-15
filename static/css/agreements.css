@@ -1,0 +1,655 @@
+/* === ПЕРЕМЕННЫЕ ТЕМ === */
+
+/* По умолчанию — светлая тема */
+:root {
+  --bg: #ffffff;
+  --surface: #f5f5f7;
+  --surface2: #ebebeb;
+  --text-primary: #000000;     /* чёрный текст */
+  --text-secondary: #555555;
+  --text-tertiary: #888888;
+  --border: #d2d2d7;
+  --accent-line: #000000;
+}
+
+/* Тёмная тема — только при data-theme="dark" */
+html[data-theme="dark"],
+body[data-theme="dark"] {
+  --bg: #000000;
+  --surface: #1c1c1e;
+  --surface2: #2c2c2e;
+  --text-primary: #ffffff;     /* белый текст */
+  --text-secondary: #bbbbbb;
+  --text-tertiary: #888888;
+  --border: #38383a;
+  --accent-line: #ffffff;
+}
+
+/* Явная светлая тема — переопределяет всё, если нужно принудительно */
+html[data-theme="light"],
+body[data-theme="light"] {
+  --bg: #ffffff;
+  --surface: #f5f5f7;
+  --surface2: #ebebeb;
+  --text-primary: #000000;
+  --text-secondary: #555555;
+  --text-tertiary: #888888;
+  --border: #d2d2d7;
+  --accent-line: #000000;
+}
+
+/* === БАЗОВЫЕ СТИЛИ === */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* === ТАБЫ === */
+.documents-tabs {
+  display: flex;
+  gap: 40px;
+  margin: 40px 0 0;
+  padding: 0 12px 12px;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.documents-tabs::-webkit-scrollbar { display: none; }
+
+.doc-tab {
+  position: relative;
+  padding: 12px 8px;
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.25s ease;
+}
+
+.doc-tab:hover,
+.doc-tab.active {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.doc-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -1px;
+  height: 2.5px;
+  background: var(--accent-line);
+  border-radius: 2px;
+}
+
+/* СЧЁТЧИК — теперь всегда правильный цвет текста */
+.doc-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  margin-left: 10px;
+  background: var(--surface2);
+  color: var(--text-primary);   /* чёрный в светлой, белый в тёмной */
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 11px;
+}
+
+/* === КАРТОЧКИ ДОКУМЕНТОВ === */
+.document-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.document-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+  border-color: transparent;
+}
+
+.doc-icon {
+  font-size: 2.8rem;
+  color: var(--text-tertiary);
+  margin-right: 28px;
+  opacity: 0.75;
+  flex-shrink: 0;
+}
+
+.doc-info h3,
+.doc-status {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.doc-date {
+  color: var(--text-tertiary);
+  font-size: 0.95rem;
+}
+
+/* Пустое состояние */
+.documents-empty {
+  text-align: center;
+  padding: 100px 20px;
+  color: var(--text-secondary);
+}
+
+.documents-empty i {
+  font-size: 4.5rem;
+  margin-bottom: 24px;
+  opacity: 0.35;
+}
+
+/* === МОДАЛКА === */
+.document-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.document-modal.active { display: flex; }
+
+.document-modal-content {
+  background: var(--bg);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 960px;
+  max-height: 95vh;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  color: var(--text-primary);
+}
+
+.document-modal-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.document-modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.document-close-btn {
+  all: unset;
+  cursor: pointer;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: var(--text-tertiary);
+  transition: background 0.2s ease;
+}
+
+.document-close-btn:hover {
+  background: var(--surface2);
+}
+
+#documentIframe {
+  width: 100%;
+  height: 100%;
+  min-height: 520px;
+  border: none;
+  background: var(--bg);
+  flex-grow: 1;
+}
+
+/* === СЕКЦИЯ ПОДПИСИ === */
+.sign-section {
+  margin: 32px;
+  padding: 28px;
+  background: var(--surface);
+  border-radius: 18px;
+  flex-shrink: 0;
+  color: var(--text-primary);
+}
+
+.sign-section h3,
+.sign-section p,
+.sign-variant p,
+.signed-info,
+.signed-info strong {
+  color: var(--text-primary);
+}
+
+.btn-primary {
+  background: var(--text-primary);
+  color: var(--bg);
+  padding: 15px 32px;
+  border-radius: 14px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.25s ease;
+}
+
+.btn-primary:hover { opacity: 0.88; }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1.5px solid var(--border);
+  padding: 15px 32px;
+  border-radius: 14px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.25s ease;
+}
+
+.btn-secondary:hover { background: var(--surface2); }
+
+
+/* Дополнительно */
+.documents-list {
+  margin-top: 48px !important;
+  padding: 0 16px;
+}
+
+/* PDF в тёмной теме */
+html[data-theme="dark"] #documentIframe,
+body[data-theme="dark"] #documentIframe {
+  filter: invert(1) hue-rotate(180deg) brightness(0.95);
+}
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+  .documents-tabs { gap: 24px; }
+  .doc-tab { font-size: 1.1rem; padding: 10px 6px; }
+  .document-card { padding: 20px; flex-direction: column; gap: 16px; }
+  .document-modal-content { border-radius: 20px 20px 0 0; height: 95vh; }
+  .btn-primary, .btn-secondary { width: 100%; padding: 16px; }
+}
+/* === КАРТОЧКИ ДОКУМЕНТОВ — ИСПРАВЛЕННЫЙ ФОН === */
+.document-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  
+  /* Ключевые изменения: фон строго по теме */
+  background: var(--bg) !important;   /* чёрный в dark, белый в light */
+}
+
+.document-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+  border-color: transparent;
+  background: var(--surface) !important;  /* при hover — лёгкий серый оттенок (как было раньше) */
+}
+
+/* Подписанные документы — тоже строго по теме */
+#signedDocuments .document-card {
+  background: var(--bg) !important;   /* чёрный в тёмной, белый в светлой */
+  border-color: var(--border);
+}
+
+#signedDocuments .document-card:hover {
+  background: var(--surface) !important;
+}
+
+/* === СОВРЕМЕННАЯ МОДАЛКА ДОКУМЕНТОВ === */
+.document-modal-modern {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.document-modal-modern.active {
+  display: flex;
+}
+
+.document-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  /* Убираем blur отсюда */
+  /* backdrop-filter: blur(10px); */
+  pointer-events: none; /* важно! чтобы клики проходили сквозь overlay */
+  z-index: -1; /* опускаем overlay ПОД контент модалки */
+}
+
+.document-modal-wrapper {
+  width: min(96vw, 1100px);
+  height: min(96vh, 92vh);
+  background: var(--bg);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Хедер */
+.document-modal-header-new {
+  padding: 28px 36px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+
+.header-left h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.doc-meta-new {
+  margin-top: 10px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.header-right {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.header-action-btn,
+.document-close-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--surface2);
+  border: none;
+  font-size: 1.3rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.header-action-btn:hover {
+  background: var(--accent-hover);
+  transform: scale(1.08);
+}
+
+.document-close-btn:hover {
+  background: #ff453a;
+  color: white;
+}
+
+/* Тело */
+.document-modal-body-new {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.document-viewer-container-new {
+  flex: 1;
+  background: #000;
+}
+
+.document-viewer-container-new object {
+  width: 100%;
+  height: 100%;
+}
+
+/* Секция подписи */
+.sign-section-new {
+  padding: 36px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.sign-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.sign-header h3 {
+  font-size: 1.5rem;
+  margin: 0 0 8px 0;
+}
+
+.sign-variant-new {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px;
+  margin-bottom: 28px;
+}
+
+.sign-variant-new:last-of-type {
+  margin-bottom: 0;
+}
+
+.variant-content {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.variant-icon {
+  font-size: 2.6rem;
+  color: var(--accent-line);
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+.variant-text strong {
+  display: block;
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+
+.variant-text p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.variant-hint {
+  margin: 12px 0 0 0;
+  font-size: 0.92rem;
+  color: var(--text-tertiary);
+}
+
+.sign-divider-new {
+  text-align: center;
+  position: relative;
+  margin: 40px 0;
+  color: var(--text-tertiary);
+}
+
+.sign-divider-new::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0; right: 0;
+  height: 1px;
+  background: var(--border);
+}
+
+.sign-divider-new span {
+  background: var(--surface);
+  padding: 0 28px;
+}
+
+/* Ручная подпись */
+.manual-actions-new {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.upload-area-new {
+  border: 2px dashed var(--border);
+  border-radius: 20px;
+  padding: 48px 24px;
+  text-align: center;
+  background: var(--surface2);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.upload-area-new:hover {
+  border-color: var(--accent-line);
+  background: var(--surface);
+}
+
+.upload-area-new i {
+  font-size: 3.5rem;
+  color: var(--text-tertiary);
+  margin-bottom: 20px;
+  display: block;
+}
+
+.upload-title {
+  font-size: 1.1rem;
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+}
+
+.upload-subtitle {
+  margin: 0 0 20px 0;
+  color: var(--text-secondary);
+}
+
+.upload-btn {
+  padding: 12px 24px;
+}
+
+.upload-area-new input { display: none; }
+
+.upload-progress-new {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.progress-bar-new {
+  flex: 1;
+  height: 10px;
+  background: var(--surface2);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  width: 0%;
+  height: 100%;
+  background: var(--accent-line);
+  transition: width 0.4s ease;
+}
+
+.uploaded-preview-new {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.uploaded-preview-new iframe {
+  width: 100%;
+  height: 500px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  margin-top: 12px;
+}
+
+/* Успех */
+.signed-success-new {
+  padding: 60px 36px;
+  text-align: center;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.success-content i {
+  font-size: 6rem;
+  color: #10b981;
+  margin-bottom: 28px;
+  display: block;
+}
+
+.success-content h3 {
+  font-size: 1.8rem;
+  margin: 0 0 16px 0;
+}
+
+.success-content p {
+  color: var(--text-secondary);
+  margin: 0 0 24px 0;
+  font-size: 1.1rem;
+}
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+  .document-modal-wrapper {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+  }
+  
+  .document-modal-header-new {
+    padding: 20px;
+  }
+  
+  .sign-section-new {
+    padding: 24px 20px;
+  }
+  
+  .variant-content {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .variant-icon {
+    align-self: center;
+  }
+}

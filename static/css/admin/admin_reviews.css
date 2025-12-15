@@ -1551,3 +1551,102 @@ header.scrolled + .theme-toggle-hanging { top: 76px; }
     box-shadow: none !important;
     background: transparent !important;
 }
+
+/* ============================================= */
+/* СВЕТЛАЯ ТЕМА — САЙДБАР ПОЛНОСТЬЮ КАК В ТЁМНОЙ (МИНИМАЛИСТИЧНЫЙ) */
+/* ============================================= */
+
+[data-theme="light"] .sidebar {
+    background: transparent !important;           /* чистый фон страницы */
+    border-right: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    padding: 2rem 2rem 2rem 3rem !important;
+}
+
+[data-theme="light"] .sidebar-title {
+    color: #111111 !important;
+    text-shadow: none !important;
+    margin-bottom: 3rem;
+}
+
+[data-theme="light"] .sidebar-menu {
+    position: relative;
+    padding-left: 0 !important;
+}
+
+
+/* Пункты меню */
+[data-theme="light"] .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0 !important;
+    color: #666666 !important;
+    font-weight: 500;
+    font-size: 1.1rem;
+    position: relative;
+    z-index: 2;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Иконки */
+[data-theme="light"] .sidebar-item i {
+    font-size: 1.4rem;
+    width: 34px;
+    text-align: center;
+    color: #444444 !important;
+    transition: transform 0.4s ease;
+}
+
+/* Текст и бейджи */
+[data-theme="light"] .sidebar-item span {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: #444444 !important;
+}
+
+[data-theme="light"] .sidebar-badge {
+    background: rgba(0,0,0,0.1) !important;
+    border: 1px solid rgba(0,0,0,0.15) !important;
+    color: #000000 !important;
+}
+
+/* Кружок при ховере/активном (как в тёмной теме) */
+[data-theme="light"] .sidebar-item::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    background: #000000 !important;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 3;
+}
+
+[data-theme="light"] .sidebar-item:hover::before,
+[data-theme="light"] .sidebar-item.active::before {
+    opacity: 1;
+}
+
+/* Ховер и активный пункт */
+[data-theme="light"] .sidebar-item:hover,
+[data-theme="light"] .sidebar-item.active {
+    color: #000000 !important;
+}
+
+[data-theme="light"] .sidebar-item:hover i,
+[data-theme="light"] .sidebar-item.active i {
+    transform: translateX(6px);
+    color: #000000 !important;
+}
+
+[data-theme="light"] .sidebar-item.active {
+    font-weight: 700;
+}

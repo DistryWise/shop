@@ -3892,3 +3892,22 @@ html[data-theme="light"] .popover-buttons button:first-child:hover {
   background: rgba(0,0,0,0.12) !important;
 }
 
+/* Убираем скроллбар у списка заказов */
+#ordersVerticalList::-webkit-scrollbar {
+  display: none;
+}
+
+/* Делаем карточки заказов чуть компактнее, но всё ещё красиво */
+#ordersVerticalList > div {
+  margin-bottom: 10px !important;
+  border-radius: 18px !important;
+}
+
+.order-header {
+  padding: 14px 18px !important;
+}
+
+/* Уменьшаем отступы в деталях заказа */
+.order-details > div {
+  padding: 18px 18px 24px !important;
+}

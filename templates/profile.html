@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <head>
-  
+  <script>
+    // Определяем тему ещё до первого рендера
+    const savedTheme = localStorage.getItem('theme');
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    const theme = savedTheme || (prefersLight ? 'light' : 'dark');
+
+    // Сразу ставим атрибут
+    document.documentElement.setAttribute('data-theme', theme);
+
+    // И сразу форсируем правильный фон лоадера
+    document.documentElement.style.backgroundColor = theme === 'light' ? '#ffffff' : '#000000';
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Личный кабинет — Piligrim</title>
@@ -331,10 +342,9 @@ window.fetch = async (...args) => {
         <section class="profile-section">
           <div class="section-header"><h3>Разделы</h3></div>
           <div class="profile-links">
-            <a href="/orders" class="profile-link"><i class="fas fa-receipt"></i> История заказов</a>
-            <a href="/favorites" class="profile-link"><i class="fas fa-heart"></i> Избранное</a>
-            <a href="/documents" class="profile-link"><i class="fas fa-file-contract"></i> Договоры и акты</a>
-            <a href="/invoices" class="profile-link"><i class="fas fa-file-invoice-dollar"></i> Счета</a>
+            <a href="/profile/orders" class="profile-link"><i class="fas fa-receipt"></i> История заказов</a>
+            <a href="/profile/agreements" class="profile-link"><i class="fas fa-file-contract"></i> Договоры и акты</a>
+            <a href="/profile/bills" class="profile-link"><i class="fas fa-file-invoice-dollar"></i> Счета</a>
             <a href="https://t.me/+89062173869" class="profile-link" target="_blank" rel="noopener">
   <i class="fas fa-headset"></i> Поддержка
 </a>
@@ -352,6 +362,381 @@ window.fetch = async (...args) => {
     </div>
   </div>
 </main>
+
+<style>
+    /* ВИЗУАЛЬНАЯ КОРРЕКЦИЯ ИКОНКИ ДОКУМЕНТОВ */
+.profile-nav-icons .icon-documents {
+  margin-left: 6px !important;
+  transform: translateX(2px);   /* дополнительная тонкая подстройка */
+}
+    /* === НАВИГАЦИЯ ПО РАЗДЕЛАМ ПРОФИЛЯ — С fa-fw ВСЁ РОВНО === */
+.profile-nav-icons {
+  position: fixed;
+  left: 50px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  z-index: 10;
+  transition: all 0.4s ease;
+  justify-content: center;
+  height: 100vh;
+  padding: 20px 0;
+  box-sizing: border-box;
+}
+
+.profile-nav-icons a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text-secondary);
+  transition: all 0.35s ease;
+  width: 80px;                  /* можно оставить или уменьшить — fa-fw всё выровняет */
+}
+
+.profile-nav-icons i {
+  font-size: 2.2rem;
+  transition: all 0.35s ease;
+  opacity: 0.7;
+}
+
+.profile-nav-icons span {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.35s ease;
+  white-space: nowrap;
+}
+
+/* Hover и активное */
+.profile-nav-icons a:hover {
+  color: var(--text-primary);
+}
+
+.profile-nav-icons a:hover i {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.profile-nav-icons a:hover span {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.profile-nav-icons a.active {
+  color: var(--accent-line);
+}
+
+.profile-nav-icons a.active i {
+  opacity: 1;
+  transform: scale(1.2);
+  text-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.profile-nav-icons a.active span {
+  opacity: 1;
+  transform: translateY(0);
+  font-weight: 800;
+}
+
+/* Светлая тема */
+[data-theme="light"] .profile-nav-icons a.active {
+  color: #000000 !important;
+}
+
+/* Сдвиг контента */
+.profile-main-content.with-icons-nav {
+  margin-left: 160px;
+  transition: margin-left 0.4s ease;
+}
+
+/* Анимация появления */
+.profile-nav-icons {
+  opacity: 0;
+  animation: fadeInLeft 0.8s ease forwards 0.4s;
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+/* === МОБИЛЬНАЯ ВЕРСИЯ (≤1026px): горизонтально сверху === */
+@media (max-width: 1026px) {
+  .profile-nav-icons {
+    position: static;
+    transform: none;
+    flex-direction: row;
+    justify-content: center;
+    gap: 40px;
+    height: auto;
+    padding: 32px 20px 20px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .profile-nav-icons a {
+    width: auto;
+    min-width: 70px;
+  }
+
+  .profile-nav-icons i {
+    font-size: 2rem;
+    opacity: 0.8;
+  }
+
+  .profile-nav-icons span {
+    opacity: 1;
+    transform: translateY(0);
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .profile-nav-icons a:hover i {
+    transform: scale(1.1);
+  }
+
+  .profile-nav-icons a.active i {
+    transform: scale(1.15);
+  }
+
+  .profile-main-content.with-icons-nav {
+    margin-left: 0 !important;
+    margin-top: 90px;
+  }
+
+  .profile-nav-icons {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+@media (max-width: 1026px) {
+  .profile-nav-icons::-webkit-scrollbar {
+    display: none;
+  }
+  .profile-nav-icons {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+/* === МОБИЛЬНАЯ АДАПТАЦИЯ (≤1026px): горизонтально сверху, без обрезки краёв === */
+@media (max-width: 1026px) {
+  .profile-nav-icons {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    flex-direction: row;
+    justify-content: space-between;            /* главное исправление — равномерно по ширине */
+    align-items: center;
+    gap: clamp(8px, 2vw, 20px);                 /* маленький gap, чтобы не выезжало */
+    padding: clamp(20px, 6vw, 32px) clamp(32px, 10vw, 60px) clamp(16px, 4vw, 20px); /* большие боковые отступы */
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;                          /* скрываем возможный переполнение */
+    -webkit-overflow-scrolling: touch;
+    z-index: 15;
+    width: 100%;
+    box-sizing: border-box;
+    flex-wrap: nowrap;
+  }
+
+  .profile-nav-icons a {
+    width: auto;
+    min-width: clamp(45px, 12vw, 70px);        /* сильнее сжимаем */
+    gap: clamp(3px, 1vw, 6px);
+    flex: 1;                                   /* равномерно распределяем пространство */
+    max-width: clamp(80px, 20vw, 100px);
+  }
+
+  .profile-nav-icons i {
+    font-size: clamp(1.4rem, 5.5vw, 1.9rem);
+    opacity: 0.9;
+  }
+
+  .profile-nav-icons span {
+    opacity: 1;
+    transform: none;
+    font-size: clamp(0.58rem, 2.2vw, 0.76rem);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* Hover и активное */
+  .profile-nav-icons a:hover i,
+  .profile-nav-icons a.active i {
+    transform: scale(1.14);
+  }
+
+  /* Отступ контента */
+  .profile-main-content.with-icons-nav {
+    margin-left: 0 !important;
+    margin-top: clamp(80px, 22vw, 100px);
+  }
+
+  .profile-nav-icons {
+    opacity: 1;
+    animation: none;
+  }
+
+  /* Скрываем скроллбар */
+  .profile-nav-icons {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .profile-nav-icons::-webkit-scrollbar {
+    display: none;
+  }
+}
+/* Мягкий и нейтральный вид в светлой теме + исправление дублирования текста */
+[data-theme="light"] .profile-nav-icons a {
+  color: #666666 !important;
+}
+
+[data-theme="light"] .profile-nav-icons a:hover {
+  color: #444444 !important;
+}
+
+[data-theme="light"] .profile-nav-icons a.active {
+  color: #555555 !important;
+}
+
+[data-theme="light"] .profile-nav-icons a i {
+  opacity: 0.7 !important;
+}
+
+[data-theme="light"] .profile-nav-icons a:hover i,
+[data-theme="light"] .profile-nav-icons a.active i {
+  opacity: 0.9 !important;
+  transform: scale(1.1) !important;
+  text-shadow: none !important;
+}
+
+/* Текст: базово скрыт, появляется только при hover/active */
+[data-theme="light"] .profile-nav-icons span {
+  color: inherit !important;
+  font-weight: 500 !important;
+  opacity: 0 !important;               /* базово скрыт */
+  transform: translateY(8px) !important;
+  transition: opacity 0.35s ease, transform 0.35s ease !important;
+}
+
+[data-theme="light"] .profile-nav-icons a:hover span,
+[data-theme="light"] .profile-nav-icons a.active span {
+  opacity: 1 !important;               /* появляется только один раз */
+  transform: translateY(0) !important;
+  font-weight: 600 !important;
+}
+
+/* Мягкий и нейтральный вид навигации в тёмной теме — без яркого белого и агрессии */
+[data-theme="dark"] .profile-nav-icons a {
+  color: #aaaaaa !important;   /* спокойный серый для всех ссылок */
+}
+
+[data-theme="dark"] .profile-nav-icons a:hover {
+  color: #cccccc !important;   /* чуть ярче на ховер */
+}
+
+[data-theme="dark"] .profile-nav-icons a.active {
+  color: #bbbbbb !important;   /* активный — светло-серый, не ярко-белый */
+}
+
+[data-theme="dark"] .profile-nav-icons a i {
+  opacity: 0.7 !important;     /* иконки неактивные — приглушённые */
+}
+
+[data-theme="dark"] .profile-nav-icons a:hover i,
+[data-theme="dark"] .profile-nav-icons a.active i {
+  opacity: 0.9 !important;     /* активные/ховер — чуть ярче, но не 1 */
+  transform: scale(1.1) !important;  /* минимальный масштаб */
+  text-shadow: none !important;      /* без тени */
+}
+
+/* Текст: базово скрыт, появляется мягко */
+[data-theme="dark"] .profile-nav-icons span {
+  color: inherit !important;
+  font-weight: 500 !important;       /* нормальный вес */
+  opacity: 0 !important;             /* базово скрыт */
+  transform: translateY(8px) !important;
+  transition: opacity 0.35s ease, transform 0.35s ease !important;
+}
+
+[data-theme="dark"] .profile-nav-icons a:hover span,
+[data-theme="dark"] .profile-nav-icons a.active span {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  font-weight: 600 !important;       /* лёгкая жирность для читаемости */
+}
+</style>
+<!-- ЛЕВАЯ ВЕРТИКАЛЬНАЯ СЕТКА ИКОНОК ДЛЯ НАВИГАЦИИ ПО ПРОФИЛЮ -->
+<nav class="profile-nav-icons">
+  <a href="/profile" class="active">
+    <i class="fas fa-user fa-fw"></i>
+    <span>Профиль</span>
+  </a>
+  <a href="/profile/orders" class="">
+    <i class="fas fa-receipt fa-fw"></i>
+    <span>История заказов</span>
+  </a>
+  <a href="/profile/bills" class="">
+    <i class="fas fa-file-invoice-dollar fa-fw"></i>
+    <span>Счета</span>
+  </a>
+  <a href="/profile/agreements" class="">
+    <i class="fas fa-file-signature fa-fw icon-documents"></i>  
+    <span>Договоры и акты</span>
+  </a>
+  <a href="https://t.me/+89062173869" class="">
+    <i class="fas fa-headset fa-fw"></i>
+    <span>Поддержка</span>
+  </a>
+</nav>
+<!-- ШТОРКА НАВИГАЦИИ ПО РАЗДЕЛАМ ПРОФИЛЯ НА МОБИЛЬНЫХ -->
+<div class="profile-mobile-sheet" id="profileMobileSheet">
+  <div class="sheet-handle"></div>
+
+  
+  <nav class="profile-nav-icons mobile">
+    <a href="/profile" class="active">
+      <i class="fas fa-user fa-fw"></i>
+      <span>Профиль</span>
+    </a>
+    <a href="/profile/orders" class="">
+      <i class="fas fa-receipt fa-fw"></i>
+      <span>История заказов</span>
+    </a>
+    <a href="/profile/bills" class="">
+      <i class="fas fa-file-invoice-dollar fa-fw"></i>
+      <span>Счета</span>
+    </a>
+    <a href="/profile/agreements" class="">
+      <i class="fas fa-file-signature fa-fw icon-documents"></i>
+      <span>Договоры и акты</span>
+    </a>
+    <a href="https://t.me/+89062173869" class="">
+      <i class="fas fa-headset fa-fw"></i>
+      <span>Поддержка</span>
+    </a>
+  </nav>
+</div>
 
 <!-- ОБЯЗАТЕЛЬНО ДОБАВЬ ЭТОТ БЛОК — ДАЖЕ ЕСЛИ ОН НЕ ИСПОЛЬЗУЕТСЯ НА ДЕСКТОПЕ! -->
 <div class="custom-alert" id="feedbackModal">

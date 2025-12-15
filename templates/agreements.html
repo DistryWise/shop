@@ -1,0 +1,2123 @@
+<!DOCTYPE html>
+<head>
+  <script>
+    // Определяем тему ещё до первого рендера
+    const savedTheme = localStorage.getItem('theme');
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    const theme = savedTheme || (prefersLight ? 'light' : 'dark');
+
+    // Сразу ставим атрибут
+    document.documentElement.setAttribute('data-theme', theme);
+
+    // И сразу форсируем правильный фон лоадера
+    document.documentElement.style.backgroundColor = theme === 'light' ? '#ffffff' : '#000000';
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Личный кабинет — Piligrim</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <script>
+// Глобальное хранилище актуального токена
+window.csrfToken = "{{ csrf_token() }}";
+
+// Автоматически обновляем токен при любом успешном ответе от сервера
+function updateCsrfTokenFromResponse(data) {
+    if (data.csrf_token) {
+        window.csrfToken = data.csrf_token;
+        document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', data.csrf_token);
+    }
+}
+
+// Перехватываем ВСЕ fetch-запросы (POST, PUT, DELETE и т.д.)
+const { fetch: origFetch } = window;
+window.fetch = async (...args) => {
+    let [resource, config] = args;
+    
+    // Только для мутирующих методов
+    if (config && ['POST','PUT','DELETE','PATCH'].includes((config.method || 'GET').toUpperCase())) {
+        config = config || {};
+        config.headers = config.headers || {};
+        config.headers['X-CSRF-Token'] = window.csrfToken;
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+        
+        // Если отправляем FormData — не трогаем Content-Type (браузер сам поставит с boundary)
+        if (!(config.body instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
+        }
+    }
+
+    const response = await origFetch(resource, config);
+    
+    // Автоматически обновляем токен после любого успешного JSON-ответа
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        try {
+            const data = await response.clone().json();
+            updateCsrfTokenFromResponse(data);
+        } catch (e) { /* не JSON — игнорируем */ }
+    }
+
+    return response;
+};
+</script>
+
+<script>
+  window.serverKnowsImLoggedIn = {{ user_authenticated|default(false)|tojson|safe }};
+</script>
+
+  <!-- Шрифты и иконки -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap" rel="stylesheet">
+
+
+
+  <!-- ДОБАВЛЕННЫЕ СТИЛИ — БЕЗ КОНФЛИКТОВ -->
+  <link rel="stylesheet" href="/static/css/search.css">
+  <link rel="stylesheet" href="/static/css/auth.css">
+  <link rel="stylesheet" href="/static/css/cart.css">
+  <link rel="stylesheet" href="/static/css/ai.css">
+  <link rel="stylesheet" href="/static/css/contacts.css"> 
+  <link rel="stylesheet" href="/static/css/agreements.css"> 
+
+  <link rel="stylesheet" href="/static/css/profile/profile.css"> 
+  <link rel="stylesheet" href="/static/css/profile/auth.css"> 
+<style>
+    /* ВИЗУАЛЬНАЯ КОРРЕКЦИЯ ИКОНКИ ДОКУМЕНТОВ */
+.profile-nav-icons .icon-documents {
+  margin-left: 6px !important;
+  transform: translateX(2px);   /* дополнительная тонкая подстройка */
+}
+    /* === НАВИГАЦИЯ ПО РАЗДЕЛАМ ПРОФИЛЯ — С fa-fw ВСЁ РОВНО === */
+.profile-nav-icons {
+  position: fixed;
+  left: 50px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  z-index: 10;
+  transition: all 0.4s ease;
+  justify-content: center;
+  height: 100vh;
+  padding: 20px 0;
+  box-sizing: border-box;
+}
+
+.profile-nav-icons a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text-secondary);
+  transition: all 0.35s ease;
+  width: 80px;                  /* можно оставить или уменьшить — fa-fw всё выровняет */
+}
+
+.profile-nav-icons i {
+  font-size: 2.2rem;
+  transition: all 0.35s ease;
+  opacity: 0.7;
+}
+
+.profile-nav-icons span {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.35s ease;
+  white-space: nowrap;
+}
+
+/* Hover и активное */
+.profile-nav-icons a:hover {
+  color: var(--text-primary);
+}
+
+.profile-nav-icons a:hover i {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.profile-nav-icons a:hover span {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.profile-nav-icons a.active {
+  color: var(--accent-line);
+}
+
+.profile-nav-icons a.active i {
+  opacity: 1;
+  transform: scale(1.2);
+  text-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.profile-nav-icons a.active span {
+  opacity: 1;
+  transform: translateY(0);
+  font-weight: 800;
+}
+
+/* Светлая тема */
+[data-theme="light"] .profile-nav-icons a.active {
+  color: #000000 !important;
+}
+
+/* Сдвиг контента */
+.profile-main-content.with-icons-nav {
+  margin-left: 160px;
+  transition: margin-left 0.4s ease;
+}
+
+/* Анимация появления */
+.profile-nav-icons {
+  opacity: 0;
+  animation: fadeInLeft 0.8s ease forwards 0.4s;
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+/* === МОБИЛЬНАЯ ВЕРСИЯ (≤1026px): горизонтально сверху === */
+@media (max-width: 1026px) {
+  .profile-nav-icons {
+    position: static;
+    transform: none;
+    flex-direction: row;
+    justify-content: center;
+    gap: 40px;
+    height: auto;
+    padding: 32px 20px 20px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .profile-nav-icons a {
+    width: auto;
+    min-width: 70px;
+  }
+
+  .profile-nav-icons i {
+    font-size: 2rem;
+    opacity: 0.8;
+  }
+
+  .profile-nav-icons span {
+    opacity: 1;
+    transform: translateY(0);
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .profile-nav-icons a:hover i {
+    transform: scale(1.1);
+  }
+
+  .profile-nav-icons a.active i {
+    transform: scale(1.15);
+  }
+
+  .profile-main-content.with-icons-nav {
+    margin-left: 0 !important;
+    margin-top: 90px;
+  }
+
+  .profile-nav-icons {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+@media (max-width: 1026px) {
+  .profile-nav-icons::-webkit-scrollbar {
+    display: none;
+  }
+  .profile-nav-icons {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+/* === МОБИЛЬНАЯ АДАПТАЦИЯ (≤1026px): горизонтально сверху, без обрезки краёв === */
+@media (max-width: 1026px) {
+  .profile-nav-icons {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    flex-direction: row;
+    justify-content: space-between;            /* главное исправление — равномерно по ширине */
+    align-items: center;
+    gap: clamp(8px, 2vw, 20px);                 /* маленький gap, чтобы не выезжало */
+    padding: clamp(20px, 6vw, 32px) clamp(32px, 10vw, 60px) clamp(16px, 4vw, 20px); /* большие боковые отступы */
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;                          /* скрываем возможный переполнение */
+    -webkit-overflow-scrolling: touch;
+    z-index: 15;
+    width: 100%;
+    box-sizing: border-box;
+    flex-wrap: nowrap;
+  }
+
+  .profile-nav-icons a {
+    width: auto;
+    min-width: clamp(45px, 12vw, 70px);        /* сильнее сжимаем */
+    gap: clamp(3px, 1vw, 6px);
+    flex: 1;                                   /* равномерно распределяем пространство */
+    max-width: clamp(80px, 20vw, 100px);
+  }
+
+  .profile-nav-icons i {
+    font-size: clamp(1.4rem, 5.5vw, 1.9rem);
+    opacity: 0.9;
+  }
+
+  .profile-nav-icons span {
+    opacity: 1;
+    transform: none;
+    font-size: clamp(0.58rem, 2.2vw, 0.76rem);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* Hover и активное */
+  .profile-nav-icons a:hover i,
+  .profile-nav-icons a.active i {
+    transform: scale(1.14);
+  }
+
+  /* Отступ контента */
+  .profile-main-content.with-icons-nav {
+    margin-left: 0 !important;
+    margin-top: clamp(80px, 22vw, 100px);
+  }
+
+  .profile-nav-icons {
+    opacity: 1;
+    animation: none;
+  }
+
+  /* Скрываем скроллбар */
+  .profile-nav-icons {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .profile-nav-icons::-webkit-scrollbar {
+    display: none;
+  }
+}
+/* Мягкий и нейтральный вид в светлой теме + исправление дублирования текста */
+[data-theme="light"] .profile-nav-icons a {
+  color: #666666 !important;
+}
+
+[data-theme="light"] .profile-nav-icons a:hover {
+  color: #444444 !important;
+}
+
+[data-theme="light"] .profile-nav-icons a.active {
+  color: #555555 !important;
+}
+
+[data-theme="light"] .profile-nav-icons a i {
+  opacity: 0.7 !important;
+}
+
+[data-theme="light"] .profile-nav-icons a:hover i,
+[data-theme="light"] .profile-nav-icons a.active i {
+  opacity: 0.9 !important;
+  transform: scale(1.1) !important;
+  text-shadow: none !important;
+}
+
+/* Текст: базово скрыт, появляется только при hover/active */
+[data-theme="light"] .profile-nav-icons span {
+  color: inherit !important;
+  font-weight: 500 !important;
+  opacity: 0 !important;               /* базово скрыт */
+  transform: translateY(8px) !important;
+  transition: opacity 0.35s ease, transform 0.35s ease !important;
+}
+
+[data-theme="light"] .profile-nav-icons a:hover span,
+[data-theme="light"] .profile-nav-icons a.active span {
+  opacity: 1 !important;               /* появляется только один раз */
+  transform: translateY(0) !important;
+  font-weight: 600 !important;
+}
+
+/* Мягкий и нейтральный вид навигации в тёмной теме — без яркого белого и агрессии */
+[data-theme="dark"] .profile-nav-icons a {
+  color: #aaaaaa !important;   /* спокойный серый для всех ссылок */
+}
+
+[data-theme="dark"] .profile-nav-icons a:hover {
+  color: #cccccc !important;   /* чуть ярче на ховер */
+}
+
+[data-theme="dark"] .profile-nav-icons a.active {
+  color: #bbbbbb !important;   /* активный — светло-серый, не ярко-белый */
+}
+
+[data-theme="dark"] .profile-nav-icons a i {
+  opacity: 0.7 !important;     /* иконки неактивные — приглушённые */
+}
+
+[data-theme="dark"] .profile-nav-icons a:hover i,
+[data-theme="dark"] .profile-nav-icons a.active i {
+  opacity: 0.9 !important;     /* активные/ховер — чуть ярче, но не 1 */
+  transform: scale(1.1) !important;  /* минимальный масштаб */
+  text-shadow: none !important;      /* без тени */
+}
+
+/* Текст: базово скрыт, появляется мягко */
+[data-theme="dark"] .profile-nav-icons span {
+  color: inherit !important;
+  font-weight: 500 !important;       /* нормальный вес */
+  opacity: 0 !important;             /* базово скрыт */
+  transform: translateY(8px) !important;
+  transition: opacity 0.35s ease, transform 0.35s ease !important;
+}
+
+[data-theme="dark"] .profile-nav-icons a:hover span,
+[data-theme="dark"] .profile-nav-icons a.active span {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  font-weight: 600 !important;       /* лёгкая жирность для читаемости */
+}
+html[data-theme="dark"] .invoice-modal-content {
+  background: #0f0f0f !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: #ffffff !important;
+}
+
+/* Заголовок и весь текст внутри модалки */
+html[data-theme="dark"] .invoice-modal-header h2,
+html[data-theme="dark"] .requisites-block,
+html[data-theme="dark"] .mark-paid-btn,
+html[data-theme="dark"] .paid-section strong,
+html[data-theme="dark"] .paid-section p {
+  color: #ffffff !important;
+}
+
+/* Крестик закрытия — был почти чёрный */
+html[data-theme="dark"] .invoice-close-btn {
+  background: rgba(255,255,255,0.12) !important;
+  color: #ffffff !important;
+}
+html[data-theme="dark"] .invoice-close-btn:hover {
+  background: rgba(255,255,255,0.22) !important;
+  color: #ffffff !important;
+}
+
+/* Блок реквизитов */
+html[data-theme="dark"] .requisites-block {
+  background: rgba(255,255,255,0.08) !important;
+  color: #e0e0e0 !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+/* Кнопка копирования реквизитов */
+html[data-theme="dark"] .copy-requisites-btn {
+  background: rgba(255,255,255,0.12) !important;
+  color: #ffffff !important;
+}
+html[data-theme="dark"] .copy-requisites-btn:hover {
+  background: rgba(255,255,255,0.25) !important;
+  transform: scale(1.1);
+}
+
+/* Кнопка "Я оплатил" */
+html[data-theme="dark"] .mark-paid-btn {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+html[data-theme="dark"] .mark-paid-btn:hover {
+  background: #e0e0e0 !important;
+}
+
+/* Успешное состояние */
+html[data-theme="dark"] .paid-section i {
+  color: #10b981 !important;
+}
+
+</style>
+<style>
+/* === ТЁМНАЯ ТЕМА: ЧЁРНАЯ МОДАЛКА ДОКУМЕНТОВ С БЕЛОЙ ОКАНТОВКОЙ === */
+
+html[data-theme="dark"] .document-modal-modern .document-modal-wrapper {
+  background: #0a0a0a !important;   /* почти чистый чёрный для премиум-вида */
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;  /* тонкая белая окантовка */
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8) !important;   /* глубокая тень для объёма */
+}
+
+html[data-theme="dark"] .document-modal-header-new {
+  background: #0f0f0f !important;   /* чуть светлее хедера для иерархии */
+  border-bottom-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+html[data-theme="dark"] .document-viewer-container-new {
+  background: #000000 !important;   /* чистый чёрный для PDF-вьюера */
+}
+
+html[data-theme="dark"] .sign-section-new {
+  background: #111111 !important;   /* лёгкий подъём над основным фоном */
+  border-top-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+html[data-theme="dark"] .sign-variant-new {
+  background: #0a0a0a !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+html[data-theme="dark"] .sign-divider-new::before {
+  background: rgba(255, 255, 255, 0.12) !important;
+}
+
+html[data-theme="dark"] .sign-divider-new span {
+  background: #0a0a0a !important;
+}
+
+html[data-theme="dark"] .upload-area-new {
+  background: #161616 !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+html[data-theme="dark"] .upload-area-new:hover {
+  background: #1c1c1c !important;
+  border-color: #ffffff !important;
+}
+
+html[data-theme="dark"] .signed-success-new {
+  background: #111111 !important;
+  border-top-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Дополнительно: чуть сильнее тень у карточек внутри модалки, если будут */
+html[data-theme="dark"] .document-modal-wrapper * {
+  box-shadow: none !important; /* сбрасываем лишние тени, если мешают */
+}
+/* Обёртка модалки — сохраняем прежнюю высоту, но разрешаем внутренний скролл */
+.document-modal-wrapper {
+  height: min(96vh, 92vh) !important;     /* оставляем как было изначально */
+  max-height: 95vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;            /* скролл только внутри */
+}
+
+/* Тело модалки — именно здесь включаем прокрутку */
+.document-modal-body-new {
+  flex: 1 1 auto !important;              /* занимает всё доступное место */
+  overflow-y: auto !important;            /* ВКЛЮЧАЕМ СКРОЛЛ */
+  -webkit-overflow-scrolling: touch !important; /* плавный скролл на iOS */
+  padding: 0 36px 36px !important;        /* отступы по бокам и снизу */
+  box-sizing: border-box !important;
+}
+
+/* PDF-контейнер — занимает место, но не мешает скроллу тела */
+.document-viewer-container-new {
+  flex: 1 1 auto !important;              /* растягивается на доступное место */
+  min-height: 400px !important;           /* чтобы PDF не сжимался слишком сильно */
+  overflow: hidden !important;
+  background: #000 !important;
+}
+
+.document-viewer-container-new object {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+/* Секция подписи и успех — просто в потоке, не фиксированные */
+.sign-section-new,
+.signed-success-new {
+  flex-shrink: 0 !important;
+  margin-top: 20px !important;
+}
+
+/* Скрываем скроллбар для красоты (как в iOS) */
+.document-modal-body-new::-webkit-scrollbar {
+  display: none !important;
+}
+.document-modal-body-new {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* Мобильная адаптация — полноэкранная модалка со скроллом */
+@media (max-width: 768px) {
+  .document-modal-wrapper {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-height: none !important;
+    border-radius: 0 !important;
+  }
+
+  .document-modal-body-new {
+    padding: 0 20px 30px !important;
+  }
+
+  .document-modal-header-new {
+    padding: 20px 20px 0 !important;
+  }
+}
+</style>
+</head>
+<body>
+
+
+  <div class="loader" id="pageLoader"></div>
+
+
+<!-- ЛЕВАЯ ВЕРТИКАЛЬНАЯ СЕТКА ИКОНОК ДЛЯ НАВИГАЦИИ ПО ПРОФИЛЮ -->
+<nav class="profile-nav-icons">
+  <a href="/profile" class="">
+    <i class="fas fa-user fa-fw"></i>
+    <span>Профиль</span>
+  </a>
+  <a href="/profile/orders" class="">
+    <i class="fas fa-receipt fa-fw"></i>
+    <span>История заказов</span>
+  </a>
+  <a href="/profile/bills" class="">
+    <i class="fas fa-file-invoice-dollar fa-fw"></i>
+    <span>Счета</span>
+  </a>
+  <a href="/profile/agreements" class="active">
+    <i class="fas fa-file-signature fa-fw icon-documents"></i>  
+    <span>Договоры и акты</span>
+  </a>
+  <a href="https://t.me/+89062173869" class="">
+    <i class="fas fa-headset fa-fw"></i>
+    <span>Поддержка</span>
+  </a>
+</nav>
+<!-- ШТОРКА НАВИГАЦИИ ПО РАЗДЕЛАМ ПРОФИЛЯ НА МОБИЛЬНЫХ -->
+<div class="profile-mobile-sheet" id="profileMobileSheet">
+  <div class="sheet-handle"></div>
+
+  
+  <nav class="profile-nav-icons mobile">
+    <a href="/profile" class="">
+      <i class="fas fa-user fa-fw"></i>
+      <span>Профиль</span>
+    </a>
+    <a href="/profile/orders" class="">
+      <i class="fas fa-receipt fa-fw"></i>
+      <span>История заказов</span>
+    </a>
+    <a href="/profile/bills" class="">
+      <i class="fas fa-file-invoice-dollar fa-fw"></i>
+      <span>Счета</span>
+    </a>
+    <a href="/profile/agreements" class="active">
+      <i class="fas fa-file-signature fa-fw icon-documents"></i>
+      <span>Договоры и акты</span>
+    </a>
+    <a href="https://t.me/+89062173869" class="">
+      <i class="fas fa-headset fa-fw"></i>
+      <span>Поддержка</span>
+    </a>
+  </nav>
+</div>
+
+
+  <!-- ==================== РАЗДЕЛ ПОДПИСАНИЯ ДОГОВОРОВ И АКТОВ ==================== -->
+<main class="profile-main-content">
+  <div class="profile-container">
+    <h1 class="profile-title">Подписание документов</h1>
+    
+    <div class="documents-tabs">
+      <button class="doc-tab active" data-tab="pending">На подпись <span class="doc-count" id="countPending">0</span></button>
+      <button class="doc-tab" data-tab="signed">Подписанные <span class="doc-count" id="countSigned">0</span></button>
+    </div>
+
+    <!-- Список документов на подпись -->
+    <div id="pendingDocuments" class="documents-list">
+      <div class="documents-empty">
+        <i class="fas fa-file-signature fa-3x"></i>
+        <p>Нет документов на подпись</p>
+      </div>
+    </div>
+
+    <!-- Список подписанных документов -->
+    <div id="signedDocuments" class="documents-list" style="display:none;">
+      <div class="documents-empty">
+        <i class="fas fa-file-check fa-3x"></i>
+        <p>Подписанных документов пока нет</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- МОДАЛКА ПРОСМОТРА И ПОДПИСИ ДОКУМЕНТА — КРАСИВАЯ И СОВРЕМЕННАЯ ВЕРСИЯ -->
+<div id="documentModal" class="document-modal-modern">
+  <div class="document-modal-overlay"></div>
+
+  <div class="document-modal-wrapper">
+    <!-- Топбар с заголовком и действиями -->
+    <div class="document-modal-header-new">
+      <div class="header-left">
+        <h2 id="modalDocTitle">Договор №___</h2>
+        <div class="doc-meta-new">
+          <span><strong>Тип:</strong> <span id="modalDocType">Договор</span></span>
+          <span>•</span>
+          <span><strong>Дата отправки:</strong> <span id="modalDocDate">-</span></span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <button id="downloadCurrentBtn" class="header-action-btn" title="Скачать текущий документ">
+          <i class="fas fa-download"></i>
+        </button>
+        <button class="document-close-btn">×</button>
+      </div>
+    </div>
+
+    <!-- Основное тело модалки -->
+    <div class="document-modal-body-new">
+      <!-- PDF-вьюер -->
+      <div class="document-viewer-container-new">
+        <object id="documentIframe" data="" type="application/pdf">
+          <p>PDF не поддерживается в вашем браузере. 
+            <a id="fallbackDownloadLink" href="#" target="_blank">Скачать файл</a>
+          </p>
+        </object>
+      </div>
+
+      <!-- Блок подписи (только для документов на подпись) -->
+      <div id="signSection" class="sign-section-new">
+        <div class="sign-header">
+          <h3>Выберите способ подписи</h3>
+        </div>
+
+        <!-- Вариант 1: ЭДО -->
+        <div class="sign-variant-new edo">
+          <div class="variant-content">
+            <div class="variant-icon"><i class="fas fa-signature"></i></div>
+            <div class="variant-text">
+              <strong>Подписать электронной подписью</strong>
+              <p>Быстро и полностью онлайн через ЭДО</p>
+            </div>
+          </div>
+          <button id="signEdoButton" class="btn-primary">
+            <i class="fas fa-signature"></i> Подписать через ЭДО
+          </button>
+          <p class="variant-hint">Документ будет подписан простой электронной подписью и сразу станет доступен</p>
+        </div>
+
+        <!-- Разделитель -->
+        <div class="sign-divider-new">
+          <span>или</span>
+        </div>
+
+        <!-- Вариант 2: Ручная подпись -->
+        <div class="sign-variant-new manual">
+          <div class="variant-content">
+            <div class="variant-icon"><i class="fas fa-print"></i></div>
+            <div class="variant-text">
+              <strong>Распечатать и подписать вручную</strong>
+              <p>Скачайте, подпишите ручкой, отсканируйте и загрузите</p>
+            </div>
+          </div>
+
+          <div class="manual-actions-new">
+            <button id="downloadButton" class="btn-secondary">
+              <i class="fas fa-download"></i> Скачать документ для подписи
+            </button>
+
+            <div class="upload-area-new" id="uploadArea">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <p class="upload-title">Перетащите подписанный PDF сюда</p>
+              <p class="upload-subtitle">или нажмите для выбора файла</p>
+              <button class="btn-secondary upload-btn" onclick="document.getElementById('signedFileInput').click()">
+                Выбрать файл
+              </button>
+              <input type="file" id="signedFileInput" accept=".pdf">
+            </div>
+
+            <!-- Прогресс загрузки -->
+            <div id="uploadProgress" class="upload-progress-new">
+              <div class="progress-bar-new">
+                <div id="progressFill" class="progress-fill"></div>
+              </div>
+              <p id="progressText">Загрузка...</p>
+            </div>
+
+            <!-- Превью загруженного файла -->
+            <div id="uploadedPreview" class="uploaded-preview-new">
+              <p><strong>Загружен:</strong> <span id="uploadedFileName"></span></p>
+              <iframe id="uploadedPreviewIframe"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Успешная подпись -->
+      <div id="signedSection" class="signed-success-new">
+        <div class="success-content">
+          <i class="fas fa-check-circle"></i>
+          <h3>Документ успешно подписан!</h3>
+          <p>Дата подписи: <span id="signedDate">-</span></p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ВЕРХНИЙ ХЕДЕР — ТОЛЬКО НА ДЕСКТОПЕ -->
+<header class="main-header desktop-only">
+  <a href="/" class="logo">
+    <img src="/static/assets/logo.png" alt="Piligrim" class="logo-img">
+  </a>
+
+  <nav class="desktop-nav">
+    <a href="/" class="nav-link">Главная</a>
+    <a href="/goods" class="nav-link">Товары</a>
+    <a href="/services" class="nav-link">Услуги</a>
+    <a href="/news" class="nav-link">Новости</a>
+    <a href="/about_company" class="nav-link">О компании</a> 
+    <a href="/contacts" class="nav-link">Контакты</a>
+  </nav>
+
+  <div class="header-right">
+    <div class="header-icons">
+      <div class="search-wrapper">
+        <div class="search-container">
+          <div class="search-icon"><i class="fas fa-search"></i></div>
+          <input type="text" class="search-input" id="searchInput" placeholder="Поиск...">
+          <button id="searchClear" class="search-clear">×</button>
+        </div>
+        <div id="autocompleteList" class="autocomplete-list"></div>
+      </div>
+
+      <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
+
+      <div class="cart-wrapper">
+        <button class="icon-btn" id="cartBtn">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <div id="miniCartDropdown" class="mini-cart-dropdown">
+          <div class="mini-cart-header"><div class="mini-cart-title">Корзина</div></div>
+          <div class="mini-cart-items" id="miniCartItems">
+            <div class="mini-cart-empty">Корзина пуста</div>
+          </div>
+          <div class="mini-cart-footer">
+            <div class="mini-cart-total" id="miniCartTotal">Итого: 0.00 ₽</div>
+            <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
+    </div>
+  </div>
+</header>
+
+
+<!-- ОБЯЗАТЕЛЬНО ДОБАВЬ ЭТОТ БЛОК — ДАЖЕ ЕСЛИ ОН НЕ ИСПОЛЬЗУЕТСЯ НА ДЕСКТОПЕ! -->
+<div class="custom-alert" id="feedbackModal">
+  <div class="alert-content">
+    <button class="alert-close">×</button>
+    <div class="alert-icon"><i class="fas fa-envelope-open-text"></i></div>
+    <div class="alert-text">
+      <strong>Обратная связь</strong>
+      <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
+    </div>
+    <form class="contact-form" novalidate>
+      <input type="text" placeholder="Ваше имя" name="name" required />
+      <div class="phone-field-wrapper">
+        <input type="tel" placeholder="+7 (___) ___-__-__" name="phone" required />
+      </div>
+      <input type="email" placeholder="Email" name="email" required />
+      <textarea placeholder="Ваше сообщение" name="message" required></textarea>
+      <button type="submit" class="alert-login-btn">
+        <span class="btn-text">Отправить</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- МОДАЛКА EMAIL — APPLE STYLE 2025 -->
+<div id="emailModal">
+  <div class="email-modal-card">
+    <div class="email-modal-header">
+      <div class="email-modal-icon">
+        <i class="far fa-envelope"></i>
+      </div>
+      <button class="email-modal-close" id="closeEmailModal" aria-label="Закрыть">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="email-modal-body">
+      <h2>Получайте акции и новости</h2>
+      <p>Мы будем присылать только самое важное — никаких спамов, обещаем</p>
+
+      <form id="emailForm" class="email-modal-form">
+        <div class="email-input-wrapper">
+          <input
+            type="email"
+            id="emailInput"
+            placeholder="you@company.com"
+            required
+            autocomplete="email"
+          />
+          <div class="email-input-focus"></div>
+        </div>
+
+        <button type="submit" class="email-submit-btn">
+          <span class="btn-text">Подписаться</span>
+          <span class="btn-loading" style="display:none;">
+            <i class="fas fa-spinner fa-spin"></i>
+          </span>
+        </button>
+      </form>
+
+      <div class="email-modal-footer">
+        <small>Можно отписаться в любой момент</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- БЛОКИРОВКА НЕАВТОРИЗОВАННОГО ДОСТУПА К ЛИЧНОМУ КАБИНЕТУ -->
+<div id="authRequiredOverlay" class="auth-required-overlay">
+  <div class="auth-required-modal">
+    <div class="auth-required-content">
+      <i class="fas fa-user-lock auth-required-icon"></i>
+      <h2>Требуется авторизация</h2>
+      <p>Для доступа к личному кабинету необходимо войти в аккаунт</p>
+      <button id="loginFromOverlayBtn" class="auth-required-btn">
+        <i class="fas fa-sign-in-alt"></i> Войти по номеру телефона
+      </button>
+      <div class="auth-required-footer">
+  <small>
+    Проблемы со входом? 
+    <a href="https://t.me/piligrim_support" 
+       target="_blank" 
+       rel="noopener" 
+       class="support-link">
+      Обратитесь в поддержку
+    </a>
+  </small>
+</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- НИЖНЯЯ ПАНЕЛЬ — ТОЛЬКО НА МОБИЛЬНЫХ -->
+<nav class="mobile-bottom-bar">
+  <button class="bottom-bar-btn" id="mobileSearchBtn" data-label="Поиск">
+    <i class="fas fa-search"></i>
+  </button>
+
+  <button class="bottom-bar-btn" id="mobileAuthBtn" data-label="Вход">
+    <i class="fas fa-user"></i>
+  </button>
+
+    <button class="bottom-bar-btn active" id="openSidebarMenu" data-label="Меню">
+  <i class="fas fa-bars"></i>
+
+</button>
+
+  <button class="bottom-bar-btn" id="mobileCartBtn" data-label="Корзина">
+    <i class="fas fa-shopping-bag"></i>
+    <span class="cart-count" id="mobileCartCount">0</span>
+  </button>
+
+  <button class="bottom-bar-btn" id="feedbackBtnMobile" data-label="Поддержка">
+    <i class="fas fa-envelope"></i>
+  </button>
+</nav>
+<!-- ПОЛНОЭКРАННАЯ ШТОРКА ПОИСКА ДЛЯ НОУТБУКОВ/ПЛАНШЕТОВ -->
+<div class="tablet-search-full" id="tabletSearchSheet">
+  <div class="tablet-search-backdrop"></div>
+  <div class="tablet-search-header-full">
+    <button class="tablet-search-back" id="closeTabletSearch">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <div class="tablet-search-input-wrapper-full">
+      <i class="fas fa-search"></i>
+      <input type="text" id="tabletSearchInput" placeholder="Поиск по каталогу..." autocomplete="off">
+      <button class="tablet-search-clear" id="tabletSearchClear">×</button>
+    </div>
+  </div>
+  <div class="tablet-search-empty" id="tabletEmptyState">
+    <i class="fas fa-search"></i>
+    <p>Начните вводить запрос...</p>
+  </div>
+  <div id="tabletAutocompleteList" class="tablet-autocomplete-list-full"></div>
+</div>
+
+<div class="mobile-search-sheet" id="mobileSearchSheet">
+  <!-- Хедер с ручкой и строкой поиска -->
+  <div class="mobile-search-header">
+    <!-- Ручка сверху (как в iOS) -->
+    <div class="sheet-handle"></div>
+
+    <!-- Кнопка назад + строка поиска -->
+    <button class="mobile-search-back" id="closeMobileSearchTop">←</button>
+    <div class="mobile-search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input 
+        type="text" 
+        class="mobile-search-input" 
+        id="mobileSearchInput" 
+        placeholder="Поиск по каталогу..." 
+        autocomplete="off"
+      >
+      <button class="mobile-search-clear" id="mobileSearchClear">×</button>
+    </div>
+  </div>
+
+  <!-- Контент: либо пустое состояние, либо результаты -->
+  <div class="mobile-search-results-content" id="mobileSearchResults">
+    
+    <!-- ПУСТОЕ СОСТОЯНИЕ — "Введите название товара" -->
+    <div class="search-empty-state" id="mobileEmptyState">
+      <div class="empty-icon">
+        <i class="fas fa-search"></i>
+      </div>
+      <div class="empty-title">Введите название товара</div>
+      <div class="empty-subtitle">
+        Например: iPhone 16, кроссовки Nike, кофеварка
+      </div>
+    </div>
+
+    <!-- Сюда будут вставляться результаты поиска -->
+    <div id="mobileAutocompleteList" class="mobile-autocomplete-list"></div>
+  </div>
+</div>
+
+<!-- МОБИЛЬНАЯ ШТОРКА КОРЗИНЫ -->
+<div class="mobile-cart-sheet" id="mobileCartSheet">
+  <div class="sheet-backdrop" id="mobileCartBackdrop"></div>
+  <div class="sheet-container">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="cart-header-icon">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="cart-count" id="mobileCartHeaderCount">0</span>
+      </div>
+      <h3>Корзина</h3>
+      <button class="sheet-close-btn" id="mobileCloseCart">×</button>
+    </div>
+    <div class="sheet-items" id="mobileMiniCartItems">
+      <div style="padding:3rem 1.5rem;text-align:center;color:#888;">
+        <i class="fas fa-shopping-bag" style="font-size:3rem;margin-bottom:1rem;opacity:0.3;"></i>
+        <p>Корзина пуста</p>
+      </div>
+    </div>
+    <div class="sheet-total">
+      Итого: <strong id="mobileMiniCartTotal">0 ₽</strong>
+    </div>
+    <div class="sheet-footer">
+      <button class="checkout-btn-full" id="mobileGoToCartBtn">
+        Перейти к оформлению
+      </button>
+    </div>
+  </div>
+</div>
+<!-- Алерт «Авторизуйтесь» перед отправкой сообщения -->
+<div class="custom-alert" id="authAlert">
+  <div class="alert-content">
+    <button class="alert-close">×</button>
+    <div class="alert-icon">
+      <i class="fas fa-user-lock"></i>
+    </div>
+    <div class="alert-text">
+      <strong>Авторизуйтесь</strong>
+      <span>Для отправки сообщения нужно войти в аккаунт</span>
+    </div>
+    <button class="alert-login-btn" id="authBtnFeedback">Войти</button>
+  </div>
+</div>
+  <!-- МОДАЛКА АВТОРИЗАЦИИ  -->
+<div id="authModal" class="auth-modal">
+  <div class="auth-modal-content">
+    <button class="close-modal" id="closeAuthModal">×</button>
+    <h2 class="auth-title">Вход по номеру<br><span class="mobile-only">телефона</span></h2>
+
+    <!-- ШАГ 1 — ВВОД НОМЕРА -->
+    <div id="stepPhone" class="auth-step">
+      <div class="country-selector">
+        <div class="selected-country" id="selectedCountry">
+          <span class="flag">RU</span>
+          <span class="code">+7</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="country-dropdown" id="countryDropdown">
+          <div class="country-item" data-code="+7" data-flag="RU">Россия +7</div>
+          <div class="country-item" data-code="+1" data-flag="US">USA +1</div>
+          <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
+        </div>
+      </div>
+      
+      <input type="text" 
+       name="honeypot" 
+       id="honeypot" 
+       tabindex="-1" 
+       autocomplete="off" 
+       style="position:absolute; left:-9999px; opacity:0; height:0; width:0; border:none; padding:0; margin:0;"
+       aria-hidden="true">
+
+<input type="hidden" name="fp_token" id="fp_token" value="">
+      <input type="tel" id="phoneInput" placeholder="(999) 999 99 99" class="auth-input">
+
+      <label class="checkbox-label required">
+        <input type="checkbox" id="privacyCheck">
+        <span class="custom-checkbox"></span>
+        Согласен с <a href="/policy" target="_blank" class="privacy-link">политикой конфиденциальности</a>
+      </label>
+
+      <label class="checkbox-label">
+        <input type="checkbox" id="subscribeCheck" checked>
+        <span class="custom-checkbox"></span>
+        Получать SMS с акциями и уведомлениями
+      </label>
+
+      <button id="sendCodeBtn" class="auth-btn" disabled>Получить код</button>
+    </div>
+
+    <!-- ШАГ 2 — ВВОД КОДА -->
+    <div id="stepCode" class="auth-step" style="display:none;">
+      <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
+      <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
+      <button id="verifyCodeBtn" class="auth-btn">Войти</button>
+      <button id="resendCode" class="auth-link">Отправить повторно</button>
+    </div>
+
+    <!-- ШАГ 3 — УСПЕШНЫЙ ВХОД -->
+    <div id="stepSuccess" class="auth-step" style="display:none;">
+      <i class="fas fa-check-circle success-icon"></i>
+      <h3>Добро пожаловаться!</h3>
+      <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
+      <button id="closeSuccess" class="auth-btn">Продолжить</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОБИЛЬНАЯ ШТОРКА ОБРАТНОЙ СВЯЗИ -->
+ <div class="mobile-feedback-top" id="mobileFeedbackTop"></div>
+<div class="mobile-feedback-sheet" id="mobileFeedbackSheet">
+
+
+  <div class="sheet-header">
+    <button class="sheet-back-btn" id="closeMobileFeedback">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <div class="sheet-title-wrapper">
+      <i class="fas fa-envelope-open-text"></i>
+      <h2>Обратная связь</h2>
+    </div>
+  </div>
+  <div class="sheet-handle"></div>
+  
+  <form class="contact-form sheet-form" novalidate id="contactFormMobile">
+    <div class="sheet-field">
+      <label>Ваше имя</label>
+      <input type="text" class="name-input" name="name" placeholder="Ваше имя..." required autocomplete="name" />
+    </div>
+    <div class="sheet-field phone-field-wrapper">
+      <label>Телефон <span class="required">*</span></label>
+      <input type="tel" class="phone-input" name="phone" placeholder="+7 (___) ___-__-__" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+    </div>
+    <div class="sheet-field">
+      <label>Email <span class="required">*</span></label>
+      <input type="email" name="email" placeholder="your@email.com" required autocomplete="email" />
+    </div>
+    <div class="sheet-field">
+      <label>Сообщение <span class="required">*</span></label>
+      <textarea name="message" placeholder="Опишите ваш вопрос или предложение..." rows="4" required></textarea>
+    </div>
+    <button type="submit" class="sheet-submit-btn" id="submitBtnMobile">
+      <span class="btn-text">Отправить заявку</span>
+      <span class="btn-loading"><i class="fas fa-spinner fa-spin"></i></span>
+      <span class="btn-cooldown" style="display:none;"><span class="timer">30</span>с</span>
+    </button>
+  </form>
+</div>
+
+<!-- ШТОРКА СЛЕВА — МЕНЮ -->
+<div class="mobile-sidebar" id="mobileSidebar">
+  <div class="sidebar-top">
+    <button class="sidebar-close" id="closeSidebar">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <img src="/static/assets/logo.png" alt="Piligrim" class="sidebar-logo-big">
+  </div>
+
+  <nav class="sidebar-nav-modern">
+    <div class="nav-divider top"></div>
+    <a href="/" class="sidebar-link-modern">Главная</a>
+    <a href="/goods" class="sidebar-link-modern">Товары</a>
+    <a href="/services" class="sidebar-link-modern">Услуги</a>
+    <a href="/news" class="sidebar-link-modern">Новости</a>
+    <a href="/about_company" class="sidebar-link-modern active">О компании</a>
+    <a href="/contacts" class="sidebar-link-modern">Контакты</a>
+    <a href="/profile" class="sidebar-link-modern">Личный кабинет</a>
+    <div class="nav-divider bottom"></div>
+  </nav>
+
+  <div class="sidebar-bottom-theme">
+    <div class="sidebar-theme-toggle">
+      <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+      <label for="theme-toggle" class="theme-toggle-label">
+        <i class="fas fa-moon"></i>
+        <i class="fas fa-sun"></i>
+      </label>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- КАРТОЧКА ТОВАРА  -->
+<div class="product-modal" id="productModal">
+  <div class="product-content">
+    <!-- Крестик закрытия -->
+    <button class="close-modal" onclick="closeProductModal()">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M6 6L22 22M6 22L22 6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <!-- Основной контейнер -->
+    <div class="product-main">
+      <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
+
+      <div class="product-info">
+        <h3 id="productTitle" class="product-title">Загрузка...</h3>
+
+        <div id="productStockInfo" 
+     style="margin: 12px 0 8px; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            line-height: 1.4;">
+</div>
+
+        <!-- Рейтинг и отзывы -->
+        <div class="product-rating">
+          <div class="stars"></div>
+          <span id="productReviewsCount" class="reviews-count">—</span>
+        </div>
+
+        <div id="productPrice" class="product-price">—</div>
+
+        <div id="productDescription" class="product-description">Загрузка описания...</div>
+
+        <!-- Кнопка "В корзину" -->
+        <button id="addToCartModal" class="add-to-cart-btn">
+          <i class="fas fa-shopping-cart"></i> В корзину
+        </button>
+
+        <!-- ОТЗЫВЫ — ТОЧНО КАК В НОВОСТЯХ -->
+        <div class="product-reviews">
+          <h4 class="reviews-title">Отзывы покупателей</h4>
+          <div class="reviews-list" id="productReviewsList">
+            <div style="text-align:center;padding:3rem;color:#888;">
+              <i class="far fa-star" style="font-size:3rem;margin-bottom:1rem;display:block;opacity:0.6;"></i>
+              <p>Отзывов пока нет</p>
+              <small style="opacity:0.7;">Будьте первым!</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- === AI АССИСТЕНТ — ИКОНКА И МОДАЛКА (из zaza.html, не в ai.css) === -->
+<div id="ai-assistant">
+  <svg viewBox="0 0 100 100" class="ai-robot" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f5d78a"/>
+        <stop offset="100%" stop-color="#d4af37"/>
+      </linearGradient>
+      <linearGradient id="suitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#2d2d2d"/>
+        <stop offset="100%" stop-color="#1a1a1a"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Голова робота (золотая) -->
+    <circle cx="50" cy="35" r="18" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+
+    <!-- Глаза -->
+    <circle cx="44" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="56" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="45.5" cy="31" r="1.8" fill="#fff"/>
+    <circle cx="57.5" cy="31" r="1.8" fill="#fff"/>
+
+    <!-- Светящиеся акценты в глазах -->
+    <circle cx="46" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+    <circle cx="58" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+
+    <!-- Туловище — пиджак -->
+    <path d="M30 52 L28 98 L72 98 L70 52 
+             Q62 58 50 58 Q38 58 30 52 Z" 
+          fill="url(#suitGrad)" stroke="#000" stroke-width="2"/>
+
+    <!-- Лацканы пиджака -->
+    <path d="M50 52 L42 64 L42 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+    <path d="M50 52 L58 64 L58 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+
+    <!-- Галстук -->
+    <path d="M50 58 L46 72 L50 78 L54 72 Z" fill="#8b1e1e"/>
+    <polygon points="46,72 50,78 54,72" fill="#5c1212"/>
+
+    <!-- Пуговицы пиджака -->
+    <circle cx="50" cy="70" r="2.5" fill="#333"/>
+    <circle cx="50" cy="78" r="2.5" fill="#333"/>
+    <circle cx="50" cy="86" r="2.5" fill="#333"/>
+
+    <!-- Руки -->
+    <rect x="24" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+    <rect x="64" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+
+    <!-- Планшет с Конституцией в левой руке -->
+    <g transform="translate(12, 68)">
+      <rect x="0" y="0" width="28" height="36" rx="4" fill="#fff" stroke="#111" stroke-width="2"/>
+      <rect x="2" y="2" width="24" height="30" rx="2" fill="#f0f0f0"/>
+      <text x="14" y="11" font-family="Arial, sans-serif" font-size="5.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+      <line x1="4" y1="15" x2="24" y2="15" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="19" x2="24" y2="19" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="23" x2="22" y2="23" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="27" x2="20" y2="27" stroke="#333" stroke-width="0.8"/>
+    </g>
+
+    <!-- Блеск на голове -->
+    <path d="M42 24 Q46 20 50 24" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.6"/>
+  </svg>
+</div>
+
+<!-- === AI ЧАТ МОДАЛЬНЫЙ (ТОТ ЖЕ СТИЛЬ) === -->
+<div id="ai-chat" class="ai-chat-modal">
+  <div class="ai-chat-header">
+    <div class="ai-chat-title">
+      <svg width="32" height="32" viewBox="0 0 100 100" style="margin-right:10px;">
+        <use href="#goldGrad"/>
+        <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+        <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="39" cy="40" r="2.5" fill="#fff"/>
+        <circle cx="63" cy="40" r="2.5" fill="#fff"/>
+        <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <g transform="translate(8, 62)">
+          <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
+          <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+        </g>
+        <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
+      </svg>
+      <span>Юрист AI</span>
+    </div>
+    <div class="ai-header-buttons">
+      <button class="ai-btn-minimize" onclick="toggleAIChatSize()" title="На весь экран">
+        <i class="fas fa-expand-arrows-alt"></i>
+      </button>
+      <button class="ai-btn-close" onclick="closeAIChat()" title="Закрыть">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+  <div class="ai-chat-body">
+    <div class="ai-chat-messages"></div>
+    <div class="ai-chat-input">
+      <input type="text" id="ai-input" placeholder="Задайте юридический вопрос..." 
+             onkeypress="if(event.key==='Enter' && this.value.trim()) { sendAIMessage(this.value); this.value=''; }">
+      <button onclick="const inp = document.getElementById('ai-input'); if(inp.value.trim()) { sendAIMessage(inp.value); inp.value=''; }" title="Отправить">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>
+<!-- ТУМБЛЕР ТЕМЫ — ВИСЯЩАЯ ЛАМПОЧКА -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
+
+  <a href="#" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
+  <!-- СКРИПТЫ -->
+  <script src="/static/js/search.js"></script>
+  <script src="/static/js/auth.js"></script>
+  <script src="/static/js/cart.js" defer></script>
+  <script src="/static/js/feedback.js"></script>
+  <script src="/static/js/contacts.js" defer></script>
+  <script src="/static/js/ai.js"></script>
+  <script src="/static/js/about_company.js" defer></script>
+  <script src="/static/js/profile.js"></script>
+  <script src="/static/js/profile_two.js"></script>
+
+
+  <script>
+  // ФИНАЛЬНАЯ ВЕРСИЯ — МОДАЛКА ОТКРЫВАЕТСЯ НОРМАЛЬНО, НЕ В УГЛУ И НЕ ПРОПАДАЕТ
+(() => {
+  const overlay = document.getElementById('authRequiredOverlay');
+  const loginBtn = document.getElementById('loginFromOverlayBtn');
+
+const isLoggedIn = async () => {
+  // НИКОМУ НЕ ВЕРИМ. Только серверу.
+  try {
+    const res = await fetch('/api/company', { 
+      method: 'HEAD', 
+      // быстро, без тела
+      credentials: 'include',
+      cache: 'no-store'     // ← важно! не берём из кэша
+    });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+};
+
+  const lockPage = () => {
+    overlay.classList.add('active');
+    document.body.classList.add('auth-locked');
+    document.querySelectorAll('header, main, footer, nav, .mobile-bottom-bar').forEach(el => {
+      if (el) el.style.filter = 'blur(16px)';
+    });
+  };
+
+  const unlockPage = () => {
+    overlay.classList.remove('active');
+    document.body.classList.remove('auth-locked');
+    document.querySelectorAll('header, main, footer, nav, .mobile-bottom-bar').forEach(el => {
+      if (el) el.style.filter = '';
+    });
+  };
+
+  // ГЛАВНОЕ: ОТКРЫВАЕМ МОДАЛКУ, КОТОРАЯ НАХОДИТСЯ В КОРНЕ body
+  const openAuthModal = () => {
+    const modal = document.querySelector('#authModal'); // берём единственную
+    if (!modal) return;
+
+    // Снимаем блокировку на 200мс — чтобы модалка успела открыться
+    unlockPage();
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden'; // можно вернуть — модалка уже вне blur
+
+    // Фокус на номер
+    setTimeout(() => {
+      document.getElementById('phoneInput')?.focus();
+    }, 300);
+
+    // Через 200мс возвращаем blur (но модалка уже поверх)
+    setTimeout(async () => {
+  const loggedIn = await isLoggedIn();
+  if (!loggedIn) {
+    lockPage();
+    modal.style.filter = 'none';
+    modal.style.zIndex = '9999999';
+  }
+}, 200);
+  };
+
+  loginBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openAuthModal();
+  });
+
+  // ИСПРАВЛЕННЫЙ check — теперь ждёт async и работает правильно
+  const check = async () => {
+    const loggedIn = await isLoggedIn();  // ← ждём результат!
+
+    if (loggedIn) {
+      unlockPage();
+      overlay?.classList.remove('active');
+      document.body.classList.remove('no-scroll');
+    } else {
+      lockPage();
+      overlay?.classList.add('active');
+      document.body.classList.add('no-scroll');
+    }
+  };
+
+  // Первый запуск
+  check();
+
+  // Периодическая проверка
+  const interval = setInterval(async () => {
+    await check();
+    const loggedIn = await isLoggedIn();
+    if (loggedIn) clearInterval(interval);
+  }, 600);
+
+  document.addEventListener('authSuccess', () => {
+    setTimeout(unlockPage, 800);
+  });
+
+  window.addEventListener('authChanged', check);
+  window.addEventListener('storage', check);
+})();
+  </script>
+  
+<script>
+// === ПОЛНАЯ ЛОГИКА ДОКУМЕНТОВ И МОДАЛКИ (С ПОДПИСЬЮ ЧЕРЕЗ ЭДО + ПОДТВЕРЖДЕНИЕМ) ===
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('documentModal');
+  const pdfViewer = document.getElementById('documentIframe');
+  const fallbackLink = document.getElementById('fallbackDownloadLink');
+  const closeBtn = document.querySelector('.document-close-btn');
+  const downloadButton = document.getElementById('downloadButton');
+  const signEdoButton = document.getElementById('signEdoButton');
+  const signedFileInput = document.getElementById('signedFileInput');
+  const uploadArea = document.getElementById('uploadArea');
+  const uploadProgress = document.getElementById('uploadProgress');
+  const uploadedPreview = document.getElementById('uploadedPreview');
+  const uploadedFileName = document.getElementById('uploadedFileName');
+  const uploadedPreviewIframe = document.getElementById('uploadedPreviewIframe');
+
+  // Элементы вариантов подписи
+  const edoVariant = document.querySelector('.sign-variant-new.edo');
+  const manualVariant = document.querySelector('.sign-variant-new.manual');
+  const signDivider = document.querySelector('.sign-divider-new');
+
+  // Создаём контейнер для формы ЭДО (динамически)
+  let edoFormContainer = document.getElementById('edoFormContainer');
+  if (!edoFormContainer) {
+    edoFormContainer = document.createElement('div');
+    edoFormContainer.id = 'edoFormContainer';
+    edoFormContainer.style.display = 'none';
+    edoFormContainer.style.marginTop = '32px';
+    edoFormContainer.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        <div>
+          <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Оператор ЭДО</label>
+          <input type="text" id="edoOperatorInput" placeholder="Например: Диадок, Контур, СБИС" style="width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-primary); font-size: 1rem;">
+        </div>
+        <div>
+          <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-primary);">Номер сертификата ЭДО</label>
+          <input type="text" id="edoCertificateInput" placeholder="Уникальный номер вашего сертификата" style="width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-primary); font-size: 1rem;">
+        </div>
+        <div style="display: flex; gap: 16px; margin-top: 24px;">
+          <button id="confirmEdoBtn" class="btn-primary" style="flex: 1;">
+            <i class="fas fa-check"></i> Подтвердить и отправить через ЭДО
+          </button>
+          <button id="cancelEdoBtn" class="btn-secondary" style="flex: 1;">
+            Отменить
+          </button>
+        </div>
+      </div>
+    `;
+    edoVariant.appendChild(edoFormContainer);
+  }
+
+  const confirmEdoBtn = document.getElementById('confirmEdoBtn');
+  const cancelEdoBtn = document.getElementById('cancelEdoBtn');
+  const edoOperatorInput = document.getElementById('edoOperatorInput');
+  const edoCertificateInput = document.getElementById('edoCertificateInput');
+
+  // Кнопка подтверждения для ручной подписи
+  let confirmUploadBtn = document.getElementById('confirmUploadBtn');
+  if (!confirmUploadBtn) {
+    confirmUploadBtn = document.createElement('button');
+    confirmUploadBtn.id = 'confirmUploadBtn';
+    confirmUploadBtn.className = 'btn-primary';
+    confirmUploadBtn.innerHTML = '<i class="fas fa-check"></i> Подтвердить и отправить';
+    confirmUploadBtn.style.display = 'none';
+    confirmUploadBtn.style.width = '100%';
+    confirmUploadBtn.style.marginTop = '24px';
+    confirmUploadBtn.style.padding = '16px';
+    document.querySelector('.manual-actions-new').appendChild(confirmUploadBtn);
+  }
+
+  let currentDocId = null;
+  let currentPdfUrl = '';
+  let uploadedFile = null;
+  let uploadedBlobUrl = null;
+
+  // Полный сброс состояния подписи (ЭДО + ручная)
+  const resetSignState = () => {
+    // ЭДО
+    edoFormContainer.style.display = 'none';
+    edoOperatorInput.value = '';
+    edoCertificateInput.value = '';
+
+    // Ручная
+    signedFileInput.value = '';
+    uploadProgress.style.display = 'none';
+    uploadedPreview.style.display = 'none';
+    confirmUploadBtn.style.display = 'none';
+    if (uploadedBlobUrl) {
+      URL.revokeObjectURL(uploadedBlobUrl);
+      uploadedBlobUrl = null;
+    }
+    uploadedFile = null;
+
+    // Возвращаем исходный вид
+    edoVariant.style.display = 'block';
+    manualVariant.style.display = 'block';
+    signDivider.style.display = 'block';
+  };
+
+  // Переключение вкладок
+  document.querySelectorAll('.doc-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.doc-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.documents-list').forEach(l => l.style.display = 'none');
+      document.getElementById(tab.dataset.tab + 'Documents').style.display = 'block';
+    });
+  });
+
+  const renderDocumentCard = (doc, container, isSigned) => {
+    const card = document.createElement('div');
+    card.className = 'document-card';
+    card.innerHTML = `
+      <div class="doc-icon"><i class="fas fa-file-contract"></i></div>
+      <div class="doc-info">
+        <h3>${doc.title}</h3>
+        <div class="doc-date">Отправлен: ${new Date(doc.created_at).toLocaleDateString('ru')}</div>
+      </div>
+      <div class="doc-status">${isSigned ? 'Подписан' : 'На подпись'}</div>
+    `;
+    card.onclick = () => openDocumentModal(doc, isSigned);
+    container.appendChild(card);
+  };
+
+  const loadDocuments = async () => {
+    try {
+      const res = await fetch('/api/user/documents');
+      if (!res.ok) return;
+      const data = await res.json();
+
+      document.getElementById('countPending').textContent = data.pending?.length || 0;
+      document.getElementById('countSigned').textContent = data.signed?.length || 0;
+
+      const pendingList = document.getElementById('pendingDocuments');
+      const signedList = document.getElementById('signedDocuments');
+      pendingList.innerHTML = '';
+      signedList.innerHTML = '';
+
+      if (!data.pending?.length) {
+        pendingList.innerHTML = '<div class="documents-empty"><i class="fas fa-file-signature"></i><p>Нет документов на подпись</p></div>';
+      }
+      if (!data.signed?.length) {
+        signedList.innerHTML = '<div class="documents-empty"><i class="fas fa-file-check"></i><p>Подписанных документов пока нет</p></div>';
+      }
+
+      data.pending?.forEach(doc => renderDocumentCard(doc, pendingList, false));
+      data.signed?.forEach(doc => renderDocumentCard(doc, signedList, true));
+    } catch (e) {
+      console.error('Ошибка загрузки документов:', e);
+    }
+  };
+
+  const openDocumentModal = (doc, isSigned) => {
+    currentDocId = doc.id;
+    currentPdfUrl = doc.pdf_url;
+
+    document.getElementById('modalDocTitle').textContent = doc.title;
+    document.getElementById('modalDocType').textContent = doc.type === 'contract' ? 'Договор' : 'Акт';
+    document.getElementById('modalDocDate').textContent = new Date(doc.created_at).toLocaleDateString('ru');
+
+    pdfViewer.data = currentPdfUrl;
+    fallbackLink.href = currentPdfUrl;
+
+    document.getElementById('signSection').style.display = isSigned ? 'none' : 'block';
+    document.getElementById('signedSection').style.display = isSigned ? 'block' : 'none';
+
+    if (isSigned && doc.signed_at) {
+      document.getElementById('signedDate').textContent = new Date(doc.signed_at).toLocaleString('ru');
+    }
+
+    resetSignState();
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  };
+
+  closeBtn.onclick = () => {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+    pdfViewer.data = '';
+    fallbackLink.href = '#';
+    currentPdfUrl = '';
+    currentDocId = null;
+    resetSignState();
+  };
+
+  modal.onclick = (e) => {
+    if (e.target === modal) closeBtn.click();
+  };
+
+  downloadButton.onclick = () => {
+    if (!currentPdfUrl) return;
+    const a = document.createElement('a');
+    a.href = currentPdfUrl;
+    a.download = document.getElementById('modalDocTitle').textContent + '.pdf';
+    a.click();
+  };
+
+  // === ПОДПИСЬ ЧЕРЕЗ ЭДО ===
+  signEdoButton.onclick = () => {
+    manualVariant.style.display = 'none';
+    signDivider.style.display = 'none';
+    edoFormContainer.style.display = 'block';
+    edoOperatorInput.focus();
+  };
+
+  cancelEdoBtn.onclick = () => {
+    resetSignState();
+  };
+
+  confirmEdoBtn.onclick = async () => {
+    const operator = edoOperatorInput.value.trim();
+    const certificate = edoCertificateInput.value.trim();
+
+    if (!operator || !certificate) {
+      alert('Пожалуйста, заполните оба поля: оператор ЭДО и номер сертификата.');
+      return;
+    }
+
+    confirmEdoBtn.disabled = true;
+    confirmEdoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправляем...';
+
+    try {
+      const res = await fetch(`/api/documents/${currentDocId}/sign-edo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          edo_operator: operator,
+          edo_certificate: certificate
+        })
+      });
+
+      if (res.ok) {
+        await afterSuccessfulSign('edo');
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || 'Ошибка подписи через ЭДО');
+      }
+    } catch (e) {
+      alert('Нет соединения с сервером');
+    } finally {
+      confirmEdoBtn.disabled = false;
+      confirmEdoBtn.innerHTML = '<i class="fas fa-check"></i> Подтвердить и отправить через ЭДО';
+    }
+  };
+
+  // === РУЧНАЯ ПОДПИСЬ ===
+  const handleFileSelect = (file) => {
+    if (!file || file.type !== 'application/pdf') {
+      alert('Пожалуйста, загрузите PDF-файл');
+      return;
+    }
+
+    uploadedFile = file;
+    uploadedFileName.textContent = file.name;
+    if (uploadedBlobUrl) URL.revokeObjectURL(uploadedBlobUrl);
+    uploadedBlobUrl = URL.createObjectURL(file);
+    uploadedPreviewIframe.src = uploadedBlobUrl;
+    uploadedPreview.style.display = 'block';
+    confirmUploadBtn.style.display = 'block';
+  };
+
+  uploadArea.addEventListener('click', () => signedFileInput.click());
+  uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = 'var(--text-primary)'; });
+  uploadArea.addEventListener('dragleave', () => uploadArea.style.borderColor = 'var(--border)');
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.style.borderColor = 'var(--border)';
+    if (e.dataTransfer.files.length) handleFileSelect(e.dataTransfer.files[0]);
+  });
+  signedFileInput.addEventListener('change', () => {
+    if (signedFileInput.files.length) handleFileSelect(signedFileInput.files[0]);
+  });
+
+  confirmUploadBtn.onclick = async () => {
+    if (!uploadedFile || !currentDocId) return;
+
+    confirmUploadBtn.disabled = true;
+    confirmUploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправляем...';
+    uploadProgress.style.display = 'block';
+
+    const formData = new FormData();
+    formData.append('signed_pdf', uploadedFile);
+
+    try {
+      const response = await fetch(`/api/documents/${currentDocId}/upload-signed`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const signedUrl = data.signed_pdf_url || currentPdfUrl;
+        await afterSuccessfulSign('manual', signedUrl);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        alert(errorData.error || 'Ошибка загрузки скана');
+      }
+    } catch (e) {
+      alert('Нет соединения с сервером');
+    } finally {
+      confirmUploadBtn.disabled = false;
+      confirmUploadBtn.innerHTML = '<i class="fas fa-check"></i> Подтвердить и отправить';
+      uploadProgress.style.display = 'none';
+    }
+  };
+
+  async function afterSuccessfulSign(method = 'edo', newPdfUrl = null) {
+    await loadDocuments();
+    document.getElementById('signSection').style.display = 'none';
+    document.getElementById('signedSection').style.display = 'block';
+    document.getElementById('signedDate').textContent = new Date().toLocaleString('ru');
+
+    if (newPdfUrl) {
+      currentPdfUrl = newPdfUrl;
+      pdfViewer.data = newPdfUrl;
+      fallbackLink.href = newPdfUrl;
+    }
+  }
+
+  document.getElementById('downloadCurrentBtn').onclick = () => {
+    if (!currentPdfUrl) {
+      alert('Документ ещё не загружен');
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = currentPdfUrl;
+    a.download = document.getElementById('modalDocTitle').textContent + '.pdf';
+    a.click();
+  };
+
+  loadDocuments();
+  setInterval(loadDocuments, 30000);
+});
+</script>
+
+<script>
+// === ФИНАЛЬНАЯ ВЕРСИЯ КАСТОМНЫХ АЛЕРТОВ ===
+// Тёмная тема: текст на основной кнопке теперь чёрный (#000000)
+
+(() => {
+  if (document.getElementById('custom-alert-styles-ultimate-fixed')) return;
+
+  const style = document.createElement('style');
+  style.id = 'custom-alert-styles-ultimate-fixed';
+  style.textContent = `
+    #customAlertOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(10px);
+      z-index: 99999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      box-sizing: border-box;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .custom-alert-card {
+      background: var(--bg, #ffffff);
+      color: var(--text-primary, #000000);
+      border-radius: 18px;
+      width: min(90vw, 380px);
+      max-width: 380px;
+      max-height: 90vh;
+      box-shadow: 0 16px 50px rgba(0, 0, 0, 0.28);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: scaleIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .custom-alert-header {
+      padding: clamp(20px, 5vw, 28px) clamp(20px, 6vw, 32px) clamp(12px, 3vw, 16px);
+      text-align: center;
+    }
+
+    .custom-alert-title {
+      font-size: clamp(1.15rem, 4vw, 1.35rem);
+      font-weight: 700;
+      margin: 0 0 10px 0;
+      line-height: 1.3;
+    }
+
+    .custom-alert-message {
+      font-size: clamp(0.95rem, 3.5vw, 1.05rem);
+      opacity: 0.88;
+      line-height: 1.55;
+      margin: 0;
+      word-break: normal !important;
+      overflow-wrap: normal !important;
+      word-wrap: normal !important;
+      hyphens: none !important;
+      -webkit-hyphens: none !important;
+      -moz-hyphens: none !important;
+      -ms-hyphens: none !important;
+      white-space: normal;
+    }
+
+    .custom-alert-body {
+      padding: 0 clamp(20px, 6vw, 32px) clamp(16px, 4vw, 24px);
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .custom-alert-input {
+      width: 100%;
+      padding: clamp(12px, 3vw, 14px) clamp(14px, 4vw, 16px);
+      border: 1px solid var(--border, #ddd);
+      border-radius: 12px;
+      background: var(--surface2, #f9f9f9);
+      color: var(--text-primary);
+      font-size: clamp(0.95rem, 3.5vw, 1rem);
+      margin-top: 12px;
+      box-sizing: border-box;
+    }
+
+    .custom-alert-input:focus {
+      outline: none;
+      border-color: var(--accent-line, #0066ff);
+      box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.18);
+    }
+
+    .custom-alert-footer {
+      padding: clamp(16px, 4vw, 24px) clamp(20px, 6vw, 32px);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .custom-alert-btn {
+      padding: clamp(11px, 2.8vw, 13px) clamp(24px, 6vw, 28px);
+      border-radius: 12px;
+      font-size: clamp(0.95rem, 3.6vw, 1.02rem);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      flex: 1;
+      min-width: 110px;
+      text-align: center;
+    }
+
+    @media (max-width: 400px) {
+      .custom-alert-footer {
+        flex-direction: column;
+      }
+      .custom-alert-btn {
+        flex: none;
+        width: 100%;
+      }
+    }
+
+    .custom-alert-btn-primary {
+      background: var(--accent-line, #0066ff);
+      color: #ffffff;
+      border: none;
+    }
+
+    .custom-alert-btn-primary:hover {
+      background: #0052cc;
+      transform: translateY(-1px);
+    }
+
+    .custom-alert-btn-secondary {
+      background: transparent;
+      color: var(--text-secondary, #666666);
+      border: 1.5px solid var(--border, #dddddd);
+    }
+
+    .custom-alert-btn-secondary:hover {
+      background: var(--surface2, #f0f0f0);
+      color: var(--text-primary, #000000);
+    }
+
+    /* Тёмная тема */
+    html[data-theme="dark"] .custom-alert-card {
+      background: #0f0f0f;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    html[data-theme="dark"] .custom-alert-input {
+      background: #1a1a1a;
+      border-color: rgba(255,255,255,0.15);
+      color: #ffffff;
+    }
+
+    html[data-theme="dark"] .custom-alert-btn-secondary {
+      color: #bbbbbb;
+      border-color: rgba(255,255,255,0.18);
+    }
+
+    html[data-theme="dark"] .custom-alert-btn-secondary:hover {
+      background: rgba(255,255,255,0.08);
+      color: #ffffff;
+    }
+
+    /* ИСПРАВЛЕНИЕ: в тёмной теме текст на основной кнопке — чёрный */
+    html[data-theme="dark"] .custom-alert-btn-primary {
+      color: #000000 !important;
+      font-weight: 700;
+    }
+
+    html[data-theme="dark"] .custom-alert-btn-primary:hover {
+      background: #4d94ff;
+    }
+
+    /* Светлая тема — всё как было */
+    html[data-theme="light"] .custom-alert-btn-secondary {
+      color: #555555 !important;
+      border-color: #cccccc !important;
+    }
+
+    html[data-theme="light"] .custom-alert-btn-secondary:hover {
+      background: #f5f5f5 !important;
+      color: #000000 !important;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Разметка (без изменений)
+  const overlay = document.createElement('div');
+  overlay.id = 'customAlertOverlay';
+  overlay.innerHTML = `
+    <div class="custom-alert-card">
+      <div class="custom-alert-header">
+        <h3 class="custom-alert-title" id="customAlertTitle">Уведомление</h3>
+        <p class="custom-alert-message" id="customAlertMessage"></p>
+      </div>
+      <div class="custom-alert-body" id="customAlertBody"></div>
+      <div class="custom-alert-footer" id="customAlertFooter"></div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const titleEl = document.getElementById('customAlertTitle');
+  const messageEl = document.getElementById('customAlertMessage');
+  const bodyEl = document.getElementById('customAlertBody');
+  const footerEl = document.getElementById('customAlertFooter');
+
+  const showAlert = (options) => {
+    return new Promise((resolve) => {
+      bodyEl.innerHTML = '';
+      footerEl.innerHTML = '';
+
+      titleEl.textContent = options.title || 'Сообщение';
+      messageEl.textContent = options.message || '';
+      messageEl.style.display = options.message ? 'block' : 'none';
+
+      let input = null;
+      if (options.input) {
+        input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'custom-alert-input';
+        input.placeholder = options.placeholder || '';
+        input.value = options.defaultValue || '';
+        bodyEl.appendChild(input);
+        setTimeout(() => input.focus(), 300);
+      }
+
+      const createBtn = (text, primary = false, value = true) => {
+        const btn = document.createElement('button');
+        btn.textContent = text;
+        btn.className = 'custom-alert-btn ' + (primary ? 'custom-alert-btn-primary' : 'custom-alert-btn-secondary');
+        btn.onclick = () => {
+          overlay.style.display = 'none';
+          document.body.style.overflow = '';
+          resolve(options.input ? (input?.value || null) : value);
+        };
+        return btn;
+      };
+
+      if (options.type === 'confirm') {
+        footerEl.appendChild(createBtn(options.cancelText || 'Отмена', false, false));
+        footerEl.appendChild(createBtn(options.confirmText || 'ОК', true, true));
+      } else if (options.type === 'prompt') {
+        footerEl.appendChild(createBtn(options.cancelText || 'Отмена', false, null));
+        footerEl.appendChild(createBtn(options.confirmText || 'ОК', true, true));
+      } else {
+        footerEl.appendChild(createBtn(options.okText || 'Понятно', true, true));
+      }
+
+      overlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    });
+  };
+
+  window.alert = async (msg) => {
+    await showAlert({
+      type: 'alert',
+      title: 'Уведомление',
+      message: String(msg),
+      okText: 'Понятно'
+    });
+  };
+
+  window.confirm = async (msg) => {
+    return await showAlert({
+      type: 'confirm',
+      title: 'Подтверждение',
+      message: String(msg),
+      cancelText: 'Отмена',
+      confirmText: 'Подтвердить'
+    });
+  };
+
+  window.prompt = async (msg, def = '') => {
+    return await showAlert({
+      type: 'prompt',
+      title: 'Введите данные',
+      message: String(msg),
+      input: true,
+      defaultValue: String(def)
+    });
+  };
+
+  window.customAlert = showAlert;
+})();
+</script>
+</body>
+</html>

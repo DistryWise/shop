@@ -66,20 +66,22 @@ window.fetch = async (...args) => {
         <nav style="margin-left: auto;"><a href="/" class="nav-link">Главная</a></nav>
     </header>
 
-    <aside class="sidebar">
-        <h3 class="sidebar-title">Админка</h3>
-        <div class="sidebar-menu">
-            <a href="/admin" class="sidebar-item active"><i class="fas fa-box"></i><span>Товары</span></a>
-            <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
-            <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
-            <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
-            <a href="/admin_dispatch" class="sidebar-item"><i class="fas fa-paper-plane"></i><span>Рассылки</span></a>
-            <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
-            <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
-            <a href="/admin_reviews" class="sidebar-item"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews | e }}</div></span></a>
-            <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders | e }}</div></span></a>
-        </div>
-    </aside>
+<aside class="sidebar">
+    <h3 class="sidebar-title">Админка</h3>
+    <div class="sidebar-menu">
+        <a href="/admin" class="sidebar-item active"><i class="fas fa-box"></i><span>Товары</span></a>
+        <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
+        <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
+        <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
+        <a href="/admin_dispatch" class="sidebar-item"><i class="fas fa-paper-plane"></i><span>Рассылки</span></a>
+        <a href="/admin_bills" class="sidebar-item"><i class="fas fa-file-invoice"></i><span>Счета</span></a>
+        <a href="/admin_documents" class="sidebar-item"><i class="fas fa-file-contract"></i><span>Документы</span></a>
+        <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
+        <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
+        <a href="/admin_reviews" class="sidebar-item"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews }}</div></span></a>
+        <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders }}</div></span></a>
+    </div>
+</aside>
 
     <main class="main-content">
         <div class="admin-container">

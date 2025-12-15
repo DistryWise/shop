@@ -1159,23 +1159,135 @@ header.scrolled {
     background: transparent !important;
 }
 
-/* ТЕКСТ "ДОБАВИТЬ НОВУЮ НОВОСТЬ" — ВСЕГДА ВИДЕН В СВЕТЛОЙ ТЕМЕ */
-[data-theme="light"] .add-form-header h3,
-[data-theme="light"] .add-form-header {
-    color: #111111 !important;
-    font-weight: 600 !important;
+/* ============================================= */
+/* СВЕТЛАЯ ТЕМА — ADD-FORM-HEADER и CUSTOM-CURSOR */
+/* ============================================= */
+
+[data-theme="light"] .add-form-wrapper {
+    background: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
 }
 
-/* Иконка стрелочки тоже чёрная */
-[data-theme="light"] .add-form-header i {
-    color: #111111 !important;
+[data-theme="light"] .add-form-header {
+    background: rgba(0,0,0,0.04) !important;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.25s ease;
 }
 
-/* Фон заголовка формы — чуть серый, чтобы было видно */
-[data-theme="light"] .add-form-header {
-    background: #f1f3f5 !important;
-    border-bottom: 1px solid rgba(0,0,0,0.08) !important;
-}
 [data-theme="light"] .add-form-header:hover {
-    background: #e9ecef !important;
+    background: rgba(0,0,0,0.08) !important;
+}
+
+[data-theme="light"] .add-form-header h3 {
+    color: #111111 !important;
+    font-weight: 600;
+}
+
+[data-theme="light"] .add-form-header i {
+    color: #444444;
+    transition: transform 0.3s ease, color 0.25s ease;
+}
+
+[data-theme="light"] .add-form-header:hover i {
+    color: #00cc7a; /* лёгкий акцент зелёным при ховере */
+}
+
+[data-theme="light"] .add-form-wrapper.collapsed .add-form-header i {
+    transform: rotate(-90deg);
+}
+
+/* Курсор при наведении — чёткий и заметный в светлой теме */
+[data-theme="light"] .custom-cursor-on-hover {
+    cursor: pointer !important;
+}
+
+/* ============================================= */
+/* СВЕТЛАЯ ТЕМА — ЧИСТЫЙ САЙДБАР БЕЗ ТЕНЕЙ И РАМОК */
+/* ============================================= */
+
+[data-theme="light"] .sidebar,
+[data-theme="light"] aside,
+[data-theme="light"] .admin-sidebar,
+[data-theme="light"] nav.sidebar {
+    background: var(--bg) !important;            /* чистый фон страницы */
+    border-right: none !important;               /* убираем правую рамку */
+    box-shadow: none !important;                 /* полностью убираем тень */
+    backdrop-filter: none !important;
+}
+
+[data-theme="light"] .sidebar-header,
+[data-theme="light"] .sidebar-title {
+    background: transparent !important;          /* убираем градиент в хедере сайдбара */
+    border-bottom: none !important;              /* убираем нижнюю линию */
+    padding-bottom: 1rem !important;
+}
+
+[data-theme="light"] .sidebar-menu,
+[data-theme="light"] .sidebar-links {
+    background: transparent !important;
+}
+
+/* Пункты меню — только текст и иконки, без фонов при ховере */
+[data-theme="light"] .sidebar-menu a,
+[data-theme="light"] .sidebar-link,
+[data-theme="light"] .nav-item a {
+    background: transparent !important;
+    border-left: none !important;                /* убираем левую полоску-индикатор */
+    padding-left: 1rem !important;               /* ровный отступ */
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transition: color 0.25s ease, padding-left 0.25s ease;
+}
+
+[data-theme="light"] .sidebar-menu a:hover,
+[data-theme="light"] .sidebar-link:hover,
+[data-theme="light"] .nav-item a:hover {
+    background: transparent !important;
+    padding-left: 1.3rem !important;             /* лёгкий отступ при ховере */
+    color: #000 !important;
+}
+
+/* Активный пункт — только жирный текст, без фона и полоски */
+[data-theme="light"] .sidebar-menu a.active,
+[data-theme="light"] .sidebar-link.active,
+[data-theme="light"] .nav-item a.active {
+    background: transparent !important;
+    border-left: none !important;
+    color: #000 !important;
+    font-weight: 700;
+    padding-left: 1.3rem !important;
+    box-shadow: none !important;
+}
+
+/* Иконки — просто серые → чёрные при ховере/активном */
+[data-theme="light"] .sidebar-menu i,
+[data-theme="light"] .sidebar-link i,
+[data-theme="light"] .nav-item i {
+    color: #888888 !important;
+    transition: color 0.25s ease;
+}
+
+[data-theme="light"] .sidebar-menu a:hover i,
+[data-theme="light"] .sidebar-link:hover i,
+[data-theme="light"] .sidebar-menu a.active i,
+[data-theme="light"] .sidebar-link.active i {
+    color: #000000 !important;
+}
+
+/* Нижняя часть (футер сайдбара) — тоже чистая */
+[data-theme="light"] .sidebar-footer,
+[data-theme="light"] .user-info {
+    background: transparent !important;
+    border-top: none !important;
+}
+
+/* Если есть подменю — тоже без фона */
+[data-theme="light"] .sidebar-submenu,
+[data-theme="light"] .dropdown-menu {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding-left: 1rem;
 }

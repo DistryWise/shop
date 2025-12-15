@@ -74,6 +74,205 @@ if (!(config.body instanceof FormData)) {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 
+    <style>
+    .wide-modal {
+        max-width: 900px;
+        width: 95%;
+    }
+    #profileContent {
+        max-height: 70vh;
+        overflow-y: auto;
+        padding: 1.5rem;
+    }
+    .profile-section {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .profile-section:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+        margin-bottom: 0;
+    }
+    .profile-section h3 {
+        margin: 0 0 1rem 0;
+        color: var(--accent);
+        font-size: 1.4rem;
+    }
+    .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+    .profile-field {
+        margin-bottom: 0.8rem;
+    }
+    .profile-field label {
+        display: block;
+        font-size: 0.85rem;
+        color: #aaa;
+        margin-bottom: 0.3rem;
+    }
+    .profile-field span {
+        font-weight: 500;
+        color: #fff;
+    }
+    .profile-field span:empty::before {
+        content: "—";
+        color: #666;
+    }
+    .wide-modal {
+        max-width: 900px;
+        width: 95%;
+    }
+    #profileContent {
+        max-height: 70vh;
+        overflow-y: auto;
+        padding: 1.5rem;
+        /* Убрал фон — теперь фон берётся от модалки (адаптируется под тему) */
+    }
+    .profile-section {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .profile-section:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+        margin-bottom: 0;
+    }
+    .profile-section h3 {
+        margin: 0 0 1rem 0;
+        color: var(--accent);
+        font-size: 1.4rem;
+    }
+    .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+    .profile-field {
+        margin-bottom: 0.8rem;
+    }
+    .profile-field label {
+        display: block;
+        font-size: 0.85rem;
+        color: #aaa;
+        margin-bottom: 0.3rem;
+    }
+    .profile-field span {
+        font-weight: 500;
+        color: #fff; /* тёмная тема */
+    }
+    .profile-field span:empty::before {
+        content: "—";
+        color: #666;
+    }
+
+    /* === Исправление только для светлой темы === */
+    html[data-theme="light"] .profile-field span {
+        color: #111111; /* чёрный текст значений */
+    }
+    html[data-theme="light"] .profile-field span:empty::before {
+        color: #999; /* серый дефис */
+    }
+    html[data-theme="light"] .profile-field label {
+        color: #666; /* подписи чуть темнее */
+    }
+    html[data-theme="light"] .profile-section {
+        border-bottom-color: rgba(0,0,0,0.1);
+    }
+    html[data-theme="light"] .profile-section:last-child {
+        border-bottom: none;
+    }
+        /* === АВАТАРКА (ЛОГОТИП) ПО ЦЕНТРУ В КРУГЕ === */
+    .profile-avatar-section {
+        text-align: center;
+        margin: 2.5rem 0 0 0;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    html[data-theme="light"] .profile-avatar-section {
+        border-top-color: rgba(0,0,0,0.1);
+    }
+
+    .profile-avatar-wrapper {
+        display: inline-block;
+    }
+
+    .profile-avatar {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        object-fit: cover;
+        /* Обводка: белая в светлой теме, чёрная в тёмной */
+        border: 5px solid #ffffff; /* тёмная тема — белая */
+        transition: transform 0.3s ease;
+    }
+    html[data-theme="light"] .profile-avatar {
+        border: 5px solid #000000; /* светлая тема — чёрная */
+    }
+
+    .profile-avatar:hover {
+        transform: scale(1.05);
+    }
+
+    /* Заглушка, если логотипа нет */
+    .profile-avatar-missing {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3.5rem;
+        color: #666;
+        border: 3px dashed #555;
+    }
+    html[data-theme="light"] .profile-avatar-missing {
+        background: rgba(0,0,0,0.06);
+        color: #999;
+        border-color: #ccc;
+    }
+
+        .profile-section h3 {
+        margin: 0 0 1rem 0;
+        color: #ffffff; /* тёмная тема */
+        font-size: 1.4rem;
+        opacity: 0.95;
+    }
+
+    html[data-theme="light"] .profile-section h3 {
+        color: #111111; /* светлая тема — чёрный */
+        opacity: 1;
+    }
+        .profile-section h3 {
+        margin: 0 0 1rem 0;
+        color: #ffffff; /* тёмная тема — белый */
+        font-size: 1.4rem;
+        opacity: 0.95;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .profile-section h3 i {
+        color: inherit;
+        font-size: 1.1em;
+    }
+
+    html[data-theme="light"] .profile-section h3 {
+        color: #111111; /* светлая тема — чёрный */
+        opacity: 1;
+    }
+
+    html[data-theme="light"] .profile-section h3 i {
+        color: #111111;
+    }
+    
+</style>
+
 </head>
 <body>
     <!-- Хедер -->
@@ -95,6 +294,8 @@ if (!(config.body instanceof FormData)) {
         <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
         <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
         <a href="/admin_dispatch" class="sidebar-item"><i class="fas fa-paper-plane"></i><span>Рассылки</span></a>
+        <a href="/admin_bills" class="sidebar-item"><i class="fas fa-file-invoice"></i><span>Счета</span></a>
+        <a href="/admin_documents" class="sidebar-item"><i class="fas fa-file-contract"></i><span>Документы</span></a>
         <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
         <a href="/admin_users" class="sidebar-item active"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
         <a href="/admin_reviews" class="sidebar-item"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews }}</div></span></a>
@@ -154,6 +355,7 @@ if (!(config.body instanceof FormData)) {
                     </div>
                 </div>
 
+
                 <!-- Кликабельные пункты -->
                 <div class="stats-items" id="statsItems"></div>
 
@@ -163,6 +365,8 @@ if (!(config.body instanceof FormData)) {
                     <div class="chart-loading" id="chartLoading">Загрузка...</div>
                 </div>
             </div>
+
+
 
             <!-- Поиск -->
             <form method="GET" class="search-form">
@@ -175,6 +379,7 @@ if (!(config.body instanceof FormData)) {
             <!-- Пользователи -->
             <div class="users-list">
                 {% for u in users %}
+                
                 <div class="user-item">
                     <div class="user-avatar">{{ u.phone[-2:] }}</div>
                     <div class="user-info">
@@ -200,6 +405,9 @@ if (!(config.body instanceof FormData)) {
                     </div>
                     {% if u.id != session.get('user_id') %}
                     <div class="user-actions-icons">
+                        <button class="action-icon" onclick="openProfileModal({{ u.id }})" title="Реквизиты и контакты">
+                            <i class="fas fa-id-card"></i>
+                        </button>
                         <button class="action-icon" onclick="openCartModal({{ u.id }})" title="Корзина">
                             <i class="fas fa-shopping-cart"></i>
                         </button>
@@ -353,6 +561,23 @@ if (!(config.body instanceof FormData)) {
   </label>
 </div>
 
+                <!-- Модалка профиля компании и контактов -->
+<div class="modal-overlay" id="profileModal">
+    <div class="modal wide-modal">
+        <div class="modal-header">
+            <h2>Реквизиты и контакты пользователя</h2>
+            <button class="modal-close" onclick="closeProfileModal()">×</button>
+        </div>
+        <div class="modal-body" id="profileContent">
+            <p style="text-align:center;padding:2rem;color:#aaa;">
+                <i class="fas fa-spinner fa-spin"></i> Загрузка...
+            </p>
+        </div>
+        <div class="modal-actions">
+            <button class="cancel-btn" onclick="closeProfileModal()">Закрыть</button>
+        </div>
+    </div>
+</div>
 <script>
     // === Глобальные переменные ===
     let dynamicChart = null;
@@ -788,7 +1013,82 @@ document.getElementById('toggleStatsBtn').addEventListener('click', () => {
     window.addEventListener('scroll', () => {
         document.querySelector('header').classList.toggle('scrolled', window.scrollY > 50);
     });
+function openProfileModal(userId) {
+    const modal = document.getElementById('profileModal');
+    const content = document.getElementById('profileContent');
+    
+    content.innerHTML = '<p style="text-align:center;padding:2rem;color:#aaa;"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>';
+    modal.classList.add('active');
 
+    // Загружаем данные компании и контактов параллельно
+    Promise.all([
+        fetch(`/api/company?admin_view=${userId}`).then(r => r.ok ? r.json() : Promise.reject()),
+        fetch(`/api/contacts?admin_view=${userId}`).then(r => r.ok ? r.json() : Promise.reject())
+    ])
+    .then(([company, contacts]) => {
+        content.innerHTML = `
+            <div class="profile-section">
+                <h3><i class="fas fa-building"></i> Реквизиты компании</h3>
+                <div class="profile-grid">
+                    <div class="profile-field"><label>Полное наименование</label><span>${company.fullName || ''}</span></div>
+                    <div class="profile-field"><label>Краткое наименование</label><span>${company.companyName || ''}</span></div>
+                    <div class="profile-field"><label>ИНН</label><span>${company.inn || ''}</span></div>
+                    <div class="profile-field"><label>ОГРН</label><span>${company.ogrn || ''}</span></div>
+                    <div class="profile-field"><label>КПП</label><span>${company.kpp || ''}</span></div>
+                    <div class="profile-field"><label>ОКПО</label><span>${company.okpo || ''}</span></div>
+                    <div class="profile-field"><label>ОКВЭД</label><span>${company.okved || ''}</span></div>
+                    <div class="profile-field"><label>Юридический адрес</label><span>${company.legalAddress || ''}</span></div>
+                    <div class="profile-field"><label>Фактический адрес</label><span>${company.actualAddress || ''}</span></div>
+                    <div class="profile-field"><label>Руководитель</label><span>${company.director || ''}</span></div>
+                    <div class="profile-field"><label>Статус</label><span>${company.companyStatus || ''}</span></div>
+                    <div class="profile-field"><label>Система налогообложения</label><span>${company.taxSystem || ''}</span></div>
+                    <div class="profile-field"><label>Дата регистрации</label><span>${company.regDate || ''}</span></div>
+                </div>
+            </div>
+
+            <div class="profile-section">
+                <h3><i class="fas fa-address-book"></i> Контактные данные</h3>
+                <div class="profile-grid">
+                    <div class="profile-field"><label>Контактное лицо</label><span>${contacts.contactPerson || ''}</span></div>
+                    <div class="profile-field"><label>Рабочий телефон</label><span>${contacts.workPhone || ''}</span></div>
+                    <div class="profile-field"><label>Личный телефон</label><span>${contacts.personalPhone || ''}</span></div>
+                    <div class="profile-field"><label>Email для документов</label><span>${contacts.documentsEmail || ''}</span></div>
+                    <div class="profile-field"><label>Email для уведомлений</label><span>${contacts.notificationsEmail || ''}</span></div>
+                    <div class="profile-field"><label>Telegram</label><span>${contacts.telegram ? '@' + contacts.telegram : ''}</span></div>
+                    <div class="profile-field"><label>WhatsApp</label><span>${contacts.whatsapp || ''}</span></div>
+                    <div class="profile-field"><label>MAX (телефон)</label><span>${contacts.maxPhone || ''}</span></div>
+                </div>
+            </div>
+
+                        ${company.avatar ? `
+            <div class="profile-section profile-avatar-section">
+                <h3><i class="fas fa-image"></i> Логотип компании</h3>
+                <div class="profile-avatar-wrapper">
+                    <img src="${company.avatar}" alt="Логотип компании" class="profile-avatar">
+                </div>
+            </div>
+            ` : `
+            <div class="profile-section profile-avatar-section">
+                <h3><i class="fas fa-image"></i> Логотип компании</h3>
+                <div class="profile-avatar-wrapper">
+                    <div class="profile-avatar-missing">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <p style="margin-top: 1rem; color: #888; font-size: 0.95rem;">Логотип не загружен</p>
+                </div>
+            </div>
+            `}
+        `;
+    })
+    .catch(err => {
+        console.error(err);
+        content.innerHTML = '<p style="text-align:center;color:#ff6666;">Ошибка загрузки данных</p>';
+    });
+}
+
+function closeProfileModal() {
+    document.getElementById('profileModal').classList.remove('active');
+}
     // Инициализация
     renderStatsItems();
 </script>

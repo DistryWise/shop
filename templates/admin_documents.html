@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отзывы — Админка | Piligrim</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <script>
+// Глобальное хранилище актуального токена
+window.csrfToken = "{{ csrf_token() }}";
+
+// Автоматически обновляем токен при любом успешном ответе от сервера
+function updateCsrfTokenFromResponse(data) {
+    if (data.csrf_token) {
+        window.csrfToken = data.csrf_token;
+        document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', data.csrf_token);
+    }
+}
+
+// Перехватываем ВСЕ fetch-запросы (POST, PUT, DELETE и т.д.)
+const { fetch: origFetch } = window;
+window.fetch = async (...args) => {
+    let [resource, config] = args;
+    
+    // Только для мутирующих методов
+    if (config && ['POST','PUT','DELETE','PATCH'].includes((config.method || 'GET').toUpperCase())) {
+        config = config || {};
+        config.headers = config.headers || {};
+        config.headers['X-CSRF-Token'] = window.csrfToken;
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+        
+        // Если отправляем FormData — не трогаем Content-Type (браузер сам поставит с boundary)
+        if (!(config.body instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
+        }
+    }
+
+    const response = await origFetch(resource, config);
+    
+    // Автоматически обновляем токен после любого успешного JSON-ответа
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        try {
+            const data = await response.clone().json();
+            updateCsrfTokenFromResponse(data);
+        } catch (e) { /* не JSON — игнорируем */ }
+    }
+
+    return response;
+};
+  </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Shadows+Into+Light&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
+    <link rel="stylesheet" href="/static/css/admin/admin_bills.css">
+
+    <style>
+        .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-overlay.visible {
+    display: flex;
+}
+    </style>
+
+    
+</head>
+
+<body>
+
+    <header>
+        <a href="/" class="logo"><img src="/static/assets/logo.png" alt="ZAZA" class="logo-img"></a>
+        <nav style="margin-left: auto;"><a href="/" class="nav-link">Главная</a></nav>
+    </header>
+
+
+    <!-- Сайдбар (точно как в новой версии) -->
+<aside class="sidebar">
+    <h3 class="sidebar-title">Админка</h3>
+    <div class="sidebar-menu">
+        <a href="/admin" class="sidebar-item"><i class="fas fa-box"></i><span>Товары</span></a>
+        <a href="/admin_services" class="sidebar-item"><i class="fas fa-balance-scale"></i><span>Услуги</span></a>
+        <a href="/admin_news" class="sidebar-item"><i class="fas fa-newspaper"></i><span>Новости</span></a>
+        <a href="/carousel-editor" class="sidebar-item"><i class="fas fa-images"></i><span>Редактор баннеров</span></a>
+        <a href="/admin_dispatch" class="sidebar-item"><i class="fas fa-paper-plane"></i><span>Рассылки</span></a>
+        <a href="/admin_bills" class="sidebar-item"><i class="fas fa-file-invoice"></i><span>Счета</span></a>
+        <a href="/admin_documents" class="sidebar-item active"><i class="fas fa-file-contract"></i><span>Документы</span></a>
+        <a href="/admin_feedback" class="sidebar-item"><i class="fas fa-envelope"></i><span>Обратная связь<div class="sidebar-badge">{{ total_feedback }}</div></span></a>
+        <a href="/admin_users" class="sidebar-item"><i class="fas fa-users"></i><span>Пользователи<div class="sidebar-badge">{{ total_users }}</div></span></a>
+        <a href="/admin_reviews" class="sidebar-item"><i class="fas fa-star"></i><span>Отзывы<div class="sidebar-badge">{{ total_reviews }}</div></span></a>
+        <a href="/admin_orders" class="sidebar-item"><i class="fas fa-shopping-cart"></i><span>Заказы<div class="sidebar-badge">{{ total_orders }}</div></span></a>
+    </div>
+</aside>
+
+
+<main class="admin-main">
+    <h1 class="admin-title">Управление договорами и актами</h1>
+
+    <!-- Сворачиваемая секция: Создать новый документ -->
+    <div class="collapsible-section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>Создать новый документ</h2>
+            <i class="fas fa-chevron-down toggle-icon"></i>
+        </div>
+        <div class="section-content">
+            <div class="form-grid">
+                <div class="form-group phone-group">
+                    <label>Телефон пользователя</label>
+                    <input type="text" id="userPhone" placeholder="+7 (999) 999-99-99" autocomplete="off">
+                    <div id="phoneAutocomplete" class="autocomplete-list"></div>
+                    <input type="hidden" id="selectedUserId">
+                </div>
+
+                <div class="form-group">
+                    <label>Название документа</label>
+                    <input type="text" id="docTitle" placeholder="Например: Договор поставки № 2025-12-001">
+                </div>
+
+                <div class="form-group">
+                    <label>Тип документа</label>
+                    <select id="docType">
+                        <option value="contract">Договор</option>
+                        <option value="act">Акт</option>
+                    </select>
+                </div>
+
+                <div class="form-group full-width file-group">
+                    <label>Загрузить PDF-документ <span style="color:var(--text-tertiary);font-size:0.9rem;">(обязательно)</span></label>
+                    <label class="file-label">
+                        <i class="fas fa-upload"></i> Выберите PDF-файл
+                        <input type="file" id="docFile" accept=".pdf" required>
+                    </label>
+                    <small id="fileStatus"></small>
+                </div>
+
+                <div class="form-group submit-group">
+                    <button id="createDocumentBtn" class="primary-btn">
+                        <i class="fas fa-paper-plane"></i> Создать и отправить документ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Сворачиваемая секция: Все отправленные документы -->
+    <div class="collapsible-section open">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2>Все отправленные документы</h2>
+            <i class="fas fa-chevron-down toggle-icon"></i>
+        </div>
+
+        <div class="section-content">
+            <div class="table-wrapper">
+                <table id="documentsTable">
+                    <thead>
+                        <tr>
+                            <th>Название</th>
+                            <th>Тип</th>
+                            <th>Телефон</th>
+                            <th>Дата создания</th>
+                            <th class="status-header">
+                                Статус
+                                <button class="status-filter-toggle" title="Фильтр по статусу">
+                                    <i class="fas fa-sort-down"></i>
+                                </button>
+                                <div class="status-filter-dropdown">
+                                    <div class="filter-option active" data-status="all">Все документы</div>
+                                    <div class="filter-option" data-status="pending">На подпись</div>
+                                    <div class="filter-option" data-status="signed">Подписанные</div>
+                                </div>
+                            </th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Заполняется JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Модальное окно просмотра PDF -->
+<div id="documentPreviewModal" class="modal-overlay" onclick="closeDocumentPreview()">
+    <div class="modal-content wide" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h2 id="previewModalTitle">Документ</h2>
+            <button class="modal-close" onclick="closeDocumentPreview()">×</button>
+        </div>
+        <div class="modal-body" style="padding:0; background:#fff;">
+            <iframe id="previewIframe" style="width:100%; height:80vh; border:none;"></iframe>
+        </div>
+    </div>
+</div>
+
+<!-- ВИСЯЩИЙ ТУМБЛЕР ТЕМЫ (ZAZA STYLE 2025) -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
+
+<!-- Модальное окно с реквизитами счёта -->
+<div id="invoiceModal" class="modal-overlay" onclick="closeInvoiceModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h2 id="modalTitle">Счёт №000</h2>
+            <button class="modal-close" onclick="closeInvoiceModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <pre id="modalRequisites"></pre>
+        </div>
+    </div>
+</div>
+
+<!-- Универсальная модалка ввода пароля админа — новый дизайн -->
+<div id="adminPasswordModal" class="password-modal-overlay">
+  <div class="password-modal-content">
+    <!-- Крестик закрытия -->
+    <button class="password-modal-close" onclick="closeModal('adminPasswordModal')">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <!-- Иконка замка -->
+    <div class="password-modal-icon">
+      <i class="fas fa-lock"></i>
+    </div>
+
+    <!-- Заголовок и текст -->
+    <h2>Подтверждение действия</h2>
+    <p>Введите пароль администратора для продолжения</p>
+
+    <!-- Поле ввода пароля -->
+    <div class="password-input-wrapper">
+  <input type="password" id="adminPasswordInput" placeholder="••••••••" autocomplete="off">
+
+</div>
+<small class="password-hint">Введите пароль администратора</small>
+
+    <!-- Сообщение об ошибке -->
+    <small id="passwordError" class="password-error">Неверный пароль</small>
+
+    <!-- Кнопки -->
+    <div class="password-modal-actions">
+      <button class="password-btn secondary" onclick="closeModal('adminPasswordModal')">
+        Отмена
+      </button>
+      <button class="password-btn primary" onclick="proceedWithPassword()">
+        <span class="btn-text">Подтвердить</span>
+        <i class="fas fa-arrow-right btn-icon"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ======================== 1. ПРОВЕРКА АДМИНСКОГО ДОСТУПА ========================
+fetch('/api/check_admin')
+    .then(r => r.json())
+    .then(data => {
+        if (!data.is_admin) {
+            document.documentElement.innerHTML = `
+                <!DOCTYPE html>
+                <html lang="ru">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>404 — Страница не найдена</title>
+                    <style>
+                        body { margin:0; height:100vh; background:#000; color:#fff; font-family:Arial,sans-serif; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+                        h1 { font-size:6rem; margin:0; opacity:0.8; }
+                        p { font-size:1.5rem; opacity:0.6; }
+                        .back { margin-top:2rem; color:#fff; text-decoration:none; padding:1rem 2rem; background:rgba(255,255,255,0.1); border-radius:12px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>404</h1>
+                    <p>Страница не найдена</p>
+                    <a href="/" class="back">← На главную</a>
+                </body>
+                </html>`;
+            throw new Error("Admin access denied");
+        }
+    })
+    .catch(() => {
+        document.documentElement.innerHTML = `<h1 style="color:#fff;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:4rem;">Доступ запрещён</h1>`;
+        throw new Error("Check admin failed");
+    });
+
+// ======================== 2. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ========================
+let currentPage = 1;
+const itemsPerPage = 10;
+let allReviews = [];
+let filteredReviews = [];
+
+
+
+function changePage(delta) {
+    const totalPages = Math.ceil(filteredReviews.length / itemsPerPage);
+    const newPage = currentPage + delta;
+    if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        renderPage();
+    }
+}
+
+
+// ======================== 8. ВСЕ ОСТАЛЬНЫЕ ФУНКЦИИ (ТВОИ, НЕ ТРОГАЛ!) ========================
+async function fetchItemModal(type, id) {
+    const modal = document.getElementById('itemModal');
+    const title = document.getElementById('modalItemTitle');
+    const img = document.getElementById('modalItemImg');
+    const desc = document.getElementById('modalItemDesc');
+    const price = document.getElementById('modalItemPrice');
+    const icon = document.getElementById('itemModalIcon');
+
+    title.textContent = 'Загрузка...';
+    desc.textContent = 'Загрузка описания...';
+    price.textContent = '';
+    img.src = '/static/assets/no-image.png';
+    icon.className = type === 'product' ? 'fas fa-box' : 'fas fa-gavel';
+
+    const endpoint = type === 'product' ? `/api/product/${id}` : `/api/service/${id}`;
+    
+    try {
+        const res = await fetch(endpoint);
+        const data = await res.json();
+
+        title.textContent = data.title || 'Без названия';
+        img.src = data.image_urls?.[0] || '/static/assets/no-image.png';
+        desc.textContent = data.full_desc || data.description || 'Описание отсутствует';
+        price.textContent = data.price_str || data.price || 'Цена не указана';
+    } catch (e) {
+        title.textContent = 'Ошибка загрузки';
+        desc.textContent = 'Не удалось загрузить данные.';
+        price.textContent = '—';
+    }
+
+    openModal('itemModal');
+}
+
+
+
+// === ПЕРЕКЛЮЧЕНИЕ ТЕМЫ (ZAZA TOGGLE) ===
+const themeToggle = document.getElementById('theme-toggle');
+const html = document.documentElement;
+
+// Восстанавливаем сохранённую тему
+if (localStorage.getItem('theme') === 'light') {
+  html.setAttribute('data-theme', 'light');
+  themeToggle.checked = true;
+} else {
+  html.setAttribute('data-theme', 'dark');
+  localStorage.setItem('theme', 'dark');
+}
+
+// Переключение при клике
+themeToggle.addEventListener('change', () => {
+  if (themeToggle.checked) {
+    html.setAttribute('data-theme', 'light');
+    localStorage.setItem('theme', 'light');
+  } else {
+    html.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+  }
+});
+
+</script>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', () => {
+    const currentPath = window.location.pathname;
+
+    // Сопоставление путей с текстом пункта меню
+    const menuMap = {
+        '/admin': 'товары',
+        '/admin_services': 'услуги',
+        '/admin_news': 'новости',
+        '/carousel-editor': 'редактор баннеров',
+        '/admin_feedback': 'обратная связь',
+        '/admin_users': 'пользователи',
+        '/admin_reviews': 'отзывы',
+        '/admin_orders': 'заказы'
+    };
+
+    const activeText = menuMap[currentPath] || null;
+
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+        item.classList.remove('active');
+        const spanText = item.querySelector('span')?.textContent?.trim().toLowerCase();
+
+        if (activeText && spanText === activeText) {
+            item.classList.add('active');
+        }
+    });
+});
+</script>
+
+<script>
+// Функция сворачивания/разворачивания секций
+function toggleSection(header) {
+    const section = header.parentElement;
+    section.classList.toggle('open');
+}
+
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    // Проверка админа (уже есть выше — оставляем)
+
+    const phoneInput = document.getElementById('userPhone');
+    const autocomplete = document.getElementById('phoneAutocomplete');
+    const userIdInput = document.getElementById('selectedUserId');
+    const fileInput = document.getElementById('docFile');
+    const fileStatus = document.getElementById('fileStatus');
+
+    let pendingAction = null;
+
+    // Универсальные функции модалки пароля (уже есть в твоём коде — используем те же)
+    // requireAdminPassword, proceedWithPassword, closeModal — оставляем как есть
+
+    // Автокомплит по телефону
+    phoneInput.addEventListener('input', async () => {
+        const query = phoneInput.value.replace(/\D/g, '');
+        if (query.length < 3) { autocomplete.style.display = 'none'; return; }
+
+        const res = await fetch(`/api/admin_search_users?phone=${query}`);
+        const users = await res.json();
+
+        autocomplete.innerHTML = users.length ? users.map(u => 
+            `<div onclick="selectUser(${u.id}, '${u.phone}')">${u.phone}</div>`
+        ).join('') : '<div>Ничего не найдено</div>';
+
+        autocomplete.style.display = 'block';
+    });
+
+    window.selectUser = (id, phone) => {
+        phoneInput.value = phone;
+        userIdInput.value = id;
+        autocomplete.style.display = 'none';
+    };
+
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.phone-group')) autocomplete.style.display = 'none';
+    });
+
+    // Проверка выбранного файла
+    fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        if (!file) {
+            fileStatus.textContent = '';
+            fileStatus.style.color = '';
+            return;
+        }
+        if (!file.name.toLowerCase().endsWith('.pdf')) {
+            fileStatus.textContent = 'Только PDF-файлы!';
+            fileStatus.style.color = '#f44336';
+            fileInput.value = '';
+        } else {
+            fileStatus.textContent = `Выбран: ${file.name}`;
+            fileStatus.style.color = '#4caf50';
+        }
+    });
+
+    // Создание документа
+    document.getElementById('createDocumentBtn').onclick = async () => {
+        const userId = userIdInput.value;
+        const title = document.getElementById('docTitle').value.trim();
+        const type = document.getElementById('docType').value;
+        const file = fileInput.files[0];
+
+        if (!userId || !title || !file) {
+            return alert('Заполните все поля и выберите PDF!');
+        }
+
+        requireAdminPassword(async () => {
+            const btn = document.getElementById('createDocumentBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Создание...';
+
+            const form = new FormData();
+            form.append('user_id', userId);
+            form.append('title', title);
+            form.append('type', type);
+            form.append('pdf_file', file);
+            form.append('csrf_token', window.csrfToken);
+            form.append('admin_password', tempPassword);
+
+            try {
+                const res = await fetch('/api/admin_create_document', {
+                    method: 'POST',
+                    body: form
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    alert('Документ успешно создан и отправлен пользователю!');
+                    loadDocuments();
+                    // Очистка формы
+                    phoneInput.value = '';
+                    userIdInput.value = '';
+                    document.getElementById('docTitle').value = '';
+                    fileInput.value = '';
+                    fileStatus.textContent = '';
+                } else {
+                    alert(data.error || 'Ошибка при создании');
+                }
+            } catch (err) {
+                alert('Ошибка соединения');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Создать и отправить документ';
+            }
+        });
+    };
+
+    // Загрузка таблицы документов
+    async function loadDocuments() {
+        const tbody = document.querySelector('#documentsTable tbody');
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;">Загрузка...</td></tr>';
+
+        try {
+            const res = await fetch('/api/admin_all_documents');
+            const docs = await res.json();
+
+            if (docs.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-filter-state">
+                                <i class="fas fa-file-signature"></i>
+                                <div>Документов пока нет</div>
+                                <small style="margin-top: 12px; opacity: 0.6;">Создайте первый документ выше</small>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = docs.map(doc => {
+                const statusClass = doc.signed_at ? 'status-confirmed' : 'status-pending';
+                const statusText = doc.signed_at ? 'Подписан' : 'На подпись';
+
+                const typeText = doc.type === 'contract' ? 'Договор' : 'Акт';
+
+                return `<tr>
+                    <td onclick="previewDocument('${doc.pdf_url}', '${doc.title}')">${doc.title}</td>
+                    <td>${typeText}</td>
+                    <td>${doc.phone}</td>
+                    <td>${new Date(doc.created_at).toLocaleDateString('ru-RU')}</td>
+                    <td class="${statusClass}">${statusText}</td>
+                    <td class="actions-cell">
+                        <button class="action-btn delete-btn" onclick="event.stopPropagation(); deleteDocument(${doc.id})" title="Удалить документ">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+        } catch {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#f44336;">Ошибка загрузки</td></tr>';
+        }
+    }
+
+    // Предпросмотр PDF
+    window.previewDocument = (url, title) => {
+    document.getElementById('previewModalTitle').textContent = title;
+    document.getElementById('previewIframe').src = url.replace(window.location.origin, '');
+    document.getElementById('documentPreviewModal').classList.add('visible');
+};
+
+    window.closeDocumentPreview = () => {
+        document.getElementById('documentPreviewModal').classList.remove('visible');
+        document.getElementById('previewIframe').src = '';
+    };
+
+    // Удаление документа
+    window.deleteDocument = (id) => {
+        requireAdminPassword(async () => {
+            if (!confirm('Удалить этот документ? Это действие нельзя отменить.')) return;
+
+            try {
+                const res = await fetch(`/api/admin_delete_document/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    alert('Документ удалён');
+                    loadDocuments();
+                } else {
+                    const data = await res.json();
+                    alert(data.error || 'Ошибка');
+                }
+            } catch {
+                alert('Ошибка соединения');
+            }
+        });
+    };
+
+    // Фильтр по статусу (аналогично счетам)
+    const filterToggle = document.querySelector('.status-filter-toggle');
+    const filterDropdown = document.querySelector('.status-filter-dropdown');
+
+    filterToggle?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        filterDropdown.classList.toggle('visible');
+        filterToggle.classList.toggle('active');
+    });
+
+    filterDropdown?.addEventListener('click', e => e.stopPropagation());
+
+    document.addEventListener('click', () => {
+        filterDropdown?.classList.remove('visible');
+        filterToggle?.classList.remove('active');
+    });
+
+    document.querySelectorAll('.filter-option').forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('.filter-option').forEach(o => o.classList.remove('active'));
+            option.classList.add('active');
+
+            const status = option.dataset.status;
+            filterDocumentsByStatus(status);
+
+            filterDropdown.classList.remove('visible');
+            filterToggle.classList.remove('active');
+        });
+    });
+
+    async function filterDocumentsByStatus(status) {
+        const tbody = document.querySelector('#documentsTable tbody');
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;">Загрузка...</td></tr>';
+
+        const res = await fetch('/api/admin_all_documents');
+        const docs = await res.json();
+
+        let filtered = docs;
+        if (status === 'pending') filtered = docs.filter(d => !d.signed_at);
+        if (status === 'signed') filtered = docs.filter(d => d.signed_at);
+
+        if (filtered.length === 0) {
+            let text = status === 'pending' ? 'на подпись' : 'подписанных';
+            if (status === 'all') text = '';
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-filter-state">
+                            <i class="fas fa-search"></i>
+                            <div>Нет документов${text ? '<br>со статусом <strong>' + (status === 'pending' ? '«На подпись»' : '«Подписан»') + '</strong>' : ''}</div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map(doc => {
+            const statusClass = doc.signed_at ? 'status-confirmed' : 'status-pending';
+            const statusText = doc.signed_at ? 'Подписан' : 'На подпись';
+            const typeText = doc.type === 'contract' ? 'Договор' : 'Акт';
+
+            return `<tr>
+                <td onclick="previewDocument('${doc.pdf_url}', '${doc.title}')">${doc.title}</td>
+                <td>${typeText}</td>
+                <td>${doc.phone}</td>
+                <td>${new Date(doc.created_at).toLocaleDateString('ru-RU')}</td>
+                <td class="${statusClass}">${statusText}</td>
+                <td class="actions-cell">
+                    <button class="action-btn delete-btn" onclick="event.stopPropagation(); deleteDocument(${doc.id})">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+    // Автообновление
+    loadDocuments();
+    setInterval(loadDocuments, 30000);
+});
+let pendingAdminAction = null; // Глобальная переменная для хранения действия
+
+function requireAdminPassword(actionCallback) {
+    pendingAdminAction = actionCallback;
+    document.getElementById('adminPasswordModal').classList.add('visible');
+    document.getElementById('adminPasswordInput').value = '';
+    document.getElementById('passwordError').style.display = 'none';
+    document.getElementById('adminPasswordInput').focus(); // бонус: фокус на поле
+}
+
+let tempPassword = null;
+
+function proceedWithPassword() {
+    const password = document.getElementById('adminPasswordInput').value.trim();
+    
+    if (password === 'admin123') {
+        tempPassword = password;  // сохраняем для отправки
+        document.getElementById('adminPasswordModal').classList.remove('visible');
+        if (pendingAdminAction) {
+            pendingAdminAction();  // выполняем действие (создание/удаление)
+            pendingAdminAction = null;
+        }
+    } else {
+        const errorEl = document.getElementById('passwordError');
+        errorEl.style.display = 'block';
+        errorEl.textContent = 'Неверный пароль';
+    }
+}
+// Универсальная функция закрытия любой модалки
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.remove('visible');
+    // Очищаем поле и ошибку
+    if (modalId === 'adminPasswordModal') {
+      document.getElementById('adminPasswordInput').value = '';
+      document.getElementById('passwordError').style.display = 'none';
+    }
+  }
+}
+</script>
+</body>
+</html>

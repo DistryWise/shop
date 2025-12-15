@@ -68,6 +68,12 @@ window.fetch = async (...args) => {
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   
 
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="manifest" href="/site.webmanifest">
+
   <link rel="stylesheet" href="/static/css/search.css">
   <link rel="stylesheet" href="/static/css/auth.css">
   <link rel="stylesheet" href="/static/css/cart.css">
@@ -76,6 +82,253 @@ window.fetch = async (...args) => {
   <link rel="stylesheet" href="/static/css/index.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap" />
 
+<style>
+/* СВЕТЛАЯ ТЕМА — ИКОНКИ В ШАПКЕ */
+
+/* 1. ДО СКРОЛЛА — ПРОЗРАЧНЫЙ СТЕКЛЯННЫЙ КРУГ */
+html[data-theme="light"] header:not(.scrolled) .icon-btn {
+  background: rgba(0, 0, 0, 0.06) !important;           /* лёгкая тёмная прозрачная заливка */
+  border: 1.2px solid rgba(0, 0, 0, 0.15) !important;   /* тонкий контур */
+  backdrop-filter: blur(12px) !important;              /* стеклянный эффект */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+html[data-theme="light"] header:not(.scrolled) .icon-btn:hover {
+  background: rgba(0, 0, 0, 0.14) !important;
+  border-color: rgba(0, 0, 0, 0.25) !important;
+  transform: scale(1.12) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 2. ПОСЛЕ СКРОЛЛА — БЕЛАЯ ЗАЛИВКА (как в тёмной теме) */
+html[data-theme="light"] header.scrolled .icon-btn {
+  background: rgba(255, 255, 255, 0.92) !important;     /* белая заливка с лёгкой прозрачностью */
+  border: 1.5px solid rgba(0, 0, 0, 0.18) !important;   /* чёткий контур */
+  backdrop-filter: blur(16px) !important;              /* стеклянный эффект */
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12) !important;
+}
+
+html[data-theme="light"] header.scrolled .icon-btn:hover {
+  background: #ffffff !important;                      /* полностью белый при наведении */
+  border-color: rgba(0, 0, 0, 0.28) !important;
+  transform: scale(1.12) !important;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* Иконки внутри — всегда чёрные в светлой теме */
+html[data-theme="light"] .icon-btn i {
+  color: #000 !important;
+}
+
+/* === ПОИСК — ТОТ ЖЕ ЭФФЕКТ === */
+
+/* До скролла */
+html[data-theme="light"] header:not(.scrolled) .search-container,
+html[data-theme="light"] header:not(.scrolled) .search-container:hover,
+html[data-theme="light"] header:not(.scrolled) .search-container.active {
+  background: rgba(0, 0, 0, 0.06) !important;
+  border: 1.2px solid rgba(0, 0, 0, 0.15) !important;
+  backdrop-filter: blur(12px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+html[data-theme="light"] header:not(.scrolled) .search-container:hover,
+html[data-theme="light"] header:not(.scrolled) .search-container.active {
+  background: rgba(0, 0, 0, 0.12) !important;
+  border-color: rgba(0, 0, 0, 0.22) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* После скролла — белая заливка */
+html[data-theme="light"] header.scrolled .search-container,
+html[data-theme="light"] header.scrolled .search-container:hover,
+html[data-theme="light"] header.scrolled .search-container.active {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.18) !important;
+  backdrop-filter: blur(16px) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12) !important;
+}
+
+html[data-theme="light"] header.scrolled .search-container:hover,
+html[data-theme="light"] header.scrolled .search-container.active {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.28) !important;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.18) !important;
+}
+
+html[data-theme="light"] .search-icon i {
+  color: #000 !important;
+}
+
+/* СВЕТЛАЯ ТЕМА — КНОПКА КОРЗИНЫ ТОЛЬКО ДО СКРОЛЛА (not scrolled): ПРОЗРАЧНЫЙ КРУГ + ЧИСТЫЙ КРАСНЫЙ БЕЙДЖИК */
+html[data-theme="light"] header:not(.scrolled) .cart-wrapper .icon-btn,
+html[data-theme="light"] header:not(.scrolled) #cartBtn,
+html[data-theme="light"] header:not(.scrolled) .cart-btn {
+  background: rgba(0, 0, 0, 0.06) !important;           /* лёгкая тёмная прозрачная заливка */
+  border: 1.2px solid rgba(0, 0, 0, 0.15) !important;   /* видимый тёмный контур */
+  backdrop-filter: blur(12px) !important;              /* стеклянный эффект */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+html[data-theme="light"] header:not(.scrolled) .cart-wrapper .icon-btn:hover,
+html[data-theme="light"] header:not(.scrolled) #cartBtn:hover,
+html[data-theme="light"] header:not(.scrolled) .cart-btn:hover {
+  background: rgba(0, 0, 0, 0.14) !important;
+  border-color: rgba(0, 0, 0, 0.25) !important;
+  transform: scale(1.12) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Иконка корзины — чёрная только до скролла */
+html[data-theme="light"] header:not(.scrolled) .cart-wrapper .icon-btn i,
+html[data-theme="light"] header:not(.scrolled) #cartBtn i {
+  color: #000 !important;
+}
+
+/* БЕЙДЖИК КОЛИЧЕСТВА — ЧИСТЫЙ КРАСНЫЙ БЕЗ БЕЛОЙ ЗАЛИВКИ (ТОЛЬКО ДО СКРОЛЛА) */
+html[data-theme="light"] header:not(.scrolled) .cart-wrapper .cart-count,
+html[data-theme="light"] header:not(.scrolled) #cartBtn .cart-count {
+  background: #ef4444 !important;                     /* чистый красный фон */
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4) !important; /* красная тень для объёма */
+}
+
+/* При hover на корзине — бейджик чуть приподнимается */
+html[data-theme="light"] header:not(.scrolled) .cart-wrapper .icon-btn:hover .cart-count,
+html[data-theme="light"] header:not(.scrolled) #cartBtn:hover .cart-count {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.5) !important;
+}
+
+/* СВЕТЛАЯ ТЕМА — КНОПКА ОБРАТНОЙ СВЯЗИ ТОЛЬКО ДО СКРОЛЛА (not scrolled): ПРОЗРАЧНЫЙ КРУГ С КОНТУРОМ */
+html[data-theme="light"] header:not(.scrolled) #feedbackBtn,
+html[data-theme="light"] header:not(.scrolled) .feedback-btn,
+html[data-theme="light"] header:not(.scrolled) [class*="feedback"][class*="btn"],
+html[data-theme="light"] header:not(.scrolled) .icon-btn:has(i.fa-envelope) {
+  background: rgba(0, 0, 0, 0.06) !important;           /* лёгкая тёмная прозрачная заливка */
+  border: 1.2px solid rgba(0, 0, 0, 0.15) !important;   /* видимый тёмный контур */
+  backdrop-filter: blur(12px) !important;              /* стеклянный эффект */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+html[data-theme="light"] header:not(.scrolled) #feedbackBtn:hover,
+html[data-theme="light"] header:not(.scrolled) .feedback-btn:hover,
+html[data-theme="light"] header:not(.scrolled) [class*="feedback"][class*="btn"]:hover,
+html[data-theme="light"] header:not(.scrolled) .icon-btn:has(i.fa-envelope):hover {
+  background: rgba(0, 0, 0, 0.14) !important;
+  border-color: rgba(0, 0, 0, 0.25) !important;
+  transform: scale(1.12) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Иконка конвертика — чисто чёрная только до скролла */
+html[data-theme="light"] header:not(.scrolled) #feedbackBtn i,
+html[data-theme="light"] header:not(.scrolled) .feedback-btn i,
+html[data-theme="light"] header:not(.scrolled) i.fa-envelope {
+  color: #000 !important;
+}
+/* СВЕТЛАЯ ТЕМА — АДМИН-КНОПКА ДО СКРОЛЛА: ПРОЗРАЧНАЯ ТЁМНАЯ ЗАЛИВКА (ПЕРЕБИВАЕТ .icon-btn) */
+html[data-theme="light"] header:not(.scrolled) #adminHeaderBtn.icon-btn {
+  background: rgba(0, 0, 0, 0.06) !important;           /* тёмная прозрачная заливка */
+  border: 1.2px solid rgba(0, 0, 0, 0.15) !important;   /* тёмный контур */
+  backdrop-filter: blur(12px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+html[data-theme="light"] header:not(.scrolled) #adminHeaderBtn.icon-btn:hover {
+  background: rgba(0, 0, 0, 0.14) !important;
+  border-color: rgba(0, 0, 0, 0.25) !important;
+  transform: scale(1.12) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* После скролла — белая заливка (как у остальных) */
+html[data-theme="light"] header.scrolled #adminHeaderBtn.icon-btn {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.18) !important;
+  backdrop-filter: blur(16px) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12) !important;
+}
+
+html[data-theme="light"] header.scrolled #adminHeaderBtn.icon-btn:hover {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.28) !important;
+  transform: scale(1.12) !important;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.18) !important;
+}
+
+/* Буква A — чёрная в светлой теме */
+html[data-theme="light"] #adminHeaderBtn text {
+  fill: #000 !important;
+}
+
+</style>
+<style>
+/* ФИНАЛЬНЫЙ ФИКС: УБИРАЕМ КВАДРАТ / ПОДЛОЖКУ ВОКРУГ АНИМИРОВАННОГО ЭМОДЗИ В СВЕТЛОЙ ТЕМЕ ДО СКРОЛЛА */
+html[data-theme="light"] header:not(.scrolled) #authBtn.icon-btn,
+html[data-theme="light"] header:not(.scrolled) #authBtn {
+
+  /* Полностью чистая кнопка — без фона, бордера, тени, блюра */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  overflow: visible !important; /* важно — чтобы эмодзи могло немного вылезать при анимации */
+}
+
+/* Убираем абсолютно все возможные подложки внутри кнопки */
+html[data-theme="light"] header:not(.scrolled) #authBtn .avatar-circle,
+html[data-theme="light"] header:not(.scrolled) #authBtn .auth-avatar,
+html[data-theme="light"] header:not(.scrolled) #authBtn .live-emoji::before,
+html[data-theme="light"] header:not(.scrolled) #authBtn .live-emoji::after,
+html[data-theme="light"] header:not(.scrolled) #authBtn * {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Специально убиваем .avatar-circle — главный виновник квадрата */
+html[data-theme="light"] header:not(.scrolled) .avatar-circle {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  opacity: 0 !important;
+}
+
+/* Сам эмодзи — чистый, без фона и подложки */
+html[data-theme="light"] header:not(.scrolled) #authBtn .live-emoji,
+html[data-theme="light"] header:not(.scrolled) #authBtn .live-emoji-final {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #000 !important;
+  /* Сохраняем все твои анимации — они работают */
+}
+
+/* При ховере — только лёгкое затемнение всей кнопки, без квадрата */
+html[data-theme="light"] header:not(.scrolled) #authBtn.icon-btn:hover {
+  background: rgba(0, 0, 0, 0.08) !important; /* едва заметно */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12) !important;
+  transform: scale(1.12) !important;
+}
+
+/* После скролла — возвращаем стандартный стеклянный стиль (как у остальных) */
+html[data-theme="light"] header.scrolled #authBtn.icon-btn {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.18) !important;
+  backdrop-filter: blur(16px) !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12) !important;
+  overflow: hidden !important;
+}
+
+html[data-theme="light"] header.scrolled #authBtn.icon-btn:hover {
+  background: #ffffff !important;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.18) !important;
+}
+
+</style>
 
 </head>
 <body>

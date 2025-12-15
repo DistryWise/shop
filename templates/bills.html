@@ -1,0 +1,2493 @@
+<!DOCTYPE html>
+<head>
+  <script>
+    // Определяем тему ещё до первого рендера
+    const savedTheme = localStorage.getItem('theme');
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    const theme = savedTheme || (prefersLight ? 'light' : 'dark');
+
+    // Сразу ставим атрибут
+    document.documentElement.setAttribute('data-theme', theme);
+
+    // И сразу форсируем правильный фон лоадера
+    document.documentElement.style.backgroundColor = theme === 'light' ? '#ffffff' : '#000000';
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Личный кабинет — Piligrim</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <script>
+// Глобальное хранилище актуального токена
+window.csrfToken = "{{ csrf_token() }}";
+
+// Автоматически обновляем токен при любом успешном ответе от сервера
+function updateCsrfTokenFromResponse(data) {
+    if (data.csrf_token) {
+        window.csrfToken = data.csrf_token;
+        document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', data.csrf_token);
+    }
+}
+
+// Перехватываем ВСЕ fetch-запросы (POST, PUT, DELETE и т.д.)
+const { fetch: origFetch } = window;
+window.fetch = async (...args) => {
+    let [resource, config] = args;
+    
+    // Только для мутирующих методов
+    if (config && ['POST','PUT','DELETE','PATCH'].includes((config.method || 'GET').toUpperCase())) {
+        config = config || {};
+        config.headers = config.headers || {};
+        config.headers['X-CSRF-Token'] = window.csrfToken;
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+        
+        // Если отправляем FormData — не трогаем Content-Type (браузер сам поставит с boundary)
+        if (!(config.body instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
+        }
+    }
+
+    const response = await origFetch(resource, config);
+    
+    // Автоматически обновляем токен после любого успешного JSON-ответа
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        try {
+            const data = await response.clone().json();
+            updateCsrfTokenFromResponse(data);
+        } catch (e) { /* не JSON — игнорируем */ }
+    }
+
+    return response;
+};
+</script>
+
+<script>
+  window.serverKnowsImLoggedIn = {{ user_authenticated|default(false)|tojson|safe }};
+</script>
+
+  <!-- Шрифты и иконки -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap" rel="stylesheet">
+
+
+
+  <!-- ДОБАВЛЕННЫЕ СТИЛИ — БЕЗ КОНФЛИКТОВ -->
+  <link rel="stylesheet" href="/static/css/search.css">
+  <link rel="stylesheet" href="/static/css/auth.css">
+  <link rel="stylesheet" href="/static/css/cart.css">
+  <link rel="stylesheet" href="/static/css/ai.css">
+  <link rel="stylesheet" href="/static/css/contacts.css"> 
+
+  <link rel="stylesheet" href="/static/css/profile/profile.css"> 
+  <link rel="stylesheet" href="/static/css/profile/auth.css"> 
+  
+<style>
+/* === ОСНОВА — ПОЛНОСТЬЮ КАК В ПРОФИЛЕ === */
+:root {
+  --bg: #ffffff;
+}
+
+html[data-theme="dark"] {
+  --bg: #000000;
+}
+
+body {
+  background: var(--bg);
+  color: #000;
+  font-family: 'Inter', sans-serif;
+}
+
+.profile-fullscreen-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 6rem 2rem 8rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.profile-hero {
+  text-align: center;
+  margin-bottom: 5rem;
+  flex-shrink: 0;
+}
+
+.profile-hero .profile-title {
+  font-size: 2.6rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: #000;
+}
+
+html[data-theme="dark"] .profile-hero .profile-title { color: #fff; }
+
+/* === ТАБЫ === */
+.invoices-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  margin: 0 auto 4rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+  flex-wrap: wrap;
+}
+
+.invoice-tab {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  padding: 0.8rem 1.2rem;
+  border-radius: 2rem;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.invoice-tab:hover {
+  background: rgba(0,0,0,0.05);
+  color: #000;
+}
+
+.invoice-tab.active {
+  background: #000;
+  color: #fff;
+}
+
+.invoice-count {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  background: #fff;
+  color: #000;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.invoice-tab.active .invoice-count {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+}
+
+/* Тёмная тема для табов */
+html[data-theme="dark"] .invoices-tabs { border-bottom-color: rgba(255,255,255,0.09); }
+html[data-theme="dark"] .invoice-tab { color: rgba(255,255,255,0.7); }
+html[data-theme="dark"] .invoice-tab:hover { background: rgba(255,255,255,0.1); color: #fff; }
+html[data-theme="dark"] .invoice-tab.active { background: #fff; color: #000; }
+html[data-theme="dark"] .invoice-tab.active .invoice-count { background: rgba(0,0,0,0.15); color: #000; }
+
+/* === КАРТОЧКИ СЧЁТОВ === */
+.invoices-list {
+  display: grid;
+  gap: 2rem;
+}
+
+.invoice-card {
+  background: var(--bg);
+  padding: 2.5rem;
+  border-radius: 1.8rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  border: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.invoice-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+  border-color: #000;
+}
+
+.invoice-icon {
+  font-size: 3.5rem;
+  color: #000;
+  opacity: 0.8;
+}
+
+.invoice-info h3 {
+  font-size: 1.7rem;
+  font-weight: 600;
+  margin: 0 0 0.6rem;
+}
+
+.invoice-amount {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0.8rem 0;
+}
+
+.invoice-date {
+  font-size: 1.1rem;
+  color: #666;
+}
+
+.invoice-status {
+  font-size: 1.2rem;
+  font-weight: 600;
+  padding: 0.6rem 1.4rem;
+  border-radius: 2rem;
+  background: rgba(0,0,0,0.05);
+  color: #000;
+}
+
+/* Пустое состояние */
+.invoices-empty {
+  text-align: center;
+  padding: 6rem 2rem;
+  color: #888;
+  font-size: 1.3rem;
+}
+
+.invoices-empty i {
+  font-size: 4.5rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.6;
+}
+
+/* Тёмная тема */
+html[data-theme="dark"] {
+  .invoice-card { background: transparent; border-color: rgba(255,255,255,0.07); }
+  .invoice-card:hover { border-color: #fff; }
+  .invoice-icon, .invoice-info h3, .invoice-amount, .invoice-status { color: #fff; }
+  .invoice-date { color: rgba(255,255,255,0.7); }
+  .invoice-status { background: rgba(255,255,255,0.08); }
+  .invoices-empty { color: rgba(255,255,255,0.7); }
+}
+
+/* === МОДАЛКА === */
+.invoice-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(12px);
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.invoice-modal.active {
+  display: flex;
+}
+
+.invoice-modal-content {
+  background: var(--bg);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 460px;
+  max-height: 95vh;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+.invoice-modal-header {
+  padding: 32px 32px 0;
+  text-align: center;
+  position: relative;
+}
+
+.invoice-modal-header h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.invoice-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.08);
+  border: none;
+  color: #666;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.invoice-close-btn:hover {
+  background: rgba(0,0,0,0.15);
+}
+
+/* Реквизиты */
+.requisites-block {
+  background: rgba(0,0,0,0.03);
+  border-radius: 16px;
+  padding: 24px;
+  margin: 24px;
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  position: relative;
+  white-space: pre-line;
+  user-select: text;
+}
+
+.copy-requisites-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 0.7rem 1.2rem;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 2rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.copy-requisites-btn:hover {
+  background: #333;
+  transform: translateY(-2px);
+}
+
+/* Кнопка "Я оплатил" и секция успеха */
+#paySection {
+  padding: 0 32px 40px;
+  text-align: center;
+}
+
+.mark-paid-btn {
+  width: 100%;
+  padding: 16px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.mark-paid-btn:hover {
+  background: #333;
+  transform: translateY(-2px);
+}
+
+.paid-section {
+  padding: 40px 32px;
+  text-align: center;
+}
+
+.paid-section i {
+  font-size: 4.5rem;
+  color: #10b981;
+  margin-bottom: 1rem;
+}
+
+.paid-section strong {
+  font-size: 1.5rem;
+  font-weight: 600;
+  display: block;
+  margin: 1rem 0;
+}
+
+.paid-section p {
+  color: #666;
+  font-size: 1.05rem;
+}
+
+/* Тёмная тема для модалки */
+html[data-theme="dark"] {
+  .invoice-modal-content { background: rgba(20,20,20,0.88); border-color: rgba(255,255,255,0.08); }
+  .requisites-block { background: rgba(255,255,255,0.08); }
+  .copy-requisites-btn { background: #fff; color: #000; }
+  .copy-requisites-btn:hover { background: #ccc; }
+  .mark-paid-btn { background: #fff; color: #000; }
+  .paid-section p { color: rgba(255,255,255,0.7); }
+}
+
+/* === АДАПТАЦИЯ ПОД МОБИЛЬНЫЕ === */
+@media (max-width: 1023px) {
+  .profile-fullscreen-container {
+    padding: clamp(3.5rem, 12vw, 6rem) clamp(0.8rem, 5vw, 2rem) clamp(5rem, 15vw, 8rem);
+  }
+
+  /* Заголовок "Оплата счетов" */
+  .profile-hero .profile-title {
+    font-size: clamp(1.9rem, 7.5vw, 2.6rem);
+  }
+
+  /* Табы */
+  .invoices-tabs {
+    gap: clamp(1.5rem, 6vw, 3rem);
+    padding: 0 1rem;
+  }
+
+  .invoice-tab {
+    font-size: clamp(1.15rem, 4.8vw, 1.5rem);
+    padding: clamp(0.6rem, 3vw, 0.8rem) clamp(0.9rem, 4vw, 1.2rem);
+  }
+
+  .invoice-count {
+    min-width: clamp(28px, 8vw, 32px);
+    height: clamp(28px, 8vw, 32px);
+    font-size: clamp(0.85rem, 3vw, 0.95rem);
+  }
+
+  /* Карточки */
+  .invoice-card {
+    padding: clamp(1.8rem, 6vw, 2.5rem);
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+  }
+
+  .invoice-icon {
+    font-size: clamp(2.8rem, 10vw, 3.5rem);
+  }
+
+  .invoice-info h3 {
+    font-size: clamp(1.4rem, 5.5vw, 1.7rem);
+  }
+
+  .invoice-amount {
+    font-size: clamp(1.8rem, 7vw, 2.2rem);
+  }
+
+  .invoice-status {
+    align-self: center;
+    padding: clamp(0.5rem, 3vw, 0.6rem) clamp(1rem, 5vw, 1.4rem);
+    font-size: clamp(1rem, 4vw, 1.2rem);
+  }
+
+  /* Пустое состояние */
+  .invoices-empty {
+    padding: clamp(4rem, 12vw, 6rem) 1.5rem;
+  }
+
+  .invoices-empty i {
+    font-size: clamp(3.5rem, 12vw, 4.5rem);
+  }
+
+  /* Модалка */
+  .invoice-modal-content {
+    margin: 15px;
+    border-radius: 20px;
+    max-width: 420px;
+  }
+
+  .invoice-modal-header {
+    padding: 24px 24px 0;
+  }
+
+  .invoice-modal-header h2 {
+    font-size: clamp(1.5rem, 5.5vw, 1.8rem);
+  }
+
+  .requisites-block {
+    margin: 20px;
+    padding: 20px;
+    font-size: clamp(0.95rem, 3.8vw, 1.1rem);
+    line-height: 1.7;
+  }
+
+  .copy-requisites-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  #paySection, .paid-section {
+    padding: 0 24px 32px;
+  }
+
+  .mark-paid-btn {
+    padding: 14px;
+    font-size: 1.05rem;
+  }
+}
+
+/* Для самых узких экранов */
+@media (max-width: 380px) {
+  .profile-fullscreen-container { padding-left: 0.9rem; padding-right: 0.9rem; }
+  .invoices-tabs { gap: 1rem; }
+}
+</style>
+<style>
+/* === ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ: ЗАГОЛОВОК, ТАБЫ И ОТСТУПЫ === */
+
+/* Переменные тем (обязательно, если их ещё нет) */
+:root {
+  --text-primary: #000000;
+  --text-secondary: #6e6e73;
+  --text-tertiary: #8e8e93;
+  --border: #d2d2d7;
+  --accent-line: #000000;
+}
+
+html[data-theme="dark"] {
+  --text-primary: #ffffff;
+  --text-secondary: #98989d;
+  --text-tertiary: #6e6e73;
+  --border: #38383a;
+  --accent-line: #ffffff;
+}
+
+/* Заголовок "Оплата счетов" — строго по центру и видим в тёмной теме */
+.profile-hero {
+  text-align: center !important;
+  margin-bottom: 3rem !important;
+}
+
+.profile-hero .profile-title {
+  font-size: 2.6rem !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  margin: 0 0 0.5rem 0 !important;
+}
+
+/* Обёртка для табов с заголовком сверху (чтобы табы были под заголовком по центру) */
+.profile-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center !important;
+}
+
+/* Табы — точно как в "Подписание документов" */
+.invoices-tabs {
+  display: flex !important;
+  gap: 40px !important;
+  margin: 60px auto 60px auto !important; /* большой отступ сверху и снизу — список счетов ниже */
+  padding: 0 12px 12px !important;
+  border-bottom: 1px solid var(--border) !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  width: fit-content !important;
+}
+
+.invoice-tab {
+  position: relative !important;
+  padding: 12px 12px !important; /* равномерный паддинг для идеального центрирования */
+  background: none !important;
+  border: none !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  color: var(--text-secondary) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: color 0.25s !important;
+  border-radius: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  min-width: 140px !important; /* чтобы текст + бейдж не съезжали */
+}
+
+.invoice-tab:hover {
+  color: var(--text-primary) !important;
+}
+
+.invoice-tab.active {
+  color: var(--text-primary) !important;
+}
+
+.invoice-tab.active::after {
+  content: '' !important;
+  position: absolute !important;
+  left: 12px !important;
+  right: 12px !important;
+  bottom: -1px !important;
+  height: 2.5px !important;
+  background: var(--accent-line) !important;
+  border-radius: 2px !important;
+}
+
+/* Бейдж с количеством */
+.invoice-count {
+  min-width: 22px !important;
+  height: 22px !important;
+  padding: 0 7px !important;
+  margin-left: 10px !important;
+  background: var(--text-tertiary) !important;
+  color: var(--bg, #ffffff) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  border-radius: 11px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Дополнительный отступ для списка счетов */
+.invoices-list {
+  margin-top: 2rem !important;
+  width: 100% !important;
+  max-width: 900px !important;
+}
+
+/* Адаптив */
+@media (max-width: 1023px) {
+  .profile-hero .profile-title {
+    font-size: clamp(1.9rem, 7.5vw, 2.6rem) !important;
+  }
+
+  .invoices-tabs {
+    gap: clamp(20px, 6vw, 40px) !important;
+    margin: 40px auto 50px auto !important;
+    padding: 0 1rem 12px !important;
+  }
+
+  .invoice-tab {
+    font-size: clamp(1.1rem, 4.5vw, 1.25rem) !important;
+    padding: 10px 8px !important;
+    min-width: auto !important;
+  }
+
+  .invoice-count {
+    min-width: clamp(20px, 6vw, 22px) !important;
+    height: clamp(20px, 6vw, 22px) !important;
+    font-size: clamp(0.7rem, 2.5vw, 0.75rem) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .invoices-tabs {
+    gap: 16px !important;
+  }
+}
+
+.profile-title {
+  color: #000000 !important; /* чёрный в светлой теме */
+}
+
+html[data-theme="dark"] .profile-title {
+  color: #ffffff !important; /* белый в тёмной теме */
+}
+
+/* Дополнительно: если используется .profile-hero .profile-title */
+.profile-hero .profile-title {
+  color: #000000 !important;
+}
+
+html[data-theme="dark"] .profile-hero .profile-title {
+  color: #ffffff !important;
+}
+.copy-requisites-btn {
+  position: absolute !important;
+  top: 16px !important;
+  right: 16px !important;
+  width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  background: transparent !important; /* без фона */
+  border: none !important;             /* без рамки */
+  color: #000 !important;              /* чёрная иконка в светлой теме */
+  font-size: 1.4rem !important;
+  cursor: pointer !important;
+  border-radius: 12px !important;      /* лёгкое скругление для красоты */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.25s ease !important;
+  opacity: 0.7 !important;
+}
+
+.copy-requisites-btn:hover {
+  opacity: 1 !important;
+  background: rgba(0,0,0,0.08) !important; /* лёгкий фон при наведении */
+  transform: scale(1.1) !important;
+}
+
+/* Тёмная тема — белая иконка */
+html[data-theme="dark"] .copy-requisites-btn {
+  color: #fff !important;
+  opacity: 0.7 !important;
+}
+
+html[data-theme="dark"] .copy-requisites-btn:hover {
+  background: rgba(255,255,255,0.12) !important;
+  opacity: 1 !important;
+}
+.copy-requisites-btn {
+  position: absolute !important;
+  top: 8px !important;      /* ещё выше */
+  right: 8px !important;    /* ещё правее от края */
+  width: 44px !important;
+  height: 44px !important;
+  padding: 0 !important;
+  background: rgba(0,0,0,0.06) !important; /* лёгкий фон, чтобы иконка выделялась */
+  border: none !important;
+  color: #000 !important;
+  font-size: 1.35rem !important;
+  cursor: pointer !important;
+  border-radius: 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.25s ease !important;
+  opacity: 0.85 !important;
+  z-index: 20 !important; /* точно поверх текста */
+}
+
+.copy-requisites-btn:hover {
+  opacity: 1 !important;
+  background: rgba(0,0,0,0.14) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Тёмная тема */
+html[data-theme="dark"] .copy-requisites-btn {
+  color: #fff !important;
+  background: rgba(255,255,255,0.1) !important;
+}
+
+html[data-theme="dark"] .copy-requisites-btn:hover {
+  background: rgba(255,255,255,0.2) !important;
+}
+</style>
+<style>
+/* === НОВАЯ ПРЕМИУМ МОДАЛКА ОПЛАТЫ — ЧИСТО, ДОРОГО, КАК В ДОГОВОРАХ === */
+
+/* Общий контейнер модалки */
+.invoice-modal-content {
+  background: var(--bg) !important;
+  border-radius: 24px !important;
+  max-width: 520px !important;
+  box-shadow: 0 30px 70px rgba(0,0,0,0.35) !important;
+}
+
+/* Заголовок модалки */
+.invoice-modal-header {
+  padding: 32px 32px 0 !important;
+  text-align: center !important;
+}
+
+.invoice-modal-header h2 {
+  font-size: 1.8rem !important;
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+}
+
+/* Блок реквизитов — премиум вид */
+.requisites-block {
+  background: var(--surface, rgba(0,0,0,0.03)) !important;
+  border-radius: 18px !important;
+  padding: 32px !important;
+  margin: 32px !important;
+  font-family: 'Courier New', monospace !important;
+  font-size: 1.1rem !important;
+  line-height: 1.9 !important;
+  position: relative !important;
+  white-space: pre-line !important;
+  user-select: text !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important;
+  border: 1px solid var(--border, rgba(0,0,0,0.08)) !important;
+}
+
+/* Иконка копирования */
+.copy-requisites-btn {
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+  width: 44px !important;
+  height: 44px !important;
+  background: rgba(0,0,0,0.06) !important;
+  color: var(--text-primary) !important;
+  border: none !important;
+  border-radius: 14px !important;
+  font-size: 1.35rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+}
+
+.copy-requisites-btn:hover {
+  background: rgba(0,0,0,0.14) !important;
+  transform: scale(1.1) !important;
+}
+
+/* Кнопка "Я оплатил" — большая и акцентная */
+#paySection {
+  padding: 0 40px 48px !important;
+  text-align: center !important;
+}
+
+.mark-paid-btn {
+  width: 100% !important;
+  padding: 20px !important;
+  background: var(--text-primary) !important;
+  color: var(--bg) !important;
+  border: none !important;
+  border-radius: 18px !important;
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+}
+
+.mark-paid-btn:hover {
+  opacity: 0.9 !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.25) !important;
+}
+
+.mark-paid-btn i {
+  font-size: 1.4rem !important;
+}
+
+/* Секция успеха — большая зелёная галочка */
+.paid-section {
+  padding: 60px 40px !important;
+  text-align: center !important;
+}
+
+.paid-success i {
+  font-size: 6rem !important;
+  color: #10b981 !important;
+  margin-bottom: 32px !important;
+}
+
+.paid-success strong {
+  font-size: 1.7rem !important;
+  font-weight: 700 !important;
+  display: block !important;
+  margin-bottom: 16px !important;
+  color: var(--text-primary) !important;
+}
+
+.paid-success p {
+  font-size: 1.15rem !important;
+  color: var(--text-secondary) !important;
+  line-height: 1.6 !important;
+}
+
+/* Тёмная тема */
+html[data-theme="dark"] .requisites-block {
+  background: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
+html[data-theme="dark"] .copy-requisites-btn {
+  background: rgba(255,255,255,0.1) !important;
+  color: #fff !important;
+}
+
+html[data-theme="dark"] .copy-requisites-btn:hover {
+  background: rgba(255,255,255,0.2) !important;
+}
+
+html[data-theme="dark"] .mark-paid-btn {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+
+</style>
+
+<style>
+/* === ПОЛНОЕ ПРИВЕДЕНИЕ РАЗДЕЛА "СЧЕТА" К ВИДУ "ДОГОВОРЫ И АКТЫ" (agreements.html) === */
+
+/* ТАБЫ — точно как .documents-tabs и .doc-tab */
+.invoices-tabs {
+  display: flex !important;
+  gap: 40px !important;
+  margin: 40px 0 0 !important;
+  padding: 0 12px 12px !important;
+  border-bottom: 1px solid var(--border) !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  justify-content: flex-start !important;
+}
+
+.invoices-tabs::-webkit-scrollbar { 
+  display: none !important; 
+}
+
+.invoice-tab {
+  position: relative !important;
+  padding: 12px 8px !important;
+  background: none !important;
+  border: none !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  color: var(--text-secondary) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: color 0.25s ease !important;
+}
+
+.invoice-tab:hover,
+.invoice-tab.active {
+  color: var(--text-primary) !important;
+  font-weight: 700 !important;
+}
+
+.invoice-tab.active::after {
+  content: '' !important;
+  position: absolute !important;
+  left: 8px !important;
+  right: 8px !important;
+  bottom: -1px !important;
+  height: 2.5px !important;
+  background: var(--accent-line) !important;
+  border-radius: 2px !important;
+}
+
+/* Счётчик в табах */
+.invoice-count {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 22px !important;
+  height: 22px !important;
+  padding: 0 7px !important;
+  margin-left: 10px !important;
+  background: var(--surface2) !important;
+  color: var(--text-primary) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  border-radius: 11px !important;
+}
+
+/* СПИСОК И КАРТОЧКИ — точно как .documents-list и .document-card */
+.invoices-list {
+  margin-top: 48px !important;
+  padding: 0 16px !important;
+}
+
+.invoice-card {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 18px !important;
+  padding: 24px !important;
+  margin-bottom: 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: pointer !important;
+  transition: all 0.25s ease !important;
+  gap: 28px !important;
+}
+
+.invoice-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12) !important;
+  border-color: transparent !important;
+}
+
+.invoice-icon {
+  font-size: 2.8rem !important;
+  color: var(--text-tertiary) !important;
+  margin-right: 0 !important;
+  opacity: 0.75 !important;
+  flex-shrink: 0 !important;
+}
+
+.invoice-info h3 {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  font-size: 1.3rem !important;
+  margin: 0 0 8px 0 !important;
+}
+
+.invoice-amount {
+  color: var(--text-primary) !important;
+  font-size: 1.8rem !important;
+  font-weight: 700 !important;
+  margin: 8px 0 !important;
+}
+
+.invoice-date {
+  color: var(--text-tertiary) !important;
+  font-size: 0.95rem !important;
+}
+
+.invoice-status {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  font-size: 1.05rem !important;
+}
+
+/* Пустое состояние — точно как в agreements.html */
+.invoices-empty {
+  text-align: center !important;
+  padding: 100px 20px !important;
+  color: var(--text-secondary) !important;
+}
+
+.invoices-empty i {
+  font-size: 4.5rem !important;
+  margin-bottom: 24px !important;
+  opacity: 0.35 !important;
+}
+
+.invoices-empty p {
+  font-size: 1.2rem !important;
+  margin: 0 !important;
+}
+
+/* Оплаченные счета — тот же стиль */
+#paidInvoices .invoice-card {
+  background: var(--surface) !important;
+}
+
+/* Мобильная адаптация (как в agreements.html) */
+@media (max-width: 768px) {
+  .invoices-tabs { 
+    gap: 24px !important; 
+  }
+  .invoice-tab { 
+    font-size: 1.1rem !important; 
+    padding: 10px 6px !important; 
+  }
+  .invoice-card { 
+    padding: 20px !important; 
+    flex-direction: column !important; 
+    gap: 16px !important; 
+    text-align: center !important;
+  }
+  .invoice-icon {
+    margin-right: 0 !important;
+  }
+}
+.invoice-count {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 22px !important;
+  height: 22px !important;
+  padding: 0 7px !important;
+  margin-left: 10px !important;
+  
+  /* Основные цвета — идентичны .doc-count из agreements.css */
+  background: var(--surface2) !important;   /* #ebebeb в light, #2c2c2e в dark */
+  color: var(--text-primary) !important;    /* #000 в light, #fff в dark */
+  
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  border-radius: 11px !important;
+  
+  /* Лёгкая тень для объёма (как в оригинале) */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
+}
+
+/* Активный таб — счётчик слегка прозрачный (как в agreements) */
+.invoice-tab.active .invoice-count {
+  background: rgba(0,0,0,0.12) !important;   /* лёгкий тёмный оверлей в light */
+  color: var(--text-primary) !important;
+}
+
+/* Тёмная тема — точное совпадение */
+html[data-theme="dark"] .invoice-count {
+  background: var(--surface2) !important;   /* #2c2c2e */
+  color: #ffffff !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3) !important;
+}
+
+html[data-theme="dark"] .invoice-tab.active .invoice-count {
+  background: rgba(255,255,255,0.15) !important;   /* полупрозрачный белый в dark */
+  color: #ffffff !important;
+}
+
+/* Дополнительно: hover на таб не ломает счётчик */
+.invoice-tab:hover .invoice-count {
+  background: var(--surface2) !important;
+}
+</style>
+</head>
+<body>
+
+
+  <div class="loader" id="pageLoader"></div>
+
+  <main class="profile-main-content">
+  <div class="profile-container">
+    <h1 class="profile-title">Оплата счетов</h1>
+    
+    <div class="invoices-tabs">
+      <button class="invoice-tab active" data-tab="pending">На оплату <span class="invoice-count" id="countPending">0</span></button>
+      <button class="invoice-tab" data-tab="paid">Оплаченные <span class="invoice-count" id="countPaid">0</span></button>
+    </div>
+
+    <!-- Счета на оплату -->
+    <div id="pendingInvoices" class="invoices-list">
+      <div class="invoices-empty">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <p>Нет счетов на оплату</p>
+      </div>
+    </div>
+
+    <!-- Оплаченные счета -->
+    <div id="paidInvoices" class="invoices-list" style="display:none;">
+      <div class="invoices-empty">
+        <i class="fas fa-check-circle"></i>
+        <p>Оплаченных счетов пока нет</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+
+<style>
+    /* ВИЗУАЛЬНАЯ КОРРЕКЦИЯ ИКОНКИ ДОКУМЕНТОВ */
+.profile-nav-icons .icon-documents {
+  margin-left: 6px !important;
+  transform: translateX(2px);   /* дополнительная тонкая подстройка */
+}
+    /* === НАВИГАЦИЯ ПО РАЗДЕЛАМ ПРОФИЛЯ — С fa-fw ВСЁ РОВНО === */
+.profile-nav-icons {
+  position: fixed;
+  left: 50px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  z-index: 10;
+  transition: all 0.4s ease;
+  justify-content: center;
+  height: 100vh;
+  padding: 20px 0;
+  box-sizing: border-box;
+}
+
+.profile-nav-icons a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text-secondary);
+  transition: all 0.35s ease;
+  width: 80px;                  /* можно оставить или уменьшить — fa-fw всё выровняет */
+}
+
+.profile-nav-icons i {
+  font-size: 2.2rem;
+  transition: all 0.35s ease;
+  opacity: 0.7;
+}
+
+.profile-nav-icons span {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.35s ease;
+  white-space: nowrap;
+}
+
+/* Hover и активное */
+.profile-nav-icons a:hover {
+  color: var(--text-primary);
+}
+
+.profile-nav-icons a:hover i {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.profile-nav-icons a:hover span {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.profile-nav-icons a.active {
+  color: var(--accent-line);
+}
+
+.profile-nav-icons a.active i {
+  opacity: 1;
+  transform: scale(1.2);
+  text-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.profile-nav-icons a.active span {
+  opacity: 1;
+  transform: translateY(0);
+  font-weight: 800;
+}
+
+/* Светлая тема */
+[data-theme="light"] .profile-nav-icons a.active {
+  color: #000000 !important;
+}
+
+/* Сдвиг контента */
+.profile-main-content.with-icons-nav {
+  margin-left: 160px;
+  transition: margin-left 0.4s ease;
+}
+
+/* Анимация появления */
+.profile-nav-icons {
+  opacity: 0;
+  animation: fadeInLeft 0.8s ease forwards 0.4s;
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+/* === МОБИЛЬНАЯ ВЕРСИЯ (≤1026px): горизонтально сверху === */
+@media (max-width: 1026px) {
+  .profile-nav-icons {
+    position: static;
+    transform: none;
+    flex-direction: row;
+    justify-content: center;
+    gap: 40px;
+    height: auto;
+    padding: 32px 20px 20px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .profile-nav-icons a {
+    width: auto;
+    min-width: 70px;
+  }
+
+  .profile-nav-icons i {
+    font-size: 2rem;
+    opacity: 0.8;
+  }
+
+  .profile-nav-icons span {
+    opacity: 1;
+    transform: translateY(0);
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .profile-nav-icons a:hover i {
+    transform: scale(1.1);
+  }
+
+  .profile-nav-icons a.active i {
+    transform: scale(1.15);
+  }
+
+  .profile-main-content.with-icons-nav {
+    margin-left: 0 !important;
+    margin-top: 90px;
+  }
+
+  .profile-nav-icons {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+@media (max-width: 1026px) {
+  .profile-nav-icons::-webkit-scrollbar {
+    display: none;
+  }
+  .profile-nav-icons {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+/* === МОБИЛЬНАЯ АДАПТАЦИЯ (≤1026px): горизонтально сверху, без обрезки краёв === */
+@media (max-width: 1026px) {
+  .profile-nav-icons {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    flex-direction: row;
+    justify-content: space-between;            /* главное исправление — равномерно по ширине */
+    align-items: center;
+    gap: clamp(8px, 2vw, 20px);                 /* маленький gap, чтобы не выезжало */
+    padding: clamp(20px, 6vw, 32px) clamp(32px, 10vw, 60px) clamp(16px, 4vw, 20px); /* большие боковые отступы */
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;                          /* скрываем возможный переполнение */
+    -webkit-overflow-scrolling: touch;
+    z-index: 15;
+    width: 100%;
+    box-sizing: border-box;
+    flex-wrap: nowrap;
+  }
+
+  .profile-nav-icons a {
+    width: auto;
+    min-width: clamp(45px, 12vw, 70px);        /* сильнее сжимаем */
+    gap: clamp(3px, 1vw, 6px);
+    flex: 1;                                   /* равномерно распределяем пространство */
+    max-width: clamp(80px, 20vw, 100px);
+  }
+
+  .profile-nav-icons i {
+    font-size: clamp(1.4rem, 5.5vw, 1.9rem);
+    opacity: 0.9;
+  }
+
+  .profile-nav-icons span {
+    opacity: 1;
+    transform: none;
+    font-size: clamp(0.58rem, 2.2vw, 0.76rem);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* Hover и активное */
+  .profile-nav-icons a:hover i,
+  .profile-nav-icons a.active i {
+    transform: scale(1.14);
+  }
+
+  /* Отступ контента */
+  .profile-main-content.with-icons-nav {
+    margin-left: 0 !important;
+    margin-top: clamp(80px, 22vw, 100px);
+  }
+
+  .profile-nav-icons {
+    opacity: 1;
+    animation: none;
+  }
+
+  /* Скрываем скроллбар */
+  .profile-nav-icons {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .profile-nav-icons::-webkit-scrollbar {
+    display: none;
+  }
+}
+/* Мягкий и нейтральный вид в светлой теме + исправление дублирования текста */
+[data-theme="light"] .profile-nav-icons a {
+  color: #666666 !important;
+}
+
+[data-theme="light"] .profile-nav-icons a:hover {
+  color: #444444 !important;
+}
+
+[data-theme="light"] .profile-nav-icons a.active {
+  color: #555555 !important;
+}
+
+[data-theme="light"] .profile-nav-icons a i {
+  opacity: 0.7 !important;
+}
+
+[data-theme="light"] .profile-nav-icons a:hover i,
+[data-theme="light"] .profile-nav-icons a.active i {
+  opacity: 0.9 !important;
+  transform: scale(1.1) !important;
+  text-shadow: none !important;
+}
+
+/* Текст: базово скрыт, появляется только при hover/active */
+[data-theme="light"] .profile-nav-icons span {
+  color: inherit !important;
+  font-weight: 500 !important;
+  opacity: 0 !important;               /* базово скрыт */
+  transform: translateY(8px) !important;
+  transition: opacity 0.35s ease, transform 0.35s ease !important;
+}
+
+[data-theme="light"] .profile-nav-icons a:hover span,
+[data-theme="light"] .profile-nav-icons a.active span {
+  opacity: 1 !important;               /* появляется только один раз */
+  transform: translateY(0) !important;
+  font-weight: 600 !important;
+}
+
+/* Мягкий и нейтральный вид навигации в тёмной теме — без яркого белого и агрессии */
+[data-theme="dark"] .profile-nav-icons a {
+  color: #aaaaaa !important;   /* спокойный серый для всех ссылок */
+}
+
+[data-theme="dark"] .profile-nav-icons a:hover {
+  color: #cccccc !important;   /* чуть ярче на ховер */
+}
+
+[data-theme="dark"] .profile-nav-icons a.active {
+  color: #bbbbbb !important;   /* активный — светло-серый, не ярко-белый */
+}
+
+[data-theme="dark"] .profile-nav-icons a i {
+  opacity: 0.7 !important;     /* иконки неактивные — приглушённые */
+}
+
+[data-theme="dark"] .profile-nav-icons a:hover i,
+[data-theme="dark"] .profile-nav-icons a.active i {
+  opacity: 0.9 !important;     /* активные/ховер — чуть ярче, но не 1 */
+  transform: scale(1.1) !important;  /* минимальный масштаб */
+  text-shadow: none !important;      /* без тени */
+}
+
+/* Текст: базово скрыт, появляется мягко */
+[data-theme="dark"] .profile-nav-icons span {
+  color: inherit !important;
+  font-weight: 500 !important;       /* нормальный вес */
+  opacity: 0 !important;             /* базово скрыт */
+  transform: translateY(8px) !important;
+  transition: opacity 0.35s ease, transform 0.35s ease !important;
+}
+
+[data-theme="dark"] .profile-nav-icons a:hover span,
+[data-theme="dark"] .profile-nav-icons a.active span {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  font-weight: 600 !important;       /* лёгкая жирность для читаемости */
+}
+html[data-theme="dark"] .invoice-modal-content {
+  background: #0f0f0f !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: #ffffff !important;
+}
+
+/* Заголовок и весь текст внутри модалки */
+html[data-theme="dark"] .invoice-modal-header h2,
+html[data-theme="dark"] .requisites-block,
+html[data-theme="dark"] .mark-paid-btn,
+html[data-theme="dark"] .paid-section strong,
+html[data-theme="dark"] .paid-section p {
+  color: #ffffff !important;
+}
+
+/* Крестик закрытия — был почти чёрный */
+html[data-theme="dark"] .invoice-close-btn {
+  background: rgba(255,255,255,0.12) !important;
+  color: #ffffff !important;
+}
+html[data-theme="dark"] .invoice-close-btn:hover {
+  background: rgba(255,255,255,0.22) !important;
+  color: #ffffff !important;
+}
+
+/* Блок реквизитов */
+html[data-theme="dark"] .requisites-block {
+  background: rgba(255,255,255,0.08) !important;
+  color: #e0e0e0 !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+/* Кнопка копирования реквизитов */
+html[data-theme="dark"] .copy-requisites-btn {
+  background: rgba(255,255,255,0.12) !important;
+  color: #ffffff !important;
+}
+html[data-theme="dark"] .copy-requisites-btn:hover {
+  background: rgba(255,255,255,0.25) !important;
+  transform: scale(1.1);
+}
+
+/* Кнопка "Я оплатил" */
+html[data-theme="dark"] .mark-paid-btn {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+html[data-theme="dark"] .mark-paid-btn:hover {
+  background: #e0e0e0 !important;
+}
+
+/* Успешное состояние */
+html[data-theme="dark"] .paid-section i {
+  color: #10b981 !important;
+}
+
+</style>
+<!-- ЛЕВАЯ ВЕРТИКАЛЬНАЯ СЕТКА ИКОНОК ДЛЯ НАВИГАЦИИ ПО ПРОФИЛЮ -->
+<nav class="profile-nav-icons">
+  <a href="/profile" class="">
+    <i class="fas fa-user fa-fw"></i>
+    <span>Профиль</span>
+  </a>
+  <a href="/profile/orders" class="">
+    <i class="fas fa-receipt fa-fw"></i>
+    <span>История заказов</span>
+  </a>
+  <a href="/profile/bills" class="active">
+    <i class="fas fa-file-invoice-dollar fa-fw"></i>
+    <span>Счета</span>
+  </a>
+  <a href="/profile/agreements" class="">
+    <i class="fas fa-file-signature fa-fw icon-documents"></i>  
+    <span>Договоры и акты</span>
+  </a>
+  <a href="https://t.me/+89062173869" class="">
+    <i class="fas fa-headset fa-fw"></i>
+    <span>Поддержка</span>
+  </a>
+</nav>
+<!-- ШТОРКА НАВИГАЦИИ ПО РАЗДЕЛАМ ПРОФИЛЯ НА МОБИЛЬНЫХ -->
+<div class="profile-mobile-sheet" id="profileMobileSheet">
+  <div class="sheet-handle"></div>
+
+  
+  <nav class="profile-nav-icons mobile">
+    <a href="/profile" class="">
+      <i class="fas fa-user fa-fw"></i>
+      <span>Профиль</span>
+    </a>
+    <a href="/profile/orders" class="">
+      <i class="fas fa-receipt fa-fw"></i>
+      <span>История заказов</span>
+    </a>
+    <a href="/profile/bills" class="active">
+      <i class="fas fa-file-invoice-dollar fa-fw"></i>
+      <span>Счета</span>
+    </a>
+    <a href="/profile/agreements" class="">
+      <i class="fas fa-file-signature fa-fw icon-documents"></i>
+      <span>Договоры и акты</span>
+    </a>
+    <a href="https://t.me/+89062173869" class="">
+      <i class="fas fa-headset fa-fw"></i>
+      <span>Поддержка</span>
+    </a>
+  </nav>
+</div>
+
+<!-- ПРЕМИУМ МОДАЛКА ОПЛАТЫ СЧЁТА -->
+<div id="invoiceModal" class="invoice-modal">
+  <div class="invoice-modal-content">
+    <div class="invoice-modal-header">
+      <h2 id="modalInvoiceTitle">Счёт №___</h2>
+      <button class="invoice-close-btn">×</button>
+    </div>
+
+    <div class="invoice-modal-body">
+      <!-- Реквизиты -->
+      <div class="requisites-block" id="requisitesText">
+        Загрузка реквизитов...
+        <button class="copy-requisites-btn" aria-label="Скопировать реквизиты">
+          <i class="fas fa-copy"></i>
+        </button>
+      </div>
+
+      <!-- Кнопка "Я оплатил" -->
+      <div id="paySection">
+        <button id="markPaidButton" class="mark-paid-btn">
+          <i class="fas fa-check"></i>
+          Я оплатил счёт
+        </button>
+      </div>
+
+      <!-- Успех после нажатия -->
+      <div id="paidSection" class="paid-section" style="display:none;">
+        <div class="paid-success">
+          <i class="fas fa-check-circle"></i>
+          <strong>Спасибо! Счёт помечен как оплаченный</strong>
+          <p>Мы проверим поступление средств<br>в течение 1–3 рабочих дней</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ВЕРХНИЙ ХЕДЕР — ТОЛЬКО НА ДЕСКТОПЕ -->
+<header class="main-header desktop-only">
+  <a href="/" class="logo">
+    <img src="/static/assets/logo.png" alt="Piligrim" class="logo-img">
+  </a>
+
+  <nav class="desktop-nav">
+    <a href="/" class="nav-link">Главная</a>
+    <a href="/goods" class="nav-link">Товары</a>
+    <a href="/services" class="nav-link">Услуги</a>
+    <a href="/news" class="nav-link">Новости</a>
+    <a href="/about_company" class="nav-link">О компании</a> 
+    <a href="/contacts" class="nav-link">Контакты</a>
+  </nav>
+
+  <div class="header-right">
+    <div class="header-icons">
+      <div class="search-wrapper">
+        <div class="search-container">
+          <div class="search-icon"><i class="fas fa-search"></i></div>
+          <input type="text" class="search-input" id="searchInput" placeholder="Поиск...">
+          <button id="searchClear" class="search-clear">×</button>
+        </div>
+        <div id="autocompleteList" class="autocomplete-list"></div>
+      </div>
+
+      <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
+
+      <div class="cart-wrapper">
+        <button class="icon-btn" id="cartBtn">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <div id="miniCartDropdown" class="mini-cart-dropdown">
+          <div class="mini-cart-header"><div class="mini-cart-title">Корзина</div></div>
+          <div class="mini-cart-items" id="miniCartItems">
+            <div class="mini-cart-empty">Корзина пуста</div>
+          </div>
+          <div class="mini-cart-footer">
+            <div class="mini-cart-total" id="miniCartTotal">Итого: 0.00 ₽</div>
+            <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
+    </div>
+  </div>
+</header>
+
+
+<!-- ОБЯЗАТЕЛЬНО ДОБАВЬ ЭТОТ БЛОК — ДАЖЕ ЕСЛИ ОН НЕ ИСПОЛЬЗУЕТСЯ НА ДЕСКТОПЕ! -->
+<div class="custom-alert" id="feedbackModal">
+  <div class="alert-content">
+    <button class="alert-close">×</button>
+    <div class="alert-icon"><i class="fas fa-envelope-open-text"></i></div>
+    <div class="alert-text">
+      <strong>Обратная связь</strong>
+      <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
+    </div>
+    <form class="contact-form" novalidate>
+      <input type="text" placeholder="Ваше имя" name="name" required />
+      <div class="phone-field-wrapper">
+        <input type="tel" placeholder="+7 (___) ___-__-__" name="phone" required />
+      </div>
+      <input type="email" placeholder="Email" name="email" required />
+      <textarea placeholder="Ваше сообщение" name="message" required></textarea>
+      <button type="submit" class="alert-login-btn">
+        <span class="btn-text">Отправить</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- МОДАЛКА EMAIL — APPLE STYLE 2025 -->
+<div id="emailModal">
+  <div class="email-modal-card">
+    <div class="email-modal-header">
+      <div class="email-modal-icon">
+        <i class="far fa-envelope"></i>
+      </div>
+      <button class="email-modal-close" id="closeEmailModal" aria-label="Закрыть">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="email-modal-body">
+      <h2>Получайте акции и новости</h2>
+      <p>Мы будем присылать только самое важное — никаких спамов, обещаем</p>
+
+      <form id="emailForm" class="email-modal-form">
+        <div class="email-input-wrapper">
+          <input
+            type="email"
+            id="emailInput"
+            placeholder="you@company.com"
+            required
+            autocomplete="email"
+          />
+          <div class="email-input-focus"></div>
+        </div>
+
+        <button type="submit" class="email-submit-btn">
+          <span class="btn-text">Подписаться</span>
+          <span class="btn-loading" style="display:none;">
+            <i class="fas fa-spinner fa-spin"></i>
+          </span>
+        </button>
+      </form>
+
+      <div class="email-modal-footer">
+        <small>Можно отписаться в любой момент</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- БЛОКИРОВКА НЕАВТОРИЗОВАННОГО ДОСТУПА К ЛИЧНОМУ КАБИНЕТУ -->
+<div id="authRequiredOverlay" class="auth-required-overlay">
+  <div class="auth-required-modal">
+    <div class="auth-required-content">
+      <i class="fas fa-user-lock auth-required-icon"></i>
+      <h2>Требуется авторизация</h2>
+      <p>Для доступа к личному кабинету необходимо войти в аккаунт</p>
+      <button id="loginFromOverlayBtn" class="auth-required-btn">
+        <i class="fas fa-sign-in-alt"></i> Войти по номеру телефона
+      </button>
+      <div class="auth-required-footer">
+  <small>
+    Проблемы со входом? 
+    <a href="https://t.me/piligrim_support" 
+       target="_blank" 
+       rel="noopener" 
+       class="support-link">
+      Обратитесь в поддержку
+    </a>
+  </small>
+</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- НИЖНЯЯ ПАНЕЛЬ — ТОЛЬКО НА МОБИЛЬНЫХ -->
+<nav class="mobile-bottom-bar">
+  <button class="bottom-bar-btn" id="mobileSearchBtn" data-label="Поиск">
+    <i class="fas fa-search"></i>
+  </button>
+
+  <button class="bottom-bar-btn" id="mobileAuthBtn" data-label="Вход">
+    <i class="fas fa-user"></i>
+  </button>
+
+    <button class="bottom-bar-btn active" id="openSidebarMenu" data-label="Меню">
+  <i class="fas fa-bars"></i>
+
+</button>
+
+  <button class="bottom-bar-btn" id="mobileCartBtn" data-label="Корзина">
+    <i class="fas fa-shopping-bag"></i>
+    <span class="cart-count" id="mobileCartCount">0</span>
+  </button>
+
+  <button class="bottom-bar-btn" id="feedbackBtnMobile" data-label="Поддержка">
+    <i class="fas fa-envelope"></i>
+  </button>
+</nav>
+<!-- ПОЛНОЭКРАННАЯ ШТОРКА ПОИСКА ДЛЯ НОУТБУКОВ/ПЛАНШЕТОВ -->
+<div class="tablet-search-full" id="tabletSearchSheet">
+  <div class="tablet-search-backdrop"></div>
+  <div class="tablet-search-header-full">
+    <button class="tablet-search-back" id="closeTabletSearch">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <div class="tablet-search-input-wrapper-full">
+      <i class="fas fa-search"></i>
+      <input type="text" id="tabletSearchInput" placeholder="Поиск по каталогу..." autocomplete="off">
+      <button class="tablet-search-clear" id="tabletSearchClear">×</button>
+    </div>
+  </div>
+  <div class="tablet-search-empty" id="tabletEmptyState">
+    <i class="fas fa-search"></i>
+    <p>Начните вводить запрос...</p>
+  </div>
+  <div id="tabletAutocompleteList" class="tablet-autocomplete-list-full"></div>
+</div>
+
+<div class="mobile-search-sheet" id="mobileSearchSheet">
+  <!-- Хедер с ручкой и строкой поиска -->
+  <div class="mobile-search-header">
+    <!-- Ручка сверху (как в iOS) -->
+    <div class="sheet-handle"></div>
+
+    <!-- Кнопка назад + строка поиска -->
+    <button class="mobile-search-back" id="closeMobileSearchTop">←</button>
+    <div class="mobile-search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input 
+        type="text" 
+        class="mobile-search-input" 
+        id="mobileSearchInput" 
+        placeholder="Поиск по каталогу..." 
+        autocomplete="off"
+      >
+      <button class="mobile-search-clear" id="mobileSearchClear">×</button>
+    </div>
+  </div>
+
+  <!-- Контент: либо пустое состояние, либо результаты -->
+  <div class="mobile-search-results-content" id="mobileSearchResults">
+    
+    <!-- ПУСТОЕ СОСТОЯНИЕ — "Введите название товара" -->
+    <div class="search-empty-state" id="mobileEmptyState">
+      <div class="empty-icon">
+        <i class="fas fa-search"></i>
+      </div>
+      <div class="empty-title">Введите название товара</div>
+      <div class="empty-subtitle">
+        Например: iPhone 16, кроссовки Nike, кофеварка
+      </div>
+    </div>
+
+    <!-- Сюда будут вставляться результаты поиска -->
+    <div id="mobileAutocompleteList" class="mobile-autocomplete-list"></div>
+  </div>
+</div>
+
+<!-- МОБИЛЬНАЯ ШТОРКА КОРЗИНЫ -->
+<div class="mobile-cart-sheet" id="mobileCartSheet">
+  <div class="sheet-backdrop" id="mobileCartBackdrop"></div>
+  <div class="sheet-container">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="cart-header-icon">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="cart-count" id="mobileCartHeaderCount">0</span>
+      </div>
+      <h3>Корзина</h3>
+      <button class="sheet-close-btn" id="mobileCloseCart">×</button>
+    </div>
+    <div class="sheet-items" id="mobileMiniCartItems">
+      <div style="padding:3rem 1.5rem;text-align:center;color:#888;">
+        <i class="fas fa-shopping-bag" style="font-size:3rem;margin-bottom:1rem;opacity:0.3;"></i>
+        <p>Корзина пуста</p>
+      </div>
+    </div>
+    <div class="sheet-total">
+      Итого: <strong id="mobileMiniCartTotal">0 ₽</strong>
+    </div>
+    <div class="sheet-footer">
+      <button class="checkout-btn-full" id="mobileGoToCartBtn">
+        Перейти к оформлению
+      </button>
+    </div>
+  </div>
+</div>
+<!-- Алерт «Авторизуйтесь» перед отправкой сообщения -->
+<div class="custom-alert" id="authAlert">
+  <div class="alert-content">
+    <button class="alert-close">×</button>
+    <div class="alert-icon">
+      <i class="fas fa-user-lock"></i>
+    </div>
+    <div class="alert-text">
+      <strong>Авторизуйтесь</strong>
+      <span>Для отправки сообщения нужно войти в аккаунт</span>
+    </div>
+    <button class="alert-login-btn" id="authBtnFeedback">Войти</button>
+  </div>
+</div>
+  <!-- МОДАЛКА АВТОРИЗАЦИИ  -->
+<div id="authModal" class="auth-modal">
+  <div class="auth-modal-content">
+    <button class="close-modal" id="closeAuthModal">×</button>
+    <h2 class="auth-title">Вход по номеру<br><span class="mobile-only">телефона</span></h2>
+
+    <!-- ШАГ 1 — ВВОД НОМЕРА -->
+    <div id="stepPhone" class="auth-step">
+      <div class="country-selector">
+        <div class="selected-country" id="selectedCountry">
+          <span class="flag">RU</span>
+          <span class="code">+7</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="country-dropdown" id="countryDropdown">
+          <div class="country-item" data-code="+7" data-flag="RU">Россия +7</div>
+          <div class="country-item" data-code="+1" data-flag="US">USA +1</div>
+          <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
+        </div>
+      </div>
+      
+      <input type="text" 
+       name="honeypot" 
+       id="honeypot" 
+       tabindex="-1" 
+       autocomplete="off" 
+       style="position:absolute; left:-9999px; opacity:0; height:0; width:0; border:none; padding:0; margin:0;"
+       aria-hidden="true">
+
+<input type="hidden" name="fp_token" id="fp_token" value="">
+      <input type="tel" id="phoneInput" placeholder="(999) 999 99 99" class="auth-input">
+
+      <label class="checkbox-label required">
+        <input type="checkbox" id="privacyCheck">
+        <span class="custom-checkbox"></span>
+        Согласен с <a href="/policy" target="_blank" class="privacy-link">политикой конфиденциальности</a>
+      </label>
+
+      <label class="checkbox-label">
+        <input type="checkbox" id="subscribeCheck" checked>
+        <span class="custom-checkbox"></span>
+        Получать SMS с акциями и уведомлениями
+      </label>
+
+      <button id="sendCodeBtn" class="auth-btn" disabled>Получить код</button>
+    </div>
+
+    <!-- ШАГ 2 — ВВОД КОДА -->
+    <div id="stepCode" class="auth-step" style="display:none;">
+      <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
+      <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
+      <button id="verifyCodeBtn" class="auth-btn">Войти</button>
+      <button id="resendCode" class="auth-link">Отправить повторно</button>
+    </div>
+
+    <!-- ШАГ 3 — УСПЕШНЫЙ ВХОД -->
+    <div id="stepSuccess" class="auth-step" style="display:none;">
+      <i class="fas fa-check-circle success-icon"></i>
+      <h3>Добро пожаловаться!</h3>
+      <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
+      <button id="closeSuccess" class="auth-btn">Продолжить</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОБИЛЬНАЯ ШТОРКА ОБРАТНОЙ СВЯЗИ -->
+ <div class="mobile-feedback-top" id="mobileFeedbackTop"></div>
+<div class="mobile-feedback-sheet" id="mobileFeedbackSheet">
+
+
+  <div class="sheet-header">
+    <button class="sheet-back-btn" id="closeMobileFeedback">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <div class="sheet-title-wrapper">
+      <i class="fas fa-envelope-open-text"></i>
+      <h2>Обратная связь</h2>
+    </div>
+  </div>
+  <div class="sheet-handle"></div>
+  
+  <form class="contact-form sheet-form" novalidate id="contactFormMobile">
+    <div class="sheet-field">
+      <label>Ваше имя</label>
+      <input type="text" class="name-input" name="name" placeholder="Ваше имя..." required autocomplete="name" />
+    </div>
+    <div class="sheet-field phone-field-wrapper">
+      <label>Телефон <span class="required">*</span></label>
+      <input type="tel" class="phone-input" name="phone" placeholder="+7 (___) ___-__-__" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+    </div>
+    <div class="sheet-field">
+      <label>Email <span class="required">*</span></label>
+      <input type="email" name="email" placeholder="your@email.com" required autocomplete="email" />
+    </div>
+    <div class="sheet-field">
+      <label>Сообщение <span class="required">*</span></label>
+      <textarea name="message" placeholder="Опишите ваш вопрос или предложение..." rows="4" required></textarea>
+    </div>
+    <button type="submit" class="sheet-submit-btn" id="submitBtnMobile">
+      <span class="btn-text">Отправить заявку</span>
+      <span class="btn-loading"><i class="fas fa-spinner fa-spin"></i></span>
+      <span class="btn-cooldown" style="display:none;"><span class="timer">30</span>с</span>
+    </button>
+  </form>
+</div>
+
+<!-- ШТОРКА СЛЕВА — МЕНЮ -->
+<div class="mobile-sidebar" id="mobileSidebar">
+  <div class="sidebar-top">
+    <button class="sidebar-close" id="closeSidebar">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <img src="/static/assets/logo.png" alt="Piligrim" class="sidebar-logo-big">
+  </div>
+
+  <nav class="sidebar-nav-modern">
+    <div class="nav-divider top"></div>
+    <a href="/" class="sidebar-link-modern">Главная</a>
+    <a href="/goods" class="sidebar-link-modern">Товары</a>
+    <a href="/services" class="sidebar-link-modern">Услуги</a>
+    <a href="/news" class="sidebar-link-modern">Новости</a>
+    <a href="/about_company" class="sidebar-link-modern active">О компании</a>
+    <a href="/contacts" class="sidebar-link-modern">Контакты</a>
+    <a href="/profile" class="sidebar-link-modern">Личный кабинет</a>
+    <div class="nav-divider bottom"></div>
+  </nav>
+
+  <div class="sidebar-bottom-theme">
+    <div class="sidebar-theme-toggle">
+      <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+      <label for="theme-toggle" class="theme-toggle-label">
+        <i class="fas fa-moon"></i>
+        <i class="fas fa-sun"></i>
+      </label>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- КАРТОЧКА ТОВАРА  -->
+<div class="product-modal" id="productModal">
+  <div class="product-content">
+    <!-- Крестик закрытия -->
+    <button class="close-modal" onclick="closeProductModal()">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M6 6L22 22M6 22L22 6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <!-- Основной контейнер -->
+    <div class="product-main">
+      <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
+
+      <div class="product-info">
+        <h3 id="productTitle" class="product-title">Загрузка...</h3>
+
+        <div id="productStockInfo" 
+     style="margin: 12px 0 8px; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            line-height: 1.4;">
+</div>
+
+        <!-- Рейтинг и отзывы -->
+        <div class="product-rating">
+          <div class="stars"></div>
+          <span id="productReviewsCount" class="reviews-count">—</span>
+        </div>
+
+        <div id="productPrice" class="product-price">—</div>
+
+        <div id="productDescription" class="product-description">Загрузка описания...</div>
+
+        <!-- Кнопка "В корзину" -->
+        <button id="addToCartModal" class="add-to-cart-btn">
+          <i class="fas fa-shopping-cart"></i> В корзину
+        </button>
+
+        <!-- ОТЗЫВЫ — ТОЧНО КАК В НОВОСТЯХ -->
+        <div class="product-reviews">
+          <h4 class="reviews-title">Отзывы покупателей</h4>
+          <div class="reviews-list" id="productReviewsList">
+            <div style="text-align:center;padding:3rem;color:#888;">
+              <i class="far fa-star" style="font-size:3rem;margin-bottom:1rem;display:block;opacity:0.6;"></i>
+              <p>Отзывов пока нет</p>
+              <small style="opacity:0.7;">Будьте первым!</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- === AI АССИСТЕНТ — ИКОНКА И МОДАЛКА (из zaza.html, не в ai.css) === -->
+<div id="ai-assistant">
+  <svg viewBox="0 0 100 100" class="ai-robot" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f5d78a"/>
+        <stop offset="100%" stop-color="#d4af37"/>
+      </linearGradient>
+      <linearGradient id="suitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#2d2d2d"/>
+        <stop offset="100%" stop-color="#1a1a1a"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Голова робота (золотая) -->
+    <circle cx="50" cy="35" r="18" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+
+    <!-- Глаза -->
+    <circle cx="44" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="56" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="45.5" cy="31" r="1.8" fill="#fff"/>
+    <circle cx="57.5" cy="31" r="1.8" fill="#fff"/>
+
+    <!-- Светящиеся акценты в глазах -->
+    <circle cx="46" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+    <circle cx="58" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+
+    <!-- Туловище — пиджак -->
+    <path d="M30 52 L28 98 L72 98 L70 52 
+             Q62 58 50 58 Q38 58 30 52 Z" 
+          fill="url(#suitGrad)" stroke="#000" stroke-width="2"/>
+
+    <!-- Лацканы пиджака -->
+    <path d="M50 52 L42 64 L42 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+    <path d="M50 52 L58 64 L58 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+
+    <!-- Галстук -->
+    <path d="M50 58 L46 72 L50 78 L54 72 Z" fill="#8b1e1e"/>
+    <polygon points="46,72 50,78 54,72" fill="#5c1212"/>
+
+    <!-- Пуговицы пиджака -->
+    <circle cx="50" cy="70" r="2.5" fill="#333"/>
+    <circle cx="50" cy="78" r="2.5" fill="#333"/>
+    <circle cx="50" cy="86" r="2.5" fill="#333"/>
+
+    <!-- Руки -->
+    <rect x="24" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+    <rect x="64" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+
+    <!-- Планшет с Конституцией в левой руке -->
+    <g transform="translate(12, 68)">
+      <rect x="0" y="0" width="28" height="36" rx="4" fill="#fff" stroke="#111" stroke-width="2"/>
+      <rect x="2" y="2" width="24" height="30" rx="2" fill="#f0f0f0"/>
+      <text x="14" y="11" font-family="Arial, sans-serif" font-size="5.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+      <line x1="4" y1="15" x2="24" y2="15" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="19" x2="24" y2="19" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="23" x2="22" y2="23" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="27" x2="20" y2="27" stroke="#333" stroke-width="0.8"/>
+    </g>
+
+    <!-- Блеск на голове -->
+    <path d="M42 24 Q46 20 50 24" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.6"/>
+  </svg>
+</div>
+
+<!-- === AI ЧАТ МОДАЛЬНЫЙ (ТОТ ЖЕ СТИЛЬ) === -->
+<div id="ai-chat" class="ai-chat-modal">
+  <div class="ai-chat-header">
+    <div class="ai-chat-title">
+      <svg width="32" height="32" viewBox="0 0 100 100" style="margin-right:10px;">
+        <use href="#goldGrad"/>
+        <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+        <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="39" cy="40" r="2.5" fill="#fff"/>
+        <circle cx="63" cy="40" r="2.5" fill="#fff"/>
+        <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <g transform="translate(8, 62)">
+          <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
+          <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+        </g>
+        <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
+      </svg>
+      <span>Юрист AI</span>
+    </div>
+    <div class="ai-header-buttons">
+      <button class="ai-btn-minimize" onclick="toggleAIChatSize()" title="На весь экран">
+        <i class="fas fa-expand-arrows-alt"></i>
+      </button>
+      <button class="ai-btn-close" onclick="closeAIChat()" title="Закрыть">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+  <div class="ai-chat-body">
+    <div class="ai-chat-messages"></div>
+    <div class="ai-chat-input">
+      <input type="text" id="ai-input" placeholder="Задайте юридический вопрос..." 
+             onkeypress="if(event.key==='Enter' && this.value.trim()) { sendAIMessage(this.value); this.value=''; }">
+      <button onclick="const inp = document.getElementById('ai-input'); if(inp.value.trim()) { sendAIMessage(inp.value); inp.value=''; }" title="Отправить">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>
+<!-- ТУМБЛЕР ТЕМЫ — ВИСЯЩАЯ ЛАМПОЧКА -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
+
+  <a href="#" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
+  <!-- СКРИПТЫ -->
+  <script src="/static/js/search.js"></script>
+  <script src="/static/js/auth.js"></script>
+  <script src="/static/js/cart.js" defer></script>
+  <script src="/static/js/feedback.js"></script>
+  <script src="/static/js/contacts.js" defer></script>
+  <script src="/static/js/ai.js"></script>
+  <script src="/static/js/about_company.js" defer></script>
+  <script src="/static/js/profile.js"></script>
+  <script src="/static/js/profile_two.js"></script>
+
+
+  <script>
+  // ФИНАЛЬНАЯ ВЕРСИЯ — МОДАЛКА ОТКРЫВАЕТСЯ НОРМАЛЬНО, НЕ В УГЛУ И НЕ ПРОПАДАЕТ
+(() => {
+  const overlay = document.getElementById('authRequiredOverlay');
+  const loginBtn = document.getElementById('loginFromOverlayBtn');
+
+const isLoggedIn = async () => {
+  // НИКОМУ НЕ ВЕРИМ. Только серверу.
+  try {
+    const res = await fetch('/api/company', { 
+      method: 'HEAD', 
+      // быстро, без тела
+      credentials: 'include',
+      cache: 'no-store'     // ← важно! не берём из кэша
+    });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+};
+
+  const lockPage = () => {
+    overlay.classList.add('active');
+    document.body.classList.add('auth-locked');
+    document.querySelectorAll('header, main, footer, nav, .mobile-bottom-bar').forEach(el => {
+      if (el) el.style.filter = 'blur(16px)';
+    });
+  };
+
+  const unlockPage = () => {
+    overlay.classList.remove('active');
+    document.body.classList.remove('auth-locked');
+    document.querySelectorAll('header, main, footer, nav, .mobile-bottom-bar').forEach(el => {
+      if (el) el.style.filter = '';
+    });
+  };
+
+  // ГЛАВНОЕ: ОТКРЫВАЕМ МОДАЛКУ, КОТОРАЯ НАХОДИТСЯ В КОРНЕ body
+  const openAuthModal = () => {
+    const modal = document.querySelector('#authModal'); // берём единственную
+    if (!modal) return;
+
+    // Снимаем блокировку на 200мс — чтобы модалка успела открыться
+    unlockPage();
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden'; // можно вернуть — модалка уже вне blur
+
+    // Фокус на номер
+    setTimeout(() => {
+      document.getElementById('phoneInput')?.focus();
+    }, 300);
+
+    // Через 200мс возвращаем blur (но модалка уже поверх)
+    setTimeout(async () => {
+  const loggedIn = await isLoggedIn();
+  if (!loggedIn) {
+    lockPage();
+    modal.style.filter = 'none';
+    modal.style.zIndex = '9999999';
+  }
+}, 200);
+  };
+
+  loginBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openAuthModal();
+  });
+
+  // ИСПРАВЛЕННЫЙ check — теперь ждёт async и работает правильно
+  const check = async () => {
+    const loggedIn = await isLoggedIn();  // ← ждём результат!
+
+    if (loggedIn) {
+      unlockPage();
+      overlay?.classList.remove('active');
+      document.body.classList.remove('no-scroll');
+    } else {
+      lockPage();
+      overlay?.classList.add('active');
+      document.body.classList.add('no-scroll');
+    }
+  };
+
+  // Первый запуск
+  check();
+
+  // Периодическая проверка
+  const interval = setInterval(async () => {
+    await check();
+    const loggedIn = await isLoggedIn();
+    if (loggedIn) clearInterval(interval);
+  }, 600);
+
+  document.addEventListener('authSuccess', () => {
+    setTimeout(unlockPage, 800);
+  });
+
+  window.addEventListener('authChanged', check);
+  window.addEventListener('storage', check);
+})();
+  </script>
+
+<script>
+// ==================== РЕАЛЬНАЯ ЛОГИКА ОПЛАТЫ СЧЕТОВ (БЭКЕНД 2025) ====================
+document.addEventListener('DOMContentLoaded', async () => {
+  const pendingTab = document.querySelector('[data-tab="pending"]');
+  const paidTab = document.querySelector('[data-tab="paid"]');
+  const pendingList = document.getElementById('pendingInvoices');
+  const paidList = document.getElementById('paidInvoices');
+  const modal = document.getElementById('invoiceModal');
+  const closeBtn = document.querySelector('.invoice-close-btn');
+  let currentInvoiceId = null;
+
+  // Переключение табов
+  document.querySelectorAll('.invoice-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.invoice-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.invoices-list').forEach(l => l.style.display = 'none');
+      document.getElementById(tab.dataset.tab + 'Invoices').style.display = 'block';
+    });
+  });
+
+  // === ЗАГРУЗКА СПИСКА СЧЁТОВ С СЕРВЕРА ===
+  const loadInvoices = async () => {
+    try {
+      const res = await fetch('/api/invoices');
+      if (!res.ok) throw new Error('Не удалось загрузить счета');
+
+      const data = await res.json();
+
+      document.getElementById('countPending').textContent = data.counts.pending;
+      document.getElementById('countPaid').textContent = data.counts.paid;
+
+      renderInvoices(data.pending || [], pendingList, false);
+      renderInvoices(data.paid || [], paidList, true);
+    } catch (err) {
+      console.error('Ошибка загрузки счетов:', err);
+      pendingList.innerHTML = '<div class="invoices-empty"><i class="fas fa-exclamation-triangle"></i><p>Ошибка связи с сервером</p></div>';
+    }
+  };
+
+  // === РЕНДЕР КАРТОЧЕК ===
+  const renderInvoices = (invoices, container, isPaid) => {
+    container.innerHTML = '';
+    if (invoices.length === 0) {
+      container.innerHTML = '<div class="invoices-empty"><i class="fas fa-file-invoice-dollar"></i><p>Нет счетов</p></div>';
+      return;
+    }
+
+    invoices.forEach(inv => {
+      const card = document.createElement('div');
+      card.className = 'invoice-card';
+      card.dataset.invoiceId = inv.id;
+
+      const date = new Date(inv.created_at).toLocaleDateString('ru');
+
+      card.innerHTML = `
+        <div class="invoice-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+        <div class="invoice-info">
+          <h3>Счёт №${inv.number}</h3>
+          <div class="invoice-amount">${Number(inv.amount).toLocaleString('ru')} ₽</div>
+          <div class="invoice-date">Выставлен: ${date}</div>
+        </div>
+        <div class="invoice-status">${isPaid ? 'Ожидает подтверждения' : 'На оплату'}</div>
+      `;
+
+      card.onclick = () => openInvoiceModal(inv.id, isPaid);
+      container.appendChild(card);
+    });
+  };
+
+  // === ОТКРЫТИЕ МОДАЛКИ С РЕАЛЬНЫМИ РЕКВИЗИТАМИ ===
+  const openInvoiceModal = async (invoiceId, isPaidFromList) => {
+    currentInvoiceId = invoiceId;
+
+    try {
+      const res = await fetch(`/api/invoices/${invoiceId}`);
+      if (!res.ok) throw new Error('Счёт не найден');
+
+      const data = await res.json();
+
+      document.getElementById('modalInvoiceTitle').textContent = data.title;
+
+      // Вставляем реквизиты (уже с переносами и без лишнего мусора)
+      document.getElementById('requisitesText').innerHTML = `
+        ${data.requisites.replace(/\n/g, '<br>')}
+        <button class="copy-requisites-btn" aria-label="Скопировать реквизиты">
+          <i class="fas fa-copy"></i>
+        </button>
+      `;
+
+      // Показываем нужную секцию
+      document.getElementById('paySection').style.display = data.isPaid ? 'none' : 'block';
+      document.getElementById('paidSection').style.display = data.isPaid ? 'block' : 'none';
+
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    } catch (err) {
+      alert('Ошибка загрузки счёта');
+      console.error(err);
+    }
+  };
+
+  // === КНОПКА "Я ОПЛАТИЛ" ===
+  document.getElementById('markPaidButton').onclick = async () => {
+    if (!currentInvoiceId) return;
+
+    const btn = document.getElementById('markPaidButton');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправляем...';
+
+    try {
+      const res = await fetch(`/api/invoices/${currentInvoiceId}/mark-paid`, {
+        method: 'POST',
+        headers: { 'X-CSRF-Token': window.csrfToken }
+      });
+
+      if (res.ok) {
+        // Перезагружаем список и переключаем модалку
+        await loadInvoices();
+        document.getElementById('paySection').style.display = 'none';
+        document.getElementById('paidSection').style.display = 'block';
+      } else {
+        alert('Ошибка при отправке. Попробуйте позже.');
+      }
+    } catch (e) {
+      alert('Нет соединения с сервером');
+    } finally {
+      btn.innerHTML = '<i class="fas fa-check"></i> Я оплатил счёт';
+      btn.disabled = false;
+    }
+  };
+
+  // === КОПИРОВАНИЕ РЕКВИЗИТОВ ===
+  document.getElementById('invoiceModal').addEventListener('click', (e) => {
+    if (e.target.closest('.copy-requisites-btn')) {
+      e.stopPropagation();
+      const btn = e.target.closest('.copy-requisites-btn');
+      const icon = btn.querySelector('i');
+      const originalClass = icon.className;
+
+      const text = document.getElementById('requisitesText').innerText
+        .replace(/Скопировать реквизиты|Скопировано.*/gi, '')
+        .trim();
+
+      navigator.clipboard.writeText(text).then(() => {
+        icon.className = 'fas fa-check';
+        btn.title = 'Скопировано!';
+        setTimeout(() => {
+          icon.className = originalClass;
+          btn.title = 'Скопировать реквизиты';
+        }, 2000);
+      });
+    }
+  });
+
+  // === ЗАКРЫТИЕ МОДАЛКИ ===
+  closeBtn.onclick = () => {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+    currentInvoiceId = null;
+  };
+
+  modal.onclick = (e) => {
+    if (e.target === modal) closeBtn.click();
+  };
+
+  // === СТАРТ ===
+  loadInvoices();
+  setInterval(loadInvoices, 45000); // автообновление каждые 45 сек
+});
+</script>
+
+</body>
+</html>

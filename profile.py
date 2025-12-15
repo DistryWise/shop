@@ -112,11 +112,19 @@ def profile_page():
 
 @profile_bp.route('/api/company', methods=['GET'])
 def get_company():
-    if 'user_id' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-
-    user_id = session['user_id']
-    phone = session.get('phone')  # ← берём телефон из сессии
+    # Поддержка просмотра админом чужого профиля
+    admin_view = request.args.get('admin_view')
+    if admin_view:
+        if not session.get('is_admin'):
+            return jsonify({"error": "Forbidden"}), 403
+        try:
+            user_id = int(admin_view)
+        except ValueError:
+            return jsonify({"error": "Invalid user_id"}), 400
+    else:
+        if 'user_id' not in session:
+            return jsonify({"error": "Unauthorized"}), 401
+        user_id = session['user_id']
 
     conn = get_conn()
     try:
@@ -126,42 +134,28 @@ def get_company():
         ).fetchone()
 
         if not row:
-            conn.execute("INSERT INTO company_profiles (user_id) VALUES (?)", (user_id,))
-            conn.commit()
-            row = conn.execute("SELECT * FROM company_profiles WHERE user_id = ?", (user_id,)).fetchone()
-
-        data = dict(row)
+            # Если профиля нет — возвращаем пустые поля (не создаём автоматически для чужого!)
+            data = {
+                'full_name': None, 'short_name': None, 'inn': None, 'ogrn': None,
+                'kpp': None, 'okpo': None, 'okved': None, 'legal_address': None,
+                'actual_address': None, 'activity': None, 'budget': None,
+                'director': None, 'company_status': 'Действующая',
+                'tax_system': 'ОСНО (плательщик НДС)', 'avatar': 'default-company-avatar.png',
+                'created_at': None
+            }
+        else:
+            data = dict(row)
 
         avatar_url = (
             f"/static/uploads/company/{data['avatar']}"
             if data['avatar'] and data['avatar'] != "default-company-avatar.png"
-            else None  # ← ВАЖНО! None, а не путь к картинке!
+            else None
         )
 
-        # === ПОДПИСКИ НА РАССЫЛКИ ===
-        sms_subscribe = True
-        email_subscribe = True
-
-        if phone:
-            # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
-            # ГЛАВНОЕ ИСПРАВЛЕНИЕ — НОРМАЛИЗАЦИЯ ТЕЛЕФОНА!
-            phone_normalized = '+' + phone if not phone.startswith('+') else phone
-            # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
-
-            try:
-                from dispatch import get_dispatch_conn
-                disp_conn = get_dispatch_conn()
-                sub = disp_conn.execute(
-                    "SELECT sms_consent, email FROM subscribers WHERE phone = ?",
-                    (phone_normalized,)  
-                ).fetchone()
-                disp_conn.close()
-
-                if sub:
-                    sms_subscribe = bool(sub['sms_consent'])
-                    email_subscribe = bool(sub['email'] and str(sub['email']).strip() != '')
-            except Exception as e:
-                current_app.logger.warning(f"Ошибка чтения подписок для {phone_normalized}: {e}")
+        # Для админ-просмотра подписки не нужны — убираем этот блок полностью
+        # (или можно оставить, но по телефону пользователя — но это лишнее)
+        sms_subscribe = None
+        email_subscribe = None
 
         return jsonify({
             "fullName": data['full_name'] or "",
@@ -178,14 +172,18 @@ def get_company():
             "director": data['director'] or "",
             "companyStatus": data['company_status'] or "Действующая",
             "taxSystem": data['tax_system'] or "ОСНО (плательщик НДС)",
-            "avatar": avatar_url,  # ← None если логотипа нет
+            "avatar": avatar_url,
             "regDate": (
                 f"{data['created_at'][8:10]}.{data['created_at'][5:7]}.{data['created_at'][:4]}"
-                if data['created_at'] else ""
+                if data.get('created_at') else ""
             ),
-            "smsSubscribe": sms_subscribe,
-            "emailSubscribe": email_subscribe,
+            # Подписки не возвращаем при админ-просмотре
+            # "smsSubscribe": sms_subscribe,
+            # "emailSubscribe": email_subscribe,
         })
+    except Exception as e:
+        current_app.logger.error(f"get_company error (user_id={user_id}): {e}")
+        return jsonify({"error": "Server error"}), 500
     finally:
         conn.close()
 
@@ -410,11 +408,19 @@ def set_email():
 
 @profile_bp.route('/api/contacts', methods=['GET'])
 def get_contacts():
-    if 'user_id' not in session:
-        return jsonify({"error": "Unauthorized"}), 401
-
-    user_id = session['user_id']
-    phone_from_session = session.get('phone', '')
+    # Поддержка админ-просмотра
+    admin_view = request.args.get('admin_view')
+    if admin_view:
+        if not session.get('is_admin'):
+            return jsonify({"error": "Forbidden"}), 403
+        try:
+            user_id = int(admin_view)
+        except ValueError:
+            return jsonify({"error": "Invalid user_id"}), 400
+    else:
+        if 'user_id' not in session:
+            return jsonify({"error": "Unauthorized"}), 401
+        user_id = session['user_id']
 
     conn = get_conn()
     try:
@@ -424,14 +430,17 @@ def get_contacts():
         ).fetchone()
 
         if not row:
-            # Создаём запись + автозаполнение телефона
-            norm_phone = normalize_phone(phone_from_session) if phone_from_session else None
-            conn.execute(
-                "INSERT INTO user_contacts (user_id, work_phone) VALUES (?, ?)",
-                (user_id, norm_phone)
-            )
-            conn.commit()
-            row = conn.execute("SELECT * FROM user_contacts WHERE user_id = ?", (user_id,)).fetchone()
+            # Если контактов нет — возвращаем пустые поля
+            return jsonify({
+                "contactPerson": "",
+                "workPhone": "",
+                "personalPhone": "",
+                "documentsEmail": "",
+                "notificationsEmail": "",
+                "telegram": "",
+                "whatsapp": "",
+                "maxPhone": "",
+            })
 
         data = dict(row)
 
@@ -446,11 +455,10 @@ def get_contacts():
             "maxPhone": data.get('max_phone') or "",
         })
     except Exception as e:
-        logger.error(f"get_contacts error: {e}")
+        logger.error(f"get_contacts error (user_id={user_id}): {e}")
         return jsonify({"error": "Server error"}), 500
     finally:
         conn.close()
-
 
 @profile_bp.route('/api/contacts', methods=['POST'])
 def save_contacts():

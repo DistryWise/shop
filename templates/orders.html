@@ -1,0 +1,2401 @@
+<!DOCTYPE html>
+<head>
+  <script>
+    // Определяем тему ещё до первого рендера
+    const savedTheme = localStorage.getItem('theme');
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    const theme = savedTheme || (prefersLight ? 'light' : 'dark');
+
+    // Сразу ставим атрибут
+    document.documentElement.setAttribute('data-theme', theme);
+
+    // И сразу форсируем правильный фон лоадера
+    document.documentElement.style.backgroundColor = theme === 'light' ? '#ffffff' : '#000000';
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Личный кабинет — Piligrim</title>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <script>
+// Глобальное хранилище актуального токена
+window.csrfToken = "{{ csrf_token() }}";
+
+// Автоматически обновляем токен при любом успешном ответе от сервера
+function updateCsrfTokenFromResponse(data) {
+    if (data.csrf_token) {
+        window.csrfToken = data.csrf_token;
+        document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', data.csrf_token);
+    }
+}
+
+// Перехватываем ВСЕ fetch-запросы (POST, PUT, DELETE и т.д.)
+const { fetch: origFetch } = window;
+window.fetch = async (...args) => {
+    let [resource, config] = args;
+    
+    // Только для мутирующих методов
+    if (config && ['POST','PUT','DELETE','PATCH'].includes((config.method || 'GET').toUpperCase())) {
+        config = config || {};
+        config.headers = config.headers || {};
+        config.headers['X-CSRF-Token'] = window.csrfToken;
+        config.headers['X-Requested-With'] = 'XMLHttpRequest';
+        
+        // Если отправляем FormData — не трогаем Content-Type (браузер сам поставит с boundary)
+        if (!(config.body instanceof FormData)) {
+            config.headers['Content-Type'] = 'application/json';
+        }
+    }
+
+    const response = await origFetch(resource, config);
+    
+    // Автоматически обновляем токен после любого успешного JSON-ответа
+    if (response.ok && response.headers.get('content-type')?.includes('application/json')) {
+        try {
+            const data = await response.clone().json();
+            updateCsrfTokenFromResponse(data);
+        } catch (e) { /* не JSON — игнорируем */ }
+    }
+
+    return response;
+};
+</script>
+
+<script>
+  window.serverKnowsImLoggedIn = {{ user_authenticated|default(false)|tojson|safe }};
+</script>
+
+  <!-- Шрифты и иконки -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap" rel="stylesheet">
+
+
+
+  <!-- ДОБАВЛЕННЫЕ СТИЛИ — БЕЗ КОНФЛИКТОВ -->
+  <link rel="stylesheet" href="/static/css/search.css">
+  <link rel="stylesheet" href="/static/css/auth.css">
+  <link rel="stylesheet" href="/static/css/cart.css">
+  <link rel="stylesheet" href="/static/css/ai.css">
+  <link rel="stylesheet" href="/static/css/contacts.css"> 
+
+  <link rel="stylesheet" href="/static/css/profile/profile.css"> 
+  <link rel="stylesheet" href="/static/css/profile/auth.css"> 
+  
+<style>
+
+    .profile-title {
+  text-align: center;
+  margin: 0 auto 56px;
+  font-size: clamp(2.2rem, 5vw, 3rem);
+  font-weight: 900;
+  letter-spacing: -1.2px;
+  line-height: 1.2;
+  max-width: 90%;
+}
+    /* === ИДЕАЛЬНЫЕ КАРТОЧКИ ЗАКАЗОВ ДЛЯ /profile — ЧИСТЫЙ ЧЁРНО-БЕЛЫЙ СТИЛЬ 2025 === */
+.apple-archive-order {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 28px;
+  padding: 28px;
+  margin: 24px 0;
+  transition: all 0.35s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.apple-archive-order:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.28);
+  border-color: var(--accent-line);
+}
+
+/* Заголовок */
+.archive-order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.archive-order-title {
+  font-size: 1.85rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.6px;
+}
+
+.archive-status-badge {
+  background: #10b981;
+  color: white;
+  padding: 6px 16px;
+  border-radius: 14px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-left: 12px;
+}
+
+.archive-status-badge:contains("Отменён"),
+.archive-status-badge[style*="Отменён"] {
+  background: #ef4444 !important;
+}
+
+/* Дата и сумма */
+.archive-order-meta {
+  text-align: right;
+  font-size: 1rem;
+  color: var(--text-primary);
+  opacity: 0.85;
+}
+
+.archive-order-date {
+  font-weight: 600;
+  margin-bottom: 4px;
+  opacity: 0.8;
+}
+
+.archive-order-total {
+  font-size: 1.7rem;
+  font-weight: 900;
+  letter-spacing: -0.8px;
+}
+
+/* Прогресс-бар — АККУРАТНЫЙ И РОВНЫЙ */
+.archive-progress-chain {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 28px 0;
+  position: relative;
+  height: 8px;
+}
+
+.archive-progress-chain::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  transform: translateY(-50%);
+}
+
+.progress-step {
+  width: 16px;
+  height: 16px;
+  background: var(--bg);
+  border: 4px solid var(--border);
+  border-radius: 50%;
+  position: relative;
+  z-index: 2;
+  transition: all 0.4s;
+}
+
+.progress-step.filled {
+  border-color: var(--accent-line);
+  background: var(--accent-line);
+  box-shadow: 0 0 0 6px rgba(0, 255, 149, 0.18);
+}
+
+.archive-progress-chain::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 4px;
+  background: var(--accent-line);
+  border-radius: 2px;
+  transform: translateY(-50%);
+  width: 0;
+  transition: width 0.6s ease;
+  z-index: 1;
+}
+
+.apple-archive-order[data-filled="1"] .archive-progress-chain::after { width: 20%; }
+.apple-archive-order[data-filled="2"] .archive-progress-chain::after { width: 40%; }
+.apple-archive-order[data-filled="3"] .archive-progress-chain::after { width: 60%; }
+.apple-archive-order[data-filled="4"] .archive-progress-chain::after { width: 80%; }
+.apple-archive-order[data-filled="5"] .archive-progress-chain::after { width: 100%; }
+
+/* Подписи прогресса */
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  opacity: 0.65;
+}
+
+.progress-label.filled {
+  opacity: 1;
+  color: var(--accent-line);
+  font-weight: 800;
+}
+
+/* Финальный статус */
+.archive-final-status {
+  text-align: center;
+  margin: 28px 0;
+}
+
+.final-icon {
+  width: 68px;
+  height: 68px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.8rem;
+  color: white;
+  font-weight: bold;
+}
+
+.final-icon.completed { background: #10b981; }
+.final-icon.cancelled { background: #ef4444; }
+
+/* Товары в заказе */
+.archive-items-list {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.archive-item-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.archive-item-thumb {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+}
+
+.archive-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.archive-item-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.archive-item-details {
+  font-size: 0.98rem;
+  color: var(--text-primary);
+  opacity: 0.8;
+  font-weight: 600;
+}
+
+/* Кнопка Повторить */
+.archive-repeat-btn {
+  background: transparent;
+  border: 2px solid var(--accent-line);
+  color: var(--accent-line);
+  padding: 8px 18px;
+  border-radius: 18px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.archive-repeat-btn:hover {
+  background: var(--accent-line);
+  color: black;
+  transform: translateY(-2px);
+}
+
+/* Ещё товаров */
+.archive-more-items {
+  text-align: center;
+  padding: 16px 0 8px;
+  font-weight: 700;
+  color: var(--text-primary);
+  opacity: 0.7;
+  font-size: 1rem;
+}
+
+/* Причина отмены */
+.archive-cancel-reason {
+  margin-top: 24px;
+  padding: 20px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px dashed #ef4444;
+  border-radius: 20px;
+  font-size: 0.98rem;
+  line-height: 1.55;
+}
+
+.cancel-reason-title {
+  font-weight: 800;
+  color: #ef4444;
+  margin-bottom: 8px;
+  font-size: 1.02rem;
+}
+
+.cancel-reason-text {
+  color: var(--text-primary);
+  opacity: 0.9;
+}
+
+/* Пустое состояние — чуть компактнее */
+.orders-empty {
+  text-align: center;
+  padding: 100px 20px;
+}
+
+.orders-empty i {
+  font-size: 6.5rem;
+  margin-bottom: 28px;
+  opacity: 0.6;
+}
+
+.orders-empty p {
+  font-size: 1.7rem;
+  font-weight: 700;
+  opacity: 0.8;
+}
+    /* === СТИЛИ ДЛЯ ИСТОРИИ ЗАКАЗОВ — В ТВОЁМ УЛЬТРА-ЧЁРНО-БЕЛОМ СТИЛЕ === */
+.orders-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 70px;
+  margin: 60px 0 0;
+  padding: 0 12px 16px;
+  border-bottom: 4px solid var(--border);
+}
+
+.order-tab {
+  position: relative;
+  padding: 18px 12px;
+  background: none;
+  border: none;
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  opacity: 0.6;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.order-tab:hover { opacity: 1; }
+.order-tab.active {
+  opacity: 1;
+}
+
+.order-tab.active::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: -4px;
+  height: 5px;
+  background: var(--accent-line);
+  border-radius: 3px;
+}
+
+.order-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 12px;
+  margin-left: 16px;
+  background: var(--text-primary);
+  color: var(--bg);
+  font-size: 1rem;
+  font-weight: 800;
+  border-radius: 18px;
+}
+
+/* Карточки заказов */
+.order-card {
+  background: var(--surface);
+  border: 3px solid var(--border);
+  border-radius: 32px;
+  padding: 40px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: default;
+  transition: all 0.4s ease;
+}
+
+.order-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 28px 56px rgba(0,0,0,0.3);
+  border-color: var(--accent-line);
+}
+
+.order-icon {
+  font-size: 4.5rem;
+  color: var(--text-primary);
+  margin-right: 40px;
+  opacity: 0.9;
+}
+
+.order-info h3 {
+  margin: 0 0 12px;
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.order-amount {
+  font-size: 2.8rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  margin: 14px 0;
+  letter-spacing: -1px;
+}
+
+.order-date {
+  font-size: 1.3rem;
+  color: var(--text-primary);
+  opacity: 0.8;
+  font-weight: 600;
+}
+
+.order-status {
+  padding: 14px 32px;
+  border-radius: 20px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.status-in_progress { background: #10b981; }
+.status-delivered   { background: #10b981; }
+.status-cancelled   { background: #ef4444; }
+
+/* Пустое состояние */
+.orders-empty {
+  text-align: center;
+  padding: 140px 20px;
+  color: var(--text-primary);
+  opacity: 0.7;
+}
+
+.orders-empty i {
+  font-size: 7.5rem;
+  margin-bottom: 36px;
+}
+
+.orders-empty p {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+}
+</style>
+<style>
+/* === УНИФИКАЦИЯ СТИЛЕЙ: ИСТОРИЯ ЗАКАЗОВ → ТОЧНО КАК ОПЛАТА СЧЕТОВ === */
+
+/* Переменные тем (если их ещё нет — дублируем для надёжности) */
+:root {
+  --text-primary: #000000;
+  --text-secondary: #6e6e73;
+  --text-tertiary: #8e8e93;
+  --border: #d2d2d7;
+  --accent-line: #000000;
+}
+html[data-theme="dark"] {
+  --text-primary: #ffffff;
+  --text-secondary: #98989d;
+  --text-tertiary: #6e6e73;
+  --border: #38383a;
+  --accent-line: #ffffff;
+}
+
+/* Заголовок "История заказов" — точно как "Оплата счетов" */
+.profile-title {
+  text-align: center !important;
+  margin: 0 auto 3rem !important;
+  font-size: 2.6rem !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  letter-spacing: normal !important;
+  line-height: normal !important;
+  max-width: none !important;
+}
+
+/* Табы — точно как .invoices-tabs */
+.orders-tabs {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 40px !important;
+  margin: 60px auto 60px auto !important;
+  padding: 0 12px 12px !important;
+  border-bottom: 1px solid var(--border) !important;
+  flex-wrap: wrap !important;
+  width: fit-content !important;
+}
+
+.order-tab {
+  position: relative !important;
+  padding: 12px 12px !important;
+  background: none !important;
+  border: none !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  color: var(--text-secondary) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: color 0.25s !important;
+  border-radius: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  min-width: 140px !important;
+}
+
+.order-tab:hover {
+  color: var(--text-primary) !important;
+}
+
+.order-tab.active {
+  color: var(--text-primary) !important;
+}
+
+.order-tab.active::after {
+  content: '' !important;
+  position: absolute !important;
+  left: 12px !important;
+  right: 12px !important;
+  bottom: -1px !important;
+  height: 2.5px !important;
+  background: var(--accent-line) !important;
+  border-radius: 2px !important;
+}
+
+/* Бейдж с количеством — точно как .invoice-count */
+.order-count {
+  min-width: 22px !important;
+  height: 22px !important;
+  padding: 0 7px !important;
+  margin-left: 10px !important;
+  background: var(--text-tertiary) !important;
+  color: var(--bg, #ffffff) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  border-radius: 11px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Адаптив для мобильных */
+@media (max-width: 1023px) {
+  .profile-title {
+    font-size: clamp(1.9rem, 7.5vw, 2.6rem) !important;
+  }
+  
+  .orders-tabs {
+    gap: clamp(20px, 6vw, 40px) !important;
+    margin: 40px auto 50px auto !important;
+    padding: 0 1rem 12px !important;
+  }
+  
+  .order-tab {
+    font-size: clamp(1.1rem, 4.5vw, 1.25rem) !important;
+    padding: 10px 8px !important;
+    min-width: auto !important;
+  }
+  
+  .order-count {
+    min-width: clamp(20px, 6vw, 22px) !important;
+    height: clamp(20px, 6vw, 22px) !important;
+    font-size: clamp(0.7rem, 2.5vw, 0.75rem) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .orders-tabs {
+    gap: 16px !important;
+  }
+}
+</style>
+<style>
+/* === СДВИГ ВЕСЬ БЛОК ЛЕВЕЕ — НАКОНЕЦ-ТО === */
+
+/* Основной контент — уменьшаем сдвиг под левую навигацию (делаем блок левее) */
+.profile-main-content.with-icons-nav {
+  margin-left: 100px !important;   /* было 160px — стало 100px, блок сдвинут левее на 60px */
+  transition: margin-left 0.4s ease !important;
+}
+
+/* Если хочешь ещё левее — раскомментируй одну из строк ниже */
+/* margin-left: 80px !important;   /* ещё левее */ */
+/* margin-left: 60px !important;   /* сильно левее */ */
+/* margin-left: 0 !important;      /* полностью влево, без сдвига под навигацию */ */
+
+/* Контейнер остаётся центрированным внутри новой области */
+.profile-container {
+  max-width: 1000px !important;
+  margin: 0 auto !important;
+  padding: 0 2rem !important;
+}
+
+/* На мобильных — ничего не меняем (там и так по центру) */
+@media (max-width: 1026px) {
+  .profile-main-content.with-icons-nav {
+    margin-left: 0 !important;
+  }
+}
+</style>
+</head>
+<body>
+
+
+  <div class="loader" id="pageLoader"></div>
+
+<!-- ==================== ВКЛАДКА: ИСТОРИЯ ЗАКАЗОВ ==================== -->
+<main class="profile-main-content with-icons-nav">
+  <div class="profile-container">
+    <h1 class="profile-title">История заказов</h1>
+    
+    <div class="orders-tabs">
+      <button class="order-tab active" data-tab="all">Все заказы <span class="order-count" id="countAll">5</span></button>
+      <button class="order-tab" data-tab="active">В работе <span class="order-count" id="countActive">2</span></button>
+      <button class="order-tab" data-tab="completed">Завершённые <span class="order-count" id="countCompleted">3</span></button>
+    </div>
+
+    <!-- Все заказы -->
+    <div id="allOrders" class="orders-list">
+      <div class="orders-empty" style="display:none;">
+        <i class="fas fa-receipt"></i>
+        <p>Заказов пока нет</p>
+      </div>
+    </div>
+
+    <!-- В работе -->
+    <div id="activeOrders" class="orders-list" style="display:none;">
+      <div class="orders-empty" style="display:none;">
+        <i class="fas fa-truck"></i>
+        <p>Активных заказов нет</p>
+      </div>
+    </div>
+
+    <!-- Завершённые -->
+    <div id="completedOrders" class="orders-list" style="display:none;">
+      <div class="orders-empty" style="display:none;">
+        <i class="fas fa-check-circle"></i>
+        <p>Завершённых заказов нет</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+
+<!-- ВЕРХНИЙ ХЕДЕР — ТОЛЬКО НА ДЕСКТОПЕ -->
+<header class="main-header desktop-only">
+  <a href="/" class="logo">
+    <img src="/static/assets/logo.png" alt="Piligrim" class="logo-img">
+  </a>
+
+  <nav class="desktop-nav">
+    <a href="/" class="nav-link">Главная</a>
+    <a href="/goods" class="nav-link">Товары</a>
+    <a href="/services" class="nav-link">Услуги</a>
+    <a href="/news" class="nav-link">Новости</a>
+    <a href="/about_company" class="nav-link">О компании</a> 
+    <a href="/contacts" class="nav-link">Контакты</a>
+  </nav>
+
+  <div class="header-right">
+    <div class="header-icons">
+      <div class="search-wrapper">
+        <div class="search-container">
+          <div class="search-icon"><i class="fas fa-search"></i></div>
+          <input type="text" class="search-input" id="searchInput" placeholder="Поиск...">
+          <button id="searchClear" class="search-clear">×</button>
+        </div>
+        <div id="autocompleteList" class="autocomplete-list"></div>
+      </div>
+
+      <button id="authBtn" class="icon-btn"><i class="fas fa-user"></i></button>
+
+      <div class="cart-wrapper">
+        <button class="icon-btn" id="cartBtn">
+          <i class="fas fa-shopping-bag"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <div id="miniCartDropdown" class="mini-cart-dropdown">
+          <div class="mini-cart-header"><div class="mini-cart-title">Корзина</div></div>
+          <div class="mini-cart-items" id="miniCartItems">
+            <div class="mini-cart-empty">Корзина пуста</div>
+          </div>
+          <div class="mini-cart-footer">
+            <div class="mini-cart-total" id="miniCartTotal">Итого: 0.00 ₽</div>
+            <button class="go-to-cart-btn" id="goToCartBtn">Оформить</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="icon-btn" id="feedbackBtn"><i class="fas fa-envelope"></i></button>
+    </div>
+  </div>
+</header>
+
+
+<!-- ОБЯЗАТЕЛЬНО ДОБАВЬ ЭТОТ БЛОК — ДАЖЕ ЕСЛИ ОН НЕ ИСПОЛЬЗУЕТСЯ НА ДЕСКТОПЕ! -->
+<div class="custom-alert" id="feedbackModal">
+  <div class="alert-content">
+    <button class="alert-close">×</button>
+    <div class="alert-icon"><i class="fas fa-envelope-open-text"></i></div>
+    <div class="alert-text">
+      <strong>Обратная связь</strong>
+      <span>Оставьте заявку — мы свяжемся с вами в ближайшее время</span>
+    </div>
+    <form class="contact-form" novalidate>
+      <input type="text" placeholder="Ваше имя" name="name" required />
+      <div class="phone-field-wrapper">
+        <input type="tel" placeholder="+7 (___) ___-__-__" name="phone" required />
+      </div>
+      <input type="email" placeholder="Email" name="email" required />
+      <textarea placeholder="Ваше сообщение" name="message" required></textarea>
+      <button type="submit" class="alert-login-btn">
+        <span class="btn-text">Отправить</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- МОДАЛКА EMAIL — APPLE STYLE 2025 -->
+<div id="emailModal">
+  <div class="email-modal-card">
+    <div class="email-modal-header">
+      <div class="email-modal-icon">
+        <i class="far fa-envelope"></i>
+      </div>
+      <button class="email-modal-close" id="closeEmailModal" aria-label="Закрыть">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+
+    <div class="email-modal-body">
+      <h2>Получайте акции и новости</h2>
+      <p>Мы будем присылать только самое важное — никаких спамов, обещаем</p>
+
+      <form id="emailForm" class="email-modal-form">
+        <div class="email-input-wrapper">
+          <input
+            type="email"
+            id="emailInput"
+            placeholder="you@company.com"
+            required
+            autocomplete="email"
+          />
+          <div class="email-input-focus"></div>
+        </div>
+
+        <button type="submit" class="email-submit-btn">
+          <span class="btn-text">Подписаться</span>
+          <span class="btn-loading" style="display:none;">
+            <i class="fas fa-spinner fa-spin"></i>
+          </span>
+        </button>
+      </form>
+
+      <div class="email-modal-footer">
+        <small>Можно отписаться в любой момент</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- БЛОКИРОВКА НЕАВТОРИЗОВАННОГО ДОСТУПА К ЛИЧНОМУ КАБИНЕТУ -->
+<div id="authRequiredOverlay" class="auth-required-overlay">
+  <div class="auth-required-modal">
+    <div class="auth-required-content">
+      <i class="fas fa-user-lock auth-required-icon"></i>
+      <h2>Требуется авторизация</h2>
+      <p>Для доступа к личному кабинету необходимо войти в аккаунт</p>
+      <button id="loginFromOverlayBtn" class="auth-required-btn">
+        <i class="fas fa-sign-in-alt"></i> Войти по номеру телефона
+      </button>
+      <div class="auth-required-footer">
+  <small>
+    Проблемы со входом? 
+    <a href="https://t.me/piligrim_support" 
+       target="_blank" 
+       rel="noopener" 
+       class="support-link">
+      Обратитесь в поддержку
+    </a>
+  </small>
+</div>
+    </div>
+  </div>
+</div>
+
+<style>
+    /* ВИЗУАЛЬНАЯ КОРРЕКЦИЯ ИКОНКИ ДОКУМЕНТОВ */
+.profile-nav-icons .icon-documents {
+  margin-left: 6px !important;
+  transform: translateX(2px);   /* дополнительная тонкая подстройка */
+}
+    /* === НАВИГАЦИЯ ПО РАЗДЕЛАМ ПРОФИЛЯ — С fa-fw ВСЁ РОВНО === */
+.profile-nav-icons {
+  position: fixed;
+  left: 50px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  z-index: 10;
+  transition: all 0.4s ease;
+  justify-content: center;
+  height: 100vh;
+  padding: 20px 0;
+  box-sizing: border-box;
+}
+
+.profile-nav-icons a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text-secondary);
+  transition: all 0.35s ease;
+  width: 80px;                  /* можно оставить или уменьшить — fa-fw всё выровняет */
+}
+
+.profile-nav-icons i {
+  font-size: 2.2rem;
+  transition: all 0.35s ease;
+  opacity: 0.7;
+}
+
+.profile-nav-icons span {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.35s ease;
+  white-space: nowrap;
+}
+
+/* Hover и активное */
+.profile-nav-icons a:hover {
+  color: var(--text-primary);
+}
+
+.profile-nav-icons a:hover i {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.profile-nav-icons a:hover span {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.profile-nav-icons a.active {
+  color: var(--accent-line);
+}
+
+.profile-nav-icons a.active i {
+  opacity: 1;
+  transform: scale(1.2);
+  text-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.profile-nav-icons a.active span {
+  opacity: 1;
+  transform: translateY(0);
+  font-weight: 800;
+}
+
+/* Светлая тема */
+[data-theme="light"] .profile-nav-icons a.active {
+  color: #000000 !important;
+}
+
+/* Сдвиг контента */
+.profile-main-content.with-icons-nav {
+  margin-left: 160px;
+  transition: margin-left 0.4s ease;
+}
+
+/* Анимация появления */
+.profile-nav-icons {
+  opacity: 0;
+  animation: fadeInLeft 0.8s ease forwards 0.4s;
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+/* === МОБИЛЬНАЯ ВЕРСИЯ (≤1026px): горизонтально сверху === */
+@media (max-width: 1026px) {
+  .profile-nav-icons {
+    position: static;
+    transform: none;
+    flex-direction: row;
+    justify-content: center;
+    gap: 40px;
+    height: auto;
+    padding: 32px 20px 20px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .profile-nav-icons a {
+    width: auto;
+    min-width: 70px;
+  }
+
+  .profile-nav-icons i {
+    font-size: 2rem;
+    opacity: 0.8;
+  }
+
+  .profile-nav-icons span {
+    opacity: 1;
+    transform: translateY(0);
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  .profile-nav-icons a:hover i {
+    transform: scale(1.1);
+  }
+
+  .profile-nav-icons a.active i {
+    transform: scale(1.15);
+  }
+
+  .profile-main-content.with-icons-nav {
+    margin-left: 0 !important;
+    margin-top: 90px;
+  }
+
+  .profile-nav-icons {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+@media (max-width: 1026px) {
+  .profile-nav-icons::-webkit-scrollbar {
+    display: none;
+  }
+  .profile-nav-icons {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+/* === МОБИЛЬНАЯ АДАПТАЦИЯ (≤1026px): горизонтально сверху, без обрезки краёв === */
+@media (max-width: 1026px) {
+  .profile-nav-icons {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    transform: none;
+    flex-direction: row;
+    justify-content: space-between;            /* главное исправление — равномерно по ширине */
+    align-items: center;
+    gap: clamp(8px, 2vw, 20px);                 /* маленький gap, чтобы не выезжало */
+    padding: clamp(20px, 6vw, 32px) clamp(32px, 10vw, 60px) clamp(16px, 4vw, 20px); /* большие боковые отступы */
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;                          /* скрываем возможный переполнение */
+    -webkit-overflow-scrolling: touch;
+    z-index: 15;
+    width: 100%;
+    box-sizing: border-box;
+    flex-wrap: nowrap;
+  }
+
+  .profile-nav-icons a {
+    width: auto;
+    min-width: clamp(45px, 12vw, 70px);        /* сильнее сжимаем */
+    gap: clamp(3px, 1vw, 6px);
+    flex: 1;                                   /* равномерно распределяем пространство */
+    max-width: clamp(80px, 20vw, 100px);
+  }
+
+  .profile-nav-icons i {
+    font-size: clamp(1.4rem, 5.5vw, 1.9rem);
+    opacity: 0.9;
+  }
+
+  .profile-nav-icons span {
+    opacity: 1;
+    transform: none;
+    font-size: clamp(0.58rem, 2.2vw, 0.76rem);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+
+  /* Hover и активное */
+  .profile-nav-icons a:hover i,
+  .profile-nav-icons a.active i {
+    transform: scale(1.14);
+  }
+
+  /* Отступ контента */
+  .profile-main-content.with-icons-nav {
+    margin-left: 0 !important;
+    margin-top: clamp(80px, 22vw, 100px);
+  }
+
+  .profile-nav-icons {
+    opacity: 1;
+    animation: none;
+  }
+
+  /* Скрываем скроллбар */
+  .profile-nav-icons {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .profile-nav-icons::-webkit-scrollbar {
+    display: none;
+  }
+}
+/* Мягкий и нейтральный вид в светлой теме + исправление дублирования текста */
+[data-theme="light"] .profile-nav-icons a {
+  color: #666666 !important;
+}
+
+[data-theme="light"] .profile-nav-icons a:hover {
+  color: #444444 !important;
+}
+
+[data-theme="light"] .profile-nav-icons a.active {
+  color: #555555 !important;
+}
+
+[data-theme="light"] .profile-nav-icons a i {
+  opacity: 0.7 !important;
+}
+
+[data-theme="light"] .profile-nav-icons a:hover i,
+[data-theme="light"] .profile-nav-icons a.active i {
+  opacity: 0.9 !important;
+  transform: scale(1.1) !important;
+  text-shadow: none !important;
+}
+
+/* Текст: базово скрыт, появляется только при hover/active */
+[data-theme="light"] .profile-nav-icons span {
+  color: inherit !important;
+  font-weight: 500 !important;
+  opacity: 0 !important;               /* базово скрыт */
+  transform: translateY(8px) !important;
+  transition: opacity 0.35s ease, transform 0.35s ease !important;
+}
+
+[data-theme="light"] .profile-nav-icons a:hover span,
+[data-theme="light"] .profile-nav-icons a.active span {
+  opacity: 1 !important;               /* появляется только один раз */
+  transform: translateY(0) !important;
+  font-weight: 600 !important;
+}
+
+/* Мягкий и нейтральный вид навигации в тёмной теме — без яркого белого и агрессии */
+[data-theme="dark"] .profile-nav-icons a {
+  color: #aaaaaa !important;   /* спокойный серый для всех ссылок */
+}
+
+[data-theme="dark"] .profile-nav-icons a:hover {
+  color: #cccccc !important;   /* чуть ярче на ховер */
+}
+
+[data-theme="dark"] .profile-nav-icons a.active {
+  color: #bbbbbb !important;   /* активный — светло-серый, не ярко-белый */
+}
+
+[data-theme="dark"] .profile-nav-icons a i {
+  opacity: 0.7 !important;     /* иконки неактивные — приглушённые */
+}
+
+[data-theme="dark"] .profile-nav-icons a:hover i,
+[data-theme="dark"] .profile-nav-icons a.active i {
+  opacity: 0.9 !important;     /* активные/ховер — чуть ярче, но не 1 */
+  transform: scale(1.1) !important;  /* минимальный масштаб */
+  text-shadow: none !important;      /* без тени */
+}
+
+/* Текст: базово скрыт, появляется мягко */
+[data-theme="dark"] .profile-nav-icons span {
+  color: inherit !important;
+  font-weight: 500 !important;       /* нормальный вес */
+  opacity: 0 !important;             /* базово скрыт */
+  transform: translateY(8px) !important;
+  transition: opacity 0.35s ease, transform 0.35s ease !important;
+}
+
+[data-theme="dark"] .profile-nav-icons a:hover span,
+[data-theme="dark"] .profile-nav-icons a.active span {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  font-weight: 600 !important;       /* лёгкая жирность для читаемости */
+}
+html[data-theme="dark"] .invoice-modal-content {
+  background: #0f0f0f !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: #ffffff !important;
+}
+
+/* Заголовок и весь текст внутри модалки */
+html[data-theme="dark"] .invoice-modal-header h2,
+html[data-theme="dark"] .requisites-block,
+html[data-theme="dark"] .mark-paid-btn,
+html[data-theme="dark"] .paid-section strong,
+html[data-theme="dark"] .paid-section p {
+  color: #ffffff !important;
+}
+
+/* Крестик закрытия — был почти чёрный */
+html[data-theme="dark"] .invoice-close-btn {
+  background: rgba(255,255,255,0.12) !important;
+  color: #ffffff !important;
+}
+html[data-theme="dark"] .invoice-close-btn:hover {
+  background: rgba(255,255,255,0.22) !important;
+  color: #ffffff !important;
+}
+
+/* Блок реквизитов */
+html[data-theme="dark"] .requisites-block {
+  background: rgba(255,255,255,0.08) !important;
+  color: #e0e0e0 !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+/* Кнопка копирования реквизитов */
+html[data-theme="dark"] .copy-requisites-btn {
+  background: rgba(255,255,255,0.12) !important;
+  color: #ffffff !important;
+}
+html[data-theme="dark"] .copy-requisites-btn:hover {
+  background: rgba(255,255,255,0.25) !important;
+  transform: scale(1.1);
+}
+
+/* Кнопка "Я оплатил" */
+html[data-theme="dark"] .mark-paid-btn {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+html[data-theme="dark"] .mark-paid-btn:hover {
+  background: #e0e0e0 !important;
+}
+
+/* Успешное состояние */
+html[data-theme="dark"] .paid-section i {
+  color: #10b981 !important;
+}
+
+</style>
+<!-- ЛЕВАЯ ВЕРТИКАЛЬНАЯ СЕТКА ИКОНОК ДЛЯ НАВИГАЦИИ ПО ПРОФИЛЮ -->
+<nav class="profile-nav-icons">
+  <a href="/profile" class="">
+    <i class="fas fa-user fa-fw"></i>
+    <span>Профиль</span>
+  </a>
+  <a href="/profile/orders" class="active">
+    <i class="fas fa-receipt fa-fw"></i>
+    <span>История заказов</span>
+  </a>
+  <a href="/profile/bills" class="">
+    <i class="fas fa-file-invoice-dollar fa-fw"></i>
+    <span>Счета</span>
+  </a>
+  <a href="/profile/agreements" class="">
+    <i class="fas fa-file-signature fa-fw icon-documents"></i>  <!-- класс для коррекции -->
+    <span>Договоры и акты</span>
+  </a>
+  <a href="https://t.me/+89062173869" class="">
+    <i class="fas fa-headset fa-fw"></i>
+    <span>Поддержка</span>
+  </a>
+</nav>
+<!-- ШТОРКА НАВИГАЦИИ ПО РАЗДЕЛАМ ПРОФИЛЯ НА МОБИЛЬНЫХ -->
+<div class="profile-mobile-sheet" id="profileMobileSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-hint">Потяните вниз для меню профиля</div>
+  
+  <nav class="profile-nav-icons mobile">
+    <a href="/profile" class="">
+      <i class="fas fa-user fa-fw"></i>
+      <span>Профиль</span>
+    </a>
+    <a href="/profile/orders" class="active">
+      <i class="fas fa-receipt fa-fw"></i>
+      <span>История заказов</span>
+    </a>
+    <a href="/profile/bills" class="">
+      <i class="fas fa-file-invoice-dollar fa-fw"></i>
+      <span>Счета</span>
+    </a>
+    <a href="/profile/agreements" class="">
+      <i class="fas fa-file-signature fa-fw icon-documents"></i>
+      <span>Договоры и акты</span>
+    </a>
+    <a href="https://t.me/+89062173869" class="">
+      <i class="fas fa-headset fa-fw"></i>
+      <span>Поддержка</span>
+    </a>
+  </nav>
+</div>
+
+<!-- НИЖНЯЯ ПАНЕЛЬ — ТОЛЬКО НА МОБИЛЬНЫХ -->
+<nav class="mobile-bottom-bar">
+  <button class="bottom-bar-btn" id="mobileSearchBtn" data-label="Поиск">
+    <i class="fas fa-search"></i>
+  </button>
+
+  <button class="bottom-bar-btn" id="mobileAuthBtn" data-label="Вход">
+    <i class="fas fa-user"></i>
+  </button>
+
+    <button class="bottom-bar-btn active" id="openSidebarMenu" data-label="Меню">
+  <i class="fas fa-bars"></i>
+
+</button>
+
+  <button class="bottom-bar-btn" id="mobileCartBtn" data-label="Корзина">
+    <i class="fas fa-shopping-bag"></i>
+    <span class="cart-count" id="mobileCartCount">0</span>
+  </button>
+
+  <button class="bottom-bar-btn" id="feedbackBtnMobile" data-label="Поддержка">
+    <i class="fas fa-envelope"></i>
+  </button>
+</nav>
+
+<!-- ПОЛНОЭКРАННАЯ ШТОРКА ПОИСКА ДЛЯ НОУТБУКОВ/ПЛАНШЕТОВ -->
+<div class="tablet-search-full" id="tabletSearchSheet">
+  <div class="tablet-search-backdrop"></div>
+  <div class="tablet-search-header-full">
+    <button class="tablet-search-back" id="closeTabletSearch">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <div class="tablet-search-input-wrapper-full">
+      <i class="fas fa-search"></i>
+      <input type="text" id="tabletSearchInput" placeholder="Поиск по каталогу..." autocomplete="off">
+      <button class="tablet-search-clear" id="tabletSearchClear">×</button>
+    </div>
+  </div>
+  <div class="tablet-search-empty" id="tabletEmptyState">
+    <i class="fas fa-search"></i>
+    <p>Начните вводить запрос...</p>
+  </div>
+  <div id="tabletAutocompleteList" class="tablet-autocomplete-list-full"></div>
+</div>
+
+<div class="mobile-search-sheet" id="mobileSearchSheet">
+  <!-- Хедер с ручкой и строкой поиска -->
+  <div class="mobile-search-header">
+    <!-- Ручка сверху (как в iOS) -->
+    <div class="sheet-handle"></div>
+
+    <!-- Кнопка назад + строка поиска -->
+    <button class="mobile-search-back" id="closeMobileSearchTop">←</button>
+    <div class="mobile-search-input-wrapper">
+      <i class="fas fa-search"></i>
+      <input 
+        type="text" 
+        class="mobile-search-input" 
+        id="mobileSearchInput" 
+        placeholder="Поиск по каталогу..." 
+        autocomplete="off"
+      >
+      <button class="mobile-search-clear" id="mobileSearchClear">×</button>
+    </div>
+  </div>
+
+  <!-- Контент: либо пустое состояние, либо результаты -->
+  <div class="mobile-search-results-content" id="mobileSearchResults">
+    
+    <!-- ПУСТОЕ СОСТОЯНИЕ — "Введите название товара" -->
+    <div class="search-empty-state" id="mobileEmptyState">
+      <div class="empty-icon">
+        <i class="fas fa-search"></i>
+      </div>
+      <div class="empty-title">Введите название товара</div>
+      <div class="empty-subtitle">
+        Например: iPhone 16, кроссовки Nike, кофеварка
+      </div>
+    </div>
+
+    <!-- Сюда будут вставляться результаты поиска -->
+    <div id="mobileAutocompleteList" class="mobile-autocomplete-list"></div>
+  </div>
+</div>
+
+<!-- МОБИЛЬНАЯ ШТОРКА КОРЗИНЫ -->
+<div class="mobile-cart-sheet" id="mobileCartSheet">
+  <div class="sheet-backdrop" id="mobileCartBackdrop"></div>
+  <div class="sheet-container">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="cart-header-icon">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="cart-count" id="mobileCartHeaderCount">0</span>
+      </div>
+      <h3>Корзина</h3>
+      <button class="sheet-close-btn" id="mobileCloseCart">×</button>
+    </div>
+    <div class="sheet-items" id="mobileMiniCartItems">
+      <div style="padding:3rem 1.5rem;text-align:center;color:#888;">
+        <i class="fas fa-shopping-bag" style="font-size:3rem;margin-bottom:1rem;opacity:0.3;"></i>
+        <p>Корзина пуста</p>
+      </div>
+    </div>
+    <div class="sheet-total">
+      Итого: <strong id="mobileMiniCartTotal">0 ₽</strong>
+    </div>
+    <div class="sheet-footer">
+      <button class="checkout-btn-full" id="mobileGoToCartBtn">
+        Перейти к оформлению
+      </button>
+    </div>
+  </div>
+</div>
+<!-- Алерт «Авторизуйтесь» перед отправкой сообщения -->
+<div class="custom-alert" id="authAlert">
+  <div class="alert-content">
+    <button class="alert-close">×</button>
+    <div class="alert-icon">
+      <i class="fas fa-user-lock"></i>
+    </div>
+    <div class="alert-text">
+      <strong>Авторизуйтесь</strong>
+      <span>Для отправки сообщения нужно войти в аккаунт</span>
+    </div>
+    <button class="alert-login-btn" id="authBtnFeedback">Войти</button>
+  </div>
+</div>
+  <!-- МОДАЛКА АВТОРИЗАЦИИ  -->
+<div id="authModal" class="auth-modal">
+  <div class="auth-modal-content">
+    <button class="close-modal" id="closeAuthModal">×</button>
+    <h2 class="auth-title">Вход по номеру<br><span class="mobile-only">телефона</span></h2>
+
+    <!-- ШАГ 1 — ВВОД НОМЕРА -->
+    <div id="stepPhone" class="auth-step">
+      <div class="country-selector">
+        <div class="selected-country" id="selectedCountry">
+          <span class="flag">RU</span>
+          <span class="code">+7</span>
+          <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="country-dropdown" id="countryDropdown">
+          <div class="country-item" data-code="+7" data-flag="RU">Россия +7</div>
+          <div class="country-item" data-code="+1" data-flag="US">USA +1</div>
+          <div class="country-item" data-code="+44" data-flag="GB">UK +44</div>
+        </div>
+      </div>
+      
+      <input type="text" 
+       name="honeypot" 
+       id="honeypot" 
+       tabindex="-1" 
+       autocomplete="off" 
+       style="position:absolute; left:-9999px; opacity:0; height:0; width:0; border:none; padding:0; margin:0;"
+       aria-hidden="true">
+
+<input type="hidden" name="fp_token" id="fp_token" value="">
+      <input type="tel" id="phoneInput" placeholder="(999) 999 99 99" class="auth-input">
+
+      <label class="checkbox-label required">
+        <input type="checkbox" id="privacyCheck">
+        <span class="custom-checkbox"></span>
+        Согласен с <a href="/policy" target="_blank" class="privacy-link">политикой конфиденциальности</a>
+      </label>
+
+      <label class="checkbox-label">
+        <input type="checkbox" id="subscribeCheck" checked>
+        <span class="custom-checkbox"></span>
+        Получать SMS с акциями и уведомлениями
+      </label>
+
+      <button id="sendCodeBtn" class="auth-btn" disabled>Получить код</button>
+    </div>
+
+    <!-- ШАГ 2 — ВВОД КОДА -->
+    <div id="stepCode" class="auth-step" style="display:none;">
+      <p class="auth-info">Код отправлен на <span id="maskedPhone"></span></p>
+      <input type="text" id="codeInput" placeholder="____" maxlength="4" class="auth-input">
+      <button id="verifyCodeBtn" class="auth-btn">Войти</button>
+      <button id="resendCode" class="auth-link">Отправить повторно</button>
+    </div>
+
+    <!-- ШАГ 3 — УСПЕШНЫЙ ВХОД -->
+    <div id="stepSuccess" class="auth-step" style="display:none;">
+      <i class="fas fa-check-circle success-icon"></i>
+      <h3>Добро пожаловаться!</h3>
+      <p>Вы успешно вошли как <span id="welcomePhone"></span></p>
+      <button id="closeSuccess" class="auth-btn">Продолжить</button>
+    </div>
+  </div>
+</div>
+
+<!-- МОБИЛЬНАЯ ШТОРКА ОБРАТНОЙ СВЯЗИ -->
+ <div class="mobile-feedback-top" id="mobileFeedbackTop"></div>
+<div class="mobile-feedback-sheet" id="mobileFeedbackSheet">
+
+
+  <div class="sheet-header">
+    <button class="sheet-back-btn" id="closeMobileFeedback">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <div class="sheet-title-wrapper">
+      <i class="fas fa-envelope-open-text"></i>
+      <h2>Обратная связь</h2>
+    </div>
+  </div>
+  <div class="sheet-handle"></div>
+  
+  <form class="contact-form sheet-form" novalidate id="contactFormMobile">
+    <div class="sheet-field">
+      <label>Ваше имя</label>
+      <input type="text" class="name-input" name="name" placeholder="Ваше имя..." required autocomplete="name" />
+    </div>
+    <div class="sheet-field phone-field-wrapper">
+      <label>Телефон <span class="required">*</span></label>
+      <input type="tel" class="phone-input" name="phone" placeholder="+7 (___) ___-__-__" pattern="\+7\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}" required />
+    </div>
+    <div class="sheet-field">
+      <label>Email <span class="required">*</span></label>
+      <input type="email" name="email" placeholder="your@email.com" required autocomplete="email" />
+    </div>
+    <div class="sheet-field">
+      <label>Сообщение <span class="required">*</span></label>
+      <textarea name="message" placeholder="Опишите ваш вопрос или предложение..." rows="4" required></textarea>
+    </div>
+    <button type="submit" class="sheet-submit-btn" id="submitBtnMobile">
+      <span class="btn-text">Отправить заявку</span>
+      <span class="btn-loading"><i class="fas fa-spinner fa-spin"></i></span>
+      <span class="btn-cooldown" style="display:none;"><span class="timer">30</span>с</span>
+    </button>
+  </form>
+</div>
+
+<!-- ШТОРКА СЛЕВА — МЕНЮ -->
+<div class="mobile-sidebar" id="mobileSidebar">
+  <div class="sidebar-top">
+    <button class="sidebar-close" id="closeSidebar">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <img src="/static/assets/logo.png" alt="Piligrim" class="sidebar-logo-big">
+  </div>
+
+  <nav class="sidebar-nav-modern">
+    <div class="nav-divider top"></div>
+    <a href="/" class="sidebar-link-modern">Главная</a>
+    <a href="/goods" class="sidebar-link-modern">Товары</a>
+    <a href="/services" class="sidebar-link-modern">Услуги</a>
+    <a href="/news" class="sidebar-link-modern">Новости</a>
+    <a href="/about_company" class="sidebar-link-modern active">О компании</a>
+    <a href="/contacts" class="sidebar-link-modern">Контакты</a>
+    <a href="/profile" class="sidebar-link-modern">Личный кабинет</a>
+    <div class="nav-divider bottom"></div>
+  </nav>
+
+  <div class="sidebar-bottom-theme">
+    <div class="sidebar-theme-toggle">
+      <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+      <label for="theme-toggle" class="theme-toggle-label">
+        <i class="fas fa-moon"></i>
+        <i class="fas fa-sun"></i>
+      </label>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- КАРТОЧКА ТОВАРА  -->
+<div class="product-modal" id="productModal">
+  <div class="product-content">
+    <!-- Крестик закрытия -->
+    <button class="close-modal" onclick="closeProductModal()">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M6 6L22 22M6 22L22 6" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <!-- Основной контейнер -->
+    <div class="product-main">
+      <img id="productImg" class="product-img" src="/static/assets/no-image.png" alt="Товар">
+
+      <div class="product-info">
+        <h3 id="productTitle" class="product-title">Загрузка...</h3>
+
+        <div id="productStockInfo" 
+     style="margin: 12px 0 8px; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            line-height: 1.4;">
+</div>
+
+        <!-- Рейтинг и отзывы -->
+        <div class="product-rating">
+          <div class="stars"></div>
+          <span id="productReviewsCount" class="reviews-count">—</span>
+        </div>
+
+        <div id="productPrice" class="product-price">—</div>
+
+        <div id="productDescription" class="product-description">Загрузка описания...</div>
+
+        <!-- Кнопка "В корзину" -->
+        <button id="addToCartModal" class="add-to-cart-btn">
+          <i class="fas fa-shopping-cart"></i> В корзину
+        </button>
+
+        <!-- ОТЗЫВЫ — ТОЧНО КАК В НОВОСТЯХ -->
+        <div class="product-reviews">
+          <h4 class="reviews-title">Отзывы покупателей</h4>
+          <div class="reviews-list" id="productReviewsList">
+            <div style="text-align:center;padding:3rem;color:#888;">
+              <i class="far fa-star" style="font-size:3rem;margin-bottom:1rem;display:block;opacity:0.6;"></i>
+              <p>Отзывов пока нет</p>
+              <small style="opacity:0.7;">Будьте первым!</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- === AI АССИСТЕНТ — ИКОНКА И МОДАЛКА (из zaza.html, не в ai.css) === -->
+<div id="ai-assistant">
+  <svg viewBox="0 0 100 100" class="ai-robot" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f5d78a"/>
+        <stop offset="100%" stop-color="#d4af37"/>
+      </linearGradient>
+      <linearGradient id="suitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#2d2d2d"/>
+        <stop offset="100%" stop-color="#1a1a1a"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Голова робота (золотая) -->
+    <circle cx="50" cy="35" r="18" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+
+    <!-- Глаза -->
+    <circle cx="44" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="56" cy="32" r="4.5" fill="#000" opacity="0.9"/>
+    <circle cx="45.5" cy="31" r="1.8" fill="#fff"/>
+    <circle cx="57.5" cy="31" r="1.8" fill="#fff"/>
+
+    <!-- Светящиеся акценты в глазах -->
+    <circle cx="46" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+    <circle cx="58" cy="30.5" r="1.2" fill="#fff" opacity="0.7"/>
+
+    <!-- Туловище — пиджак -->
+    <path d="M30 52 L28 98 L72 98 L70 52 
+             Q62 58 50 58 Q38 58 30 52 Z" 
+          fill="url(#suitGrad)" stroke="#000" stroke-width="2"/>
+
+    <!-- Лацканы пиджака -->
+    <path d="M50 52 L42 64 L42 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+    <path d="M50 52 L58 64 L58 72" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+
+    <!-- Галстук -->
+    <path d="M50 58 L46 72 L50 78 L54 72 Z" fill="#8b1e1e"/>
+    <polygon points="46,72 50,78 54,72" fill="#5c1212"/>
+
+    <!-- Пуговицы пиджака -->
+    <circle cx="50" cy="70" r="2.5" fill="#333"/>
+    <circle cx="50" cy="78" r="2.5" fill="#333"/>
+    <circle cx="50" cy="86" r="2.5" fill="#333"/>
+
+    <!-- Руки -->
+    <rect x="24" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+    <rect x="64" y="58" width="12" height="28" rx="6" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="1.5"/>
+
+    <!-- Планшет с Конституцией в левой руке -->
+    <g transform="translate(12, 68)">
+      <rect x="0" y="0" width="28" height="36" rx="4" fill="#fff" stroke="#111" stroke-width="2"/>
+      <rect x="2" y="2" width="24" height="30" rx="2" fill="#f0f0f0"/>
+      <text x="14" y="11" font-family="Arial, sans-serif" font-size="5.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+      <line x1="4" y1="15" x2="24" y2="15" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="19" x2="24" y2="19" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="23" x2="22" y2="23" stroke="#333" stroke-width="0.8"/>
+      <line x1="4" y1="27" x2="20" y2="27" stroke="#333" stroke-width="0.8"/>
+    </g>
+
+    <!-- Блеск на голове -->
+    <path d="M42 24 Q46 20 50 24" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.6"/>
+  </svg>
+</div>
+
+<!-- === AI ЧАТ МОДАЛЬНЫЙ (ТОТ ЖЕ СТИЛЬ) === -->
+<div id="ai-chat" class="ai-chat-modal">
+  <div class="ai-chat-header">
+    <div class="ai-chat-title">
+      <svg width="32" height="32" viewBox="0 0 100 100" style="margin-right:10px;">
+        <use href="#goldGrad"/>
+        <circle cx="50" cy="50" r="48" fill="url(#goldGrad)" stroke="#b8975a" stroke-width="2"/>
+        <circle cx="38" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="62" cy="42" r="7" fill="#000" opacity="0.8"/>
+        <circle cx="39" cy="40" r="2.5" fill="#fff"/>
+        <circle cx="63" cy="40" r="2.5" fill="#fff"/>
+        <path d="M30 58 Q50 68 70 58" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <g transform="translate(8, 62)">
+          <rect x="0" y="0" width="30" height="38" rx="3" fill="#fff" stroke="#000" stroke-width="1.6"/>
+          <text x="15" y="12" font-family="Arial" font-size="6.5" fill="#000" text-anchor="middle" font-weight="bold">КОНСТИТУЦИЯ</text>
+        </g>
+        <path d="M16 75 Q10 70 13 65" fill="none" stroke="#b8975a" stroke-width="7.5" stroke-linecap="round"/>
+      </svg>
+      <span>Юрист AI</span>
+    </div>
+    <div class="ai-header-buttons">
+      <button class="ai-btn-minimize" onclick="toggleAIChatSize()" title="На весь экран">
+        <i class="fas fa-expand-arrows-alt"></i>
+      </button>
+      <button class="ai-btn-close" onclick="closeAIChat()" title="Закрыть">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+  <div class="ai-chat-body">
+    <div class="ai-chat-messages"></div>
+    <div class="ai-chat-input">
+      <input type="text" id="ai-input" placeholder="Задайте юридический вопрос..." 
+             onkeypress="if(event.key==='Enter' && this.value.trim()) { sendAIMessage(this.value); this.value=''; }">
+      <button onclick="const inp = document.getElementById('ai-input'); if(inp.value.trim()) { sendAIMessage(inp.value); inp.value=''; }" title="Отправить">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ТУМБЛЕР ТЕМЫ — ВИСЯЩАЯ ЛАМПОЧКА -->
+<div class="theme-toggle-hanging">
+  <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+  <label for="theme-toggle" class="theme-toggle-label">
+    <div class="rope top"></div>
+    <div class="bulb">
+      <div class="bulb-light"></div>
+      <div class="bulb-glow"></div>
+    </div>
+    <div class="rope bottom"></div>
+  </label>
+</div>
+
+  <a href="#" class="back-to-top"><i class="fas fa-arrow-up"></i></a>
+  <!-- СКРИПТЫ -->
+  <script src="/static/js/search.js"></script>
+  <script src="/static/js/auth.js"></script>
+  <script src="/static/js/cart.js" defer></script>
+  <script src="/static/js/feedback.js"></script>
+  <script src="/static/js/contacts.js" defer></script>
+  <script src="/static/js/ai.js"></script>
+  <script src="/static/js/about_company.js" defer></script>
+  <script src="/static/js/profile.js"></script>
+  <script src="/static/js/profile_two.js"></script>
+
+
+  <script>
+  // ФИНАЛЬНАЯ ВЕРСИЯ — МОДАЛКА ОТКРЫВАЕТСЯ НОРМАЛЬНО, НЕ В УГЛУ И НЕ ПРОПАДАЕТ
+(() => {
+  const overlay = document.getElementById('authRequiredOverlay');
+  const loginBtn = document.getElementById('loginFromOverlayBtn');
+
+const isLoggedIn = async () => {
+  // НИКОМУ НЕ ВЕРИМ. Только серверу.
+  try {
+    const res = await fetch('/api/company', { 
+      method: 'HEAD', 
+      // быстро, без тела
+      credentials: 'include',
+      cache: 'no-store'     // ← важно! не берём из кэша
+    });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+};
+
+  const lockPage = () => {
+    overlay.classList.add('active');
+    document.body.classList.add('auth-locked');
+    document.querySelectorAll('header, main, footer, nav, .mobile-bottom-bar').forEach(el => {
+      if (el) el.style.filter = 'blur(16px)';
+    });
+  };
+
+  const unlockPage = () => {
+    overlay.classList.remove('active');
+    document.body.classList.remove('auth-locked');
+    document.querySelectorAll('header, main, footer, nav, .mobile-bottom-bar').forEach(el => {
+      if (el) el.style.filter = '';
+    });
+  };
+
+  // ГЛАВНОЕ: ОТКРЫВАЕМ МОДАЛКУ, КОТОРАЯ НАХОДИТСЯ В КОРНЕ body
+  const openAuthModal = () => {
+    const modal = document.querySelector('#authModal'); // берём единственную
+    if (!modal) return;
+
+    // Снимаем блокировку на 200мс — чтобы модалка успела открыться
+    unlockPage();
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden'; // можно вернуть — модалка уже вне blur
+
+    // Фокус на номер
+    setTimeout(() => {
+      document.getElementById('phoneInput')?.focus();
+    }, 300);
+
+    // Через 200мс возвращаем blur (но модалка уже поверх)
+    setTimeout(async () => {
+  const loggedIn = await isLoggedIn();
+  if (!loggedIn) {
+    lockPage();
+    modal.style.filter = 'none';
+    modal.style.zIndex = '9999999';
+  }
+}, 200);
+  };
+
+  loginBtn?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openAuthModal();
+  });
+
+  // ИСПРАВЛЕННЫЙ check — теперь ждёт async и работает правильно
+  const check = async () => {
+    const loggedIn = await isLoggedIn();  // ← ждём результат!
+
+    if (loggedIn) {
+      unlockPage();
+      overlay?.classList.remove('active');
+      document.body.classList.remove('no-scroll');
+    } else {
+      lockPage();
+      overlay?.classList.add('active');
+      document.body.classList.add('no-scroll');
+    }
+  };
+
+  // Первый запуск
+  check();
+
+  // Периодическая проверка
+  const interval = setInterval(async () => {
+    await check();
+    const loggedIn = await isLoggedIn();
+    if (loggedIn) clearInterval(interval);
+  }, 600);
+
+  document.addEventListener('authSuccess', () => {
+    setTimeout(unlockPage, 800);
+  });
+
+  window.addEventListener('authChanged', check);
+  window.addEventListener('storage', check);
+})();
+  </script>
+  
+<script>
+// ФИНАЛЬНАЯ ВЕРСИЯ — ДЕКАБРЬ 2025 — С ГАРАНТИРОВАННЫМ ОБНОВЛЕНИЕМ КОРЗИНЫ
+(() => {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  function init() {
+    const lists = {
+      all:       document.getElementById('allOrders'),
+      active:    document.getElementById('activeOrders'),
+      completed: document.getElementById('completedOrders')
+    };
+
+    if (!lists.all) return;
+
+    let allOrders = [];
+    let currentTab = 'all';
+
+    // Observer для ленивой подгрузки фото
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target;
+          if (img.dataset.load === 'pending') {
+            loadImageForItem(img, img.dataset.id, img.dataset.type);
+            img.dataset.load = 'done';
+            observer.unobserve(img);
+          }
+        }
+      });
+    }, { rootMargin: '300px' });
+
+    const loadImageForItem = (imgEl, itemId, itemType) => {
+      if (!itemId || !imgEl) return;
+      const apiUrl = itemType === 'service' ? `/api/service/${itemId}` : `/api/product/${itemId}`;
+
+      fetch(apiUrl + '?t=' + Date.now(), { credentials: 'include', cache: 'no-store' })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data && (data.image_url || data.image_urls?.[0])) {
+            imgEl.src = (data.image_url || data.image_urls[0]) + '?t=' + Date.now();
+          }
+        })
+        .catch(() => {});
+    };
+
+    // Тост "Добавлено в корзину!"
+    const showAddedToast = () => {
+      const toast = document.createElement('div');
+      toast.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:center;gap:16px;">
+          <i class="fas fa-check-circle" style="font-size:clamp(1.5rem,5vw,2rem);"></i>
+          <div style="font-size:clamp(0.95rem,4.2vw,1.25rem);font-weight:800;white-space:nowrap;">Добавлено в корзину!</div>
+        </div>
+      `;
+
+      Object.assign(toast.style, {
+        position: 'fixed',
+        bottom: 'max(28px, env(safe-area-inset-bottom,28px))',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        background: '#00ff95',
+        color: '#000',
+        padding: '16px 32px',
+        borderRadius: '32px',
+        boxShadow: '0 20px 60px rgba(0,255,149,0.38)',
+        backdropFilter: 'blur(28px)',
+        zIndex: '999999',
+        fontFamily: 'Inter, sans-serif',
+        maxWidth: '92vw',
+        textAlign: 'center',
+        opacity: '0',
+        pointerEvents: 'none',
+        animation: 'toastUp 0.6s cubic-bezier(0.22,0.61,0.36,1) forwards'
+      });
+
+      document.body.appendChild(toast);
+      requestAnimationFrame(() => toast.style.opacity = '1');
+
+      setTimeout(() => {
+        toast.style.animation = 'toastDown 0.5s ease forwards';
+        setTimeout(() => toast.remove(), 550);
+      }, 2800);
+    };
+
+    if (!document.getElementById('addedToastStyles')) {
+      const style = document.createElement('style');
+      style.id = 'addedToastStyles';
+      style.textContent = `
+        @keyframes toastUp { from { transform: translateX(-50%) translateY(120px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+        @keyframes toastDown { to { transform: translateX(-50%) translateY(120px); opacity: 0; } }
+      `;
+      document.head.appendChild(style);
+    }
+
+    const formatPrice = (priceStr, priceCents) => {
+      if (priceStr && priceStr !== '—' && priceStr.trim() !== '') return priceStr;
+      if (!priceCents || priceCents <= 0) return 'Цена по запросу';
+      const rub = Math.floor(priceCents / 100);
+      const kop = (priceCents % 100).toString().padStart(2, '0');
+      return `${rub.toLocaleString('ru-RU')}.${kop} ₽`;
+    };
+
+    const createCard = (order) => {
+      const cancelled = order.status === 'cancelled';
+      const completed = ['delivered', 'completed'].includes(order.status);
+
+      const steps = ['pending', 'confirmed', 'processing', 'shipping', 'completed'];
+      const step = steps.indexOf(order.status);
+      const filled = step >= 0 ? step + 1 : 0;
+
+      const reason = order.cancel_reason ? 
+        String(order.cancel_reason).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') : '';
+
+      const card = document.createElement('div');
+      card.className = 'apple-archive-order';
+      card.dataset.orderId = order.id;
+
+      card.innerHTML = `
+        <div class="archive-order-header">
+          <div class="archive-order-title">
+            Заказ ${order.display_id || order.user_order_number || order.id}
+            <span class="archive-status-badge">
+              ${completed ? 'Выполнен' : cancelled ? 'Отменён' : 'В работе'}
+            </span>
+          </div>
+          <div class="archive-order-meta">
+            <div class="archive-order-date">
+              ${new Date(order.created_at).toLocaleDateString('ru-RU', {day:'numeric', month:'short', year:'numeric'})}
+            </div>
+            <div class="archive-order-total">${order.total_str || '—'}</div>
+          </div>
+        </div>
+
+        ${!completed && !cancelled ? `
+          <div class="archive-progress-chain">
+            ${[0,1,2,3,4].map(i => `<div class="progress-step ${i < filled ? 'filled' : ''}"></div>`).join('')}
+          </div>
+          <div class="progress-labels">
+            <div class="progress-label ${filled > 0 ? 'filled' : ''}">Принят</div>
+            <div class="progress-label ${filled > 1 ? 'filled' : ''}">Подтверждён</div>
+            <div class="progress-label ${filled > 2 ? 'filled' : ''}">В обработке</div>
+            <div class="progress-label ${filled > 3 ? 'filled' : ''}">В доставке</div>
+            <div class="progress-label ${filled > 4 ? 'filled' : ''}">Готово</div>
+          </div>
+        ` : ''}
+
+        ${completed || cancelled ? `
+          <div class="archive-final-status">
+            <div class="final-icon ${completed ? 'completed' : 'cancelled'}">
+              ${completed ? '✓' : '✕'}
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="archive-items-list">
+          ${order.items?.slice(0,4).map(item => {
+            const imgId = `thumb-${order.id}-${item.item_id || item.id}`;
+            const isService = (item.item_type || item.type || 'product') === 'service';
+            const itemId = item.item_id || item.id;
+
+            let imgHtml = '';
+            if (item.image_url) {
+              imgHtml = `<img id="${imgId}" src="${item.image_url}?t=${Date.now()}" class="archive-item-thumb" onerror="this.src='/static/assets/no-image.png?t=' + Date.now()" loading="lazy">`;
+            } else {
+              imgHtml = `<img id="${imgId}" src="/static/assets/no-image.png" class="archive-item-thumb" 
+                              data-load="pending" data-id="${itemId}" data-type="${isService ? 'service' : 'product'}" loading="lazy">`;
+            }
+
+            return `
+              <div class="archive-item-row">
+                ${imgHtml}
+                <div class="archive-item-info">
+                  <div class="archive-item-title">${item.title || 'Без названия'}</div>
+                  <div class="archive-item-details">${(item.quantity || 1)} × ${formatPrice(item.price_str, item.price_cents)}</div>
+                </div>
+                <button class="archive-repeat-btn" data-id="${itemId}" data-type="${isService ? 'service' : 'product'}">
+                  Повторить
+                </button>
+              </div>
+            `;
+          }).join('') || ''}
+          ${order.items?.length > 4 ? `<div class="archive-more-items">…и ещё ${order.items.length - 4}</div>` : ''}
+        </div>
+
+        ${cancelled && reason ? `
+          <div class="archive-cancel-reason">
+            <div class="cancel-reason-title">Причина отмены</div>
+            <div class="archive-reason-text">${reason}</div>
+          </div>
+        ` : ''}
+      `;
+
+      return card;
+    };
+
+    const updateCounters = () => {
+      const active = allOrders.filter(o => !['delivered','completed','cancelled'].includes(o.status)).length;
+      const completedCount = allOrders.filter(o => ['delivered','completed','cancelled'].includes(o.status)).length;
+
+      const set = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val > 0 ? val : '';
+      };
+
+      set('countAll', allOrders.length);
+      set('countActive', active);
+      set('countCompleted', completedCount);
+    };
+
+    const renderTab = (tab) => {
+      currentTab = tab;
+      Object.values(lists).forEach(l => l && (l.style.display = 'none'));
+      const container = lists[tab];
+      if (!container) return;
+      container.style.display = 'block';
+
+      let filtered = allOrders;
+      if (tab === 'active') filtered = allOrders.filter(o => !['delivered','completed','cancelled'].includes(o.status));
+      if (tab === 'completed') filtered = allOrders.filter(o => ['delivered','completed','cancelled'].includes(o.status));
+
+      container.innerHTML = '';
+      if (filtered.length === 0) {
+        const text = tab === 'all' ? 'Заказов пока нет' : tab === 'active' ? 'Активных заказов нет' : 'Завершённых заказов нет';
+        container.innerHTML = `<div class="orders-empty"><i class="fas fa-receipt"></i><p>${text}</p></div>`;
+        return;
+      }
+
+      filtered.forEach((order, visibleIndex) => {
+        const card = createCard(order);
+        container.appendChild(card);
+
+        card.querySelectorAll('img[data-load="pending"]').forEach(img => {
+          if (visibleIndex < 2) {
+            loadImageForItem(img, img.dataset.id, img.dataset.type);
+            img.dataset.load = 'done';
+          } else {
+            observer.observe(img);
+          }
+        });
+      });
+    };
+
+    const endpoints = ['/api/user_orders', '/api/user/orders', '/api/orders', '/api/user_archived_orders'];
+
+    const loadOrders = async () => {
+      for (const url of endpoints) {
+        try {
+          const res = await fetch(url + '?t=' + Date.now(), { credentials: 'include', cache: 'no-store' });
+          if (res.ok) {
+            const data = await res.json();
+            allOrders = Array.isArray(data) ? data : (data.orders || data.list || []);
+            allOrders.sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date));
+            updateCounters();
+            renderTab(currentTab);
+            console.log('Заказы загружены с:', url);
+            return;
+          }
+        } catch (e) {}
+      }
+      lists.all.innerHTML = `<div class="orders-empty"><p>Нет доступа к заказам</p></div>`;
+    };
+
+    document.querySelectorAll('.order-tab').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.preventDefault();
+        document.querySelectorAll('.order-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderTab(btn.dataset.tab);
+      });
+    });
+
+    // === ГЛАВНОЕ ИСПРАВЛЕНИЕ: ГАРАНТИРОВАННОЕ ОБНОВЛЕНИЕ КОРЗИНЫ ===
+    document.addEventListener('click', async e => {
+      const btn = e.target.closest('.archive-repeat-btn');
+      if (!btn) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (btn.disabled) return;
+      btn.disabled = true;
+      const oldHTML = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+      const id = btn.dataset.id;
+      const type = btn.dataset.type || 'product';
+
+      try {
+        const res = await fetch('/api/cart/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(type === 'service' ? { service_id: id, quantity: 1 } : { product_id: id, quantity: 1 })
+        });
+
+        if (res.ok) {
+          showAddedToast();
+
+          // ГАРАНТИРОВАННОЕ ОБНОВЛЕНИЕ КОРЗИНЫ
+          document.dispatchEvent(new CustomEvent('cartUpdated'));
+
+          // Принудительно обновляем счётчики и мини-корзину через 300мс (чтобы сервер успел)
+          setTimeout(() => {
+            // Обновляем счётчики в хедере
+            document.querySelectorAll('#cartCount, #mobileCartCount, .cart-count').forEach(el => {
+              const current = parseInt(el.textContent || '0', 10);
+              el.textContent = current + 1;
+            });
+
+            // Если есть функция обновления корзины — вызываем
+            if (typeof updateMiniCart === 'function') updateMiniCart();
+            if (typeof loadCart === 'function') loadCart();
+            if (typeof refreshCart === 'function') refreshCart();
+
+            // Дополнительно — триггерим событие, которое может слушать cart.js
+            document.dispatchEvent(new CustomEvent('cartChanged'));
+            document.dispatchEvent(new CustomEvent('cart-updated'));
+          }, 300);
+        }
+      } catch (err) {
+        console.error('Ошибка добавления в корзину:', err);
+      } finally {
+        setTimeout(() => {
+          if (btn.isConnected) {
+            btn.disabled = false;
+            btn.innerHTML = oldHTML;
+          }
+        }, 400);
+      }
+    });
+
+    loadOrders();
+    setInterval(loadOrders, 60000);
+    document.addEventListener('authSuccess', () => setTimeout(loadOrders, 600));
+  }
+})();
+</script>
+
+<script>
+// АНТИФЛУД ДЛЯ КНОПКИ "ПОВТОРИТЬ" — Блокировка работает даже после F5 и динамической подгрузки заказов (финал, декабрь 2025)
+(() => {
+  const STORAGE_KEY = 'repeatFloodBlockUntil';
+  let floodAlert = null;
+  let blockTimeout = null;
+
+  const getOrCreateAlert = () => {
+    let alert = document.getElementById('repeatFloodAlert');
+    if (alert) alert.remove();
+
+    alert = document.createElement('div');
+    alert.id = 'repeatFloodAlert';
+    alert.innerHTML = `
+      <div class="flood-alert-backdrop"></div>
+      <div class="flood-alert-content">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h3>Слишком много попыток</h3>
+        <p>Подождите <strong id="floodTimer">60</strong> секунд</p>
+        <button class="flood-alert-close">Понятно</button>
+      </div>
+    `;
+
+    Object.assign(alert.style, {
+      position: 'fixed',
+      inset: '0',
+      zIndex: '999999',
+      fontFamily: 'Inter, sans-serif',
+      opacity: '0',
+      transition: 'opacity 0.4s ease',
+      pointerEvents: 'none'
+    });
+
+    const backdrop = alert.querySelector('.flood-alert-backdrop');
+    backdrop.style.cssText = `
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      pointer-events: none;
+    `;
+
+    const content = alert.querySelector('.flood-alert-content');
+    content.style.cssText = `
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--surface, #ffffff);
+      color: var(--text-primary, #000000);
+      padding: 2.5rem 2rem;
+      border-radius: 32px;
+      text-align: center;
+      max-width: 90%;
+      width: 380px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+      pointer-events: auto;
+      border: 2px solid var(--border, #dddddd);
+    `;
+
+    alert.querySelector('i').style.cssText = 'font-size: 4rem; color: #ff4444; margin-bottom: 1rem; display: block;';
+    alert.querySelector('h3').style.cssText = 'margin: 0 0 1rem; font-size: 1.8rem; font-weight: 800;';
+    alert.querySelector('p').style.cssText = 'margin: 0 0 1.5rem; font-size: 1.15rem; line-height: 1.5;';
+    alert.querySelector('#floodTimer').style.cssText = 'color: #ff4444; font-weight: 900; font-size: 1.4rem;';
+
+    const closeBtn = alert.querySelector('.flood-alert-close');
+    closeBtn.style.cssText = `
+      background: #ff4444; color: white; border: none;
+      padding: 0.9rem 2rem; border-radius: 24px;
+      font-size: 1.1rem; font-weight: 700; cursor: pointer;
+      transition: all 0.3s;
+    `;
+    closeBtn.onmouseover = () => closeBtn.style.background = '#ff3333';
+    closeBtn.onmouseout = () => closeBtn.style.background = '#ff4444';
+    closeBtn.onclick = hideAlert;
+
+    document.body.appendChild(alert);
+    return alert;
+  };
+
+  const showAlert = () => {
+    floodAlert = getOrCreateAlert();
+    requestAnimationFrame(() => floodAlert.style.opacity = '1');
+    document.addEventListener('keydown', escKeyHandler);
+  };
+
+  const hideAlert = () => {
+    if (!floodAlert) return;
+    floodAlert.style.opacity = '0';
+    document.removeEventListener('keydown', escKeyHandler);
+  };
+
+  const escKeyHandler = (e) => {
+    if (e.key === 'Escape') hideAlert();
+  };
+
+  const updateTimer = (seconds) => {
+    const timerEl = document.getElementById('floodTimer');
+    if (timerEl) timerEl.textContent = Math.max(0, seconds);
+  };
+
+  // Универсальная функция блокировки — вызываем всегда, когда кнопки могут появиться
+  const blockButtons = () => {
+    document.querySelectorAll('.archive-repeat-btn').forEach(btn => {
+      btn.disabled = true;
+      btn.style.opacity = '0.4';
+      btn.style.pointerEvents = 'none';
+      btn.title = 'Заблокировано из-за частых кликов';
+    });
+  };
+
+  const unblockButtons = () => {
+    document.querySelectorAll('.archive-repeat-btn').forEach(btn => {
+      btn.disabled = false;
+      btn.style.opacity = '';
+      btn.style.pointerEvents = '';
+      btn.title = '';
+    });
+    hideAlert();
+    localStorage.removeItem(STORAGE_KEY);
+  };
+
+  const applyBlockIfActive = () => {
+    const blockedUntilStr = localStorage.getItem(STORAGE_KEY);
+    if (!blockedUntilStr) return false;
+
+    const until = parseInt(blockedUntilStr, 10);
+    const now = Date.now();
+
+    if (isNaN(until) || now >= until) {
+      localStorage.removeItem(STORAGE_KEY);
+      unblockButtons();
+      return false;
+    }
+
+    const secondsLeft = Math.ceil((until - now) / 1000);
+    blockButtons();
+    showAlert();
+    updateTimer(secondsLeft);
+
+    if (blockTimeout) clearInterval(blockTimeout);
+    blockTimeout = setInterval(() => {
+      const remaining = Math.ceil((until - Date.now()) / 1000);
+      if (remaining <= 0) {
+        clearInterval(blockTimeout);
+        blockTimeout = null;
+        unblockButtons();
+      } else {
+        updateTimer(remaining);
+      }
+    }, 1000);
+
+    return true;
+  };
+
+  // Применяем блокировку при загрузке
+  applyBlockIfActive();
+
+  // КЛЮЧЕВОЕ: слушаем событие, когда заказы отрисовались (в твоём коде это renderTab вызывается после loadOrders)
+  // В твоём скрипте заказов нет явного события — но мы можем использовать MutationObserver на контейнерах заказов
+  const observer = new MutationObserver(() => {
+    applyBlockIfActive();
+  });
+
+  document.querySelectorAll('#allOrders, #activeOrders, #completedOrders').forEach(container => {
+    if (container) observer.observe(container, { childList: true, subtree: true });
+  });
+
+  // Антифлуд
+  let clickCount = 0;
+  let firstClickTime = 0;
+
+  const handleClick = (e) => {
+    const btn = e.target.closest('.archive-repeat-btn');
+    if (!btn || btn.disabled) return;
+
+    const now = Date.now();
+
+    if (clickCount === 0) {
+      firstClickTime = now;
+      clickCount = 1;
+      return;
+    }
+
+    clickCount++;
+
+    if (clickCount > 5 && (now - firstClickTime) < 30000) {
+      const blockUntil = now + 60000;
+      localStorage.setItem(STORAGE_KEY, blockUntil.toString());
+
+      blockButtons();
+      showAlert();
+      updateTimer(60);
+      applyBlockIfActive(); // На всякий случай
+
+      clickCount = 0;
+      return;
+    }
+
+    if ((now - firstClickTime) >= 30000) {
+      clickCount = 1;
+      firstClickTime = now;
+    }
+  };
+
+  document.addEventListener('click', handleClick, true);
+})();
+</script>
+
+</body>
+</html>

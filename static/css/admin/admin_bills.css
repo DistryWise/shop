@@ -1,0 +1,1309 @@
+
+/* === НОВЫЕ СТИЛИ ДЛЯ СВОРАЧИВАЕМЫХ СЕКЦИЙ — ПО ЦЕНТРУ, С АНИМАЦИЕЙ === */
+.admin-main {
+    margin-left: 280px;
+    padding: 40px 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.admin-title {
+    font-size: 2.4rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.collapsible-section {
+    width: 100%;
+    max-width: 1200px;
+    background: var(--surface, rgba(255,255,255,0.05));
+    border-radius: 20px;
+    margin-bottom: 40px;
+    overflow: hidden;
+    border: 1px solid var(--border, rgba(255,255,255,0.1));
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.section-header {
+    padding: 24px 32px;
+    background: rgba(255,255,255,0.03);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--text-primary);
+}
+
+.toggle-icon {
+    font-size: 1.4rem;
+    transition: transform 0.3s ease;
+    color: var(--text-primary);
+}
+
+.collapsible-section:not(.open) .toggle-icon {
+    transform: rotate(-90deg);
+}
+
+.section-content {
+    padding: 32px;
+    max-height: 2000px;
+    opacity: 1;
+    transition: all 0.4s ease;
+}
+
+.collapsible-section:not(.open) .section-content {
+    max-height: 0;
+    padding: 0 32px;
+    opacity: 0;
+    overflow: hidden;
+}
+
+/* Форма и таблица внутри */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.form-group input, .form-group textarea {
+    padding: 16px;
+    background: var(--bg-input, #111);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: 'Courier New', monospace;
+}
+
+.form-group input:focus, .form-group textarea:focus {
+    outline: none;
+    border-color: #fff;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.1);
+}
+
+.full-width { grid-column: 1 / -1; }
+
+.phone-group { position: relative; }
+
+.autocomplete-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 10;
+    display: none;
+    margin-top: 4px;
+}
+
+.autocomplete-list div {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+}
+
+.autocomplete-list div:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+.file-group .file-label {
+    display: block;
+    padding: 20px;
+    background: var(--bg-input);
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.file-group .file-label:hover {
+    border-color: #fff;
+    background: rgba(255,255,255,0.05);
+}
+
+.file-group input[type="file"] { display: none; }
+
+.file-group small {
+    display: block;
+    margin-top: 10px;
+    text-align: center;
+    opacity: 0.8;
+}
+
+.submit-group { text-align: right; }
+
+.primary-btn {
+    background: var(--text-primary);
+    color: var(--bg);
+    padding: 16px 36px;
+    border: none;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.primary-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+/* Таблица */
+.table-wrapper {
+    overflow-x: auto;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background: rgba(255,255,255,0.03);
+    padding: 18px 20px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+td {
+    padding: 18px 20px;
+    border-top: 1px solid var(--border);
+    color: var(--text-secondary);
+}
+
+tr:hover {
+    background: rgba(255,255,255,0.03);
+}
+
+.status-pending { color: #ff9800; font-weight: 600; }
+.status-marked { color: #8bc34a; font-weight: 600; }
+.status-confirmed { color: #4caf50; font-weight: 700; }
+
+.delete-btn, .confirm-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin: 0 5px;
+    transition: all 0.3s;
+}
+
+.confirm-btn {
+    background: #4caf50;
+    color: #fff;
+}
+
+.confirm-btn:hover {
+    background: #388e3c;
+}
+
+.delete-btn {
+    background: #f44336;
+    color: #fff;
+}
+
+.delete-btn:hover {
+    background: #d32f2f;
+}
+
+/* Светлая тема */
+html[data-theme="light"] {
+    --text-primary: #000;
+    --text-secondary: #444;
+    --bg: #fff;
+    --bg-input: #f5f5f5;
+    --border: #ddd;
+    --surface: rgba(0,0,0,0.03);
+}
+
+html[data-theme="light"] .primary-btn {
+    background: #000;
+    color: #fff;
+}
+
+html[data-theme="light"] .section-header {
+    background: rgba(0,0,0,0.03);
+}
+
+html[data-theme="light"] tr:hover,
+html[data-theme="light"] .autocomplete-list div:hover {
+    background: rgba(0,0,0,0.05);
+}
+
+.actions-cell {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 4px;
+    transition: all 0.3s;
+    font-size: 1rem;
+}
+
+.confirm-btn {
+    color: #4caf50;
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.confirm-btn:hover {
+    background: rgba(76, 175, 80, 0.2);
+    transform: scale(1.1);
+}
+
+.delete-btn {
+    color: #f44336;
+    background: rgba(244, 67, 54, 0.1);
+}
+
+.delete-btn:hover {
+    background: rgba(244, 67, 54, 0.2);
+    transform: scale(1.1);
+}
+
+.action-btn i {
+    pointer-events: none;
+}
+
+/* Минимальный фильтр по статусу — шторка по клику */
+.status-header {
+    position: relative;
+    padding-right: 4px !important; /* чтобы иконка не съезжала */
+}
+
+.status-filter-toggle {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-left: 10px;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.status-filter-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+}
+
+.status-filter-toggle i {
+    transition: transform 0.3s ease;
+}
+
+.status-filter-toggle.active i {
+    transform: rotate(180deg);
+}
+
+.status-filter-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface, rgba(255,255,255,0.08));
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 12px 0;
+    min-width: 220px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-50%) translateY(-10px);
+}
+
+.status-filter-dropdown.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Стрелочка вверх */
+.status-filter-dropdown::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid var(--border);
+}
+
+.status-filter-dropdown::after {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid var(--surface, rgba(255,255,255,0.08));
+    margin-bottom: 1px;
+}
+
+.filter-option {
+    padding: 12px 24px;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.filter-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.filter-option.active {
+    background: var(--text-primary);
+    color: var(--bg);
+    font-weight: 600;
+}
+
+/* Светлая тема — исправления */
+html[data-theme="light"] .status-filter-toggle:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme="light"] .status-filter-dropdown {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+}
+
+html[data-theme="light"] .status-filter-dropdown::after {
+    border-bottom-color: #ffffff;
+}
+
+html[data-theme="light"] .filter-option:hover {
+    background: rgba(0, 0, 0, 0.08);
+}
+/* Стабильная таблица с прокруткой и фиксированной высотой */
+.table-wrapper {
+    overflow-x: auto;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    max-height: 600px;           /* фиксированная максимальная высота */
+    overflow-y: auto;            /* вертикальная прокрутка при переполнении */
+    display: block;              /* важно для max-height */
+}
+
+#invoicesTable {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;            /* чтобы таблица не сжималась по ширине на мобильных */
+}
+
+#invoicesTable thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(255,255,255,0.03);
+}
+
+#invoicesTable tbody {
+    position: relative;
+}
+
+/* Плейсхолдер при пустом результате фильтра */
+.empty-filter-state {
+    height: 500px;               /* фиксированная высота, чтобы блок не сжимался */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    opacity: 0.8;
+    text-align: center;
+    padding: 40px;
+}
+
+.empty-filter-state i {
+    font-size: 4rem;
+    margin-bottom: 24px;
+    opacity: 0.4;
+}
+
+.empty-filter-state small {
+    margin-top: 16px;
+    font-size: 1rem;
+    opacity: 0.6;
+}
+
+/* Светлая тема */
+html[data-theme="light"] .empty-filter-state {
+    color: #666;
+}
+
+/* 1. Скрываем скроллбар в таблице счетов, но оставляем прокрутку */
+.table-wrapper::-webkit-scrollbar {
+    width: 0px;                  /* для вертикального */
+    height: 0px;                 /* для горизонтального */
+}
+
+.table-wrapper {
+    scrollbar-width: none;       /* Firefox */
+    -ms-overflow-style: none;    /* IE и Edge */
+}
+
+/* 2. Скрываем скроллбар в автокомплите телефона */
+.autocomplete-list::-webkit-scrollbar {
+    width: 0px;
+}
+
+.autocomplete-list {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+/* 3. Шторка фильтра всегда поверх всего (даже при малом количестве строк) */
+.status-filter-dropdown {
+    z-index: 2000 !important;    /* очень высокий z-index — выше всего */
+    position: absolute;          /* уже есть, но на всякий */
+    top: calc(100% + 12px);      /* чуть ниже заголовка */
+    left: 50%;
+    transform: translateX(-50%);
+    /* остальные стили остаются как были */
+}
+
+/* Дополнительно: убедимся, что thead не перекрывает шторку */
+#invoicesTable thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;                 /* ниже шторки */
+    background: rgba(255,255,255,0.03);
+}
+
+html[data-theme="light"] #invoicesTable thead {
+    background: rgba(0,0,0,0.03);
+}
+
+/* Улучшаем вид шторки при малом количестве строк */
+.status-filter-dropdown {
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4); /* чуть сильнее тень для "выпадающего" эффекта */
+}
+
+html[data-theme="light"] .status-filter-dropdown {
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+}
+/* Увеличиваем минимальную высоту таблицы, чтобы шторка всегда помещалась */
+.table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;            /* прокрутка остаётся */
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    max-height: 600px;           /* при большом количестве — прокрутка */
+    min-height: 480px;           /* КЛЮЧЕВОЕ: минимальная высота — шторка всегда видна */
+    display: block;
+    position: relative;          /* важно для позиционирования шторки внутри */
+}
+
+/* Плейсхолдер теперь адаптируется под новую высоту */
+.empty-filter-state {
+    min-height: 420px;            /* чуть меньше min-height таблицы */
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    opacity: 0.8;
+    text-align: center;
+    padding: 40px;
+}
+
+.empty-filter-state i {
+    font-size: 4rem;
+    margin-bottom: 24px;
+    opacity: 0.4;
+}
+
+/* Шторка остаётся внутри .table-wrapper, но теперь места достаточно */
+.status-filter-dropdown {
+    z-index: 2000 !important;
+    top: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%);
+    /* остальные стили без изменений */
+}
+/* Нижняя панель с кнопкой — слева */
+.submit-group {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-start;  /* кнопка слева */
+    align-items: center;
+    margin-top: 32px;
+    padding: 0;
+}
+
+/* Основные стили кнопки — компактная, с видимой рамкой */
+.primary-btn {
+    background: rgba(255, 255, 255, 0.05);       /* лёгкий полупрозрачный фон для видимости */
+    color: #ffffff;                              /* ярко-белый текст */
+    border: 2px solid #ffffff;                   /* яркая белая рамка — теперь видно! */
+    padding: 14px 28px;
+    border-radius: 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3),
+                0 0 12px rgba(255,255,255,0.15); /* свечение рамки */
+    backdrop-filter: blur(8px);
+}
+
+/* Наведение — заливка и усиление */
+.primary-btn:hover {
+    background: #ffffff;
+    color: #000000;
+    border-color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.4),
+                0 0 20px rgba(255,255,255,0.3);
+}
+
+/* Клик */
+.primary-btn:active {
+    transform: translateY(0);
+}
+
+/* Иконка */
+.primary-btn i {
+    font-size: 1.1rem;
+}
+
+/* === Светлая тема === */
+html[data-theme="light"] .primary-btn {
+    background: rgba(0, 0, 0, 0.05);
+    color: #000000;
+    border: 2px solid #000000;                   /* чёрная рамка — отлично видно */
+    box-shadow: 0 6px 16px rgba(0,0,0,0.15),
+                0 0 12px rgba(0,0,0,0.1);
+}
+
+html[data-theme="light"] .primary-btn:hover {
+    background: #000000;
+    color: #ffffff;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.3);
+}
+
+/* Модальное окно с реквизитами */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    backdrop-filter: blur(5px);
+}
+
+.modal-overlay.visible {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--surface, rgba(255,255,255,0.1));
+    border-radius: 20px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+}
+
+.modal-header {
+    padding: 24px 32px;
+    background: rgba(255,255,255,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 32px;
+    overflow-y: auto;
+    max-height: calc(90vh - 100px);
+}
+
+.modal-body pre {
+    white-space: pre-wrap;
+    font-family: 'Courier New', monospace;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+/* Светлая тема */
+html[data-theme="light"] .modal-content {
+    background: #ffffff;
+    border: 1px solid #ddd;
+}
+
+html[data-theme="light"] .modal-header {
+    background: rgba(0,0,0,0.03);
+    border-bottom: 1px solid #ddd;
+}
+/* Универсальные стили для всех новых модалок (пароль, удаление, создание, оплата) */
+#adminPasswordModal,
+#deleteConfirmModal,
+#createConfirmModal,
+#confirmPaymentModal {
+    z-index: 4000 !important;
+}
+
+/* Общие стили для всех модалок подтверждения */
+#deleteConfirmModal .modal-body i,
+#createConfirmModal .modal-body i,
+#confirmPaymentModal .modal-body i,
+#adminPasswordModal .modal-body i {
+    font-size: 4rem;
+    margin-bottom: 24px;
+    opacity: 0.8;
+}
+
+#deleteConfirmModal .modal-body i { color: #f44336; }
+#confirmPaymentModal .modal-body i { color: #4caf50; }
+#adminPasswordModal .modal-body i { color: #ff9800; }
+
+/* Стили для полей ввода в модалке пароля */
+#adminPasswordModal input[type="password"] {
+    width: 100%;
+    padding: 16px;
+    border-radius: 16px;
+    border: 2px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    text-align: center;
+    margin-bottom: 24px;
+    box-sizing: border-box;
+}
+
+#adminPasswordModal input[type="password"]:focus {
+    outline: none;
+    border-color: #fff;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.1);
+}
+
+/* Ошибка пароля */
+#passwordError {
+    color: #f44336;
+    margin-top: 12px;
+    display: none;
+    font-size: 0.95rem;
+}
+
+/* Превью в модалке создания счёта */
+#createConfirmModal .modal-body div[style*="background"] {
+    background: rgba(255,255,255,0.05);
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    font-family: 'Courier New', monospace;
+    line-height: 1.6;
+}
+
+/* Светлая тема — исправления для новых модалок */
+html[data-theme="light"] #adminPasswordModal input[type="password"],
+html[data-theme="light"] #adminPasswordModal input[type="password"]:focus {
+    background: #f5f5f5;
+    border-color: #ddd;
+    color: #000;
+}
+
+html[data-theme="light"] #createConfirmModal .modal-body div[style*="background"] {
+    background: rgba(0,0,0,0.05);
+}
+
+/* ========================================================
+   МОДАЛКА ПАРОЛЯ АДМИНА — МИНИМАЛИЗМ (ЧЁРНЫЙ + БЕЛЫЙ)
+   ======================================================== */
+
+#adminPasswordModal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(16px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 4000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.35s ease;
+}
+
+#adminPasswordModal.visible {
+    display: flex;
+    opacity: 1;
+    visibility: visible;
+}
+
+#adminPasswordModal .modal-content {
+    background: var(--surface, rgba(255, 255, 255, 0.06));
+    backdrop-filter: blur(24px);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    width: 92%;
+    max-width: 480px;
+    padding: 48px 40px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    transform: translateY(20px) scale(0.96);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#adminPasswordModal.visible .modal-content {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+/* Заголовок */
+#adminPasswordModal .modal-header h2 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 32px 0;
+    letter-spacing: -0.5px;
+}
+
+/* Крестик — минималистичный */
+#adminPasswordModal .modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    color: var(--text-primary);
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    opacity: 0.7;
+}
+
+#adminPasswordModal .modal-close:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--text-primary);
+}
+
+/* Иконка замка — чёрно-белая, минимальная */
+#adminPasswordModal .modal-body i.fa-lock {
+    font-size: 4rem;
+    color: var(--text-primary);
+    margin-bottom: 28px;
+    opacity: 0.6;
+}
+
+/* Текст */
+#adminPasswordModal .modal-body p {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    margin-bottom: 36px;
+    line-height: 1.6;
+    opacity: 0.85;
+    font-weight: 400;
+}
+
+/* Поле ввода — чистый минимализм */
+#adminPasswordModal #adminPasswordInput {
+    width: 100%;
+    padding: 18px 20px;
+    background: transparent;
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    text-align: center;
+    margin-bottom: 32px;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+#adminPasswordModal #adminPasswordInput::placeholder {
+    color: transparent;
+}
+
+#adminPasswordModal #adminPasswordInput:focus {
+    outline: none;
+    border-color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.08);
+}
+
+/* Подпись под полем (постоянная, вместо placeholder) */
+#adminPasswordModal .modal-body p + #adminPasswordInput {
+    margin-top: -20px;
+}
+
+#adminPasswordInput::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+    letter-spacing: normal;
+    font-weight: 400;
+    font-size: 1.1rem;
+}
+
+/* Кнопки — строгий минимализм */
+#adminPasswordModal .modal-body > div {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+
+#adminPasswordModal .primary-btn {
+    flex: 1;
+    max-width: 160px;
+    padding: 16px 24px;
+    background: transparent;
+    color: var(--text-primary);
+    border: 2px solid var(--text-primary);
+    border-radius: 16px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.35s ease;
+    letter-spacing: 0.5px;
+}
+
+#adminPasswordModal .primary-btn:hover {
+    background: var(--text-primary);
+    color: var(--bg);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* Отмена — чуть тоньше */
+#adminPasswordModal .primary-btn:last-child {
+    border-color: var(--border);
+    opacity: 0.8;
+}
+
+#adminPasswordModal .primary-btn:last-child:hover {
+    border-color: var(--text-primary);
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Ошибка — минимальная, без цвета */
+#adminPasswordModal #passwordError {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-top: 20px;
+    display: none;
+    opacity: 0.8;
+}
+
+/* === Светлая тема === */
+html[data-theme="light"] #adminPasswordModal .modal-content {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: #ddd;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15);
+}
+
+html[data-theme="light"] #adminPasswordModal #adminPasswordInput {
+    background: transparent;
+    border-color: #ccc;
+}
+
+html[data-theme="light"] #adminPasswordModal #adminPasswordInput:focus {
+    border-color: #000;
+    background: rgba(0, 0, 0, 0.03);
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="light"] #adminPasswordModal .primary-btn {
+    border-color: #000;
+    color: #000;
+}
+
+html[data-theme="light"] #adminPasswordModal .primary-btn:hover {
+    background: #000;
+    color: #fff;
+}
+
+html[data-theme="light"] #adminPasswordModal .primary-btn:last-child {
+    border-color: #ccc;
+}
+
+html[data-theme="light"] #adminPasswordModal .modal-close {
+    border-color: #ddd;
+}
+
+/* ========================================================
+   НОВАЯ МОДАЛКА ПАРОЛЯ — МИНИМАЛИЗМ + КРАСОТА (2025 STYLE)
+   ======================================================== */
+
+.password-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 5000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.password-modal-overlay.visible {
+  display: flex;
+  opacity: 1;
+  visibility: visible;
+}
+
+.password-modal-content {
+  background: var(--surface, rgba(255, 255, 255, 0.08));
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  width: 92%;
+  max-width: 460px;
+  padding: 48px 40px;
+  text-align: center;
+  box-shadow: 
+    0 32px 80px rgba(0, 0, 0, 0.5),
+    0 0 40px rgba(255, 255, 255, 0.05);
+  transform: scale(0.95) translateY(20px);
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.password-modal-overlay.visible .password-modal-content {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+/* Крестик */
+.password-modal-close {
+  all: unset;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  font-size: 1.4rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  opacity: 0.7;
+}
+
+.password-modal-close:hover {
+  background: rgba(255, 255, 255, 0.15);
+  opacity: 1;
+  transform: rotate(90deg);
+}
+
+/* Иконка замка */
+.password-modal-icon {
+  font-size: 4.5rem;
+  color: var(--text-primary);
+  margin-bottom: 32px;
+  opacity: 0.6;
+}
+
+/* Текст */
+.password-modal-content h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 16px 0;
+  letter-spacing: -0.5px;
+}
+
+.password-modal-content p {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin: 0 0 40px 0;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+/* Поле ввода — Apple-style */
+.password-input-wrapper {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+#adminPasswordInput {
+  width: 100%;
+  padding: 20px 24px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-primary);
+  font-size: 1.3rem;
+  text-align: center;
+  font-weight: 500;
+  letter-spacing: 4px;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+#adminPasswordInput::placeholder {
+  color: transparent;
+}
+
+#adminPasswordInput:focus {
+  outline: none;
+  border-color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.1);
+}
+
+.password-input-focus {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  border: 2px solid transparent;
+  pointer-events: none;
+  transition: all 0.3s ease;
+}
+
+#adminPasswordInput:focus ~ .password-input-focus {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+/* Ошибка */
+.password-error {
+  color: #ff453a;
+  font-size: 0.95rem;
+  margin-top: -12px;
+  margin-bottom: 20px;
+  display: none;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+/* Кнопки */
+.password-modal-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.password-btn {
+  flex: 1;
+  padding: 16px 24px;
+  border-radius: 18px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.35s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.password-btn.secondary {
+  background: transparent;
+  border: 2px solid var(--border);
+  color: var(--text-primary);
+  opacity: 0.8;
+}
+
+.password-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--text-primary);
+  opacity: 1;
+}
+
+.password-btn.primary {
+  background: var(--text-primary);
+  color: var(--bg);
+  border: 2px solid var(--text-primary);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.password-btn.primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+}
+
+.password-btn.primary:active {
+  transform: translateY(0);
+}
+
+.btn-icon {
+  transition: transform 0.3s ease;
+}
+
+.password-btn.primary:hover .btn-icon {
+  transform: translateX(6px);
+}
+
+/* === Светлая тема === */
+html[data-theme="light"] .password-modal-content {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: #e0e0e0;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.15);
+}
+
+html[data-theme="light"] #adminPasswordInput {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: #d0d0d0;
+  color: #000;
+}
+
+html[data-theme="light"] #adminPasswordInput:focus {
+  border-color: #000;
+  background: rgba(0, 0, 0, 0.06);
+  box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme="light"] .password-btn.secondary {
+  border-color: #ccc;
+  color: #333;
+}
+
+html[data-theme="light"] .password-btn.secondary:hover {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: #000;
+}
+
+html[data-theme="light"] .password-btn.primary {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+/* Иконка предупреждения — жёлтая/оранжевая */
+#confirmModal .password-modal-icon.warning {
+  color: #ff9800;
+}
+
+/* Кнопка "Да, удалить" — красная */
+#confirmModal .password-btn.primary.danger {
+  background: #f44336;
+  border-color: #f44336;
+}
+
+#confirmModal .password-btn.primary.danger:hover {
+  background: #d32f2f;
+  box-shadow: 0 16px 40px rgba(244, 67, 54, 0.4);
+}
+
+/* Светлая тема */
+html[data-theme="light"] #confirmModal .password-modal-icon.warning {
+  color: #ff9800;
+}
+
+html[data-theme="light"] #confirmModal .password-btn.primary.danger {
+  background: #f44336;
+  color: #fff;
+}
+

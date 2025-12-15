@@ -47,6 +47,10 @@ from editor import zaza_editor, init_zaza_db
 from auth_backend import init_auth_db, generate_and_send_code, verify_user_code
 from dispatch import init_dispatch_db, register_dispatch_routes, get_stats
 from profile import init_company_db, profile_bp
+from bills import bills_bp
+from documents import documents_bp
+
+
 def get_client_ip():
     """Точно определяет IP даже за Cloudflare/Nginx"""
     if request.headers.get("CF-Connecting-IP"):
@@ -101,7 +105,6 @@ def create_app():
     logger.info("Все БД готовы!")
 
     
-
     # === ОТСЛЕЖИВАНИЕ ВИЗИТОВ ===
     track_visits(app)
     
@@ -122,7 +125,7 @@ def create_app():
         admin_paths = (
             '/admin', '/admin_', '/zaza_admin', '/carousel-editor',
             '/api/admin', '/admin_users', '/admin_reviews', '/admin_orders',
-            '/admin_feedback'
+            '/admin_feedback','/admin_bills','/admin_documents'
         )
 
         if any(request.path.startswith(path) for path in admin_paths):
@@ -162,8 +165,23 @@ def create_app():
     @app.route('/zaza_admin')
     def zaza_admin_page(): return render_template('zaza_admin.html')
 
+    @app.route('/admin_documents')
+    def admin_documents(): return render_template('admin_documents.html')
+
     @app.route('/about_company')
     def about(): return render_template('about_company.html')
+
+    @app.route('/profile/orders')
+    def orders(): return render_template('orders.html')
+
+    @app.route('/profile/agreements')
+    def agreements(): return render_template('agreements.html')
+
+    @app.route('/profile/bills')
+    def bills(): return render_template('bills.html')
+
+    @app.route('/admin_bills')
+    def admin_profile(): return render_template('admin_bills.html')
 
     @app.route('/policy')
     def policy(): return render_template('supports/policy.html')
@@ -172,6 +190,17 @@ def create_app():
     
     @app.route('/bin')
     def bin(): return render_template('/bin.html')
+
+    @app.route('/favicon.ico')
+    def favicon():
+        return send_from_directory(os.path.join(app.root_path, 'static'),
+                                'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    
+    @app.route('/<filename>')
+    def custom_favicon(filename):
+        if filename in ['apple-touch-icon.png', 'favicon-32x32.png', 'favicon-16x16.png', 'site.webmanifest']:
+            return send_from_directory('static', filename)
+        return 'Not Found', 404  # или abort(404)
 
     @app.route('/cart-mobile')
     def cart_mobile():
@@ -233,8 +262,9 @@ def create_app():
     app.register_blueprint(zaza_editor)
     app.register_blueprint(users_bp)
     app.register_blueprint(admin_goods_bp)
-
+    app.register_blueprint(bills_bp)
     app.register_blueprint(profile_bp)
+    app.register_blueprint(documents_bp)
 
     # === АДМИН РОУТЫ (внутри register_admin_routes — они тоже защищены по IP) ===
     register_admin_routes(app)
@@ -247,15 +277,23 @@ def create_app():
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['X-XSS-Protection'] = '1; mode=block'
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        
+        # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←← НОВАЯ CSP
         response.headers['Content-Security-Policy'] = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-            "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; "
-            "img-src 'self' data: https:; "
-            "font-src 'self' https://cdnjs.cloudflare.com; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; "
+            "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; "
+            "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
+            "img-src 'self' data: blob: https:; "           # blob: для превью изображений
             "connect-src 'self'; "
-            "frame-ancestors 'none';"
+            "frame-src 'self' blob:; "                     # ← КРИТИЧЕСКИ ВАЖНО для <object> и PDF
+            "object-src 'self' blob:; "                    # ← для <object data="...">
+            "child-src 'self' blob:; "
+            "frame-ancestors 'self';"                      # ← вместо 'none' — разрешаем встраивание в себя
         )
+        # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+        
         return response
 
     # === ОБРАБОТЧИКИ ОШИБОК ===
@@ -487,6 +525,9 @@ def create_app():
         # Записываем базовые данные в сессию
         session['user_id'] = user_id
         session['phone'] = clean_phone
+
+        from bills import insert_test_invoices_for_user
+        insert_test_invoices_for_user(user_id)
 
         guest_id = session.get('guest_id')
         if guest_id:
