@@ -526,9 +526,6 @@ def create_app():
         session['user_id'] = user_id
         session['phone'] = clean_phone
 
-        from bills import insert_test_invoices_for_user
-        insert_test_invoices_for_user(user_id)
-
         guest_id = session.get('guest_id')
         if guest_id:
             conn = sqlite3.connect('database.db')
