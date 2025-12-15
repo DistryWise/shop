@@ -327,7 +327,61 @@ html[data-theme="light"] header.scrolled #authBtn.icon-btn:hover {
   background: #ffffff !important;
   box-shadow: 0 16px 45px rgba(0, 0, 0, 0.18) !important;
 }
+/* ===================================================== */
+/* ТЁМНАЯ ТЕМА: ТОЛЬКО ТЕКСТ В ХЕДЕРЕ ЧЁРНЫЙ ДО СКРОЛЛА  */
+/* Иконки остаются белыми                                */
+/* ===================================================== */
 
+/* Текст: логотип, пункты меню, ссылки, спаны и т.д. */
+header:not(.scrolled) .header-logo,
+header:not(.scrolled) .nav-link,
+header:not(.scrolled) .header-menu a,
+header:not(.scrolled) a,
+header:not(.scrolled) span,
+header:not(.scrolled) .header-text,
+/* Универсально — любой текстовый элемент, но без иконок */
+header:not(.scrolled) {
+  color: #000000 !important;
+}
+
+/* Наследование для всех чисто текстовых вложенных элементов */
+header:not(.scrolled) * {
+  color: inherit;
+}
+
+/* Страховка: если где-то текст задан напрямую — перебиваем */
+header:not(.scrolled),
+[data-theme="dark"] header:not(.scrolled) {
+  color: #000000 !important;
+}
+
+/* После скролла — возвращаем белый текст (стандарт тёмной темы) */
+header.scrolled,
+header.scrolled .header-logo,
+header.scrolled .nav-link,
+header.scrolled a,
+header.scrolled span,
+header.scrolled * {
+  color: #ffffff !important;
+}
+
+/* Явно защищаем иконки от изменения цвета (всегда белые) */
+header i,
+header svg,
+header .header-icons i,
+header .header-icons svg,
+header .icon-btn i,
+header .icon-btn svg {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+/* В состоянии scrolled иконки тоже белые (на всякий случай) */
+header.scrolled i,
+header.scrolled svg {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
 </style>
 
 </head>
