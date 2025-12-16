@@ -1307,3 +1307,125 @@ html[data-theme="light"] #confirmModal .password-btn.primary.danger {
   color: #fff;
 }
 
+/* В светлой теме возвращаем тёмный текст для контраста */
+html[data-theme="dark"] #adminPasswordModal .password-btn.primary {
+    color: #ffffff !important; /* тёмно-синий/чёрный текст в светлой теме */
+}
+/* Кастомный селект — чуть меньше остальных полей, без зелёного текста в светлой теме */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select-trigger {
+    padding: 14px 16px; /* чуть меньше padding */
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    user-select: none;
+    height: 52px; /* меньше, чем у инпутов (было 56px) */
+    box-sizing: border-box;
+}
+
+/* Наведение — только рамка и тень */
+.custom-select-trigger:hover {
+    border-color: #fff;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.1);
+}
+
+/* Стрелка */
+.custom-select-arrow {
+    transition: transform 0.3s ease;
+    opacity: 0.7;
+    font-size: 1.2rem;
+}
+
+.custom-select.open .custom-select-arrow {
+    transform: rotate(180deg);
+}
+
+/* Выпадающий список */
+.custom-select-options {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    max-height: 200px;
+    overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 10;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.custom-select.open .custom-select-options {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.custom-select-option {
+    padding: 14px 16px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+/* Наведение — только фон, текст остаётся тем же (никакого зелёного!) */
+.custom-select-option:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--text-primary); /* явно фиксируем цвет текста */
+}
+
+.custom-select-option.selected {
+    background: rgba(255,255,255,0.15);
+    font-weight: 600;
+}
+
+/* === Светлая тема === */
+html[data-theme="light"] .custom-select-trigger {
+    background: #f5f5f5;
+    border-color: #ddd;
+    color: #000;
+}
+
+html[data-theme="light"] .custom-select-trigger:hover {
+    border-color: #000;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
+}
+
+html[data-theme="light"] .custom-select-options {
+    background: #f5f5f5;
+    border-color: #ddd;
+}
+
+html[data-theme="light"] .custom-select-option:hover {
+    background: rgba(0,0,0,0.08);
+    color: #000; /* чёрный текст, никакого зелёного */
+}
+
+html[data-theme="light"] .custom-select-option.selected {
+    background: rgba(0,0,0,0.12);
+    color: #000;
+}
+
+html[data-theme="light"] .custom-select-arrow {
+    color: #000;
+}

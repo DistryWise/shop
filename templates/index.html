@@ -265,68 +265,7 @@ html[data-theme="light"] #adminHeaderBtn text {
 
 </style>
 <style>
-/* ФИНАЛЬНЫЙ ФИКС: УБИРАЕМ КВАДРАТ / ПОДЛОЖКУ ВОКРУГ АНИМИРОВАННОГО ЭМОДЗИ В СВЕТЛОЙ ТЕМЕ ДО СКРОЛЛА */
-html[data-theme="light"] header:not(.scrolled) #authBtn.icon-btn,
-html[data-theme="light"] header:not(.scrolled) #authBtn {
 
-  /* Полностью чистая кнопка — без фона, бордера, тени, блюра */
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  overflow: visible !important; /* важно — чтобы эмодзи могло немного вылезать при анимации */
-}
-
-/* Убираем абсолютно все возможные подложки внутри кнопки */
-html[data-theme="light"] header:not(.scrolled) #authBtn .avatar-circle,
-html[data-theme="light"] header:not(.scrolled) #authBtn .auth-avatar,
-html[data-theme="light"] header:not(.scrolled) #authBtn .live-emoji::before,
-html[data-theme="light"] header:not(.scrolled) #authBtn .live-emoji::after,
-html[data-theme="light"] header:not(.scrolled) #authBtn * {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-/* Специально убиваем .avatar-circle — главный виновник квадрата */
-html[data-theme="light"] header:not(.scrolled) .avatar-circle {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  opacity: 0 !important;
-}
-
-/* Сам эмодзи — чистый, без фона и подложки */
-html[data-theme="light"] header:not(.scrolled) #authBtn .live-emoji,
-html[data-theme="light"] header:not(.scrolled) #authBtn .live-emoji-final {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: #000 !important;
-  /* Сохраняем все твои анимации — они работают */
-}
-
-/* При ховере — только лёгкое затемнение всей кнопки, без квадрата */
-html[data-theme="light"] header:not(.scrolled) #authBtn.icon-btn:hover {
-  background: rgba(0, 0, 0, 0.08) !important; /* едва заметно */
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12) !important;
-  transform: scale(1.12) !important;
-}
-
-/* После скролла — возвращаем стандартный стеклянный стиль (как у остальных) */
-html[data-theme="light"] header.scrolled #authBtn.icon-btn {
-  background: rgba(255, 255, 255, 0.92) !important;
-  border: 1.5px solid rgba(0, 0, 0, 0.18) !important;
-  backdrop-filter: blur(16px) !important;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12) !important;
-  overflow: hidden !important;
-}
-
-html[data-theme="light"] header.scrolled #authBtn.icon-btn:hover {
-  background: #ffffff !important;
-  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.18) !important;
-}
 /* ===================================================== */
 /* ТЁМНАЯ ТЕМА: ТОЛЬКО ТЕКСТ В ХЕДЕРЕ ЧЁРНЫЙ ДО СКРОЛЛА  */
 /* Иконки остаются белыми                                */
@@ -382,6 +321,226 @@ header.scrolled svg {
   color: #ffffff !important;
   fill: #ffffff !important;
 }
+
+/* ТЁМНАЯ ТЕМА — МИНИ-КОРЗИНА ДО СКРОЛЛА: ВСЁ ТЕКСТ БЕЛЫЙ (ВИДИМЫЙ) */
+header:not(.scrolled) .cart-modal,
+header:not(.scrolled) .cart-modal * {
+  color: #ffffff !important;                      /* весь текст белый */
+}
+
+/* Конкретные элементы — на всякий случай */
+header:not(.scrolled) .cart-modal-title,
+header:not(.scrolled) .mini-cart-info h4,
+header:not(.scrolled) .mini-cart-price,
+header:not(.scrolled) .mini-cart-total,
+header:not(.scrolled) .quantity-btn,
+header:not(.scrolled) .clear-cart-btn,
+header:not(.scrolled) .mini-cart-empty,
+header:not(.scrolled) p,
+header:not(.scrolled) div {
+  color: #ffffff !important;
+}
+
+/* Итого — ярко-белый и жирный */
+header:not(.scrolled) .mini-cart-total {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+/* Кнопка "Оформить" — белый текст */
+header:not(.scrolled) .go-to-cart-btn {
+  color: #ffffff !important;
+}
+
+/* Крестик закрытия — светлый */
+header:not(.scrolled) .cart-modal-close {
+  color: #cccccc !important;
+}
+header:not(.scrolled) .cart-modal-close:hover {
+  color: #ffffff !important;
+}
+
+/* Количество в контроле — белое */
+header:not(.scrolled) .sheet-quantity-controls span,
+header:not(.scrolled) .quantity-btn {
+  color: #ffffff !important;
+}
+
+/* ========================================================= */
+/* СВЕТЛАЯ ТЕМА — КНОПКА ВХОДА ДО СКРОЛЛА: 1 в 1 КАК В ТЁМНОЙ */
+/* ========================================================= */
+
+/* Основное состояние (до скролла, не авторизован) */
+html[data-theme="light"] header:not(.scrolled) #authBtn:not(.logged-in) {
+  background: rgba(0, 0, 0, 0.06) !important;
+  border: 1.2px solid rgba(0, 0, 0, 0.15) !important;
+  backdrop-filter: blur(12px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Иконка человека — чёрная */
+html[data-theme="light"] header:not(.scrolled) #authBtn:not(.logged-in) i {
+  color: #000000 !important;
+}
+
+/* Текст "Вход" при ховере — тоже чёрный */
+html[data-theme="light"] header:not(.scrolled) #authBtn .login-text {
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+/* Ховер-эффект — точно как в тёмной теме */
+html[data-theme="light"] header:not(.scrolled) #authBtn:not(.logged-in):hover {
+  background: rgba(0, 0, 0, 0.14) !important;
+  border-color: rgba(0, 0, 0, 0.25) !important;
+  transform: scale(1.12) translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* При расширении кнопки (появление текста) — плавно */
+html[data-theme="light"] header:not(.scrolled) #authBtn:not(.logged-in):hover {
+  width: 130px !important;
+  min-width: 130px !important;
+  border-radius: 30px !important;
+}
+
+/* После авторизации (если используется аватар/эмодзи) — тоже тот же стиль до скролла */
+html[data-theme="light"] header:not(.scrolled) #authBtn.logged-in {
+  background: rgba(0, 0, 0, 0.06) !important;
+  border: 1.2px solid rgba(0, 0, 0, 0.15) !important;
+  backdrop-filter: blur(12px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+html[data-theme="light"] header:not(.scrolled) #authBtn.logged-in:hover {
+  background: rgba(0, 0, 0, 0.14) !important;
+  border-color: rgba(0, 0, 0, 0.25) !important;
+  transform: scale(1.12) translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Эмодзи/аватар после входа — чёрный в светлой теме до скролла */
+html[data-theme="light"] header:not(.scrolled) #authBtn.logged-in .live-emoji,
+html[data-theme="light"] header:not(.scrolled) #authBtn.logged-in .auth-avatar {
+  color: #000000 !important;
+}
+
+/*--------------------*/
+/* Отмена всех стилей для светлой темы */
+
+
+
+/* Эмодзи/аватарка после входа */
+html[data-theme="light"] #authBtn.logged-in .auth-avatar,
+html[data-theme="light"] #authBtn.logged-in .live-emoji,
+html[data-theme="light"] #authBtn.logged-in .live-emoji-final {
+  color: initial !important;
+}
+
+/* Фон кнопки после входа */
+html[data-theme="light"] #authBtn.logged-in {
+  background: initial !important;
+  border: initial !important;
+  backdrop-filter: initial !important;
+  -webkit-backdrop-filter: initial !important;
+}
+
+html[data-theme="light"] #authBtn.logged-in:hover {
+  background: initial !important;
+  border-color: initial !important;
+  box-shadow: initial !important;
+}
+
+/* Обводка аватарки */
+html[data-theme="light"] .avatar-circle {
+  border: initial !important;
+  background: initial !important;
+}
+
+html[data-theme="light"] #authBtn.logged-in:hover .avatar-circle {
+  background: initial !important;
+  border-color: initial !important;
+}
+
+/* Кнопка до скролла (все версии) */
+[data-theme="light"] header:not(.scrolled) #authBtn,
+[data-theme="light"] header:not(.scrolled) #authBtn * {
+  background: initial !important;
+  border-color: initial !important;
+  color: initial !important;
+  fill: initial !important;
+  backdrop-filter: initial !important;
+  -webkit-backdrop-filter: initial !important;
+  box-shadow: initial !important;
+}
+
+[data-theme="light"] header:not(.scrolled) #authBtn .login-text,
+[data-theme="light"] header:not(.scrolledhores) #authBtn .login-text {
+  color: initial !important;
+  font-weight: initial !important;
+  text-shadow: initial !important;
+}
+
+[data-theme="light"] header:not(.scrolled) #authBtn i,
+[data-theme="light"] header:not(.scrolled) #authBtn svg,
+[data-theme="light"] header:not(.scrolled) #authBtn svg * {
+  color: initial !important;
+  fill: initial !important;
+  stroke: initial !important;
+}
+
+[data-theme="light"] header:not(.scrolled) #authBtn:hover {
+  background: initial !important;
+  border-color: initial !important;
+  box-shadow: initial !important;
+  transform: initial !important;
+}
+
+[data-theme="light"] header:not(.scrolled) #authBtn.logged-in .live-emoji,
+[data-theme="light"] header:not(.scrolled) #authBtn.logged-in .auth-avatar,
+[data-theme="light"] header:not(.scrolled) #authBtn.logged-in .live-emoji-final {
+  color: initial !important;
+}
+
+[data-theme="light"] header:not(.scrolled) #authBtn.logged-in .logout-text {
+  color: initial !important;
+}
+
+/* Финальная версия кнопки до скролла с чёрной рамкой */
+[data-theme="light"] header:not(.scrolled) #authBtn {
+  background: initial !important;
+  border: initial !important;
+  backdrop-filter: initial !important;
+  -webkit-backdrop-filter: initial !important;
+  box-shadow: initial !important;
+}
+
+[data-theme="light"] header:not(.scrolled) #authBtn i,
+[data-theme="light"] header:not(.scrolled) #authBtn .live-emoji,
+[data-theme="light"] header:not(.scrolled) #authBtn .live-emoji-final,
+[data-theme="light"] header:not(.scrolled) #authBtn .auth-avatar {
+  color: initial !important;
+}
+
+[data-theme="light"] header:not(.scrolled) #authBtn .login-text,
+[data-theme="light"] header:not(.scrolled) #authBtn .logout-text {
+  color: initial !important;
+  font-weight: initial !important;
+  text-shadow: initial !important;
+}
+
+[data-theme="light"] header:not(.scrolled) #authBtn:hover {
+  background: initial !important;
+  border: initial !important;
+  box-shadow: initial !important;
+  transform: initial !important;
+}
+
+[data-theme="light"] header:not(.scrolled) #authBtn:hover .login-text,
+[data-theme="light"] header:not(.scrolled) #authBtn:hover .logout-text {
+  color: initial !important;
+}
+
 </style>
 
 </head>
@@ -818,6 +977,7 @@ header.scrolled svg {
     </div>
   </div>
 </div>
+
 <!-- АЛЕРТ АВТОРИЗАЦИИ -->
 <div id="authAlert" class="custom-alert">
   <div class="alert-content">

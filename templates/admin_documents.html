@@ -56,6 +56,12 @@ window.fetch = async (...args) => {
     <link rel="stylesheet" href="/static/css/admin/admin_reviews.css">
     <link rel="stylesheet" href="/static/css/admin/admin_bills.css">
 
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="manifest" href="/site.webmanifest">
+
     <style>
         .modal-overlay {
     display: none;
@@ -72,6 +78,101 @@ window.fetch = async (...args) => {
 }
     </style>
 
+
+
+<!-- Стили для тостов (в стиле ZAZA 2025) -->
+<style>
+.toast-container {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    pointer-events: none;
+}
+
+.toast {
+    min-width: 300px;
+    max-width: 500px;
+    padding: 16px 24px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1rem;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: auto;
+}
+
+.toast.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast.success {
+    background: linear-gradient(135deg, #1e40af, #3b82f6);
+    color: white;
+    border: 1px solid #60a5fa;
+}
+
+.toast.error {
+    background: linear-gradient(135deg, #991b1b, #dc2626);
+    color: white;
+    border: 1px solid #f87171;
+}
+
+.toast.warning {
+    background: linear-gradient(135deg, #92400e, #f59e0b);
+    color: white;
+    border: 1px solid #fbbf24;
+}
+
+.toast i {
+    font-size: 1.4rem;
+}
+
+.toast .toast-message {
+    flex: 1;
+}
+
+.toast .toast-close {
+    margin-left: auto;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.toast .toast-close:hover {
+    opacity: 1;
+}
+
+/* Адаптация под светлую тему */
+html[data-theme="light"] .toast.success {
+    background: #dbeafe;
+    color: #1e40af;
+    border-color: #93c5fd;
+}
+
+html[data-theme="light"] .toast.error {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fca5a5;
+}
+
+html[data-theme="light"] .toast.warning {
+    background: #fffbeb;
+    color: #92400e;
+    border-color: #fcd34d;
+}
+</style>
     
 </head>
 
@@ -81,8 +182,8 @@ window.fetch = async (...args) => {
         <a href="/" class="logo"><img src="/static/assets/logo.png" alt="ZAZA" class="logo-img"></a>
         <nav style="margin-left: auto;"><a href="/" class="nav-link">Главная</a></nav>
     </header>
-
-
+<!-- Контейнер для тостов -->
+<div class="toast-container" id="toastContainer"></div>
     <!-- Сайдбар (точно как в новой версии) -->
 <aside class="sidebar">
     <h3 class="sidebar-title">Админка</h3>
@@ -126,12 +227,25 @@ window.fetch = async (...args) => {
                 </div>
 
                 <div class="form-group">
-                    <label>Тип документа</label>
-                    <select id="docType">
-                        <option value="contract">Договор</option>
-                        <option value="act">Акт</option>
-                    </select>
-                </div>
+    <label>Тип документа</label>
+    <div class="custom-select-wrapper">
+        <div class="custom-select" id="customDocType">
+            <div class="custom-select-trigger">
+                <span id="customSelectText">Договор</span>
+                <i class="fas fa-chevron-down custom-select-arrow"></i>
+            </div>
+            <div class="custom-select-options">
+                <div class="custom-select-option" data-value="contract">Договор</div>
+                <div class="custom-select-option" data-value="act">Акт</div>
+            </div>
+        </div>
+        <!-- Скрытый настоящий select для отправки формы -->
+        <select id="docType" style="display: none;">
+            <option value="contract" selected>Договор</option>
+            <option value="act">Акт</option>
+        </select>
+    </div>
+</div>
 
                 <div class="form-group full-width file-group">
                     <label>Загрузить PDF-документ <span style="color:var(--text-tertiary);font-size:0.9rem;">(обязательно)</span></label>
@@ -230,8 +344,8 @@ window.fetch = async (...args) => {
 </div>
 
 <!-- Универсальная модалка ввода пароля админа — новый дизайн -->
-<div id="adminPasswordModal" class="password-modal-overlay">
-  <div class="password-modal-content">
+<div id="adminPasswordModal" class="password-modal-overlay" onclick="closeModal('adminPasswordModal')">
+  <div class="password-modal-content" onclick="event.stopPropagation()">
     <!-- Крестик закрытия -->
     <button class="password-modal-close" onclick="closeModal('adminPasswordModal')">
       <i class="fas fa-times"></i>
@@ -248,10 +362,9 @@ window.fetch = async (...args) => {
 
     <!-- Поле ввода пароля -->
     <div class="password-input-wrapper">
-  <input type="password" id="adminPasswordInput" placeholder="••••••••" autocomplete="off">
-
-</div>
-<small class="password-hint">Введите пароль администратора</small>
+      <input type="password" id="adminPasswordInput" placeholder="••••••••" autocomplete="off">
+    </div>
+    <small class="password-hint">Введите пароль администратора</small>
 
     <!-- Сообщение об ошибке -->
     <small id="passwordError" class="password-error">Неверный пароль</small>
@@ -423,46 +536,53 @@ function toggleSection(header) {
 </script>
 
 <script>
+let phoneInput, userIdInput, fileInput, fileStatus, autocomplete;
+
 document.addEventListener('DOMContentLoaded', async () => {
-    // Проверка админа (уже есть выше — оставляем)
+    // Присваиваем элементы один раз, когда DOM готов
+    phoneInput   = document.getElementById('userPhone');
+    userIdInput  = document.getElementById('selectedUserId');
+    fileInput    = document.getElementById('docFile');
+    fileStatus   = document.getElementById('fileStatus');
+    autocomplete = document.getElementById('phoneAutocomplete');
 
-    const phoneInput = document.getElementById('userPhone');
-    const autocomplete = document.getElementById('phoneAutocomplete');
-    const userIdInput = document.getElementById('selectedUserId');
-    const fileInput = document.getElementById('docFile');
-    const fileStatus = document.getElementById('fileStatus');
-
-    let pendingAction = null;
-
-    // Универсальные функции модалки пароля (уже есть в твоём коде — используем те же)
-    // requireAdminPassword, proceedWithPassword, closeModal — оставляем как есть
-
-    // Автокомплит по телефону
+    // === Автокомплит по телефону ===
     phoneInput.addEventListener('input', async () => {
         const query = phoneInput.value.replace(/\D/g, '');
-        if (query.length < 3) { autocomplete.style.display = 'none'; return; }
+        if (query.length < 3) {
+            autocomplete.style.display = 'none';
+            return;
+        }
 
-        const res = await fetch(`/api/admin_search_users?phone=${query}`);
-        const users = await res.json();
+        try {
+            const res = await fetch(`/api/admin_search_users?phone=${query}`);
+            const users = await res.json();
 
-        autocomplete.innerHTML = users.length ? users.map(u => 
-            `<div onclick="selectUser(${u.id}, '${u.phone}')">${u.phone}</div>`
-        ).join('') : '<div>Ничего не найдено</div>';
+            autocomplete.innerHTML = users.length
+                ? users.map(u => `<div class="autocomplete-item" onclick="selectUser(${u.id}, '${u.phone.replace(/'/g, "\\'")}')">${u.phone}</div>`).join('')
+                : '<div class="autocomplete-empty">Ничего не найдено</div>';
 
-        autocomplete.style.display = 'block';
+            autocomplete.style.display = 'block';
+        } catch (err) {
+            autocomplete.style.display = 'none';
+        }
     });
 
+    // Выбор пользователя из автокомплита
     window.selectUser = (id, phone) => {
         phoneInput.value = phone;
         userIdInput.value = id;
         autocomplete.style.display = 'none';
     };
 
+    // Скрытие автокомплита при клике вне
     document.addEventListener('click', e => {
-        if (!e.target.closest('.phone-group')) autocomplete.style.display = 'none';
+        if (!e.target.closest('.phone-group')) {
+            autocomplete.style.display = 'none';
+        }
     });
 
-    // Проверка выбранного файла
+    // Валидация и отображение выбранного файла
     fileInput.addEventListener('change', () => {
         const file = fileInput.files[0];
         if (!file) {
@@ -470,68 +590,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             fileStatus.style.color = '';
             return;
         }
+
         if (!file.name.toLowerCase().endsWith('.pdf')) {
             fileStatus.textContent = 'Только PDF-файлы!';
             fileStatus.style.color = '#f44336';
-            fileInput.value = '';
+            fileInput.value = ''; // очищаем неверный файл
         } else {
             fileStatus.textContent = `Выбран: ${file.name}`;
             fileStatus.style.color = '#4caf50';
         }
     });
-
-    // Создание документа
-    document.getElementById('createDocumentBtn').onclick = async () => {
-        const userId = userIdInput.value;
-        const title = document.getElementById('docTitle').value.trim();
-        const type = document.getElementById('docType').value;
-        const file = fileInput.files[0];
-
-        if (!userId || !title || !file) {
-            return alert('Заполните все поля и выберите PDF!');
-        }
-
-        requireAdminPassword(async () => {
-            const btn = document.getElementById('createDocumentBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Создание...';
-
-            const form = new FormData();
-            form.append('user_id', userId);
-            form.append('title', title);
-            form.append('type', type);
-            form.append('pdf_file', file);
-            form.append('csrf_token', window.csrfToken);
-            form.append('admin_password', tempPassword);
-
-            try {
-                const res = await fetch('/api/admin_create_document', {
-                    method: 'POST',
-                    body: form
-                });
-
-                const data = await res.json();
-
-                if (data.success) {
-                    alert('Документ успешно создан и отправлен пользователю!');
-                    loadDocuments();
-                    // Очистка формы
-                    phoneInput.value = '';
-                    userIdInput.value = '';
-                    document.getElementById('docTitle').value = '';
-                    fileInput.value = '';
-                    fileStatus.textContent = '';
-                } else {
-                    alert(data.error || 'Ошибка при создании');
-                }
-            } catch (err) {
-                alert('Ошибка соединения');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Создать и отправить документ';
-            }
-        });
-    };
 
     // Загрузка таблицы документов
     async function loadDocuments() {
@@ -593,25 +661,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('previewIframe').src = '';
     };
 
-    // Удаление документа
-    window.deleteDocument = (id) => {
-        requireAdminPassword(async () => {
-            if (!confirm('Удалить этот документ? Это действие нельзя отменить.')) return;
 
-            try {
-                const res = await fetch(`/api/admin_delete_document/${id}`, { method: 'DELETE' });
-                if (res.ok) {
-                    alert('Документ удалён');
-                    loadDocuments();
-                } else {
-                    const data = await res.json();
-                    alert(data.error || 'Ошибка');
-                }
-            } catch {
-                alert('Ошибка соединения');
-            }
-        });
-    };
 
     // Фильтр по статусу (аналогично счетам)
     const filterToggle = document.querySelector('.status-filter-toggle');
@@ -694,33 +744,46 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadDocuments();
     setInterval(loadDocuments, 30000);
 });
-let pendingAdminAction = null; // Глобальная переменная для хранения действия
+
+let pendingAdminAction = null; // теперь это объект: { callback: func, password: string }
 
 function requireAdminPassword(actionCallback) {
-    pendingAdminAction = actionCallback;
+    // Сохраняем только колбэк, пароль будем брать при подтверждении
+    pendingAdminAction = { callback: actionCallback, password: null };
+
     document.getElementById('adminPasswordModal').classList.add('visible');
     document.getElementById('adminPasswordInput').value = '';
     document.getElementById('passwordError').style.display = 'none';
-    document.getElementById('adminPasswordInput').focus(); // бонус: фокус на поле
+    document.getElementById('adminPasswordInput').focus();
 }
 
-let tempPassword = null;
-
-function proceedWithPassword() {
+async function proceedWithPassword() {
     const password = document.getElementById('adminPasswordInput').value.trim();
     
-    if (password === 'admin123') {
-        tempPassword = password;  // сохраняем для отправки
-        document.getElementById('adminPasswordModal').classList.remove('visible');
-        if (pendingAdminAction) {
-            pendingAdminAction();  // выполняем действие (создание/удаление)
-            pendingAdminAction = null;
-        }
-    } else {
-        const errorEl = document.getElementById('passwordError');
-        errorEl.style.display = 'block';
-        errorEl.textContent = 'Неверный пароль';
+    if (!password) {
+        showPasswordError('Введите пароль');
+        return;
     }
+
+    if (!pendingAdminAction) return;
+
+    // Сохраняем пароль временно только для этого действия
+    pendingAdminAction.password = password;
+
+    // Закрываем модалку
+    document.getElementById('adminPasswordModal').classList.remove('visible');
+
+    // Выполняем действие
+    await pendingAdminAction.callback(pendingAdminAction.password);
+
+    // Очищаем
+    pendingAdminAction = null;
+}
+
+function showPasswordError(msg) {
+    const errorEl = document.getElementById('passwordError');
+    errorEl.textContent = msg;
+    errorEl.style.display = 'block';
 }
 // Универсальная функция закрытия любой модалки
 function closeModal(modalId) {
@@ -734,6 +797,221 @@ function closeModal(modalId) {
     }
   }
 }
+</script>
+<!-- JS для тостов + мгновенное обновление при создании -->
+<script>
+function showToast(message, type = 'success', duration = 4000) {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    let icon = 'fa-check-circle';
+    if (type === 'error') icon = 'fa-times-circle';
+    if (type === 'warning') icon = 'fa-exclamation-triangle';
+
+    toast.innerHTML = `
+        <i class="fas ${icon}"></i>
+        <div class="toast-message">${message}</div>
+        <i class="fas fa-times toast-close" onclick="this.parentElement.remove()"></i>
+    `;
+
+    container.appendChild(toast);
+
+    requestAnimationFrame(() => {
+        toast.classList.add('visible');
+    });
+
+    if (duration > 0) {
+        setTimeout(() => {
+            toast.classList.remove('visible');
+            setTimeout(() => toast.remove(), 400);
+        }, duration);
+    }
+}
+
+// Создание документа — полностью исправленная версия
+document.getElementById('createDocumentBtn').onclick = async () => {
+    const userId = userIdInput.value;
+    const title = document.getElementById('docTitle').value.trim();
+    const type = document.getElementById('docType').value;
+    const file = fileInput.files[0];
+
+    if (!userId || !title || !file) {
+        return showToast('Заполните все поля и выберите PDF!', 'error');
+    }
+
+    const btn = document.getElementById('createDocumentBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Создание...';
+
+    // Флаг, был ли выполнен запрос
+    let requestSent = false;
+
+    requireAdminPassword(async (password) => {
+        requestSent = true;
+
+        const form = new FormData();
+        form.append('user_id', userId);
+        form.append('title', title);
+        form.append('type', type);
+        form.append('pdf_file', file);
+        form.append('admin_password', password);
+
+        let res;
+        try {
+            res = await fetch('/api/admin_create_document', {
+                method: 'POST',
+                body: form
+            });
+        } catch (networkErr) {
+            showToast('Ошибка сети. Проверьте подключение.', 'error');
+            return;
+        }
+
+        let data = {};
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            try {
+                data = await res.json();
+            } catch (parseErr) {
+                showToast('Некорректный ответ от сервера', 'error');
+                loadDocuments();
+                return;
+            }
+        }
+
+        if (res.ok && data.success) {
+            showToast('Документ успешно создан и отправлен пользователю!', 'success');
+
+            // Мгновенное добавление в таблицу
+            const tbody = document.querySelector('#documentsTable tbody');
+            const typeText = type === 'contract' ? 'Договор' : 'Акт';
+            const phone = phoneInput.value || 'Неизвестно';
+            const today = new Date().toLocaleDateString('ru-RU');
+
+            const newRow = document.createElement('tr');
+            newRow.style.opacity = '0';
+            newRow.style.transition = 'opacity 0.5s ease';
+            newRow.innerHTML = `
+                <td onclick="previewDocument('/static/uploads/documents/${file.name}', '${title.replace(/'/g, "\\'")}')">${title}</td>
+                <td>${typeText}</td>
+                <td>${phone}</td>
+                <td>${today}</td>
+                <td class="status-pending">На подпись</td>
+                <td class="actions-cell">
+                    <button class="action-btn delete-btn" onclick="event.stopPropagation(); deleteDocument(0)" title="Удалить документ">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            `;
+
+            tbody.insertBefore(newRow, tbody.firstChild);
+            requestAnimationFrame(() => newRow.style.opacity = '1');
+
+            // Очистка формы
+            phoneInput.value = '';
+            userIdInput.value = '';
+            document.getElementById('docTitle').value = '';
+            fileInput.value = '';
+            fileStatus.textContent = '';
+
+            setTimeout(loadDocuments, 1000);
+        } else {
+            showToast(data.error || 'Ошибка при создании документа', 'error');
+        }
+    });
+
+    // Ждём 10 секунд — если пользователь не ввёл пароль (нажал Отмена или закрыл модалку)
+    setTimeout(() => {
+        if (!requestSent) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Создать и отправить документ';
+        }
+    }, 10000); // достаточно долго, чтобы пользователь ввёл пароль
+};
+// Удаление — оставляем как есть (уже с оптимистичным удалением)
+window.deleteDocument = (id) => {
+    requireAdminPassword(async (password) => {
+        const row = document.querySelector(`button[onclick*="deleteDocument(${id})"]`)?.closest('tr');
+        if (row) {
+            row.style.opacity = '0.5';
+            row.style.transition = 'opacity 0.3s';
+            setTimeout(() => row.remove(), 300);
+        }
+
+        const form = new FormData();
+        form.append('admin_password', password);
+
+        let res;
+        try {
+            res = await fetch(`/api/admin_delete_document/${id}`, {
+                method: 'DELETE',
+                body: form
+            });
+        } catch (networkErr) {
+            showToast('Ошибка сети. Проверьте подключение.', 'error');
+            if (row && row.parentElement) row.style.opacity = '1';
+            return;
+        }
+
+        let data = {};
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            try {
+                data = await res.json();
+            } catch {
+                showToast('Некорректный ответ от сервера', 'error');
+                loadDocuments();
+                return;
+            }
+        }
+
+        if (res.ok && data.success) {
+            showToast('Документ успешно удалён', 'success');
+            if (row && row.parentElement) row.remove();
+            loadDocuments();
+        } else {
+            showToast(data.error || 'Не удалось удалить документ', 'error');
+            if (row && row.parentElement) row.style.opacity = '1';
+            loadDocuments();
+        }
+    });
+};
+
+// Кастомный селект — логика открытия/выбора
+document.querySelectorAll('.custom-select').forEach(select => {
+    const trigger = select.querySelector('.custom-select-trigger');
+    const options = select.querySelector('.custom-select-options');
+    const text = select.querySelector('#customSelectText');
+    const realSelect = document.getElementById('docType');
+
+    trigger.addEventListener('click', () => {
+        select.classList.toggle('open');
+    });
+
+    select.querySelectorAll('.custom-select-option').forEach(option => {
+        option.addEventListener('click', () => {
+            const value = option.dataset.value;
+            const displayText = option.textContent;
+
+            text.textContent = displayText;
+            realSelect.value = value;
+
+            select.classList.remove('open');
+
+            // Подсвечиваем выбранный
+            select.querySelectorAll('.custom-select-option').forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+        });
+    });
+});
+
+// Закрытие при клике вне
+document.addEventListener('click', e => {
+    if (!e.target.closest('.custom-select')) {
+        document.querySelectorAll('.custom-select').forEach(s => s.classList.remove('open'));
+    }
+});
 </script>
 </body>
 </html>

@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 # ПРОПИСЫВАЕМ РУКАМИ — БЕЗ .env
 ALLOWED_ADMIN_IPS = ["62.217.186.199", "188.123.58.214", "127.0.0.1", "::1"]
-ADMIN_PHONES = ["79530357851"]          # ← ТВОЙ НОМЕР БЕЗ +7
+ADMIN_PHONES = ["79530357851","79062173869"]          # ← ТВОЙ НОМЕР БЕЗ +7
 # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 
 logger.info(f"IP whitelist (вшито в код): {ALLOWED_ADMIN_IPS}")
@@ -525,9 +525,6 @@ def create_app():
         # Записываем базовые данные в сессию
         session['user_id'] = user_id
         session['phone'] = clean_phone
-
-        from bills import insert_test_invoices_for_user
-        insert_test_invoices_for_user(user_id)
 
         guest_id = session.get('guest_id')
         if guest_id:

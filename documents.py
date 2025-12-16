@@ -16,10 +16,15 @@ UPLOAD_FOLDER = os.path.join('static', 'uploads', 'documents')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def check_admin_password():
-    """Проверяет пароль админа из JSON или form"""
+    """Возвращает True, если пароль верный, иначе False"""
     data = request.get_json(silent=True) or {}
-    password = data.get('admin_password') or request.form.get('admin_password')
-    return password == 'admin123'
+    admin_password = data.get('admin_password') or request.form.get('admin_password')
+    
+    # Лучше сразу вынести в env-переменную!
+    correct_password = os.getenv('ADMIN_PASSWORD', 'admin123')  # fallback только для dev
+    
+    return admin_password == correct_password
+
 
 def get_conn():
     conn = sqlite3.connect(DB_PATH)
@@ -378,4 +383,10 @@ def admin_delete_document(doc_id):
     finally:
         conn.close()
 
-        
+@documents_bp.route('/api/check_admin_password', methods=['POST'])
+def check_admin_password_api():
+    if not session.get('is_admin'):
+        return jsonify({"error": "Forbidden"}), 403
+    if check_admin_password():  # твоя функция
+        return jsonify({"valid": True})
+    return jsonify({"error": "Invalid password"}), 403

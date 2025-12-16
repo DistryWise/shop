@@ -525,6 +525,8 @@ scrollbar-width: none; /* Firefox /
 .ai-chat-messages::-webkit-scrollbar {
 display: none; /* Chrome/Safari/Opera */
 }
+
 body:has(.ai-chat-modal.fullscreen) #ai-assistant {
 display: none !important;
 }
+
